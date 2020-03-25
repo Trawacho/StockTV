@@ -4,4 +4,5 @@
 
 /src/.vs/StockTV/v16
 /src/StockTV/obj
+/src/StockTV/bin
 /src/StockTV/StockTV.csproj.user
