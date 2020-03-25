@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Source>C:\Users\hct\Desktop\StandardLogo.png</Source>
+    <SmallTileSource>C:\Users\hct\Desktop\StandardLogo.png</SmallTileSource>
+    <MediumTileSource>C:\Users\hct\Desktop\StandardLogo.png</MediumTileSource>
+    <WideTileSource>C:\Users\hct\Desktop\StandardLogo.png</WideTileSource>
+    <LargeTileSource>C:\Users\hct\Desktop\StandardLogo.png</LargeTileSource>
+    <AppIconSource>C:\Users\hct\Desktop\StandardLogo.png</AppIconSource>
+    <SplashScreenSource>C:\Users\hct\Desktop\StandardLogo.png</SplashScreenSource>
+    <PackageLogoSource>C:\Users\hct\Desktop\StandardLogo.png</PackageLogoSource>
+    <BadgeLogoSource>C:\Users\hct\Desktop\StandardLogo.png</BadgeLogoSource>
+  </PropertyGroup>
+</Project>
