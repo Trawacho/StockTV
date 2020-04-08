@@ -1,0 +1,57 @@
+﻿<Page
+    x:Class="StockTV.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:StockTV.Pages"
+    xmlns:vm="using:StockTV.ViewModel"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="Black">
+
+
+    <Page.DataContext>
+        <vm:SettingsPageViewModel/>
+    </Page.DataContext>
+
+
+
+    <Grid BorderBrush="Black" BorderThickness="2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Farbschema" Foreground="White" FontSize="40" Margin="20" Grid.Column="0" Grid.Row="0"/>
+        <ToggleSwitch Grid.Row="0" Grid.Column="1" Background="Black"
+                      BorderBrush="Black" BorderThickness="2"
+                      HorizontalAlignment="Left" 
+                      OffContent="Dunkel" Margin="20"
+                      OnContent="Hell" 
+                      Foreground="White" 
+                      FontSize="40"
+                      IsOn="{Binding Path=IsColorSchemeNormal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock Text="zum Umschalten die 1 drücken" Grid.Row="0" Grid.Column="2" Foreground="Yellow" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <TextBlock Text="Spielmodus" Foreground="White" FontSize="40" Margin="20" Grid.Column="0" Grid.Row="1"/>
+        <ToggleSwitch Grid.Row="1" Grid.Column="1" Background="Black"
+                      BorderBrush="Black" BorderThickness="2"
+                      HorizontalAlignment="Left" 
+                      OffContent="LKMS" Margin="20"
+                      OnContent="Normal" 
+                      Foreground="White" 
+                      FontSize="40"
+                      IsOn="{Binding Path=IsGameModusNormal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock Text="zum Umschalten die 2 drücken" Grid.Row="1" Grid.Column="2" Foreground="Yellow" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+    </Grid>
+    
+</Page>

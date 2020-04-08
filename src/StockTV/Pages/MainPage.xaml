@@ -1,0 +1,155 @@
+﻿<Page
+    x:Class="StockTV.Pages.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:StockTV.ViewModel"
+    xmlns:conv="using:StockTV.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{Binding Path=Settings.ColorScheme.MainBackground}"
+    >
+
+    <Page.DataContext>
+        <vm:MainPageViewModel />
+    </Page.DataContext>
+
+    <Page.Resources>
+        <conv:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:DoubleDivisionConverter x:Key="DoubleDivisionConverter"/>
+        <conv:GameModusToVisibilityConverter x:Key="GameModusToVisibilityConverter"/>
+    </Page.Resources>
+
+
+    <Grid>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Information -->
+        <Viewbox Grid.Row="0"
+                 Grid.Column="0"
+                 Grid.ColumnSpan="5" 
+                 Margin="10,5,10,0">
+            <TextBlock Text="{Binding Path=HeaderText}"  
+                       Foreground="{Binding Path=Settings.ColorScheme.HeaderForeground}"
+                       FontStretch="ExtraCondensed"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center"/>
+        </Viewbox>
+
+        <!-- Left Value / RED -->
+        <Viewbox  Grid.Row="1" 
+                  Grid.Column="0"
+                  x:Name="viewBoxLeftValue">
+            <TextBlock Text="{Binding Path=LeftPointsSum}"
+                       Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"
+                       FontWeight="SemiBold"
+                       FontStretch="ExtraExpanded"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center" />
+        </Viewbox>
+      
+        <!-- Left 2nd Value -->
+        <Viewbox Grid.Row="1"
+                 Grid.Column="1"
+                 VerticalAlignment="Bottom"
+                 Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
+                 Height="{Binding ActualHeight, ElementName=viewBoxLeftValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
+            <TextBlock Text="{Binding Path=Left2ndPoints}"
+                       Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"
+                       FontWeight="Thin"
+                       HorizontalAlignment="Right" 
+                       VerticalAlignment="Bottom" 
+                       TextAlignment="Right" />
+        </Viewbox>
+
+        <!-- : -->
+        <Viewbox Grid.Row="1" 
+                 Grid.Column="2" 
+                 x:Name="viewBoxRightValue">
+            <TextBlock Text=":" 
+                       Foreground="{Binding Path=Settings.ColorScheme.ColonForeground}"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center" />
+        </Viewbox>
+
+        <!-- Right 2nd Value -->
+        <Viewbox Grid.Row="1"
+                 Grid.Column="3"
+                 VerticalAlignment="Bottom"
+                 Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
+                 Height="{Binding ActualHeight, ElementName=viewBoxRightValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
+            <TextBlock Text="{Binding Path=Right2ndPoints}"
+                       Foreground="{Binding Path=Settings.ColorScheme.RightForeground}"
+                       FontWeight="Thin"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom" 
+                       TextAlignment="Left" />
+        </Viewbox>
+
+        <!-- Right Value / Green -->
+        <Viewbox Grid.Row="1" 
+                 Grid.Column="4">
+            <TextBlock Text="{Binding Path=RightPointsSum}"
+                       Foreground="{Binding Path=Settings.ColorScheme.RightForeground}"
+                       FontWeight="SemiBold"
+                       FontStretch="ExtraExpanded"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center"/>
+        </Viewbox>
+
+        <!-- Info about turns from Left (Red) -->
+        <Viewbox Grid.Row="2" 
+                 Grid.Column="0"
+                 Grid.ColumnSpan="2"
+                 Margin="5,0,0,0">
+            <TextBlock Text="{Binding Path=LeftPoints}" 
+                       Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"
+                       Margin="2,0,0,0"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center" />
+        </Viewbox>
+      
+        <!-- Input Value -->
+        <Viewbox Grid.Row="2"
+                 Grid.Column="2">
+            <TextBlock Text="{Binding Path=InputValue}"
+                       Foreground="{Binding Path=Settings.ColorScheme.InputValueForeground}"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch"
+                       TextAlignment="Center"/>
+        </Viewbox>
+
+        <!-- Info about turns from Right (Green)-->
+        <Viewbox Grid.Row="2" 
+                 Grid.Column="3"
+                 Grid.ColumnSpan="2"
+                 Margin="0,0,0,5">
+            <TextBlock Text="{Binding Path=RightPoints}"
+                       Foreground="{Binding Path=Settings.ColorScheme.RightForeground}"
+                       Margin="0,0,2,0"
+                       HorizontalAlignment="Stretch" 
+                       VerticalAlignment="Stretch" 
+                       TextAlignment="Center"/>
+        </Viewbox>
+        
+    </Grid>
+</Page>

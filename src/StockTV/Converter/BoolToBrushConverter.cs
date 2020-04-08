@@ -6,7 +6,7 @@ using Windows.UI.Xaml.Media;
 namespace StockTV.Converter
 {
 
-    public class BrushToColorConverter : IValueConverter
+    public class BoolToBrushConverter : IValueConverter
     {
         /// <summary>
         /// Converts TRUE to Black, all other to LightGray

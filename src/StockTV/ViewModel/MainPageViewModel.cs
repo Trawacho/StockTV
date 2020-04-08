@@ -1,10 +1,14 @@
 ﻿using StockTV.Classes;
+using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 namespace StockTV.ViewModel
 {
-    public class MainPageViewModel
+    public class MainPageViewModel : INotifyPropertyChanged
     {
         /// <summary>
         /// UWP ViewModel
@@ -18,12 +22,41 @@ namespace StockTV.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
 
+        public void RaiseAllPropertysChanged()
+        {
+            foreach (var prop in this.GetType().GetProperties())
+            {
+                RaisePropertyChange(prop.Name);
+            }
+        }
+
         #endregion
 
 
-        public void Do(uint ScanCode)
+        #region private Fields
+
+        private int _inputValue;
+
+        private Match Match;
+
+        #endregion
+
+
+        #region Constructor
+
+        public MainPageViewModel()
         {
-            System.Diagnostics.Debug.WriteLine($"ScanCode: {ScanCode} ");
+            Match = new Match();
+            _inputValue = -1;
+        }
+
+        #endregion
+
+
+        #region Public Function
+
+        public void GetScanCode(uint ScanCode)
+        {
 
             /*
              * ScanCode of KeyPad
@@ -54,23 +87,24 @@ namespace StockTV.ViewModel
 
                 case 83:    // ,
                 case 28:    // Enter
+                    ShowSettingsPage();
                     break;
 
                 case 55:    // *
-                    MyWertung.AddRight();
+                    AddRight();
                     break;
 
                 case 74:    // -
-                    MyWertung.DeleteLastTurn();
+                    DeleteLastTurn();
                     break;
 
                 case 53:    // /
                 case 14:    // BackSpace
-                    MyWertung.AddLeft();
+                    AddLeft();
                     break;
 
                 case 78:    // +
-                    MyWertung.Reset();
+                    Reset();
                     break;
 
 
@@ -78,58 +112,218 @@ namespace StockTV.ViewModel
 
                 case 79:
                     //MyWertung.InputText = "1";
-                    MyWertung.AddInput(1);
+                    AddInput(1);
                     break;
                 case 80:
                     //MyWertung.InputText = "2";
-                    MyWertung.AddInput(2);
+                    AddInput(2);
                     break;
                 case 81:
                     //MyWertung.InputText = "3";
-                    MyWertung.AddInput(3);
+                    AddInput(3);
                     break;
                 case 75:
                     //MyWertung.InputText = "4";
-                    MyWertung.AddInput(4);
+                    AddInput(4);
                     break;
                 case 76:
                     //MyWertung.InputText = "5";
-                    MyWertung.AddInput(5);
+                    AddInput(5);
                     break;
                 case 77:
                     //MyWertung.InputText = "6";
-                    MyWertung.AddInput(6);
+                    AddInput(6);
                     break;
                 case 71:
                     //MyWertung.InputText = "7";
-                    MyWertung.AddInput(7);
+                    AddInput(7);
                     break;
                 case 72:
                     //MyWertung.InputText = "8";
-                    MyWertung.AddInput(8);
+                    AddInput(8);
                     break;
                 case 73:
                     //MyWertung.InputText = "9";
-                    MyWertung.AddInput(9);
+                    AddInput(9);
                     break;
                 case 82:
                     //MyWertung.InputText = "0";
-                    MyWertung.AddInput(0);
+                    AddInput(0);
                     break;
 
                     #endregion
             }
 
+            RaiseAllPropertysChanged();
 
         }
 
-        public Result MyWertung { get; set; }
+        #endregion
 
 
-        public MainPageViewModel()
+        #region Public READONLY Properties
+
+        public Settings Settings
         {
-            MyWertung = new Result(30, 30);
+            get
+            {
+                return Settings.Instance;
+            }
         }
 
+
+        public string HeaderText
+        {
+            get
+            {
+                if (Match.CurrentGame.GameNumber == 1 && Match.CurrentGame.CountOfTurns == 0)
+                {
+                    return "Spielstand";
+                }
+                else if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Normal)
+                {
+                    return $"Spielstand nach {Match.CurrentGame.CountOfTurns} Kehren";
+                }
+                else if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Lkms)
+                {
+                    return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.CountOfTurns}";
+                }
+                return "unknown Status";
+            }
+        }
+
+        public string LeftPointsSum
+        {
+            get
+            {
+                return Match.CurrentGame.Turns.Sum(t => t.PointsLeft).ToString();
+            }
+        }
+
+        public string Left2ndPoints
+        {
+            get
+            {
+                return Match.MatchPointsLeft.ToString();
+            }
+        }
+
+        public string RightPointsSum
+        {
+            get
+            {
+                return Match.CurrentGame.Turns.Sum(t => t.PointsRight).ToString();
+            }
+        }
+
+        public string Right2ndPoints
+        {
+            get
+            {
+                return Match.MatchPointsRight.ToString();
+            }
+        }
+
+        public string LeftPoints
+        {
+            get
+            {
+                string temp = string.Empty;
+                foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
+                {
+                    temp += String.IsNullOrEmpty(temp) ? "" : "-";
+                    temp += $"{item.PointsLeft}";
+                }
+                return temp;
+            }
+        }
+
+        public string RightPoints
+        {
+            get
+            {
+                string temp = string.Empty;
+                foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
+                {
+                    temp += String.IsNullOrEmpty(temp) ? "" : "-";
+                    temp += $"{item.PointsRight}";
+                }
+                return temp;
+            }
+        }
+
+        public string InputValue
+        {
+            get
+            {
+                return  _inputValue == -1 ? string.Empty : _inputValue.ToString();
+            }
+        }
+
+        #endregion
+
+
+        #region Private Functions
+
+        private void Reset()
+        {
+            Match.Reset();
+            _inputValue = -1;
+        }
+
+        private void DeleteLastTurn()
+        {
+            Match.DeleteLastTurn();
+            _inputValue = -1;
+        }
+
+        private void AddLeft()
+        {
+            if (_inputValue == -1)
+                return;
+
+            this.Match.AddTurn(new Turn()
+            {
+                PointsLeft = _inputValue
+            });
+
+            _inputValue = -1;
+        }
+
+        private void AddRight()
+        {
+            if (_inputValue == -1)
+                return;
+
+
+            this.Match.AddTurn(new Turn()
+            {
+                PointsRight = _inputValue
+            });
+
+            _inputValue = -1;
+        }
+
+        private void AddInput(int value)
+        {
+            _inputValue = _inputValue < 0 ? value : (_inputValue * 10) + value;
+
+            if (_inputValue > Settings.Instance.GameSettings.MaxPointsPerTurn)
+            {
+                _inputValue = -1;
+            }
+        }
+
+        private void ShowSettingsPage()
+        {
+            if (Match.CanSettingsShow)
+            {
+                Frame rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(Pages.SettingsPage));
+            }
+        }
+
+        #endregion
+       
     }
 }

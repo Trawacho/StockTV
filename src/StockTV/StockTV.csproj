@@ -119,15 +119,27 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Classes\Result.cs" />
+    <Compile Include="Classes\ColorScheme.cs" />
+    <Compile Include="Classes\Game.cs" />
+    <Compile Include="Classes\GameSettings.cs" />
+    <Compile Include="Classes\Match.cs" />
+    <Compile Include="Classes\Settings.cs" />
+    <Compile Include="Classes\StringExtension.cs" />
     <Compile Include="Classes\Turn.cs" />
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
-    <Compile Include="Converter\BrushToColorConverter.cs" />
-    <Compile Include="MainPage.xaml.cs">
+    <Compile Include="Converter\BoolToBrushConverter.cs" />
+    <Compile Include="Converter\DoubleDivisionConverter.cs" />
+    <Compile Include="Converter\GameModusToVisibilityConverter.cs" />
+    <Compile Include="Converter\SchemeToBrushConverter.cs" />
+    <Compile Include="Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModel\MainPageViewModel.cs" />
+    <Compile Include="ViewModel\SettingsPageViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -147,9 +159,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="MainPage.xaml">
+    <Page Include="Pages\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\SettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
