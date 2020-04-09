@@ -31,6 +31,9 @@ namespace StockTV.Classes
 
         #region Public Properties
 
+        /// <summary>
+        /// Checks the Input if Settings Page can be displayed
+        /// </summary>
         public bool CanSettingsShow
         {
             get
@@ -39,6 +42,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// the current Game
+        /// </summary>
         public Game CurrentGame
         {
             get
@@ -50,6 +56,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// Sum of MatchPoints for left
+        /// </summary>
         public int MatchPointsLeft
         {
             get
@@ -58,6 +67,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// Sum of MatchPoints for right
+        /// </summary>
         public int MatchPointsRight
         {
             get
@@ -71,6 +83,10 @@ namespace StockTV.Classes
 
         #region Public Functions
 
+        /// <summary>
+        /// Add a new Turn to Current Game. Add also a new Game if <see cref="Settings.GameSettings.MaxCountOfTurnsPerGame"/> are reached
+        /// </summary>
+        /// <param name="turn"></param>
         public void AddTurn(Turn turn)
         {
             if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Lkms  &&
@@ -88,6 +104,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// Delete the last turn from Game while GameCount > 1
+        /// </summary>
         public void DeleteLastTurn()
         {
             if (Games.Count > 1 && CurrentGame.CountOfTurns == 0)

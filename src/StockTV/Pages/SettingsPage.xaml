@@ -26,8 +26,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Text="Farbschema" Foreground="White" FontSize="40" Margin="20" Grid.Column="0" Grid.Row="0"/>
@@ -52,6 +52,8 @@
                       IsOn="{Binding Path=IsGameModusNormal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Text="zum Umschalten die 2 drücken" Grid.Row="1" Grid.Column="2" Foreground="Yellow" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
+
+        <TextBlock Text="zurück mit ENTER" Foreground="Red" FontSize="40" Margin="20" Grid.Column="2" Grid.Row="3"/>
     </Grid>
     
 </Page>

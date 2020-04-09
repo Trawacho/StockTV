@@ -8,27 +8,38 @@ namespace StockTV.Classes
 {
     public class Game
     {
+        #region Constructor
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="gameNumber">Number of the new Game</param>
         public Game(int gameNumber)
         {
             Turns = new List<Turn>();
-            _GameNumber = gameNumber;
+            GameNumber = gameNumber;
         }
 
-        private readonly int _GameNumber;
-        public int GameNumber
-        {
-            get
-            {
-                return _GameNumber;
-            }
-        }
+        #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Number of the Game
+        /// </summary>
+        public int GameNumber { get; }
+
+        /// <summary>
+        /// List of all Turns for this Game
+        /// </summary>
         public List<Turn> Turns
         {
             get; set;
         }
 
-
+        /// <summary>
+        /// After the MaxCountOfTurnsPerGame are reached, it returns the Points for Left
+        /// </summary>
         public int GamePointsLeft
         {
             get
@@ -51,6 +62,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// After the MaxCountOfTurnsPerGame are reached, it returns the Points for Right
+        /// </summary>
         public int GamePointsRight
         {
             get
@@ -74,7 +88,9 @@ namespace StockTV.Classes
 
         }
 
-
+        /// <summary>
+        /// the Count of Turns in this Game
+        /// </summary>
         public int CountOfTurns
         {
             get
@@ -83,6 +99,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// True if the input is correct to Display the settings page
+        /// </summary>
         public bool IsSettingsInput
         {
             get
@@ -96,14 +115,9 @@ namespace StockTV.Classes
             }
         }
 
-        internal void DeleteLastTurn()
-        {
-            if (Turns.Count > 0)
-            {
-                Turns.RemoveAt(Turns.Count - 1);
-            }
-        }
-
+        /// <summary>
+        /// Sum of the LEFT Points of all Turns in this Game
+        /// </summary>
         private int LeftPointsSum
         {
             get
@@ -112,6 +126,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// Sum of the RIGHT Points of all Turns in this Game
+        /// </summary>
         private int RightPointsSum
         {
             get
@@ -119,5 +136,24 @@ namespace StockTV.Classes
                 return Turns.Sum(t => t.PointsRight);
             }
         }
+
+        #endregion
+
+
+        #region Public Functions
+
+        /// <summary>
+        /// Delete the Last Turn in this Game
+        /// </summary>
+        public void DeleteLastTurn()
+        {
+            if (Turns.Count > 0)
+            {
+                Turns.RemoveAt(Turns.Count - 1);
+            }
+        }
+        
+        #endregion
+
     }
 }

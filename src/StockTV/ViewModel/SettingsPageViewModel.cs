@@ -21,14 +21,18 @@ namespace StockTV.ViewModel
 
         #endregion
 
+
+        #region Constructor
+
         public SettingsPageViewModel()
         {
 
         }
 
-        private Settings settings = Settings.Instance;
+        #endregion
 
 
+        #region Functions
 
         public void SettingsPage_KeyDown(uint ScanCode)
         {
@@ -56,7 +60,7 @@ namespace StockTV.ViewModel
 
             switch (ScanCode)
             {
-                case 14:
+                case 28:
                     Frame rootFrame = Window.Current.Content as Frame;
                     rootFrame.Navigate(typeof(MainPage));
                     break;
@@ -72,40 +76,46 @@ namespace StockTV.ViewModel
 
         }
 
-
-
         public void SwitchColorScheme()
         {
-            settings.ColorScheme.SwitchColorScheme();
+            Settings.Instance.ColorScheme.SwitchColorScheme();
             RaisePropertyChange(nameof(IsColorSchemeNormal));
         }
+
+        public void SwitchGameModus()
+        {
+            if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Normal)
+            {
+                Settings.Instance.GameSettings.SetModus(GameSettings.Modis.Lkms);
+            }
+            else
+            {
+                Settings.Instance.GameSettings.SetModus(GameSettings.Modis.Normal);
+            }
+            RaisePropertyChange(nameof(IsGameModusNormal));
+        }
+
+        #endregion
+
+
+        #region Properties
 
         public bool IsColorSchemeNormal
         {
             get
             {
-                return settings.ColorScheme.Scheme == ColorScheme.Schemes.Normal;
+                return Settings.Instance.ColorScheme.Scheme == ColorScheme.Schemes.Normal;
             }
         }
-
-        public void SwitchGameModus()
-        {
-            if (settings.GameSettings.Modus == GameSettings.Modis.Normal)
-            {
-                settings.GameSettings.SetModus(GameSettings.Modis.Lkms);
-            }
-            else
-            {
-                settings.GameSettings.SetModus(GameSettings.Modis.Normal);
-            }
-            RaisePropertyChange(nameof(IsGameModusNormal));
-        }
+        
         public bool IsGameModusNormal
         {
             get
             {
-                return settings.GameSettings.Modus == GameSettings.Modis.Normal;
+                return Settings.Instance.GameSettings.Modus == GameSettings.Modis.Normal;
             }
         }
+        
+        #endregion
     }
 }

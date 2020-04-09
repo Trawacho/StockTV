@@ -11,7 +11,7 @@ namespace StockTV.ViewModel
     public class MainPageViewModel : INotifyPropertyChanged
     {
         /// <summary>
-        /// UWP ViewModel
+        /// UWP ViewModel for MainPage
         /// </summary>
 
         #region NotifyPropertyChanged
@@ -163,6 +163,9 @@ namespace StockTV.ViewModel
 
         #region Public READONLY Properties
 
+        /// <summary>
+        /// Settings
+        /// </summary>
         public Settings Settings
         {
             get
@@ -171,7 +174,9 @@ namespace StockTV.ViewModel
             }
         }
 
-
+        /// <summary>
+        /// HeaderText
+        /// </summary>
         public string HeaderText
         {
             get
@@ -192,6 +197,9 @@ namespace StockTV.ViewModel
             }
         }
 
+        /// <summary>
+        /// Sum of the LEFT Points
+        /// </summary>
         public string LeftPointsSum
         {
             get
@@ -200,7 +208,10 @@ namespace StockTV.ViewModel
             }
         }
 
-        public string Left2ndPoints
+        /// <summary>
+        /// Sum of the Left MatchPoints
+        /// </summary>
+        public string LeftMatchPoints
         {
             get
             {
@@ -208,6 +219,9 @@ namespace StockTV.ViewModel
             }
         }
 
+        /// <summary>
+        /// Sum of the RIGHT Points
+        /// </summary>
         public string RightPointsSum
         {
             get
@@ -216,7 +230,10 @@ namespace StockTV.ViewModel
             }
         }
 
-        public string Right2ndPoints
+        /// <summary>
+        /// Sum of the Right MatchPoints
+        /// </summary>
+        public string RightMatchPoints
         {
             get
             {
@@ -224,6 +241,9 @@ namespace StockTV.ViewModel
             }
         }
 
+        /// <summary>
+        /// Turn-Details of the Left 
+        /// </summary>
         public string LeftPoints
         {
             get
@@ -238,6 +258,9 @@ namespace StockTV.ViewModel
             }
         }
 
+        /// <summary>
+        /// Turn-Details of the Right
+        /// </summary>
         public string RightPoints
         {
             get
@@ -252,6 +275,9 @@ namespace StockTV.ViewModel
             }
         }
 
+        /// <summary>
+        /// InputValue to Display
+        /// </summary>
         public string InputValue
         {
             get
@@ -318,6 +344,7 @@ namespace StockTV.ViewModel
         {
             if (Match.CanSettingsShow)
             {
+                Reset();
                 Frame rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }

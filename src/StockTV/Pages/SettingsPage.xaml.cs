@@ -25,6 +25,9 @@ namespace StockTV.Pages
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public SettingsPage()
         {
             this.InitializeComponent();
@@ -36,21 +39,28 @@ namespace StockTV.Pages
                    System.Diagnostics.Debug.WriteLine("InputPane TryHide");
                };
 
-            //Send ScanCode from KeyDown to DataContext
-            //Window.Current.CoreWindow.KeyDown +=
-            // (s, e) => ((SettingsPageViewModel)DataContext).SettingsPage_KeyDown(s,e);
+            //Register Event
             this.KeyDown += SettingsPage_KeyDown;
 
             //Set focus to MainPage after Loaded
             this.Loaded += (s, e) => (s as SettingsPage).Focus(FocusState.Programmatic);
         }
 
+        /// <summary>
+        /// Remove Event from KeyDown before Page is unloaded
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
             this.KeyDown -= SettingsPage_KeyDown;
             base.OnNavigatingFrom(e);
         }
 
+        /// <summary>
+        /// Send ScnaCode to DataContext
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SettingsPage_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             ((SettingsPageViewModel)DataContext).SettingsPage_KeyDown(e.KeyStatus.ScanCode);

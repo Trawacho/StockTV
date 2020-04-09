@@ -64,13 +64,13 @@
                        TextAlignment="Center" />
         </Viewbox>
       
-        <!-- Left 2nd Value -->
+        <!-- Left MatchPoint Value -->
         <Viewbox Grid.Row="1"
                  Grid.Column="1"
                  VerticalAlignment="Bottom"
                  Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
                  Height="{Binding ActualHeight, ElementName=viewBoxLeftValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
-            <TextBlock Text="{Binding Path=Left2ndPoints}"
+            <TextBlock Text="{Binding Path=LeftMatchPoints}"
                        Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"
                        FontWeight="Thin"
                        HorizontalAlignment="Right" 
@@ -89,13 +89,13 @@
                        TextAlignment="Center" />
         </Viewbox>
 
-        <!-- Right 2nd Value -->
+        <!-- Right MatchPoint Value -->
         <Viewbox Grid.Row="1"
                  Grid.Column="3"
                  VerticalAlignment="Bottom"
                  Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
                  Height="{Binding ActualHeight, ElementName=viewBoxRightValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
-            <TextBlock Text="{Binding Path=Right2ndPoints}"
+            <TextBlock Text="{Binding Path=RightMatchPoints}"
                        Foreground="{Binding Path=Settings.ColorScheme.RightForeground}"
                        FontWeight="Thin"
                        HorizontalAlignment="Left"

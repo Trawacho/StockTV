@@ -9,11 +9,16 @@ namespace StockTV.Classes
 {
     public class ColorScheme : INotifyPropertyChanged
     {
+        #region Public Enumeration
+
         public enum Schemes
         {
             Normal,
             Dark
         }
+
+        #endregion
+
 
         #region Implementation of NotifyPropertyChanged
 

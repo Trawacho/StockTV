@@ -9,38 +9,41 @@ namespace StockTV.Classes
 {
     public class GameSettings
     {
+
+        #region Public Enumeration 
+
+        /// <summary>
+        /// Enumeration for different Modis
+        /// </summary>
         public enum Modis
         {
             Normal,
             Lkms
         }
 
+        #endregion
 
+
+        #region Contructor
+
+        /// <summary>
+        /// Default - Constructor
+        /// </summary>
+        /// <param name="modus"></param>
         public GameSettings(Modis modus = Modis.Normal)
         {
             SetModus(modus);
         }
 
-        private Modis modis;
-        public Modis Modus
-        {
-            get
-            {
-                return modis;
-            }
-            private set
-            {
-                if (modis == value)
-                    return;
+        #endregion
 
-                modis = value;
 
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["GameSettingsModus"] = value.ToString();
+        #region Public Functions
 
-            }
-        }
-
+        /// <summary>
+        /// Set the modus
+        /// </summary>
+        /// <param name="modus"></param>
         public void SetModus(Modis modus)
         {
             switch (modus)
@@ -58,6 +61,16 @@ namespace StockTV.Classes
             }
         }
 
+        #endregion
+
+
+        #region Static Functions
+
+
+        /// <summary>
+        /// Returns the localy saved GameSettings 
+        /// </summary>
+        /// <returns></returns>
         public static GameSettings Load()
         {
             var localSettings = ApplicationData.Current.LocalSettings;
@@ -66,11 +79,44 @@ namespace StockTV.Classes
             return new GameSettings(gamemodus.ToEnum<GameSettings.Modis>());
         }
 
+        #endregion
 
+
+        #region Properties
+
+        /// <summary>
+        /// Max count of Turns per Game
+        /// </summary>
         public int MaxCountOfTurnsPerGame { get; set; }
 
+        /// <summary>
+        /// Max Points per single Turn
+        /// </summary>
         public int MaxPointsPerTurn { get; set; } = 30;
 
+        private Modis modis;
+        /// <summary>
+        /// Modus for the Game
+        /// </summary>
+        public Modis Modus
+        {
+            get
+            {
+                return modis;
+            }
+            private set
+            {
+                if (modis == value)
+                    return;
+
+                modis = value;
+
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["GameSettingsModus"] = value.ToString();
+            }
+        }
+
+        #endregion
 
     }
 }
