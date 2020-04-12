@@ -8,6 +8,9 @@ Spielstand nach jeder Kehre im Stocksport Manschaftsspiel auf einem PublicTV liv
  - 2x [Kabelloser Ziffernblock]
  - 1x LCD-Display mind. 42"
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
+### optional:
+ - Kabel: https://www.amazon.de/gp/product/B0728GMRHH/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1
+ - Verstärker: https://www.amazon.de/gp/product/B071WX56QF/ref=ppx_yo_dt_b_asin_title_o00_s01?ie=UTF8&psc=1
 
   
 ### Erste Schritte:
