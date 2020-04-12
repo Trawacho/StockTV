@@ -40,7 +40,10 @@ namespace StockTV.Classes
 
         #region Constructor
 
-
+        /// <summary>
+        /// Default-Constructor
+        /// </summary>
+        /// <param name="scheme"></param>
         public ColorScheme(Schemes scheme = Schemes.Normal)
         {
             Scheme = scheme;
@@ -51,13 +54,20 @@ namespace StockTV.Classes
 
         #region Functions
 
-        internal void SwitchColorScheme()
+        /// <summary>
+        /// Changes the current ColorScheme
+        /// </summary>
+        private void SwitchColorScheme()
         {
             Scheme = Scheme == Schemes.Normal
                               ? Schemes.Dark
                               : Schemes.Normal;
         }
 
+        /// <summary>
+        /// Loads the ColorScheme from local settings
+        /// </summary>
+        /// <returns></returns>
         internal static ColorScheme Load()
         {
             var localSettings = ApplicationData.Current.LocalSettings;
@@ -66,6 +76,17 @@ namespace StockTV.Classes
             return new ColorScheme(colorschema.ToEnum<ColorScheme.Schemes>());
         }
 
+
+        internal void ColorSchemeUp()
+        {
+            SwitchColorScheme();
+        }
+
+        internal void ColorSchemeDown()
+        {
+            SwitchColorScheme();
+
+        }
         #endregion
 
 
@@ -73,6 +94,9 @@ namespace StockTV.Classes
 
         private Schemes schemes;
 
+        /// <summary>
+        /// ColorScheme
+        /// </summary>
         internal Schemes Scheme
         {
             get
@@ -96,7 +120,10 @@ namespace StockTV.Classes
 
         #region ReadOnly Properties
 
-        public SolidColorBrush HeaderForeground
+        /// <summary>
+        /// Brush for the Header text
+        /// </summary>
+        public SolidColorBrush MainTextForeground
         {
             get
             {
@@ -113,6 +140,9 @@ namespace StockTV.Classes
 
         }
 
+        /// <summary>
+        /// Brush for the Background
+        /// </summary>
         public SolidColorBrush MainBackground
         {
             get
@@ -129,14 +159,9 @@ namespace StockTV.Classes
             }
         }
 
-        public SolidColorBrush ColonForeground
-        {
-            get
-            {
-                return HeaderForeground;
-            }
-        }
-
+        /// <summary>
+        /// Brush for the left side
+        /// </summary>
         public SolidColorBrush LeftForeground
         {
             get
@@ -153,6 +178,9 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        /// Brush for the right side
+        /// </summary>
         public SolidColorBrush RightForeground
         {
             get
@@ -169,13 +197,7 @@ namespace StockTV.Classes
             }
         }
 
-        public SolidColorBrush InputValueForeground
-        {
-            get
-            {
-                return HeaderForeground;
-            }
-        }
+       
 
         #endregion
 

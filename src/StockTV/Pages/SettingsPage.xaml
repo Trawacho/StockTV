@@ -3,21 +3,27 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:StockTV.Pages"
+    xmlns:c="using:StockTV.Converter"
     xmlns:vm="using:StockTV.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="Black">
+    Background="White"
+    Foreground="Black"
+    FontSize="40">
 
 
     <Page.DataContext>
         <vm:SettingsPageViewModel/>
     </Page.DataContext>
 
+    <Page.Resources>
+        <c:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Page.Resources>
 
-
-    <Grid BorderBrush="Black" BorderThickness="2">
+    <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
@@ -26,34 +32,140 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Farbschema" Foreground="White" FontSize="40" Margin="20" Grid.Column="0" Grid.Row="0"/>
-        <ToggleSwitch Grid.Row="0" Grid.Column="1" Background="Black"
-                      BorderBrush="Black" BorderThickness="2"
-                      HorizontalAlignment="Left" 
-                      OffContent="Dunkel" Margin="20"
-                      OnContent="Hell" 
-                      Foreground="White" 
-                      FontSize="40"
-                      IsOn="{Binding Path=IsColorSchemeNormal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-        <TextBlock Text="zum Umschalten die 1 drücken" Grid.Row="0" Grid.Column="2" Foreground="Yellow" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-        <TextBlock Text="Spielmodus" Foreground="White" FontSize="40" Margin="20" Grid.Column="0" Grid.Row="1"/>
-        <ToggleSwitch Grid.Row="1" Grid.Column="1" Background="Black"
-                      BorderBrush="Black" BorderThickness="2"
-                      HorizontalAlignment="Left" 
-                      OffContent="LKMS" Margin="20"
-                      OnContent="Normal" 
-                      Foreground="White" 
-                      FontSize="40"
-                      IsOn="{Binding Path=IsGameModusNormal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-        <TextBlock Text="zum Umschalten die 2 drücken" Grid.Row="1" Grid.Column="2" Foreground="Yellow" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <!--#region ColorScheme -->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsColorSchemeActive,
+                                Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" Grid.Row="0"/>
+
+        <TextBlock Text="Farbschema:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="0"/>
+        <TextBlock Grid.Row="0"
+                   Grid.Column="2"
+                   HorizontalAlignment="Center"
+                   Text="{Binding Path=ColorSchemeValue}"
+                   Margin="20"/>
+
+        <TextBlock Text="Normal oder Dark" 
+                   Grid.Row="0" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
 
 
-        <TextBlock Text="zurück mit ENTER" Foreground="Red" FontSize="40" Margin="20" Grid.Column="2" Grid.Row="3"/>
+
+        <!--#region GameModus -->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsGameModusActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" Grid.Row="1"/>
+        <TextBlock Text="Spielmodus:" 
+                   HorizontalAlignment="Right"
+                   Margin="20"  
+                   Grid.Column="1" 
+                   Grid.Row="1"/>
+        <TextBlock Grid.Row="1"
+                   Grid.Column="2"
+                   HorizontalAlignment="Center"
+                   Text="{Binding Path=GameModusValue}"
+                   Margin="20"/>
+        <TextBlock Text="Normal oder LKMS" 
+                   Grid.Row="1" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+
+
+
+        <!--#endregion-->
+
+        <!--#region MaxPointPerTurn-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsPointsPerTurnActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" 
+                   Grid.Row="2"/>
+        <TextBlock Text="Max Punkte pro Kehre:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="2"/>
+        <TextBlock Grid.Row="2"
+                   Grid.Column="2"
+                   HorizontalAlignment="Center"
+                   Text="{Binding Path=PointsPerTurnValue}"
+                   Margin="20"/>
+        <TextBlock Text="15 bis 99 (30)" 
+                   Grid.Row="2" 
+                   Grid.Column="3"
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
+
+        <!--#region TurnsPerGame-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsTurnsPerGameActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" 
+                   Grid.Row="3"/>
+        <TextBlock Text="Max Kehren pro Spiel:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="3"/>
+        <TextBlock Grid.Row="3"
+                   Grid.Column="2"
+                   Text="{Binding Path=TurnsPerGameValue}"
+                   HorizontalAlignment="Center"
+                   Margin="20"/>
+        <TextBlock Text="4 bis 99 (6 oder 30)" 
+                   Grid.Row="3" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
+
+
+
+        <TextBox Grid.Row="6" Grid.Column="1" Background="Transparent" 
+                 BorderThickness="0"
+                 Text="{Binding Path=xVal}"
+                 IsReadOnly="True"/>
+
+        <TextBlock Grid.Row="5"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="4"
+                   Margin="20"
+                   TextWrapping="Wrap"
+                   Text="Tasten: 2 + 4 Navigation, 6 + 8 Wert ändern, ENTER zurück"
+                   />
+
+        
     </Grid>
     
 </Page>

@@ -44,20 +44,70 @@ namespace StockTV.Classes
         /// Set the modus
         /// </summary>
         /// <param name="modus"></param>
-        public void SetModus(Modis modus)
+        private void SetModus(Modis modus)
         {
             switch (modus)
             {
                 case Modis.Normal:
                     Modus = modus;
-                    MaxCountOfTurnsPerGame = 30;
+                    TurnsPerGame = 30;
                     break;
                 case Modis.Lkms:
                     Modus = Modis.Lkms;
-                    MaxCountOfTurnsPerGame = 6;
+                    TurnsPerGame = 6;
                     break;
                 default:
                     break;
+            }
+            PointsPerTurn = 30;
+
+        }
+
+        /// <summary>
+        /// change to Next or Previous modus
+        /// </summary>
+        /// <param name="next"></param>
+        public void ModusChange(bool next = true)
+        {
+            if (Modus == Modis.Normal)
+            {
+                SetModus(Modis.Lkms);
+            }
+            else
+            {
+                SetModus(Modis.Normal);
+            }
+        }
+
+        /// <summary>
+        /// Increase or decrease the value
+        /// </summary>
+        /// <param name="up"></param>
+        public void TurnsPerGameChange(bool up = true)
+        {
+            if (up)
+            {
+                TurnsPerGame++;
+            }
+            else
+            {
+                TurnsPerGame--;
+            }
+        }
+
+        /// <summary>
+        /// Increase or decrease the value
+        /// </summary>
+        /// <param name="up"></param>
+        public void PointsPerTurnChange(bool up = true)
+        {
+            if (up)
+            {
+                PointsPerTurn++;
+            }
+            else
+            {
+                PointsPerTurn--;
             }
         }
 
@@ -75,8 +125,14 @@ namespace StockTV.Classes
         {
             var localSettings = ApplicationData.Current.LocalSettings;
             var gamemodus = localSettings.Values["GameSettingsModus"] as string;
+            var turnspergame = localSettings.Values["TurnsPerGame"] as string;
+            var pointsperturn = localSettings.Values["PointsPerTurn"] as string;
 
-            return new GameSettings(gamemodus.ToEnum<GameSettings.Modis>());
+            var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.Modis>());
+            gamesettings.TurnsPerGame = Int32.Parse(turnspergame ?? "30");
+            gamesettings.PointsPerTurn = Int32.Parse(pointsperturn ?? "30");
+
+            return gamesettings;
         }
 
         #endregion
@@ -84,15 +140,47 @@ namespace StockTV.Classes
 
         #region Properties
 
+        private int turnsPerGame;
         /// <summary>
         /// Max count of Turns per Game
         /// </summary>
-        public int MaxCountOfTurnsPerGame { get; set; }
+        public int TurnsPerGame
+        {
+            get
+            {
+                return turnsPerGame;
+            }
+            private set
+            {
+                if (turnsPerGame == value || value < 4 || value > 99)
+                    return;
 
+                turnsPerGame = value;
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["TurnsPerGame"] = value.ToString();
+            }
+        }
+
+        private int pointsPerTurn;
         /// <summary>
         /// Max Points per single Turn
         /// </summary>
-        public int MaxPointsPerTurn { get; set; } = 30;
+        public int PointsPerTurn
+        {
+            get
+            {
+                return pointsPerTurn;
+            }
+            set
+            {
+                if (pointsPerTurn == value || value < 15 || value > 99)
+                    return;
+
+                pointsPerTurn = value;
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["PointsPerTurn"] = value.ToString();
+            }
+        }
 
         private Modis modis;
         /// <summary>

@@ -126,11 +126,10 @@
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\StringExtension.cs" />
     <Compile Include="Classes\Turn.cs" />
-    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
-    <Compile Include="Converter\BoolToBrushConverter.cs" />
+    <Compile Include="Converter\ActiveSettingToVisibilityConverter.cs" />
+    <Compile Include="Converter\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converter\DoubleDivisionConverter.cs" />
     <Compile Include="Converter\GameModusToVisibilityConverter.cs" />
-    <Compile Include="Converter\SchemeToBrushConverter.cs" />
     <Compile Include="Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

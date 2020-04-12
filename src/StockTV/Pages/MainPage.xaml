@@ -15,8 +15,6 @@
     </Page.DataContext>
 
     <Page.Resources>
-        <conv:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
-        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <conv:DoubleDivisionConverter x:Key="DoubleDivisionConverter"/>
         <conv:GameModusToVisibilityConverter x:Key="GameModusToVisibilityConverter"/>
     </Page.Resources>
@@ -44,7 +42,7 @@
                  Grid.ColumnSpan="5" 
                  Margin="10,5,10,0">
             <TextBlock Text="{Binding Path=HeaderText}"  
-                       Foreground="{Binding Path=Settings.ColorScheme.HeaderForeground}"
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
                        FontStretch="ExtraCondensed"
                        HorizontalAlignment="Stretch" 
                        VerticalAlignment="Stretch" 
@@ -68,8 +66,12 @@
         <Viewbox Grid.Row="1"
                  Grid.Column="1"
                  VerticalAlignment="Bottom"
-                 Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
-                 Height="{Binding ActualHeight, ElementName=viewBoxLeftValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
+                 Visibility="{Binding Path=Settings.GameSettings.Modus, 
+                                      Converter={StaticResource GameModusToVisibilityConverter}}"
+                 Height="{Binding ActualHeight, 
+                                  ElementName=viewBoxLeftValue, 
+                                  Converter={StaticResource DoubleDivisionConverter}, 
+                                  ConverterParameter=2}">
             <TextBlock Text="{Binding Path=LeftMatchPoints}"
                        Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"
                        FontWeight="Thin"
@@ -83,7 +85,7 @@
                  Grid.Column="2" 
                  x:Name="viewBoxRightValue">
             <TextBlock Text=":" 
-                       Foreground="{Binding Path=Settings.ColorScheme.ColonForeground}"
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
                        HorizontalAlignment="Stretch" 
                        VerticalAlignment="Stretch" 
                        TextAlignment="Center" />
@@ -93,8 +95,12 @@
         <Viewbox Grid.Row="1"
                  Grid.Column="3"
                  VerticalAlignment="Bottom"
-                 Visibility="{Binding Path=Settings.GameSettings.Modus, Converter={StaticResource GameModusToVisibilityConverter}}"
-                 Height="{Binding ActualHeight, ElementName=viewBoxRightValue, Converter={StaticResource DoubleDivisionConverter}, ConverterParameter=2}">
+                 Visibility="{Binding Path=Settings.GameSettings.Modus, 
+                                      Converter={StaticResource GameModusToVisibilityConverter}}"
+                 Height="{Binding ActualHeight, 
+                                  ElementName=viewBoxRightValue, 
+                                  Converter={StaticResource DoubleDivisionConverter}, 
+                                  ConverterParameter=2}">
             <TextBlock Text="{Binding Path=RightMatchPoints}"
                        Foreground="{Binding Path=Settings.ColorScheme.RightForeground}"
                        FontWeight="Thin"
@@ -132,7 +138,7 @@
         <Viewbox Grid.Row="2"
                  Grid.Column="2">
             <TextBlock Text="{Binding Path=InputValue}"
-                       Foreground="{Binding Path=Settings.ColorScheme.InputValueForeground}"
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
                        HorizontalAlignment="Stretch"
                        VerticalAlignment="Stretch"
                        TextAlignment="Center"/>

@@ -10,6 +10,9 @@ namespace StockTV.Classes
     {
         #region Constructor
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Match()
         {
             Games = new List<Game>();
@@ -90,7 +93,7 @@ namespace StockTV.Classes
         public void AddTurn(Turn turn)
         {
             if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Lkms  &&
-                Settings.Instance.GameSettings.MaxCountOfTurnsPerGame == CurrentGame.CountOfTurns)
+                Settings.Instance.GameSettings.TurnsPerGame == CurrentGame.CountOfTurns)
             {
                 Games.Add(new Game(Games.Count + 1));
             }
@@ -98,7 +101,7 @@ namespace StockTV.Classes
             turn.TurnNumber = CurrentGame.CountOfTurns + 1;
 
 
-            if (Settings.Instance.GameSettings.MaxCountOfTurnsPerGame > CurrentGame.CountOfTurns)
+            if (Settings.Instance.GameSettings.TurnsPerGame > CurrentGame.CountOfTurns)
             {
                 CurrentGame.Turns.Add(turn);
             }

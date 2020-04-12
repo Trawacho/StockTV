@@ -334,7 +334,7 @@ namespace StockTV.ViewModel
         {
             _inputValue = _inputValue < 0 ? value : (_inputValue * 10) + value;
 
-            if (_inputValue > Settings.Instance.GameSettings.MaxPointsPerTurn)
+            if (_inputValue > Settings.Instance.GameSettings.PointsPerTurn)
             {
                 _inputValue = -1;
             }

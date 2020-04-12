@@ -22,6 +22,7 @@ namespace StockTV.Classes
 
         #endregion
 
+
         #region Properties
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace StockTV.Classes
         {
             get
             {
-                if (CountOfTurns < Settings.Instance.GameSettings.MaxCountOfTurnsPerGame)
+                if (CountOfTurns < Settings.Instance.GameSettings.TurnsPerGame)
                     return 0;
 
                 if (LeftPointsSum > RightPointsSum)
@@ -69,7 +70,7 @@ namespace StockTV.Classes
         {
             get
             {
-                if (CountOfTurns < Settings.Instance.GameSettings.MaxCountOfTurnsPerGame)
+                if (CountOfTurns < Settings.Instance.GameSettings.TurnsPerGame)
                     return 0;
 
                 if (RightPointsSum > LeftPointsSum)
