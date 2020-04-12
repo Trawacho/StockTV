@@ -162,7 +162,7 @@
                    Grid.ColumnSpan="4"
                    Margin="20"
                    TextWrapping="Wrap"
-                   Text="Tasten: 2 + 4 Navigation, 6 + 8 Wert ändern, ENTER zurück"
+                   Text="Tasten: 2 + 8 Navigation, 4 + 6 Wert ändern, ENTER zurück"
                    />
 
         
