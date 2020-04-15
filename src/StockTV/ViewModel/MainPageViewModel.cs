@@ -181,19 +181,22 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Match.CurrentGame.GameNumber == 1 && Match.CurrentGame.CountOfTurns == 0)
+                if (Match.CurrentGame.GameNumber == 1 && 
+                    Match.CurrentGame.CountOfTurns == 0)
                 {
                     return "Spielstand";
                 }
-                else if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Normal)
+
+                switch (Settings.Instance.GameSettings.GameModus)
                 {
-                    return $"Spielstand nach {Match.CurrentGame.CountOfTurns} Kehren";
+                    case GameSettings.GameModis.Training:
+                        return $"Spielstand nach {Match.CurrentGame.CountOfTurns} Kehren";
+                    case GameSettings.GameModis.BestOf:
+                    case GameSettings.GameModis.Turnier:
+                        return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.CountOfTurns}";
+                    default:
+                        return "unknown Status";
                 }
-                else if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Lkms)
-                {
-                    return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.CountOfTurns}";
-                }
-                return "unknown Status";
             }
         }
 

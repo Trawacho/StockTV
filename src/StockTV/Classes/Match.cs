@@ -89,10 +89,13 @@ namespace StockTV.Classes
         /// <param name="turn"></param>
         public void AddTurn(Turn turn)
         {
-            if (Settings.Instance.GameSettings.Modus == GameSettings.Modis.Lkms  &&
-                Settings.Instance.GameSettings.TurnsPerGame == CurrentGame.CountOfTurns)
+            if (Settings.Instance.GameSettings.TurnsPerGame == CurrentGame.CountOfTurns)
             {
-                Games.Add(new Game(Games.Count + 1));
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf ||
+                    Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
+                {
+                    Games.Add(new Game(Games.Count + 1));
+                }
             }
 
             turn.TurnNumber = CurrentGame.CountOfTurns + 1;
@@ -113,7 +116,7 @@ namespace StockTV.Classes
             {
                 Games.RemoveAt(Games.Count - 1);
             }
-         
+
             CurrentGame.DeleteLastTurn();
         }
 

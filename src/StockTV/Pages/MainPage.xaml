@@ -66,7 +66,7 @@
         <Viewbox Grid.Row="1"
                  Grid.Column="1"
                  VerticalAlignment="Bottom"
-                 Visibility="{Binding Path=Settings.GameSettings.Modus, 
+                 Visibility="{Binding Path=Settings.GameSettings.GameModus, 
                                       Converter={StaticResource GameModusToVisibilityConverter}}"
                  Height="{Binding ActualHeight, 
                                   ElementName=viewBoxLeftValue, 
@@ -95,7 +95,7 @@
         <Viewbox Grid.Row="1"
                  Grid.Column="3"
                  VerticalAlignment="Bottom"
-                 Visibility="{Binding Path=Settings.GameSettings.Modus, 
+                 Visibility="{Binding Path=Settings.GameSettings.GameModus, 
                                       Converter={StaticResource GameModusToVisibilityConverter}}"
                  Height="{Binding ActualHeight, 
                                   ElementName=viewBoxRightValue, 

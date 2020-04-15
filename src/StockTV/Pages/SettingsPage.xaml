@@ -34,6 +34,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
@@ -87,7 +88,7 @@
                    HorizontalAlignment="Center"
                    Text="{Binding Path=GameModusValue}"
                    Margin="20"/>
-        <TextBlock Text="Normal oder LKMS" 
+        <TextBlock Text="Training, BestOf, Turnier" 
                    Grid.Row="1" 
                    Grid.Column="3" 
                    Margin="30,20"
@@ -150,14 +151,38 @@
                    VerticalAlignment="Center"/>
         <!--#endregion-->
 
+        <!--#region CourtNumber-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsCourtNumberActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" 
+                   Grid.Row="4"/>
+        <TextBlock Text="Bahnnummer:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="4"/>
+        <TextBlock Grid.Row="4"
+                   Grid.Column="2"
+                   Text="{Binding Path=CourtNumber}"
+                   HorizontalAlignment="Center"
+                   Margin="20"/>
+        <TextBlock Text="Nummer der Bahn 1 bis 99" 
+                   Grid.Row="4" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
 
-
-        <TextBox Grid.Row="6" Grid.Column="1" Background="Transparent" 
+        <TextBox Grid.Row="6" Grid.Column="3" Background="Transparent" 
                  BorderThickness="0"
                  Text="{Binding Path=xVal}"
                  IsReadOnly="True"/>
 
-        <TextBlock Grid.Row="5"
+        <TextBlock Grid.Row="6"
                    Grid.Column="0"
                    Grid.ColumnSpan="4"
                    Margin="20"

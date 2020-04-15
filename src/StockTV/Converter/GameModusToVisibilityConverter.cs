@@ -9,7 +9,7 @@ namespace StockTV.Converter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if((GameSettings.Modis)value == GameSettings.Modis.Lkms)
+            if((GameSettings.GameModis)value == GameSettings.GameModis.BestOf)
             {
                 return Visibility.Visible;
             }

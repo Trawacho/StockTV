@@ -125,6 +125,7 @@
     <Compile Include="Classes\Match.cs" />
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\StringExtension.cs" />
+    <Compile Include="Classes\StructExtension.cs" />
     <Compile Include="Classes\Turn.cs" />
     <Compile Include="Converter\ActiveSettingToVisibilityConverter.cs" />
     <Compile Include="Converter\BooleanToVisibilityConverter.cs" />

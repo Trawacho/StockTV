@@ -47,12 +47,12 @@ namespace StockTV.ViewModel
             GameMous = 1,
             MaxPointsPerTurn = 2,
             MaxCountOfTurnsPerGame = 3,
-
+            CourtNumber = 4
         }
 
 
         private ActiveSettings ActiveSetting;
-        
+
 
         #region Functions
 
@@ -109,7 +109,7 @@ namespace StockTV.ViewModel
 
         public void GoToNextSetting()
         {
-            if (ActiveSetting  < Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Max())
+            if (ActiveSetting < Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Max())
             {
                 ActiveSetting += 1;
             }
@@ -118,7 +118,7 @@ namespace StockTV.ViewModel
         public void GoToPreviousSettings()
         {
 
-            if (ActiveSetting  > Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Min())
+            if (ActiveSetting > Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Min())
             {
                 ActiveSetting -= 1;
             }
@@ -140,6 +140,9 @@ namespace StockTV.ViewModel
                 case ActiveSettings.MaxPointsPerTurn:
                     Settings.Instance.GameSettings.PointsPerTurnChange();
                     break;
+                case ActiveSettings.CourtNumber:
+                    Settings.Instance.CourtNumberChange();
+                    break;
                 default:
                     break;
             }
@@ -160,6 +163,9 @@ namespace StockTV.ViewModel
                     break;
                 case ActiveSettings.MaxPointsPerTurn:
                     Settings.Instance.GameSettings.PointsPerTurnChange(false);
+                    break;
+                case ActiveSettings.CourtNumber:
+                    Settings.Instance.CourtNumberChange(false);
                     break;
                 default:
                     break;
@@ -206,6 +212,14 @@ namespace StockTV.ViewModel
         }
 
 
+        public bool IsCourtNumberActive
+        {
+            get
+            {
+                return ActiveSetting == ActiveSettings.CourtNumber;
+            }
+        }
+
 
         public string ColorSchemeValue
         {
@@ -219,7 +233,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.Instance.GameSettings.Modus.ToString();
+                return Settings.Instance.GameSettings.GameModus.ToString();
             }
         }
 
@@ -239,7 +253,15 @@ namespace StockTV.ViewModel
             }
         }
 
-       public string xVal
+        public string CourtNumber
+        {
+            get
+            {
+                return Settings.Instance.CourtNumber.ToString();
+            }
+        }
+
+        public string xVal
         {
             get
             {
@@ -247,7 +269,7 @@ namespace StockTV.ViewModel
             }
             set { }
         }
-        
+
         #endregion
     }
 }

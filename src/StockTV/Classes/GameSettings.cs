@@ -11,10 +11,11 @@ namespace StockTV.Classes
         /// <summary>
         /// Enumeration for different Modis
         /// </summary>
-        public enum Modis
+        public enum GameModis
         {
-            Normal,
-            Lkms
+            Training,
+            BestOf,
+            Turnier
         }
 
         #endregion
@@ -26,7 +27,7 @@ namespace StockTV.Classes
         /// Default - Constructor
         /// </summary>
         /// <param name="modus"></param>
-        public GameSettings(Modis modus = Modis.Normal)
+        public GameSettings(GameModis modus = GameModis.Training)
         {
             SetModus(modus);
         }
@@ -40,21 +41,25 @@ namespace StockTV.Classes
         /// Set the modus
         /// </summary>
         /// <param name="modus"></param>
-        private void SetModus(Modis modus)
+        private void SetModus(GameModis modus)
         {
+            GameModus = modus;
+
             switch (modus)
             {
-                case Modis.Normal:
-                    Modus = modus;
+                case GameModis.Training:
                     TurnsPerGame = 30;
                     break;
-                case Modis.Lkms:
-                    Modus = Modis.Lkms;
+                case GameModis.BestOf:
+                    TurnsPerGame = 6;
+                    break;
+                case GameModis.Turnier:
                     TurnsPerGame = 6;
                     break;
                 default:
                     break;
             }
+
             PointsPerTurn = 30;
 
         }
@@ -65,13 +70,13 @@ namespace StockTV.Classes
         /// <param name="next"></param>
         public void ModusChange(bool next = true)
         {
-            if (Modus == Modis.Normal)
+            if (next)
             {
-                SetModus(Modis.Lkms);
+                SetModus(GameModus.Next());
             }
             else
             {
-                SetModus(Modis.Normal);
+                SetModus(GameModus.Previous());
             }
         }
 
@@ -120,11 +125,11 @@ namespace StockTV.Classes
         public static GameSettings Load()
         {
             var localSettings = ApplicationData.Current.LocalSettings;
-            var gamemodus = localSettings.Values["GameSettingsModus"] as string;
-            var turnspergame = localSettings.Values["TurnsPerGame"] as string;
-            var pointsperturn = localSettings.Values["PointsPerTurn"] as string;
+            var gamemodus = localSettings.Values[nameof(GameModus)] as string;
+            var turnspergame = localSettings.Values[nameof(TurnsPerGame)] as string;
+            var pointsperturn = localSettings.Values[nameof(PointsPerTurn)] as string;
 
-            var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.Modis>());
+            var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>());
             gamesettings.TurnsPerGame = Int32.Parse(turnspergame ?? "30");
             gamesettings.PointsPerTurn = Int32.Parse(pointsperturn ?? "30");
 
@@ -148,12 +153,14 @@ namespace StockTV.Classes
             }
             private set
             {
-                if (turnsPerGame == value || value < 4 || value > 99)
+                if (turnsPerGame == value ||
+                           value < 4 ||
+                           value > 99)
                     return;
 
                 turnsPerGame = value;
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["TurnsPerGame"] = value.ToString();
+                localSettings.Values[nameof(TurnsPerGame)] = value.ToString();
             }
         }
 
@@ -174,15 +181,15 @@ namespace StockTV.Classes
 
                 pointsPerTurn = value;
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["PointsPerTurn"] = value.ToString();
+                localSettings.Values[nameof(PointsPerTurn)] = value.ToString();
             }
         }
 
-        private Modis modis;
+        private GameModis modis;
         /// <summary>
         /// Modus for the Game
         /// </summary>
-        public Modis Modus
+        public GameModis GameModus
         {
             get
             {
@@ -196,7 +203,7 @@ namespace StockTV.Classes
                 modis = value;
 
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["GameSettingsModus"] = value.ToString();
+                localSettings.Values[nameof(GameModus)] = value.ToString();
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using Windows.Storage;
 
 namespace StockTV.Classes
 {
@@ -10,6 +11,16 @@ namespace StockTV.Classes
 
         private static readonly Lazy<Settings> settings = new Lazy<Settings>(() => new Settings());
 
+        private void Load()
+        {
+            ColorScheme = ColorScheme.Load();
+            GameSettings = GameSettings.Load();
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            var coursenr = localSettings.Values[nameof(CourtNumber)] as string;
+            this.CourtNumber = Int32.Parse(coursenr ?? "1");
+        }
+
         /// <summary>
         /// Instanz of the settings
         /// </summary>
@@ -20,8 +31,7 @@ namespace StockTV.Classes
         /// </summary>
         private Settings()
         {
-            ColorScheme = ColorScheme.Load();
-            GameSettings = GameSettings.Load();
+            Load();
         }
 
         /// <summary>
@@ -34,8 +44,42 @@ namespace StockTV.Classes
         /// </summary>
         public GameSettings GameSettings { get; set; }
 
+        public void CourtNumberChange(bool up = true)
+        {
+            if (up)
+            {
+                CourtNumber++;
+            }
+            else
+            {
+                CourtNumber--;
+            }
+        }
+
+        private int courtNumber;
+        /// <summary>
+        /// Number of the Course
+        /// </summary>
+        public int CourtNumber
+        {
+            get { return courtNumber; }
+            set
+            {
+
+                if (courtNumber == value ||
+                          value < 1 ||
+                          value > 99)
+                    return;
+
+                courtNumber = value;
+
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values[nameof(CourtNumber)] = value.ToString();
+            }
+        }
+
     }
 
-   
+
 
 }
