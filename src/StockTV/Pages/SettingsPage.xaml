@@ -54,6 +54,7 @@
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="0"/>
+        
         <TextBlock Grid.Row="0"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
@@ -78,25 +79,25 @@
                    VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" Grid.Row="1"/>
+        
         <TextBlock Text="Spielmodus:" 
                    HorizontalAlignment="Right"
                    Margin="20"  
                    Grid.Column="1" 
                    Grid.Row="1"/>
+        
         <TextBlock Grid.Row="1"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=GameModusValue}"
                    Margin="20"/>
+        
         <TextBlock Text="Training, BestOf, Turnier" 
                    Grid.Row="1" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-
-
-
         <!--#endregion-->
 
         <!--#region MaxPointPerTurn-->
@@ -107,16 +108,19 @@
                    Margin="20"
                    Grid.Column="0" 
                    Grid.Row="2"/>
+        
         <TextBlock Text="Max Punkte pro Kehre:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="2"/>
+        
         <TextBlock Grid.Row="2"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=PointsPerTurnValue}"
                    Margin="20"/>
+        
         <TextBlock Text="15 bis 99 (30)" 
                    Grid.Row="2" 
                    Grid.Column="3"
@@ -133,16 +137,19 @@
                    Margin="20"
                    Grid.Column="0" 
                    Grid.Row="3"/>
+        
         <TextBlock Text="Max Kehren pro Spiel:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="3"/>
+        
         <TextBlock Grid.Row="3"
                    Grid.Column="2"
                    Text="{Binding Path=TurnsPerGameValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
+        
         <TextBlock Text="4 bis 99 (6 oder 30)" 
                    Grid.Row="3" 
                    Grid.Column="3" 
@@ -159,16 +166,19 @@
                    Margin="20"
                    Grid.Column="0" 
                    Grid.Row="4"/>
+        
         <TextBlock Text="Bahnnummer:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="4"/>
+        
         <TextBlock Grid.Row="4"
                    Grid.Column="2"
                    Text="{Binding Path=CourtNumber}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
+        
         <TextBlock Text="Nummer der Bahn 1 bis 99" 
                    Grid.Row="4" 
                    Grid.Column="3" 
@@ -190,7 +200,6 @@
                    Text="Tasten: 2 + 8 Navigation, 4 + 6 Wert ändern, ENTER zurück"
                    />
 
-        
     </Grid>
-    
+
 </Page>

@@ -91,8 +91,7 @@ namespace StockTV.Classes
         {
             if (Settings.Instance.GameSettings.TurnsPerGame == CurrentGame.CountOfTurns)
             {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf ||
-                    Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf )
                 {
                     Games.Add(new Game(Games.Count + 1));
                 }
@@ -116,16 +115,28 @@ namespace StockTV.Classes
             {
                 Games.RemoveAt(Games.Count - 1);
             }
-
-            CurrentGame.DeleteLastTurn();
+            else
+            {
+                CurrentGame.DeleteLastTurn();
+            }
         }
 
         /// <summary>
-        /// reset of the current game
+        /// reset of the current game (BestOf, Training) or starts the next Match (Turnier)
         /// </summary>
         public void Reset()
         {
-            CurrentGame.Turns.Clear();
+            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
+            {
+                if(CurrentGame.CountOfTurns == Settings.Instance.GameSettings.TurnsPerGame)
+                {
+                    Games.Add(new Game(Games.Count + 1));
+                }
+            }
+            else
+            {
+                CurrentGame.Turns.Clear();
+            }
         }
 
         #endregion
