@@ -18,7 +18,7 @@ namespace StockTV.Classes
 
             var localSettings = ApplicationData.Current.LocalSettings;
             var coursenr = localSettings.Values[nameof(CourtNumber)] as string;
-            this.CourtNumber = Int32.Parse(coursenr ?? "1");
+            this.CourtNumber = byte.Parse(coursenr ?? "1");
         }
 
         /// <summary>
@@ -56,11 +56,11 @@ namespace StockTV.Classes
             }
         }
 
-        private int courtNumber;
+        private byte courtNumber;
         /// <summary>
         /// Number of the Course
         /// </summary>
-        public int CourtNumber
+        public byte CourtNumber
         {
             get { return courtNumber; }
             set

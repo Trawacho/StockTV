@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
 
 namespace StockTV.Classes
 {
@@ -12,8 +16,8 @@ namespace StockTV.Classes
         /// </summary>
         public Match()
         {
-            Games = new List<Game>();
-            Games.Add(new Game(1));
+            games = new List<Game>();
+            games.Add(new Game(1));
         }
 
         #endregion
@@ -24,7 +28,7 @@ namespace StockTV.Classes
         /// <summary>
         /// internal List of Games
         /// </summary>
-        private List<Game> Games;
+        private List<Game> games;
 
         #endregion
 
@@ -38,7 +42,7 @@ namespace StockTV.Classes
         {
             get
             {
-                return Games[0].IsSettingsInput;
+                return games[0].IsSettingsInput;
             }
         }
 
@@ -49,10 +53,10 @@ namespace StockTV.Classes
         {
             get
             {
-                if (Games.Count == 0)
-                    Games.Add(new Game(1));
+                if (games.Count == 0)
+                    games.Add(new Game(1));
 
-                return Games.Last();
+                return games.Last();
             }
         }
 
@@ -63,7 +67,7 @@ namespace StockTV.Classes
         {
             get
             {
-                return Games.Sum(g => g.GamePointsLeft);
+                return games.Sum(g => g.GamePointsLeft);
             }
         }
 
@@ -74,33 +78,34 @@ namespace StockTV.Classes
         {
             get
             {
-                return Games.Sum(g => g.GamePointsRight);
+                return games.Sum(g => g.GamePointsRight);
             }
         }
 
+        /// <summary>
+        /// All Games from Match
+        /// </summary>
+        public IEnumerable<Game> Games
+        {
+            get
+            {
+                return games;
+            }
+        }
         #endregion
 
 
         #region Public Functions
 
         /// <summary>
-        /// Add a new Turn to Current Game. Add also a new Game if <see cref="Settings.GameSettings.MaxCountOfTurnsPerGame"/> are reached
+        /// Add a new Turn to Current Game until <see cref="GameSettings.TurnsPerGame"/> are reached
         /// </summary>
         /// <param name="turn"></param>
         public void AddTurn(Turn turn)
         {
-            if (Settings.Instance.GameSettings.TurnsPerGame == CurrentGame.CountOfTurns)
-            {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf )
-                {
-                    Games.Add(new Game(Games.Count + 1));
-                }
-            }
+            turn.TurnNumber = Convert.ToByte(CurrentGame.Turns.Count + 1);
 
-            turn.TurnNumber = CurrentGame.CountOfTurns + 1;
-
-
-            if (Settings.Instance.GameSettings.TurnsPerGame > CurrentGame.CountOfTurns)
+            if (Settings.Instance.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
             {
                 CurrentGame.Turns.Add(turn);
             }
@@ -111,9 +116,9 @@ namespace StockTV.Classes
         /// </summary>
         public void DeleteLastTurn()
         {
-            if (Games.Count > 1 && CurrentGame.CountOfTurns == 0)
+            if (games.Count > 1 && CurrentGame.Turns.Count == 0)
             {
-                Games.RemoveAt(Games.Count - 1);
+                games.RemoveAt(games.Count - 1);
             }
             else
             {
@@ -122,15 +127,28 @@ namespace StockTV.Classes
         }
 
         /// <summary>
-        /// reset of the current game (BestOf, Training) or starts the next Match (Turnier)
+        /// reset of the current game or starts the next Match (BestOf, Turnier) when max of <see cref="GameSettings.TurnsPerGame"/> are reached
         /// </summary>
-        public void Reset()
+        public void Reset(bool force = false)
         {
-            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
+            if (force)
             {
-                if(CurrentGame.CountOfTurns == Settings.Instance.GameSettings.TurnsPerGame)
+                this.games.Clear();
+                this.games.Add(new Game(1));
+                return;
+            }
+
+
+            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier ||
+                Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf)
+            {
+                if (CurrentGame.Turns.Count == Settings.Instance.GameSettings.TurnsPerGame)
                 {
-                    Games.Add(new Game(Games.Count + 1));
+                    games.Add(new Game(Convert.ToByte(games.Count + 1)));
+                }
+                else
+                {
+                    CurrentGame.Turns.Clear();
                 }
             }
             else
@@ -139,6 +157,35 @@ namespace StockTV.Classes
             }
         }
 
+
+        public byte[] Serialize(bool compressed = false)
+        {
+            var values = new List<byte>();
+            values.Add(Settings.Instance.CourtNumber);
+            values.Add(Convert.ToByte(Games.Count()));
+
+            foreach (var g in Games)
+            {
+                values.Add(Convert.ToByte(g.Turns.Count));
+                foreach (var t in g.Turns)
+                {
+                    values.Add(t.PointsLeft);
+                    values.Add(t.PointsRight);
+                }
+            }
+
+            var data = values.ToArray();
+
+            if (!compressed)
+                return data;
+
+            var output = new MemoryStream();
+            using (var datastream = new DeflateStream(output, CompressionLevel.Optimal))
+            {
+                datastream.Write(data, 0, data.Length);
+            }
+            return output.ToArray();
+        }
         #endregion
 
     }

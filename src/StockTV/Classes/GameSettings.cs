@@ -130,8 +130,8 @@ namespace StockTV.Classes
             var pointsperturn = localSettings.Values[nameof(PointsPerTurn)] as string;
 
             var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>());
-            gamesettings.TurnsPerGame = Int32.Parse(turnspergame ?? "30");
-            gamesettings.PointsPerTurn = Int32.Parse(pointsperturn ?? "30");
+            gamesettings.TurnsPerGame = byte.Parse(turnspergame ?? "30");
+            gamesettings.PointsPerTurn = byte.Parse(pointsperturn ?? "30");
 
             return gamesettings;
         }
@@ -141,11 +141,11 @@ namespace StockTV.Classes
 
         #region Properties
 
-        private int turnsPerGame;
+        private byte turnsPerGame;
         /// <summary>
         /// Max count of Turns per Game
         /// </summary>
-        public int TurnsPerGame
+        public byte TurnsPerGame
         {
             get
             {
@@ -164,11 +164,11 @@ namespace StockTV.Classes
             }
         }
 
-        private int pointsPerTurn;
+        private byte pointsPerTurn;
         /// <summary>
         /// Max Points per single Turn
         /// </summary>
-        public int PointsPerTurn
+        public byte PointsPerTurn
         {
             get
             {

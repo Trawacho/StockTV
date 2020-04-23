@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -35,7 +36,7 @@ namespace StockTV.ViewModel
 
         #region private Fields
 
-        private int _inputValue;
+        private sbyte _inputValue;
 
         private Match Match;
 
@@ -55,7 +56,7 @@ namespace StockTV.ViewModel
 
         #region Public Function
 
-        public void GetScanCode(uint ScanCode)
+        public async Task GetScanCode(uint ScanCode)
         {
 
             /*
@@ -156,6 +157,11 @@ namespace StockTV.ViewModel
 
             RaiseAllPropertysChanged();
 
+            if(Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
+            {
+                await NetworkService.SendMessage(Match);
+            }
+
         }
 
         #endregion
@@ -182,7 +188,7 @@ namespace StockTV.ViewModel
             get
             {
                 if (Match.CurrentGame.GameNumber == 1 && 
-                    Match.CurrentGame.CountOfTurns == 0)
+                    Match.CurrentGame.Turns.Count == 0)
                 {
                     return "Spielstand";
                 }
@@ -190,10 +196,10 @@ namespace StockTV.ViewModel
                 switch (Settings.Instance.GameSettings.GameModus)
                 {
                     case GameSettings.GameModis.Training:
-                        return $"Spielstand nach {Match.CurrentGame.CountOfTurns} Kehren";
+                        return $"Spielstand nach {Match.CurrentGame.Turns.Count} Kehren";
                     case GameSettings.GameModis.BestOf:
                     case GameSettings.GameModis.Turnier:
-                        return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.CountOfTurns}";
+                        return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
                     default:
                         return "unknown Status";
                 }
@@ -294,9 +300,9 @@ namespace StockTV.ViewModel
 
         #region Private Functions
 
-        private void Reset()
+        private void Reset(bool force = false)
         {
-            Match.Reset();
+            Match.Reset(force);
             _inputValue = -1;
         }
 
@@ -313,7 +319,7 @@ namespace StockTV.ViewModel
 
             this.Match.AddTurn(new Turn()
             {
-                PointsLeft = _inputValue
+                PointsLeft = (byte)_inputValue
             });
 
             _inputValue = -1;
@@ -327,15 +333,17 @@ namespace StockTV.ViewModel
 
             this.Match.AddTurn(new Turn()
             {
-                PointsRight = _inputValue
+                PointsRight = Convert.ToByte(_inputValue)
             });
 
             _inputValue = -1;
         }
 
-        private void AddInput(int value)
+        private void AddInput(sbyte value)
         {
-            _inputValue = _inputValue < 0 ? value : (_inputValue * 10) + value;
+            _inputValue = _inputValue < 0 
+                        ? value 
+                        : Convert.ToSByte((_inputValue * 10) + value);
 
             if (_inputValue > Settings.Instance.GameSettings.PointsPerTurn)
             {
@@ -347,7 +355,7 @@ namespace StockTV.ViewModel
         {
             if (Match.CanSettingsShow)
             {
-                Reset();
+                Reset(true);
                 Frame rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }

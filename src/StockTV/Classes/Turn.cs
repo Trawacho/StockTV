@@ -18,11 +18,11 @@
         /// <summary>
         /// points in this turn for RED
         /// </summary>
-        public int PointsRight { get; set; } = 0;
+        public byte PointsRight { get; set; } = 0;
 
         /// <summary>
         /// points int this turn for GREEN
         /// </summary>
-        public int PointsLeft { get; set; } = 0;
+        public byte PointsLeft { get; set; } = 0;
     }
 }

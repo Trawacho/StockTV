@@ -11,7 +11,7 @@ namespace StockTV.Classes
         /// Constructor
         /// </summary>
         /// <param name="gameNumber">Number of the new Game</param>
-        public Game(int gameNumber)
+        public Game(byte gameNumber)
         {
             Turns = new List<Turn>();
             GameNumber = gameNumber;
@@ -25,7 +25,7 @@ namespace StockTV.Classes
         /// <summary>
         /// Number of the Game
         /// </summary>
-        public int GameNumber { get; }
+        public byte GameNumber { get; }
 
         /// <summary>
         /// List of all Turns for this Game
@@ -42,7 +42,7 @@ namespace StockTV.Classes
         {
             get
             {
-                if (CountOfTurns < Settings.Instance.GameSettings.TurnsPerGame)
+                if (Turns.Count < Settings.Instance.GameSettings.TurnsPerGame)
                     return 0;
 
                 if (LeftPointsSum > RightPointsSum)
@@ -67,7 +67,7 @@ namespace StockTV.Classes
         {
             get
             {
-                if (CountOfTurns < Settings.Instance.GameSettings.TurnsPerGame)
+                if (Turns.Count < Settings.Instance.GameSettings.TurnsPerGame)
                     return 0;
 
                 if (RightPointsSum > LeftPointsSum)
@@ -84,17 +84,6 @@ namespace StockTV.Classes
                 }
             }
 
-        }
-
-        /// <summary>
-        /// the Count of Turns in this Game
-        /// </summary>
-        public int CountOfTurns
-        {
-            get
-            {
-                return Turns.Count;
-            }
         }
 
         /// <summary>
