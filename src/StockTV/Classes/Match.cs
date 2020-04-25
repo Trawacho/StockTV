@@ -28,7 +28,7 @@ namespace StockTV.Classes
         /// <summary>
         /// internal List of Games
         /// </summary>
-        private List<Game> games;
+        private readonly List<Game> games;
 
         #endregion
 
@@ -162,11 +162,10 @@ namespace StockTV.Classes
         {
             var values = new List<byte>();
             values.Add(Settings.Instance.CourtNumber);
-            values.Add(Convert.ToByte(Games.Count()));
+            values.Add(Convert.ToByte(Settings.Instance.GameSettings.TurnsPerGame));
 
             foreach (var g in Games)
             {
-                values.Add(Convert.ToByte(g.Turns.Count));
                 foreach (var t in g.Turns)
                 {
                     values.Add(t.PointsLeft);

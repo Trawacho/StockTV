@@ -1,70 +1,55 @@
 ﻿using System;
-using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace StockTV.Classes
 {
     public static class NetworkService
     {
-        
-        public static async Task SendMessage(Match match)
+
+        class UdpState
         {
-            (IPAddress address, IPAddress mask) ip_mask = GetIpAndMask();
-
-            IPAddress broadcast = GetBroadcastAddress(ip_mask.address, ip_mask.mask);
-            var ep = new IPEndPoint(broadcast, 4700);
-
-            var datagramm = match.Serialize(true); 
-            using(var sendClient = new UdpClient())
-            {
-                sendClient.ExclusiveAddressUse = false;
-                sendClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                int xx = await sendClient.SendAsync(datagramm, datagramm.Length, ep);
-            }
-        }
-
-        private static string MatchToMessage(Match match)
-        {
-            var message = string.Empty;
-            message += Settings.Instance.CourtNumber.ToString("X2");
-            foreach (var game in match.Games)
-            {
-                message += game.GameNumber.ToString("X2");
-                foreach (var t in game.Turns)
-                {
-                    message += t.PointsLeft.ToString("X2");
-                    message += t.PointsRight.ToString("X2");
-                }
-            }
-            return message;
-        }
-
-        public static byte[] Compress(byte[] data)
-        {
-            var output = new MemoryStream();
-            using (var dstream = new DeflateStream(output, CompressionLevel.Optimal))
-            {
-                dstream.Write(data, 0, data.Length);
-            }
-            return output.ToArray();
+            public UdpClient u;
+            public IPEndPoint e;
         }
 
 
-        public static IPAddress GetBroadcastAddress(IPAddress address, IPAddress mask)
+        public static void SendData(byte[] data)
         {
-            uint ipAddress = BitConverter.ToUInt32(address.GetAddressBytes(), 0);
-            uint ipMaskV4 = BitConverter.ToUInt32(mask.GetAddressBytes(), 0);
-            uint broadCastIpAddress = ipAddress | ~ipMaskV4;
+            UdpState state = new UdpState()
+            {
+                u = new UdpClient(),
+                e = new IPEndPoint(Settings.Instance.BroadcastAddress, Settings.Instance.BroadcastPort)
+            };
+
+            state.u.BeginSend(data, data.Length, state.e, new AsyncCallback(SendCallback), state);
+
+        }
+
+        static void SendCallback(IAsyncResult ar)
+        {
+            var state = (UdpState)ar.AsyncState;
+            state.u.EndSend(ar);
+        }
+
+        public static IPAddress GetBroadcastAddress()
+        {
+            (IPAddress a, IPAddress m) = GetIPAddressAndSubnetMask();
+            return GetBroadcastAddress(a, m);
+        }
+
+        static IPAddress GetBroadcastAddress(IPAddress ipAddress, IPAddress subnetMask)
+        {
+            uint address = BitConverter.ToUInt32(ipAddress.GetAddressBytes(), 0);
+            uint mask = BitConverter.ToUInt32(subnetMask.GetAddressBytes(), 0);
+            uint broadCastIpAddress = address | ~mask;
 
             return new IPAddress(BitConverter.GetBytes(broadCastIpAddress));
         }
 
 
-        public static (IPAddress address, IPAddress mask) GetIpAndMask()
+        static (IPAddress address, IPAddress mask) GetIPAddressAndSubnetMask()
         {
             IPAddress a = default;
             IPAddress m = default;
@@ -96,7 +81,7 @@ namespace StockTV.Classes
             return (a, m);
         }
 
-
-
     }
+
+
 }

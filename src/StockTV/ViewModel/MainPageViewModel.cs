@@ -38,13 +38,16 @@ namespace StockTV.ViewModel
 
         private sbyte _inputValue;
 
-        private Match Match;
+        private readonly Match Match;
 
         #endregion
 
 
         #region Constructor
 
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
         public MainPageViewModel()
         {
             Match = new Match();
@@ -56,7 +59,7 @@ namespace StockTV.ViewModel
 
         #region Public Function
 
-        public async Task GetScanCode(uint ScanCode)
+        public void GetScanCode(uint ScanCode)
         {
 
             /*
@@ -85,8 +88,9 @@ namespace StockTV.ViewModel
             switch (ScanCode)
             {
                 case 69:    // NumLock
-
                 case 83:    // ,
+                    break;
+
                 case 28:    // Enter
                     ShowSettingsPage();
                     break;
@@ -157,10 +161,8 @@ namespace StockTV.ViewModel
 
             RaiseAllPropertysChanged();
 
-            if(Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier)
-            {
-                await NetworkService.SendMessage(Match);
-            }
+            if (Settings.Instance.IsBroadcasting)
+                NetworkService.SendData(Match.Serialize(true));
 
         }
 
@@ -187,7 +189,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Match.CurrentGame.GameNumber == 1 && 
+                if (Match.CurrentGame.GameNumber == 1 &&
                     Match.CurrentGame.Turns.Count == 0)
                 {
                     return "Spielstand";
@@ -291,7 +293,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return  _inputValue == -1 ? string.Empty : _inputValue.ToString();
+                return _inputValue == -1 ? string.Empty : _inputValue.ToString();
             }
         }
 
@@ -341,11 +343,15 @@ namespace StockTV.ViewModel
 
         private void AddInput(sbyte value)
         {
-            _inputValue = _inputValue < 0 
-                        ? value 
-                        : Convert.ToSByte((_inputValue * 10) + value);
-
-            if (_inputValue > Settings.Instance.GameSettings.PointsPerTurn)
+            if (_inputValue < 0)
+            {
+                _inputValue = value;
+            }
+            else if ((_inputValue * 10) + value < Settings.Instance.GameSettings.PointsPerTurn)
+            {
+                _inputValue = Convert.ToSByte((_inputValue * 10) + value);
+            }
+            else
             {
                 _inputValue = -1;
             }
@@ -356,12 +362,12 @@ namespace StockTV.ViewModel
             if (Match.CanSettingsShow)
             {
                 Reset(true);
-                Frame rootFrame = Window.Current.Content as Frame;
+                var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }
         }
 
         #endregion
-       
+
     }
 }

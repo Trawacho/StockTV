@@ -41,16 +41,22 @@ namespace StockTV.ViewModel
         #endregion
 
 
+        /// <summary>
+        /// all different settings possible to activate for editing
+        /// </summary>
         public enum ActiveSettings
         {
             ColorScheme = 0,
             GameMous = 1,
             MaxPointsPerTurn = 2,
             MaxCountOfTurnsPerGame = 3,
-            CourtNumber = 4
+            CourtNumber = 4,
+            Networking = 5
         }
 
-
+        /// <summary>
+        /// Actual Setting to edit
+        /// </summary>
         private ActiveSettings ActiveSetting;
 
 
@@ -82,20 +88,20 @@ namespace StockTV.ViewModel
 
             switch (ScanCode)
             {
-                case 28:
+                case 28:    //Enter
                     Frame rootFrame = Window.Current.Content as Frame;
                     rootFrame.Navigate(typeof(MainPage));
                     break;
-                case 72:
+                case 72:    //8 (up)
                     GoToPreviousSettings();
                     break;
-                case 80:
+                case 80:    //2 (down)
                     GoToNextSetting();
                     break;
-                case 75:
+                case 75:    //4 (left)
                     DecreaseSetting();
                     break;
-                case 77:
+                case 77:    //6 (right)
                     IncreaseSetting();
                     break;
                 default:
@@ -105,7 +111,6 @@ namespace StockTV.ViewModel
             RaiseAllPropertiesChanged();
 
         }
-
 
         public void GoToNextSetting()
         {
@@ -143,6 +148,9 @@ namespace StockTV.ViewModel
                 case ActiveSettings.CourtNumber:
                     Settings.Instance.CourtNumberChange();
                     break;
+                case ActiveSettings.Networking:
+                    Settings.Instance.IsBroadcastingChange();
+                    break;
                 default:
                     break;
             }
@@ -167,6 +175,9 @@ namespace StockTV.ViewModel
                 case ActiveSettings.CourtNumber:
                     Settings.Instance.CourtNumberChange(false);
                     break;
+                case ActiveSettings.Networking:
+                    Settings.Instance.IsBroadcastingChange();
+                    break;
                 default:
                     break;
             }
@@ -176,7 +187,6 @@ namespace StockTV.ViewModel
         #endregion
 
         #region Properties
-
 
         public bool IsColorSchemeActive
         {
@@ -211,7 +221,6 @@ namespace StockTV.ViewModel
             }
         }
 
-
         public bool IsCourtNumberActive
         {
             get
@@ -220,6 +229,13 @@ namespace StockTV.ViewModel
             }
         }
 
+        public bool IsNetworkingActive
+        {
+            get
+            {
+                return ActiveSetting == ActiveSettings.Networking;
+            }
+        }
 
         public string ColorSchemeValue
         {
@@ -253,11 +269,27 @@ namespace StockTV.ViewModel
             }
         }
 
-        public string CourtNumber
+        public string CourtNumberValue
         {
             get
             {
                 return Settings.Instance.CourtNumber.ToString();
+            }
+        }
+
+        public string NetworkingValue
+        {
+            get
+            {
+                return Settings.Instance.IsBroadcasting ? "On" : "Off";
+            }
+        }
+
+        public string NetworkingDescription
+        {
+            get
+            {
+                return Settings.Instance.IsBroadcasting ? $"On: {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}" : "On / Off";
             }
         }
 
