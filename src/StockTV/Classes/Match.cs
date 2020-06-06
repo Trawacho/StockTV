@@ -158,12 +158,20 @@ namespace StockTV.Classes
         }
 
 
-        public byte[] Serialize(bool compressed = false)
+        public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
         {
             var values = new List<byte>();
-            values.Add(Settings.Instance.CourtNumber);
+
+            //First byte is CourtNumber
+            if (courtNumber == 0)
+                courtNumber = Settings.Instance.CourtNumber;
+            
+            values.Add(courtNumber);
+            
+            //Second byte is Number of Turns per Game
             values.Add(Convert.ToByte(Settings.Instance.GameSettings.TurnsPerGame));
 
+            //Add for each turn in each Game the value of the left and then the value of the right
             foreach (var g in Games)
             {
                 foreach (var t in g.Turns)
@@ -173,6 +181,7 @@ namespace StockTV.Classes
                 }
             }
 
+            //Convert the list of values to an array
             var data = values.ToArray();
 
             if (!compressed)
