@@ -47,11 +47,12 @@ namespace StockTV.ViewModel
         public enum ActiveSettings
         {
             ColorScheme = 0,
-            GameMous = 1,
-            MaxPointsPerTurn = 2,
-            MaxCountOfTurnsPerGame = 3,
-            CourtNumber = 4,
-            Networking = 5
+            ColorSchemeRightToLeft = 1,
+            GameMous = 2,
+            MaxPointsPerTurn = 3,
+            MaxCountOfTurnsPerGame = 4,
+            CourtNumber = 5,
+            Networking = 6,
         }
 
         /// <summary>
@@ -136,6 +137,9 @@ namespace StockTV.ViewModel
                 case ActiveSettings.ColorScheme:
                     Settings.Instance.ColorScheme.ColorSchemeUp();
                     break;
+                case ActiveSettings.ColorSchemeRightToLeft:
+                    Settings.Instance.ColorScheme.RightToLeftUp();
+                    break;
                 case ActiveSettings.GameMous:
                     Settings.Instance.GameSettings.ModusChange();
                     break;
@@ -162,6 +166,9 @@ namespace StockTV.ViewModel
             {
                 case ActiveSettings.ColorScheme:
                     Settings.Instance.ColorScheme.ColorSchemeDown();
+                    break;
+                case ActiveSettings.ColorSchemeRightToLeft:
+                    Settings.Instance.ColorScheme.RightToLeftDown();
                     break;
                 case ActiveSettings.GameMous:
                     Settings.Instance.GameSettings.ModusChange(false);
@@ -193,6 +200,14 @@ namespace StockTV.ViewModel
             get
             {
                 return ActiveSetting == ActiveSettings.ColorScheme;
+            }
+        }
+
+        public bool IsColorSchemeRightToLeftActive
+        {
+            get
+            {
+                return ActiveSetting == ActiveSettings.ColorSchemeRightToLeft;
             }
         }
 
@@ -245,6 +260,16 @@ namespace StockTV.ViewModel
             }
         }
 
+        public string RightToLeftValue
+        {
+            get
+            {
+                return Settings.Instance.ColorScheme.RightToLeft
+                    ? "Links"
+                    : "Rechts";
+            }
+        }
+
         public string GameModusValue
         {
             get
@@ -289,7 +314,9 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.Instance.IsBroadcasting ? $"On: {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}" : "On / Off";
+                return Settings.Instance.IsBroadcasting 
+                    ? $"IP: {Settings.Instance.IPAddress} --> {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}" 
+                    : "On / Off";
             }
         }
 

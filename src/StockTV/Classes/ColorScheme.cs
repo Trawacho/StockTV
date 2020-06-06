@@ -44,9 +44,10 @@ namespace StockTV.Classes
         /// Default-Constructor
         /// </summary>
         /// <param name="scheme"></param>
-        public ColorScheme(Schemes scheme = Schemes.Normal)
+        public ColorScheme(Schemes scheme = Schemes.Normal, bool rightToLeft = true)
         {
             Scheme = scheme;
+            RightToLeft = rightToLeft;
         }
 
         #endregion
@@ -65,6 +66,14 @@ namespace StockTV.Classes
         }
 
         /// <summary>
+        /// Changes the current Direction
+        /// </summary>
+        private void SwitchRightToLeft()
+        {
+            RightToLeft = !RightToLeft;
+        }
+
+        /// <summary>
         /// Loads the ColorScheme from local settings
         /// </summary>
         /// <returns></returns>
@@ -72,8 +81,12 @@ namespace StockTV.Classes
         {
             var localSettings = ApplicationData.Current.LocalSettings;
 
-            var colorschema = localSettings.Values["ColorScheme"] as String;
-            return new ColorScheme(colorschema.ToEnum<ColorScheme.Schemes>());
+            var colorschema = localSettings.Values["ColorScheme"] as string;
+            var righttoleft = localSettings.Values["RightToLeft"] as string;
+            return new ColorScheme(
+                colorschema.ToEnum<ColorScheme.Schemes>(),
+                Convert.ToBoolean(righttoleft)
+                );
         }
 
 
@@ -89,6 +102,16 @@ namespace StockTV.Classes
         }
         #endregion
 
+        internal void RightToLeftUp()
+        {
+            SwitchRightToLeft();
+
+        }
+
+        internal void RightToLeftDown()
+        {
+            SwitchRightToLeft();
+        }
 
         #region Properties
 
@@ -115,6 +138,31 @@ namespace StockTV.Classes
                 localSettings.Values["ColorScheme"] = value.ToString();
             }
         }
+
+        private bool rightToLeft;
+
+        /// <summary>
+        /// RightToLeft Direction
+        /// </summary>
+        internal bool RightToLeft
+        {
+            get
+            {
+                return rightToLeft;
+            }
+
+            set
+            {
+                if (rightToLeft == value)
+                    return;
+                rightToLeft = value;
+                NotifyPropertyChangedAllProperties();
+
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["RightToLeft"] = value.ToString();
+            }
+        }
+
         #endregion
 
 
@@ -129,10 +177,9 @@ namespace StockTV.Classes
             {
                 switch (Scheme)
                 {
-                    case Schemes.Normal:
-                        return new SolidColorBrush(Colors.Black);
                     case Schemes.Dark:
                         return new SolidColorBrush(Colors.LightGray);
+                    case Schemes.Normal:
                     default:
                         return new SolidColorBrush(Colors.Black);
                 }
@@ -149,10 +196,9 @@ namespace StockTV.Classes
             {
                 switch (Scheme)
                 {
-                    case Schemes.Normal:
-                        return new SolidColorBrush(Colors.White);
                     case Schemes.Dark:
                         return new SolidColorBrush(Colors.Black);
+                    case Schemes.Normal:
                     default:
                         return new SolidColorBrush(Colors.White);
                 }
@@ -168,12 +214,17 @@ namespace StockTV.Classes
             {
                 switch (Scheme)
                 {
-                    case Schemes.Normal:
-                        return new SolidColorBrush(Colors.Red);
+
                     case Schemes.Dark:
-                        return new SolidColorBrush(Colors.Red);
+                        return RightToLeft
+                            ? new SolidColorBrush(Colors.Red)
+                            : new SolidColorBrush(Colors.YellowGreen);
+
+                    case Schemes.Normal:
                     default:
-                        return new SolidColorBrush(Colors.Red);
+                        return RightToLeft
+                            ? new SolidColorBrush(Colors.Red)
+                            : new SolidColorBrush(Colors.Green);
                 }
             }
         }
@@ -187,17 +238,22 @@ namespace StockTV.Classes
             {
                 switch (Scheme)
                 {
-                    case Schemes.Normal:
-                        return new SolidColorBrush(Colors.Green);
+
                     case Schemes.Dark:
-                        return new SolidColorBrush(Colors.YellowGreen);
+                        return RightToLeft
+                            ? new SolidColorBrush(Colors.YellowGreen)
+                            : new SolidColorBrush(Colors.Red);
+
+                    case Schemes.Normal:
                     default:
-                        return new SolidColorBrush(Colors.Green);
+                        return RightToLeft
+                            ? new SolidColorBrush(Colors.Green)
+                            : new SolidColorBrush(Colors.Red);
                 }
             }
         }
 
-       
+
 
         #endregion
 

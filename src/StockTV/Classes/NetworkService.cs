@@ -38,6 +38,13 @@ namespace StockTV.Classes
             (IPAddress a, IPAddress m) = GetIPAddressAndSubnetMask();
             return GetBroadcastAddress(a, m);
         }
+       
+        public static (IPAddress address, IPAddress mask, IPAddress broadcast) GetIPAddresses()
+        {
+            (IPAddress address, IPAddress mask) = GetIPAddressAndSubnetMask();
+            var broadcast = GetBroadcastAddress(address, mask);
+            return (address, mask, broadcast);
+        }
 
         static IPAddress GetBroadcastAddress(IPAddress ipAddress, IPAddress subnetMask)
         {

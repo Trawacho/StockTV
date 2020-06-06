@@ -21,7 +21,7 @@
     </Page.Resources>
 
     <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
-        
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
@@ -30,6 +30,7 @@
 
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
@@ -54,7 +55,7 @@
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="0"/>
-        
+
         <TextBlock Grid.Row="0"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
@@ -69,6 +70,37 @@
                    VerticalAlignment="Center"/>
         <!--#endregion-->
 
+        <!--#region ColorScheme RightToLeft-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsColorSchemeRightToLeftActive,
+                                Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" Grid.Row="1"/>
+
+        <TextBlock Text="nächste Bahn:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="1"/>
+
+        <TextBlock Grid.Row="1"
+                   Grid.Column="2"
+                   HorizontalAlignment="Center"
+                   Text="{Binding Path=RightToLeftValue}"
+                   Margin="20"/>
+
+        <TextBlock Text="Links oder Rechts" 
+                   Grid.Row="1" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+
+        <!--#endregion-->
+
+
         <!--#region GameModus -->
         <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsGameModusActive,
@@ -76,22 +108,22 @@
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    Margin="20"
-                   Grid.Column="0" Grid.Row="1"/>
-        
+                   Grid.Column="0" Grid.Row="2"/>
+
         <TextBlock Text="Spielmodus:" 
                    HorizontalAlignment="Right"
                    Margin="20"  
                    Grid.Column="1" 
-                   Grid.Row="1"/>
-        
-        <TextBlock Grid.Row="1"
+                   Grid.Row="2"/>
+
+        <TextBlock Grid.Row="2"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=GameModusValue}"
                    Margin="20"/>
-        
+
         <TextBlock Text="Training, BestOf, Turnier" 
-                   Grid.Row="1" 
+                   Grid.Row="2" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -105,22 +137,22 @@
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
-                   Grid.Row="2"/>
-        
+                   Grid.Row="3"/>
+
         <TextBlock Text="Max Punkte pro Kehre:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
-                   Grid.Row="2"/>
-        
-        <TextBlock Grid.Row="2"
+                   Grid.Row="3"/>
+
+        <TextBlock Grid.Row="3"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=PointsPerTurnValue}"
                    Margin="20"/>
-        
+
         <TextBlock Text="15 bis 99 (30)" 
-                   Grid.Row="2" 
+                   Grid.Row="3" 
                    Grid.Column="3"
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -134,22 +166,22 @@
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
-                   Grid.Row="3"/>
-        
+                   Grid.Row="4"/>
+
         <TextBlock Text="Max Kehren pro Spiel:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
-                   Grid.Row="3"/>
-        
-        <TextBlock Grid.Row="3"
+                   Grid.Row="4"/>
+
+        <TextBlock Grid.Row="4"
                    Grid.Column="2"
                    Text="{Binding Path=TurnsPerGameValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
-        
+
         <TextBlock Text="4 bis 99 (6 oder 30)" 
-                   Grid.Row="3" 
+                   Grid.Row="4" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -163,22 +195,22 @@
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
-                   Grid.Row="4"/>
-        
+                   Grid.Row="5"/>
+
         <TextBlock Text="Bahnnummer:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
-                   Grid.Row="4"/>
-        
-        <TextBlock Grid.Row="4"
+                   Grid.Row="5"/>
+
+        <TextBlock Grid.Row="5"
                    Grid.Column="2"
                    Text="{Binding Path=CourtNumberValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
-        
-        <TextBlock Text="Nummer der Bahn 1 bis 99" 
-                   Grid.Row="4" 
+
+        <TextBlock Text="1 bis 99" 
+                   Grid.Row="5" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -192,22 +224,22 @@
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
-                   Grid.Row="5"/>
+                   Grid.Row="6"/>
 
         <TextBlock Text="Networking:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
-                   Grid.Row="5"/>
+                   Grid.Row="6"/>
 
-        <TextBlock Grid.Row="5"
+        <TextBlock Grid.Row="6"
                    Grid.Column="2"
                    Text="{Binding Path=NetworkingValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
         <TextBlock Text="{Binding Path=NetworkingDescription}"
-                   Grid.Row="5" 
+                   Grid.Row="6" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -215,12 +247,12 @@
         <!--#endregion-->
 
         <!--#region Misc at the buttom -->
-        <TextBox Grid.Row="7" Grid.Column="3" Background="Transparent" 
+        <TextBox Grid.Row="8" Grid.Column="3" Background="Transparent" 
                  BorderThickness="0"
                  Text="{Binding Path=xVal}"
                  IsReadOnly="True"/>
 
-        <TextBlock Grid.Row="7"
+        <TextBlock Grid.Row="8"
                    Grid.Column="0"
                    Grid.ColumnSpan="4"
                    Margin="20"

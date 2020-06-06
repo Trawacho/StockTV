@@ -119,7 +119,9 @@ namespace StockTV.Classes
 
                 if (value)
                 {
-                    BroadcastAddress = NetworkService.GetBroadcastAddress();
+                    var (address, mask, broadcast) = NetworkService.GetIPAddresses();
+                    BroadcastAddress = broadcast;
+                    IPAddress = address;
                 }
             }
         }
@@ -128,6 +130,7 @@ namespace StockTV.Classes
         /// Broadcast IP-Address
         /// </summary>
         public IPAddress BroadcastAddress { get; private set; }
+        public IPAddress IPAddress { get; private set; }
 
         const int broadcastPort = 4711;
 

@@ -192,16 +192,17 @@ namespace StockTV.ViewModel
                 if (Match.CurrentGame.GameNumber == 1 &&
                     Match.CurrentGame.Turns.Count == 0)
                 {
-                    return "Spielstand";
+                    return $"Bahn: {Settings.Instance.CourtNumber}";
                 }
 
                 switch (Settings.Instance.GameSettings.GameModus)
                 {
                     case GameSettings.GameModis.Training:
-                        return $"Spielstand nach {Match.CurrentGame.Turns.Count} Kehren";
+                        return $"Bahn: {Settings.Instance.CourtNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
                     case GameSettings.GameModis.BestOf:
-                    case GameSettings.GameModis.Turnier:
                         return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
+                    case GameSettings.GameModis.Turnier:
+                        return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
                     default:
                         return "unknown Status";
                 }
