@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace StockTV.Classes
 {
@@ -90,5 +93,58 @@ namespace StockTV.Classes
 
     }
 
+    class NetworkSimulationService
+    {
+        static Random rand = new Random();
+        public static void Simulate()
+        {
+            const int numberOfMatches = 9;
+            const int numberOfCourts = 4;
+            const int numberOfTurns = 6;
+            Settings.Instance.IsBroadcasting = true;
 
+            var matches = new List<Match>();
+
+            while (true)
+            {
+                matches.Clear();
+                for (int b = 0; b < numberOfCourts; b++)
+                {
+                    matches.Add(new Match());
+                }
+
+                Parallel.ForEach(matches, (m) =>
+                {
+                    for (int i = 0; i < numberOfMatches; i++) // 9 Spiele
+                    {
+                        for (int k = 0; k < numberOfTurns; k++) // 6 Kehren pro Spiel
+                        {
+                            Turn t = new Turn();
+                            if (rand.Next(2) == 1)
+                            {
+                                t.PointsLeft = Convert.ToByte(rand.Next(2, 9));
+                            }
+                            else
+                            {
+                                t.PointsRight = Convert.ToByte(rand.Next(2, 9));
+                            }
+
+                            m.AddTurn(t);
+                            NetworkService.SendData(m.Serialize(true,
+                                                            Convert.ToByte(matches.IndexOf(m) + 1)));
+                            Thread.Sleep(2000);
+                        }
+                        m.Reset();
+                    }
+                });
+
+
+                Thread.Sleep(10000);
+                byte[] cancelValue = new byte[1] { byte.MaxValue };
+                NetworkService.SendData(cancelValue);
+            }
+
+        }
+
+    }
 }
