@@ -23,7 +23,7 @@ Zur installation von StockTV am Raspi gibt es verschiedene Möglichkeiten
 
 * per GerätePortal
   * Im GerätePortal unter Apps - AppsManager kann die Software auch auf den Raspi geladen werden. Hierzu muss aber zuvor ein Zertifikat installiert werden. 
-  * Wählen Sie im GerätePortal "Install Certificate". Das Zertifikat finden Sie im Verzeichnis \src\StockTV\AppPackages\StockTV_..\*.cer . Mit einem Klick auf Install wird das Zertifikat dann installiert. 
+  * Wählen Sie im GerätePortal "Install Certificate". Das Zertifikat finden Sie im Verzeichnis \src\StockTV\AppPackages\StockTV_..\StockTV_*_arm.cer . Mit einem Klick auf Install wird das Zertifikat dann installiert. 
   * Anschließend "Local Storage" wählen um die erforderlichen Pakete zu installieren. Dazu wählen sie die StockTV*.appxbundle Datei aus, aktiviern die CheckBox für "Allow me to select framework packages" und klicken auf Next. Dann für jede Datei im Ordner "AppPackages\StockTV_...\Dependencies\arm\*.appx" "Datei auswählen" klicken und die Dateien hinzufügen. 
   * Erst wenn alle Dateien in der Liste angezeigt werden auf "Install" klicken und die Pakte installieren. Nach kurzer Zeit wird in der unteren Liste die App "StockTV" zusätzlich angezeigt.
 	

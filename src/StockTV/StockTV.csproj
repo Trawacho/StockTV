@@ -24,7 +24,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>arm</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <PackageCertificateThumbprint>7DC7B4D0F27AF431A9DDA2DAA01D6B2E64F571EC</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>E8BE66E973748812D24DF0802BB20DB2F7E39B4F</PackageCertificateThumbprint>
     <PackageCertificateKeyFile />
     <AppxPackageSigningTimestampServerUrl>http://timestamp.globalsign.com/scripts/timstamp.dll</AppxPackageSigningTimestampServerUrl>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
