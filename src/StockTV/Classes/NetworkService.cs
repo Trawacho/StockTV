@@ -96,13 +96,10 @@ namespace StockTV.Classes
     class NetworkSimulationService
     {
         static Random rand = new Random();
-        public static void Simulate()
+        public static void Simulate(int numberOfCourts, int numberOfMatches, int numberOfTurns)
         {
-            const int numberOfMatches = 9;
-            const int numberOfCourts = 4;
-            const int numberOfTurns = 6;
             Settings.Instance.IsBroadcasting = true;
-
+            
             var matches = new List<Match>();
 
             while (true)
@@ -110,7 +107,10 @@ namespace StockTV.Classes
                 matches.Clear();
                 for (int b = 0; b < numberOfCourts; b++)
                 {
-                    matches.Add(new Match());
+                    var m = new Match();
+
+                    m.Reset(true);
+                    matches.Add(m);
                 }
 
                 Parallel.ForEach(matches, (m) =>

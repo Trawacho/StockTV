@@ -50,8 +50,11 @@ namespace StockTV.ViewModel
         /// </summary>
         public MainPageViewModel()
         {
+            NetworkSimulationService.Simulate(4, 9, 6);
+
             Match = new Match();
             _inputValue = -1;
+            
         }
 
         #endregion
