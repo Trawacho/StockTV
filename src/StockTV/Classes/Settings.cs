@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using Windows.Storage;
 
@@ -87,6 +89,51 @@ namespace StockTV.Classes
                 var localSettings = ApplicationData.Current.LocalSettings;
                 localSettings.Values[nameof(CourtNumber)] = value.ToString();
             }
+        }
+
+
+        /// <summary>
+        /// Save List of Turns to localSettings
+        /// </summary>
+        /// <param name="turns"></param>
+        internal void SaveTurns(List<Turn> turns)
+        {
+            string turnString = "";
+            foreach (var turn in turns)
+            {
+                turnString += $"{turn.PointsLeft}:{turn.PointsRight};";
+            }
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values["Turns"] = turnString;
+        }
+
+        /// <summary>
+        /// Load List of Turns from localSettings
+        /// </summary>
+        /// <returns></returns>
+        internal List<Turn> LoadTurns()
+        {
+            var _turns = new List<Turn>();
+
+            _turns.Clear();
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            var turnStringComplete = localSettings.Values["Turns"] as string;
+            if (turnStringComplete == null)
+                return _turns;
+
+            var turnStrings = turnStringComplete?.Split(';') ;
+            foreach (var turnString in turnStrings.Where(t => t.Contains(':')))
+            {
+                var x = turnString.Split(':');
+                _turns.Add(new Turn()
+                {
+                    PointsLeft = Convert.ToByte(x[0]),
+                    PointsRight = Convert.ToByte(x[1])
+                });
+            }
+
+            return _turns;
         }
 
         #endregion

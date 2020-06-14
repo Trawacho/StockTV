@@ -75,13 +75,13 @@ namespace StockTV.ViewModel
              * ScanCode: 71 7
              * ScanCode: 72 8
              * ScanCode: 73 9
-             * ScanCode: 53 /
-             * ScanCode: 55 *
-             * ScanCode: 74 -
-             * ScanCode: 78 +
+             * ScanCode: 53 /                   --> ROT
+             * ScanCode: 55 *                   --> GRÜN
+             * ScanCode: 74 -                   --> BLAU
+             * ScanCode: 78 +                   --> GELB
              * ScanCode: 28 Enter
              * ScanCode: 83 ,
-             * ScanCode: 14 BackSpace
+             * ScanCode: 14 BackSpace           --> ROT
              *
              */
 
@@ -95,20 +95,20 @@ namespace StockTV.ViewModel
                     ShowSettingsPage();
                     break;
 
-                case 55:    // *
-                    AddRight();
+                case 55:    // *                    --> GRÜN
+                    AddToGreen();
                     break;
 
-                case 74:    // -
+                case 74:    // -                    --> BLAU
                     DeleteLastTurn();
                     break;
 
-                case 53:    // /
+                case 53:    // /                    --> ROT
                 case 14:    // BackSpace
-                    AddLeft();
+                    AddToRed();
                     break;
 
-                case 78:    // +
+                case 78:    // +                    --> GELB
                     Reset();
                     break;
 
@@ -161,9 +161,11 @@ namespace StockTV.ViewModel
 
             RaiseAllPropertysChanged();
 
+            // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
+            {
                 NetworkService.SendData(Match.Serialize(true));
-
+            }
         }
 
         #endregion
@@ -315,29 +317,45 @@ namespace StockTV.ViewModel
             _inputValue = -1;
         }
 
-        private void AddLeft()
+        private void AddToRed()
         {
             if (_inputValue == -1)
                 return;
 
-            this.Match.AddTurn(new Turn()
+            var turn = new Turn();
+
+            if (!Settings.Instance.ColorScheme.RightToLeft)
             {
-                PointsLeft = (byte)_inputValue
-            });
+                turn.PointsRight = Convert.ToByte(_inputValue);
+            }
+            else
+            {
+                turn.PointsLeft = Convert.ToByte(_inputValue);
+            }
+
+            this.Match.AddTurn(turn);
 
             _inputValue = -1;
         }
 
-        private void AddRight()
+        private void AddToGreen()
         {
             if (_inputValue == -1)
                 return;
 
+            var turn = new Turn();
 
-            this.Match.AddTurn(new Turn()
+            if (Settings.Instance.ColorScheme.RightToLeft)
             {
-                PointsRight = Convert.ToByte(_inputValue)
-            });
+                turn.PointsRight = Convert.ToByte(_inputValue);
+            }
+            else
+            {
+                turn.PointsLeft = Convert.ToByte(_inputValue);
+            }
+
+            this.Match.AddTurn(turn);
+
 
             _inputValue = -1;
         }
