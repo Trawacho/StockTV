@@ -18,6 +18,8 @@ namespace StockTV.Classes
         {
             games = new List<Game>();
             games.Add(new Game(1));
+
+            LoadTurnsFromLocalSettings();
         }
 
         #endregion
@@ -108,6 +110,7 @@ namespace StockTV.Classes
             if (Settings.Instance.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
             {
                 CurrentGame.Turns.Add(turn);
+                SaveTurnsToLocalSettings();
             }
         }
 
@@ -124,6 +127,8 @@ namespace StockTV.Classes
             {
                 CurrentGame.DeleteLastTurn();
             }
+
+            SaveTurnsToLocalSettings();
         }
 
         /// <summary>
@@ -135,6 +140,7 @@ namespace StockTV.Classes
             {
                 this.games.Clear();
                 this.games.Add(new Game(1));
+                SaveTurnsToLocalSettings();
                 return;
             }
 
@@ -146,39 +152,47 @@ namespace StockTV.Classes
                 {
                     games.Add(new Game(Convert.ToByte(games.Count + 1)));
                 }
-                else
-                {
-                    CurrentGame.Turns.Clear();
-                }
             }
             else
             {
                 CurrentGame.Turns.Clear();
             }
+
+            SaveTurnsToLocalSettings();
         }
 
 
         public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
         {
+            /* 
+             *  the byte[] should have as first byte the courtnumber, follow by the values of the Games
+             *  for each Game the first byte is the sum of values from the turns of the left
+             *  the next byte is the sum of values form the turns of the right
+             *  followed by the next game
+             *  
+             *  e.g.
+             *  01 09 03 15 05 03 00
+             *  Court 1
+             *  Game1: 9:3
+             *  Game2: 15:5
+             *  Game3: 3:0
+             *  
+             */
+
+
             var values = new List<byte>();
 
             //First byte is CourtNumber
             if (courtNumber == 0)
                 courtNumber = Settings.Instance.CourtNumber;
-            
-            values.Add(courtNumber);
-            
-            //Second byte is Number of Turns per Game
-            values.Add(Convert.ToByte(Settings.Instance.GameSettings.TurnsPerGame));
 
-            //Add for each turn in each Game the value of the left and then the value of the right
+            values.Add(courtNumber);
+
+            //Add for each Game the sum of the turn-value for left and right
             foreach (var g in Games)
             {
-                foreach (var t in g.Turns)
-                {
-                    values.Add(t.PointsLeft);
-                    values.Add(t.PointsRight);
-                }
+                values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
+                values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
             }
 
             //Convert the list of values to an array
@@ -193,6 +207,39 @@ namespace StockTV.Classes
                 datastream.Write(data, 0, data.Length);
             }
             return output.ToArray();
+        }
+
+        /// <summary>
+        /// Save all turns as long as <see cref="GameSettings.GameModus"/> isn´t <see cref="GameSettings.GameModis.Training"/>
+        /// </summary>
+        internal void SaveTurnsToLocalSettings()
+        {
+            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Training)
+                return;
+
+            var turns = new List<Turn>();
+
+            foreach (var g in Games)
+            {
+                foreach (var t in g.Turns)
+                {
+                    turns.Add(t);
+                }
+            }
+            Settings.Instance.SaveTurns(turns);
+        }
+
+        private void LoadTurnsFromLocalSettings()
+        {
+            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Training)
+                return;
+
+            foreach (var t in Settings.Instance.LoadTurns())
+            {
+                this.AddTurn(t);
+                this.Reset();
+            }
+
         }
         #endregion
 

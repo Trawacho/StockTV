@@ -6,3 +6,5 @@
 /src/StockTV/obj
 /src/StockTV/bin
 /src/StockTV/StockTV.csproj.user
+/StockTV/.vs
+/.vs
