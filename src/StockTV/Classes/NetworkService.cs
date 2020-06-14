@@ -136,6 +136,9 @@ namespace StockTV.Classes
                         }
                         m.Reset();
                     }
+                    //Send the next new Game with the zero turn to commit the last game
+                    NetworkService.SendData(m.Serialize(true,
+                                                            Convert.ToByte(matches.IndexOf(m) + 1)));
                 });
 
 
