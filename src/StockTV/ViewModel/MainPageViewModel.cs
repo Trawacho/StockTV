@@ -75,13 +75,13 @@ namespace StockTV.ViewModel
              * ScanCode: 71 7
              * ScanCode: 72 8
              * ScanCode: 73 9
-             * ScanCode: 53 /
-             * ScanCode: 55 *
-             * ScanCode: 74 -
-             * ScanCode: 78 +
+             * ScanCode: 53 /                   --> ROT
+             * ScanCode: 55 *                   --> GRÜN
+             * ScanCode: 74 -                   --> BLAU
+             * ScanCode: 78 +                   --> GELB
              * ScanCode: 28 Enter
              * ScanCode: 83 ,
-             * ScanCode: 14 BackSpace
+             * ScanCode: 14 BackSpace           --> ROT
              *
              */
 
@@ -105,7 +105,7 @@ namespace StockTV.ViewModel
 
                 case 53:    // /                    --> ROT
                 case 14:    // BackSpace
-                    AddLeft();
+                    AddToRed();
                     break;
 
                 case 78:    // +                    --> GELB
@@ -161,9 +161,11 @@ namespace StockTV.ViewModel
 
             RaiseAllPropertysChanged();
 
+            // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
+            {
                 NetworkService.SendData(Match.Serialize(true));
-
+            }
         }
 
         #endregion
@@ -315,7 +317,7 @@ namespace StockTV.ViewModel
             _inputValue = -1;
         }
 
-        private void AddLeft()
+        private void AddToRed()
         {
             if (_inputValue == -1)
                 return;
