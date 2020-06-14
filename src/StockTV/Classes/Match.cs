@@ -146,10 +146,6 @@ namespace StockTV.Classes
                 {
                     games.Add(new Game(Convert.ToByte(games.Count + 1)));
                 }
-                else
-                {
-                    CurrentGame.Turns.Clear();
-                }
             }
             else
             {
