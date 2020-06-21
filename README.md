@@ -12,7 +12,8 @@ Spielstand nach jeder Kehre im Stocksport Manschaftsspiel auf einem PublicTV liv
 Es gibt wegen der Entfernung immer wieder Probleme mit Tastaturen. Diese funken mit Klasse 2 des Bluetooth Standards der nur mit 10m Entfernung spezifiziert ist. Damit man den Raspi in die Mitte der Spielfläche montieren kann, wird ein längeres HDMI-Kabel, evtl. sogar mit Verstärker benötigt. Die Reichweite der Tastaturen zum Raspi ist damit auf beiden Seiten etwa < 20m und sollte störungsfreier funktionieren.
  - HDMI-Kabel: https://www.amazon.de/gp/product/B0728GMRHH/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1
  - HDMI-Verstärker: https://www.amazon.de/gp/product/B071WX56QF/ref=ppx_yo_dt_b_asin_title_o00_s01?ie=UTF8&psc=1
-
+#### USB-Verlängerung
+Eine weitere Möglichkeit besteht darin, den Raspi relativ nah an den TV zu moniteren. Der Abstand zu einer der beiden Tastaturen sollte dann unter 10m sein. Mit einer aktiven USB-Verlägnerung von DeLock (Art-Nr. 30m Variante 83453) kann dann der zweite Funk-Empfänger weiter zur zweiten Tastatur gebracht werden und somit der Abstand wesentlich verringert werden.
   
 ### Erste Schritte:
   Nach dem Zusammenbau des Raspberry PI muss auf die SD-Karte WindowsIoT installiert werden.<br>
