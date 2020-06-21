@@ -7,66 +7,109 @@ namespace StockTV.Classes
 {
     public static class NetworkService
     {
-
         class UdpState
         {
-            public UdpClient u;
-            public IPEndPoint e;
+            public UdpClient udpclient;
+            public IPEndPoint endPoint;
         }
 
-
+        /// <summary>
+        /// Send data to Broadcast address
+        /// </summary>
+        /// <param name="data"></param>
         public static void SendData(byte[] data)
         {
             UdpState state = new UdpState()
             {
-                u = new UdpClient(),
-                e = new IPEndPoint(Settings.Instance.BroadcastAddress, Settings.Instance.BroadcastPort)
+                udpclient = new UdpClient(),
+                endPoint = new IPEndPoint(Settings.Instance.BroadcastAddress, Settings.Instance.BroadcastPort)
             };
 
-            state.u.BeginSend(data, data.Length, state.e, new AsyncCallback(SendCallback), state);
-
+            state.udpclient.BeginSend(data, data.Length, state.endPoint, new AsyncCallback(SendCallback), state);
         }
 
+        /// <summary>
+        /// callBack to do EndSend
+        /// </summary>
+        /// <param name="ar"></param>
         static void SendCallback(IAsyncResult ar)
         {
             var state = (UdpState)ar.AsyncState;
-            state.u.EndSend(ar);
+            try
+            {
+                state.udpclient.EndSend(ar);
+            }
+            catch (SocketException ex)
+            {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+#endif
+            }
         }
 
+        /// <summary>
+        /// Get Broadcast-Address from System. NULL value if an error occours
+        /// </summary>
+        /// <returns></returns>
         public static IPAddress GetBroadcastAddress()
         {
-            (IPAddress a, IPAddress m) = GetIPAddressAndSubnetMask();
-            return GetBroadcastAddress(a, m);
+            (IPAddress address, IPAddress mask) = GetIPAddressAndSubnetMask();
+            return GetBroadcastAddress(address, mask);
         }
-       
+
+        /// <summary>
+        /// Get IPAddress, SubnetMask and BroadCastAddress from System. NULL-Values if an error occours
+        /// </summary>
+        /// <returns></returns>
         public static (IPAddress address, IPAddress mask, IPAddress broadcast) GetIPAddresses()
         {
             (IPAddress address, IPAddress mask) = GetIPAddressAndSubnetMask();
-            var broadcast = GetBroadcastAddress(address, mask);
+            IPAddress broadcast = default;
+            broadcast = GetBroadcastAddress(address, mask);
             return (address, mask, broadcast);
         }
 
+        /// <summary>
+        /// Get the Broadcast-Address from given IP and Subnetmask. NULL-Values if an error occours
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <param name="subnetMask"></param>
+        /// <returns></returns>
         static IPAddress GetBroadcastAddress(IPAddress ipAddress, IPAddress subnetMask)
         {
-            uint address = BitConverter.ToUInt32(ipAddress.GetAddressBytes(), 0);
-            uint mask = BitConverter.ToUInt32(subnetMask.GetAddressBytes(), 0);
-            uint broadCastIpAddress = address | ~mask;
+            if (ipAddress == null ||
+                subnetMask == null)
+                return null;
 
-            return new IPAddress(BitConverter.GetBytes(broadCastIpAddress));
+            IPAddress broadcast = default;
+            try
+            {
+                uint address = BitConverter.ToUInt32(ipAddress.GetAddressBytes(), 0);
+                uint mask = BitConverter.ToUInt32(subnetMask.GetAddressBytes(), 0);
+                uint broadCastIpAddress = address | ~mask;
+                broadcast = new IPAddress(BitConverter.GetBytes(broadCastIpAddress));
+            }
+            catch { }
+
+
+            return broadcast;
         }
 
-
+        /// <summary>
+        /// Get IPAddress and subnetmask from System. NULL-Values if an error occours
+        /// </summary>
+        /// <returns></returns>
         static (IPAddress address, IPAddress mask) GetIPAddressAndSubnetMask()
         {
-            IPAddress a = default;
-            IPAddress m = default;
+            IPAddress _address = default;
+            IPAddress _mask = default;
             try
             {
                 using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
                 {
                     socket.Connect("10.0.0.1", 65530);
                     IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                    a = endPoint.Address;
+                    _address = endPoint.Address;
                 }
                 foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces())
                 {
@@ -74,9 +117,9 @@ namespace StockTV.Classes
                     {
                         if (unicastIPAddressInformation.Address.AddressFamily == AddressFamily.InterNetwork)
                         {
-                            if (a.Equals(unicastIPAddressInformation.Address))
+                            if (_address.Equals(unicastIPAddressInformation.Address))
                             {
-                                m = unicastIPAddressInformation.IPv4Mask;
+                                _mask = unicastIPAddressInformation.IPv4Mask;
                             }
                         }
                     }
@@ -85,7 +128,7 @@ namespace StockTV.Classes
             catch
             {
             }
-            return (a, m);
+            return (_address, _mask);
         }
 
     }

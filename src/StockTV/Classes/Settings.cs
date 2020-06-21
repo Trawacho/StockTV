@@ -169,6 +169,11 @@ namespace StockTV.Classes
                     var (address, mask, broadcast) = NetworkService.GetIPAddresses();
                     BroadcastAddress = broadcast;
                     IPAddress = address;
+
+                    if(address == null || broadcast == null)
+                    {
+                        isBroadcasting = false;
+                    }
                 }
             }
         }
