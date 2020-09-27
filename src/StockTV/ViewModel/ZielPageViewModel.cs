@@ -107,6 +107,7 @@ namespace StockTV.ViewModel
         public ZielPageViewModel()
         {
             this._inputValue = -1;
+            this._zielbewerb = new Zielbewerb();
         }
 
         #region Private Functions
