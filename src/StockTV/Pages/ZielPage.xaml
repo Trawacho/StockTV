@@ -15,19 +15,17 @@
 
     <Grid >
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.8*"/>
-            <RowDefinition Height="1.7*"/>
+            <RowDefinition Height="0.75*"/>
+            <RowDefinition Height="1.75*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Versuche -->
-        <Viewbox Margin="15,5,15,0"  Grid.ColumnSpan="2" Grid.Row="0"
+        <Viewbox Margin="15,5,15,0"  Grid.Column="0" Grid.Row="0"
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding   Path=VersucheText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
@@ -35,28 +33,28 @@
         </Viewbox>
         
         <!-- Gesamt Text-->
-        <Viewbox Margin="15,5,15,0"  Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="0"
+        <Viewbox Margin="15,5,15,0"  Grid.Column="1" Grid.Row="0"
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtText}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
         </Viewbox>
         
         <!-- GesatPunkte -->
-        <Viewbox Margin="0,5,15,0" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" 
+        <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.RightForeground}" />
         </Viewbox>
         
         <!--EingabeWert-->
-        <Viewbox  Margin="0,5,0,0"    Grid.Column="0"  Grid.ColumnSpan="2"  Grid.Row="1"
+        <Viewbox  Margin="0,5,0,0" Grid.Column="0" Grid.Row="1"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
         </Viewbox>
 
         <!--Werte der Disziplinen-->
-        <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4"
+        <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                  HorizontalAlignment="Stretch">
             <TextBlock Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}" 
                        Text="{Binding Path=VersuchsWerte, Mode=OneWay}"/>
