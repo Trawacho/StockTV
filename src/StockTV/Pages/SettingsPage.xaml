@@ -122,7 +122,7 @@
                    Text="{Binding Path=GameModusValue}"
                    Margin="20"/>
 
-        <TextBlock Text="Training, BestOf, Turnier" 
+        <TextBlock Text="Training, BestOf, Turnier, Ziel" 
                    Grid.Row="2" 
                    Grid.Column="3" 
                    Margin="30,20"
