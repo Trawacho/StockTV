@@ -128,6 +128,7 @@
     <Compile Include="Classes\StringExtension.cs" />
     <Compile Include="Classes\StructExtension.cs" />
     <Compile Include="Classes\Turn.cs" />
+    <Compile Include="Classes\Zielbewerb.cs" />
     <Compile Include="Converter\ActiveSettingToVisibilityConverter.cs" />
     <Compile Include="Converter\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converter\DoubleDivisionConverter.cs" />

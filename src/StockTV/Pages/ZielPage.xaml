@@ -43,7 +43,7 @@
         <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
-                       Foreground="{Binding Path=Settings.ColorScheme.RightForeground}" />
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}" />
         </Viewbox>
         
         <!--EingabeWert-->

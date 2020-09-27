@@ -31,10 +31,7 @@ namespace StockTV.ViewModel
         #endregion
 
         private sbyte _inputValue;
-        private readonly ConcurrentStack<byte> MassenVorne;
-        private readonly ConcurrentStack<byte> MassenHinten;
-        private readonly ConcurrentStack<byte> Schüsse;
-        private readonly ConcurrentStack<byte> Kombinieren;
+        private Zielbewerb _zielbewerb;
 
         #region Public READONLY Properties to display in View
 
@@ -65,7 +62,7 @@ namespace StockTV.ViewModel
         /// </summary>
         public string GesamtPunkteText
         {
-            get { return (SummeVon(MassenVorne) + SummeVon(Schüsse) + SummeVon(MassenHinten) + SummeVon(Kombinieren)).ToString(); }
+            get { return _zielbewerb.GesamtSumme.ToString(); }
         }
 
         /// <summary>
@@ -75,7 +72,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return $"{CountOfVersuche()}/24";
+                return $"{_zielbewerb.CountOfVersuche()}/24";
             }
         }
 
@@ -86,7 +83,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return $"{SummeVon(MassenVorne)} - {SummeVon(Schüsse)} - {SummeVon(MassenHinten)} - {SummeVon(Kombinieren)}";
+                return $"{_zielbewerb.MassenVorneSumme} - {_zielbewerb.SchüsseSumme} - {_zielbewerb.MassenHintenSumme} - {_zielbewerb.KombinierenSumme}";
             }
         }
 
@@ -110,11 +107,6 @@ namespace StockTV.ViewModel
         public ZielPageViewModel()
         {
             this._inputValue = -1;
-
-            this.MassenVorne = new ConcurrentStack<byte>();
-            this.MassenHinten = new ConcurrentStack<byte>();
-            this.Schüsse = new ConcurrentStack<byte>();
-            this.Kombinieren = new ConcurrentStack<byte>();
         }
 
         #region Private Functions
@@ -148,67 +140,18 @@ namespace StockTV.ViewModel
             if (_inputValue == -1)
                 return;
 
-            if (MassenVorne.Count() < 6)
-            {
-                MassenVorne.Push(Convert.ToByte(_inputValue));
-            }
-            else if (Schüsse.Count() < 6)
-            {
-                Schüsse.Push(Convert.ToByte(_inputValue));
-            }
-            else if (MassenHinten.Count() < 6)
-            {
-                MassenHinten.Push(Convert.ToByte(_inputValue));
-            }
-            else if (Kombinieren.Count() < 6)
-            {
-                Kombinieren.Push(Convert.ToByte(_inputValue));
-            }
+            _zielbewerb.AddValueToVersuche(_inputValue);
 
             _inputValue = -1;
         }
-
-        /// <summary>
-        /// Anzahl aller Versuche die bereits hinterlegt sind
-        /// </summary>
-        /// <returns></returns>
-        private int CountOfVersuche()
-        {
-            return MassenVorne.Count + Schüsse.Count + MassenHinten.Count + Kombinieren.Count;
-        }
-
-        private int SummeVon(ConcurrentStack<byte> stack)
-        {
-            int value = 0;
-            foreach (var v in stack)
-            {
-                value += Convert.ToInt32(v);
-            }
-            return value;
-        }
+      
 
         /// <summary>
         /// Denn letzten Versuche wieder löschen
         /// </summary>
         private void DeleteLastValue()
         {
-            if (Kombinieren.Count > 0)
-            {
-                Kombinieren.TryPop(out _);
-            }
-            else if (MassenHinten.Count > 0)
-            {
-                MassenHinten.TryPop(out _);
-            }
-            else if (Schüsse.Count > 0)
-            {
-                Schüsse.TryPop(out _);
-            }
-            else if (MassenVorne.Count > 0)
-            {
-                MassenVorne.TryPop(out _);
-            }
-
+            _zielbewerb.DeleteLastValue();
             _inputValue = -1;
         }
 
@@ -217,11 +160,7 @@ namespace StockTV.ViewModel
         /// </summary>
         private void Reset()
         {
-            MassenVorne.Clear();
-            MassenHinten.Clear();
-            Schüsse.Clear();
-            Kombinieren.Clear();
-
+            _zielbewerb.Reset();
             _inputValue = -1;
         }
 
@@ -230,8 +169,7 @@ namespace StockTV.ViewModel
         /// </summary>
         private void ShowSettingsPage()
         {
-            if (MassenVorne.Count() == 3 &&
-                SummeVon(MassenVorne) == 22)
+            if (_zielbewerb.IsSettingsInput())
             {
                 Reset();
                 var rootFrame = Window.Current.Content as Frame;
@@ -345,7 +283,7 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
             {
-                // NetworkService.SendData(Match.Serialize(true));
+                 NetworkService.SendData(_zielbewerb.Serialize(true));
             }
         }
 
