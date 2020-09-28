@@ -90,8 +90,7 @@ namespace StockTV.ViewModel
             switch (ScanCode)
             {
                 case 28:    //Enter
-                    Frame rootFrame = Window.Current.Content as Frame;
-                    rootFrame.Navigate(typeof(MainPage));
+                    ExitSettingPage();
                     break;
                 case 72:    //8 (up)
                     GoToPreviousSettings();
@@ -111,6 +110,16 @@ namespace StockTV.ViewModel
 
             RaiseAllPropertiesChanged();
 
+        }
+
+        private void ExitSettingPage()
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Ziel)
+                rootFrame.Navigate(typeof(ZielPage));
+            else
+                rootFrame.Navigate(typeof(MainPage));
         }
 
         public void GoToNextSetting()
@@ -314,8 +323,8 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.Instance.IsBroadcasting 
-                    ? $"IP: {Settings.Instance.IPAddress} --> {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}" 
+                return Settings.Instance.IsBroadcasting
+                    ? $"IP: {Settings.Instance.IPAddress} --> {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}"
                     : "On / Off";
             }
         }

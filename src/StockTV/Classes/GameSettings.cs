@@ -15,7 +15,8 @@ namespace StockTV.Classes
         {
             Training,
             BestOf,
-            Turnier
+            Turnier,
+            Ziel
         }
 
         #endregion
@@ -130,6 +131,10 @@ namespace StockTV.Classes
             var pointsperturn = localSettings.Values[nameof(PointsPerTurn)] as string;
 
             var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>());
+            //if(gamesettings.GameModus == GameModis.Ziel)
+            //{
+            //    gamesettings.GameModus = GameModis.Training;
+            //}
             gamesettings.TurnsPerGame = byte.Parse(turnspergame ?? "30");
             gamesettings.PointsPerTurn = byte.Parse(pointsperturn ?? "30");
 
