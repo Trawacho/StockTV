@@ -120,6 +120,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\ColorScheme.cs" />
+    <Compile Include="Classes\Debounce.cs" />
     <Compile Include="Classes\Game.cs" />
     <Compile Include="Classes\GameSettings.cs" />
     <Compile Include="Classes\Match.cs" />

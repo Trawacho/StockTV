@@ -61,6 +61,14 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
+            if (!(ScanCode == 74 && _inputValue == 0))
+            {
+                if (!Debounce.IsDebounceOk(ScanCode))
+                {
+                    return;
+                }
+            }
+
 
             /*
              * ScanCode of KeyPad
@@ -314,7 +322,9 @@ namespace StockTV.ViewModel
         private void DeleteLastTurn()
         {
             Match.DeleteLastTurn();
-            _inputValue = -1;
+
+            if (_inputValue != 0)
+                _inputValue = -1;
         }
 
         private void AddToRed()

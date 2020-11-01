@@ -145,7 +145,7 @@ namespace StockTV.ViewModel
 
             _inputValue = -1;
         }
-      
+
 
         /// <summary>
         /// Denn letzten Versuche wieder löschen
@@ -153,7 +153,8 @@ namespace StockTV.ViewModel
         private void DeleteLastValue()
         {
             _zielbewerb.DeleteLastValue();
-            _inputValue = -1;
+            if (_inputValue != 0)
+                _inputValue = -1;
         }
 
         /// <summary>
@@ -184,6 +185,13 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
+            if (!(ScanCode == 74 && _inputValue == 0))
+            {
+                if (!Debounce.IsDebounceOk(ScanCode))
+                {
+                    return;
+                }
+            }
 
             /*
              * ScanCode of KeyPad
@@ -284,7 +292,7 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
             {
-                 NetworkService.SendData(_zielbewerb.Serialize(true));
+                NetworkService.SendData(_zielbewerb.Serialize(true));
             }
         }
 
