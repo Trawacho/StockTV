@@ -32,6 +32,7 @@ namespace StockTV.ViewModel
 
         private sbyte _inputValue;
         private Zielbewerb _zielbewerb;
+        private byte settingsCounter;
 
         #region Public READONLY Properties to display in View
 
@@ -171,12 +172,20 @@ namespace StockTV.ViewModel
         /// </summary>
         private void ShowSettingsPage()
         {
-            if (_zielbewerb.IsSettingsInput())
+
+            if (settingsCounter == 5)
             {
-                Reset();
+                settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }
+
+            //if (_zielbewerb.IsSettingsInput())
+            //{
+            //    Reset();
+            //    var rootFrame = Window.Current.Content as Frame;
+            //    rootFrame.Navigate(typeof(Pages.SettingsPage));
+            //}
         }
 
         #endregion
@@ -185,12 +194,23 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
+            //Debouncing
             if (!(ScanCode == 74 && _inputValue == 0))
             {
                 if (!Debounce.IsDebounceOk(ScanCode))
                 {
                     return;
                 }
+            }
+
+            //Settings
+            if (_inputValue == 0 && ScanCode == 28)
+            {
+                settingsCounter++;
+            }
+            else
+            {
+                settingsCounter = 0;
             }
 
             /*
