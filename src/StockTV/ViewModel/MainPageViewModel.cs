@@ -40,6 +40,8 @@ namespace StockTV.ViewModel
 
         private readonly Match Match;
 
+        private byte settingsCounter;
+
         #endregion
 
 
@@ -64,6 +66,25 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
+            //Settings
+            if (_inputValue == 0 && ScanCode == 28)
+            {
+                settingsCounter++;
+            }
+            else
+            {
+                settingsCounter = 0;
+            }
+
+            //Debouncing 
+            if (!(ScanCode == 74 && _inputValue == 0))
+            {
+                if (!Debounce.IsDebounceOk(this, ScanCode))
+                {
+                    return;
+                }
+            }
+
 
             /*
              * ScanCode of KeyPad
@@ -317,7 +338,9 @@ namespace StockTV.ViewModel
         private void DeleteLastTurn()
         {
             Match.DeleteLastTurn();
-            _inputValue = -1;
+
+            if (_inputValue != 0)
+                _inputValue = -1;
         }
 
         private void AddToRed()
@@ -381,9 +404,9 @@ namespace StockTV.ViewModel
 
         private void ShowSettingsPage()
         {
-            if (Match.CanSettingsShow)
+            if(settingsCounter >= 5)
             {
-                Reset(true);
+                settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }

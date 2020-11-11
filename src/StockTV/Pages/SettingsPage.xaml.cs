@@ -1,19 +1,8 @@
-﻿using StockTV.Classes;
-using StockTV.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using StockTV.ViewModel;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -33,40 +22,44 @@ namespace StockTV.Pages
             this.InitializeComponent();
 
             InputPane.GetForCurrentView().Showing +=
-               (s, e) =>
-               {
-                   (s as InputPane).TryHide();
-                   System.Diagnostics.Debug.WriteLine("InputPane TryHide");
-               };
-
-            //Register Event
-            this.KeyDown += SettingsPage_KeyDown;
+               (s, e) => (s as InputPane).TryHide();
 
             //Set focus to MainPage after Loaded
             this.Loaded += (s, e) => (s as SettingsPage).Focus(FocusState.Programmatic);
         }
 
         /// <summary>
-        /// Remove Event from KeyDown before Page is unloaded
+        /// Register Event
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            Window.Current.CoreWindow.KeyDown += SettingsPage_KeyDown;
+        }
+
+
+        /// <summary>
+        /// Remove Event
         /// </summary>
         /// <param name="e"></param>
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            this.KeyDown -= SettingsPage_KeyDown;
+            Window.Current.CoreWindow.KeyDown -= SettingsPage_KeyDown;
             base.OnNavigatingFrom(e);
         }
 
         /// <summary>
-        /// Send ScnaCode to DataContext
+        /// Send ScanCode to DataContext
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SettingsPage_KeyDown(object sender, KeyRoutedEventArgs e)
+        private void SettingsPage_KeyDown(object sender, KeyEventArgs e)
         {
             ((SettingsPageViewModel)DataContext).SettingsPage_KeyDown(e.KeyStatus.ScanCode);
         }
 
-        
+
 
 
 

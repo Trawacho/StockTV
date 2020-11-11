@@ -253,8 +253,37 @@ namespace StockTV.Classes
             }
         }
 
+        public SolidColorBrush ZielSummeGesamtForeGround
+        {
+            get
+            {
+                switch (Scheme)
+                {
+                    case Schemes.Normal:
+                        return new SolidColorBrush(Colors.DarkMagenta);
 
+                    case Schemes.Dark:
+                    default:
+                        return new SolidColorBrush(Colors.Magenta);
+                }
+            }
+        }
 
+        public SolidColorBrush ZielSummeEinzelForeGround
+        {
+            get
+            {
+                switch (Scheme)
+                {
+                    case Schemes.Normal:
+                        return new SolidColorBrush(Colors.DarkCyan);
+                    
+                    case Schemes.Dark:
+                    default:
+                        return new SolidColorBrush(Colors.Cyan);
+                }
+            }
+        }
         #endregion
 
 

@@ -36,13 +36,7 @@ namespace StockTV.Classes
         private readonly ConcurrentStack<byte> MassenHinten;
         private readonly ConcurrentStack<byte> Schüsse;
         private readonly ConcurrentStack<byte> Kombinieren;
-
-
-        internal bool IsSettingsInput()
-        {
-            return MassenVorne.Count() == 3 &&
-                   MassenVorneSumme == 22;
-        }
+        
 
         internal void AddValueToVersuche(sbyte value)
         {

@@ -89,7 +89,7 @@ namespace StockTV.ViewModel
 
             switch (ScanCode)
             {
-                case 28:    //Enter
+                case 78:    //+ (gelbe Taste)
                     ExitSettingPage();
                     break;
                 case 72:    //8 (up)
@@ -109,7 +109,6 @@ namespace StockTV.ViewModel
             }
 
             RaiseAllPropertiesChanged();
-
         }
 
         private void ExitSettingPage()
@@ -120,6 +119,7 @@ namespace StockTV.ViewModel
                 rootFrame.Navigate(typeof(ZielPage));
             else
                 rootFrame.Navigate(typeof(MainPage));
+            
         }
 
         public void GoToNextSetting()
@@ -197,7 +197,6 @@ namespace StockTV.ViewModel
                 default:
                     break;
             }
-
         }
 
         #endregion
@@ -327,15 +326,6 @@ namespace StockTV.ViewModel
                     ? $"IP: {Settings.Instance.IPAddress} --> {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}"
                     : "On / Off";
             }
-        }
-
-        public string xVal
-        {
-            get
-            {
-                return string.Empty;
-            }
-            set { }
         }
 
         #endregion

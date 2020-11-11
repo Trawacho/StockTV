@@ -87,22 +87,6 @@ namespace StockTV.Classes
         }
 
         /// <summary>
-        /// True if the input is correct to Display the settings page
-        /// </summary>
-        public bool IsSettingsInput
-        {
-            get
-            {
-                if (Turns.Count != 3)
-                    return false;
-
-                return (Turns[0]?.PointsLeft == 4 &&
-                        Turns[1]?.PointsLeft == 7 &&
-                        Turns[2]?.PointsLeft == 11);
-            }
-        }
-
-        /// <summary>
         /// Sum of the LEFT Points of all Turns in this Game
         /// </summary>
         private int LeftPointsSum
