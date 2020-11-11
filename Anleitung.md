@@ -9,13 +9,14 @@ Zur leichteren Bedienung wird empfohlen die 4 wichtigen Systemtasten farbig zu m
 - \* --> grün
 - Bckspc --> rot (anstatt /)
 
-Es wird immer erst der entsprechende Wert eingegeben, dann die Farbtaste für die Mannschaft (rot oder grün). 
+Es wird immer erst der entsprechende Wert eingegeben, dann die Farbtaste für die Mannschaft (rot oder grün) gedrückt. 
 Mit der blauen Taste wird immer der letzte Wert gelöscht.
 Die gelbe Taste schließt ein Spiel ab
 
 ## Settings
 Damit man zu den Settings gelangt, muss in der Eingabe eine "0" stehen. Dann 5x die Enter-Taste drücken. Es erscheint die Settings-Seite.
 Die Navigation erfolgt mit den Tasten 8 und 2. Die Wert-Änderung mit 4 und 6. Verlassen werden die Settings mit der gelben Taste.
+
 * Farb-Schema: Hintergrund kann dunkel oder hell eingestellt werden
 * nächste Bahn: Berachtet man Bahn 1 in Spielrichtung so befindet sich die nächste Bahn links oder rechts. Dies hat eine Auswirkung auf die Farben grün und rot sowie dem Netzwerkmodus
 * Spielmodus: Training, BestOf, Turnier, Ziel
@@ -28,4 +29,12 @@ Die Navigation erfolgt mit den Tasten 8 und 2. Die Wert-Änderung mit 4 und 6. V
 * Bahnnummer: Auf welcher Bahn wird das System Eingesetzt. Wichtig bei der Netzwerkübertragung
 * Networking: Im Turniermodus und Zielmodus werden bei ON die Daten im Netzwerk zur Verfügung gestellt. Mit der Software StockMaster können die Daten empfangen und live ausgewertet werden.
 
+### Blaue Taste
+Mit der blauen Taste kann immer die letzte Eingabe gelöscht werden. Sollten viele Eingaben gelöscht werden (zum Beispiel nach einem Turnier), kann man die Eingabeverzögerung umgehen, in dem man eine "0" eingibt und dann die Blaue Taste nutzt
+
+### Eingabeverzögerung
+Um die Eingabe bedienerfreundlich zu gestalten, ist eine Eingabeverzögerung von ca. 1 Sekunde eingestellt. Das bedeutet dass die gleiche Taste nur einmal pro Sekunde vom System akzeptiert wird.
+
+### zu hoher Eingabewert
+In den Settings kann ein maximaler Wert pro Kehre festgelegt werden. Wenn dieser mit der Eingabe überschritten wird, wird die Eingabe automatisch wieder gelöscht
 
