@@ -17,6 +17,7 @@ namespace StockTV.Classes
             lastTick = DateTime.Now.Ticks;
             lastValue = val;
             return true;
+
         }
     }
 }
