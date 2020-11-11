@@ -31,7 +31,7 @@ namespace StockTV.ViewModel
         #endregion
 
         private sbyte _inputValue;
-        private Zielbewerb _zielbewerb;
+        private readonly Zielbewerb _zielbewerb;
         private byte settingsCounter;
 
         #region Public READONLY Properties to display in View
@@ -168,24 +168,16 @@ namespace StockTV.ViewModel
         }
 
         /// <summary>
-        /// Switch to SettingsPage if 3 Values with sum of 22 are inserted
+        /// Switch to SettingsPage
         /// </summary>
         private void ShowSettingsPage()
         {
-
-            if (settingsCounter == 5)
+            if (settingsCounter >= 5)
             {
                 settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }
-
-            //if (_zielbewerb.IsSettingsInput())
-            //{
-            //    Reset();
-            //    var rootFrame = Window.Current.Content as Frame;
-            //    rootFrame.Navigate(typeof(Pages.SettingsPage));
-            //}
         }
 
         #endregion
@@ -194,15 +186,6 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
-            //Debouncing
-            if (!(ScanCode == 74 && _inputValue == 0))
-            {
-                if (!Debounce.IsDebounceOk(ScanCode))
-                {
-                    return;
-                }
-            }
-
             //Settings
             if (_inputValue == 0 && ScanCode == 28)
             {
@@ -212,6 +195,18 @@ namespace StockTV.ViewModel
             {
                 settingsCounter = 0;
             }
+
+
+            //Debouncing
+            if (!(ScanCode == 74 && _inputValue == 0))
+            {
+                if (!Debounce.IsDebounceOk(this, ScanCode))
+                {
+                    return;
+                }
+            }
+
+            
 
             /*
              * ScanCode of KeyPad
@@ -264,43 +259,33 @@ namespace StockTV.ViewModel
                 #region Numbers 1 to 0
 
                 case 79:
-                    //MyWertung.InputText = "1";
                     AddInput(1);
                     break;
                 case 80:
-                    //MyWertung.InputText = "2";
                     AddInput(2);
                     break;
                 case 81:
-                    //MyWertung.InputText = "3";
                     AddInput(3);
                     break;
                 case 75:
-                    //MyWertung.InputText = "4";
                     AddInput(4);
                     break;
                 case 76:
-                    //MyWertung.InputText = "5";
                     AddInput(5);
                     break;
                 case 77:
-                    //MyWertung.InputText = "6";
                     AddInput(6);
                     break;
                 case 71:
-                    //MyWertung.InputText = "7";
                     AddInput(7);
                     break;
                 case 72:
-                    //MyWertung.InputText = "8";
                     AddInput(8);
                     break;
                 case 73:
-                    //MyWertung.InputText = "9";
                     AddInput(9);
                     break;
                 case 82:
-                    //MyWertung.InputText = "0";
                     AddInput(0);
                     break;
 

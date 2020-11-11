@@ -63,16 +63,6 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
-            
-            //Debouncing 
-            if (!(ScanCode == 74 && _inputValue == 0))
-            {
-                if (!Debounce.IsDebounceOk(ScanCode))
-                {
-                    return;
-                }
-            }
-
             //Settings
             if (_inputValue == 0 && ScanCode == 28)
             {
@@ -82,6 +72,16 @@ namespace StockTV.ViewModel
             {
                 settingsCounter = 0;
             }
+
+            //Debouncing 
+            if (!(ScanCode == 74 && _inputValue == 0))
+            {
+                if (!Debounce.IsDebounceOk(this, ScanCode))
+                {
+                    return;
+                }
+            }
+
 
             /*
              * ScanCode of KeyPad
@@ -401,19 +401,12 @@ namespace StockTV.ViewModel
 
         private void ShowSettingsPage()
         {
-            if(settingsCounter == 5)
+            if(settingsCounter >= 5)
             {
                 settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }
-
-            //if (Match.CanSettingsShow)
-            //{
-            //    Reset(true);
-            //    var rootFrame = Window.Current.Content as Frame;
-            //    rootFrame.Navigate(typeof(Pages.SettingsPage));
-            //}
         }
 
         #endregion

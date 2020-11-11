@@ -43,7 +43,7 @@
         <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
-                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}" />
+            Foreground="{Binding Path=Settings.ColorScheme.ZielSummeGesamtForeGround}" />
         </Viewbox>
         
         <!--EingabeWert-->
@@ -56,8 +56,8 @@
         <!--Werte der Disziplinen-->
         <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                  HorizontalAlignment="Stretch">
-            <TextBlock Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}" 
-                       Text="{Binding Path=VersuchsWerte, Mode=OneWay}"/>
+            <TextBlock Text="{Binding Path=VersuchsWerte, Mode=OneWay}"
+            Foreground="{Binding Path=Settings.ColorScheme.ZielSummeEinzelForeGround}"/>
         </Viewbox>
 
 

@@ -38,17 +38,6 @@ namespace StockTV.Classes
         #region Public Properties
 
         /// <summary>
-        /// Checks the Input if Settings Page can be displayed
-        /// </summary>
-        public bool CanSettingsShow
-        {
-            get
-            {
-                return games[0].IsSettingsInput;
-            }
-        }
-
-        /// <summary>
         /// the current Game
         /// </summary>
         public Game CurrentGame
