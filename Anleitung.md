@@ -3,10 +3,10 @@
 ## Standards 
 Zur Bedienung wird grundsätzlich nur ein Nummernblock benötigt. Dieser ist per Funk (Bluetooth) oder USB-Kabel direkt angeschlossen. 
 Zur leichteren Bedienung wird empfohlen die 4 wichtigen Systemtasten farbig zu markieren
-- + --> gelb
-- - --> blau
-- / --> rot
-- * --> grün
+- \+ --> gelb
+- \- --> blau
+- \/ --> rot
+- \* --> grün
 - Bckspc --> rot (anstatt /)
 
 Es wird immer erst der entsprechende Wert eingegeben, dann die Farbtaste für die Mannschaft (rot oder grün). 
