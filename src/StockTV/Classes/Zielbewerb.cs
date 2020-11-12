@@ -36,26 +36,31 @@ namespace StockTV.Classes
         private readonly ConcurrentStack<byte> MassenHinten;
         private readonly ConcurrentStack<byte> Schüsse;
         private readonly ConcurrentStack<byte> Kombinieren;
-        
 
-        internal void AddValueToVersuche(sbyte value)
+        internal bool AddValueToVersuche(sbyte value)
         {
             if (MassenVorne.Count() < 6)
             {
+                if (!IsMassValue(value)) return false;
                 MassenVorne.Push(Convert.ToByte(value));
             }
             else if (Schüsse.Count() < 6)
             {
+                if (!IsSchussValue(value)) return false;
                 Schüsse.Push(Convert.ToByte(value));
             }
             else if (MassenHinten.Count() < 6)
             {
+                if (!IsMassValue(value)) return false;
                 MassenHinten.Push(Convert.ToByte(value));
             }
             else if (Kombinieren.Count() < 6)
             {
+                if (!IsMassValue(value)) return false;
                 Kombinieren.Push(Convert.ToByte(value));
             }
+
+            return true;
         }
 
         internal void DeleteLastValue()
@@ -96,6 +101,11 @@ namespace StockTV.Classes
             return MassenVorne.Count + Schüsse.Count + MassenHinten.Count + Kombinieren.Count;
         }
 
+        /// <summary>
+        /// Summe aller Werte von stack
+        /// </summary>
+        /// <param name="stack"></param>
+        /// <returns></returns>
         private int SummeVon(ConcurrentStack<byte> stack)
         {
             int value = 0;
@@ -106,6 +116,54 @@ namespace StockTV.Classes
             return value;
         }
 
+        /// <summary>
+        /// Ist der Wert bei einem Mass-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsMassValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 4:
+                case 6:
+                case 8:
+                case 10:
+                    return true;
+                
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Ist der Wert bei einem Schuss-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsSchussValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 5:
+                case 10:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Erzeugt ein byte-Array mit allen Werten. Im Ersten Byte ist die Bahnnummer. In den Weiteren der Wert der Versuche
+        /// </summary>
+        /// <param name="compressed"></param>
+        /// <param name="courtNumber"></param>
+        /// <returns></returns>
         public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
         {
             /* 
@@ -134,19 +192,19 @@ namespace StockTV.Classes
             values.Add(courtNumber);
 
             //Add for each attempt the value 
-            foreach(var a in MassenVorne)
+            foreach (var a in MassenVorne)
             {
                 values.Add(a);
             }
-            foreach(var a in Schüsse)
+            foreach (var a in Schüsse)
             {
                 values.Add(a);
             }
-            foreach(var a in MassenHinten)
+            foreach (var a in MassenHinten)
             {
                 values.Add(a);
             }
-            foreach(var a in Kombinieren)
+            foreach (var a in Kombinieren)
             {
                 values.Add(a);
             }
