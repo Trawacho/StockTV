@@ -11,9 +11,7 @@ namespace StockTV.Classes
     /// </summary>
     public sealed class Settings
     {
-
         private static readonly Lazy<Settings> settings = new Lazy<Settings>(() => new Settings());
-
 
         private void Load()
         {
@@ -91,6 +89,9 @@ namespace StockTV.Classes
             }
         }
 
+        #endregion
+
+        #region Turns of a Game
 
         /// <summary>
         /// Save List of Turns to localSettings
@@ -122,7 +123,7 @@ namespace StockTV.Classes
             if (turnStringComplete == null)
                 return _turns;
 
-            var turnStrings = turnStringComplete?.Split(';') ;
+            var turnStrings = turnStringComplete?.Split(';');
             foreach (var turnString in turnStrings.Where(t => t.Contains(':')))
             {
                 var x = turnString.Split(':');
@@ -138,6 +139,48 @@ namespace StockTV.Classes
 
         #endregion
 
+        #region Zielschiessen
+
+        /// <summary>
+        /// Save list of Values from Zielschiessen to localSettings
+        /// </summary>
+        /// <param name="values"></param>
+        internal void SaveZielValues(List<byte> values)
+        {
+            string zielString = "";
+            foreach (var v in values)
+            {
+                zielString += $"{v};";
+            }
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values["Ziel"] = zielString;
+        }
+
+        /// <summary>
+        /// Load list of values from Zielschiessen from localSettings
+        /// </summary>
+        /// <returns></returns>
+        internal List<byte> LoadZielValues()
+        {
+            var _vals = new List<byte>();
+            _vals.Clear();
+            var localSettings = ApplicationData.Current.LocalSettings;
+            var zielStringComplete = localSettings.Values["Ziel"] as string;
+            if (zielStringComplete == null)
+                return _vals;
+
+            var zielStrings = zielStringComplete?.Split(';');
+            foreach (var zielString in zielStrings)
+            {
+                if (!string.IsNullOrEmpty(zielString))
+                    _vals.Add(Convert.ToByte(zielString));
+            }
+
+            return _vals;
+        }
+
+        #endregion
+
         #region Broadcasting / Networking
 
         /// <summary>
@@ -149,6 +192,7 @@ namespace StockTV.Classes
         }
 
         private bool isBroadcasting;
+
         /// <summary>
         /// Broadcasting every Result or not
         /// </summary>
@@ -166,11 +210,11 @@ namespace StockTV.Classes
 
                 if (value)
                 {
-                    var (address, mask, broadcast) = NetworkService.GetIPAddresses();
+                    var (address, _, broadcast) = NetworkService.GetIPAddresses();
                     BroadcastAddress = broadcast;
                     IPAddress = address;
 
-                    if(address == null || broadcast == null)
+                    if (address == null || broadcast == null)
                     {
                         isBroadcasting = false;
                     }

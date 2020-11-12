@@ -11,11 +11,30 @@ namespace StockTV.Classes
 {
     public class Zielbewerb
     {
+        #region Public Properties of SUMs
+
+        /// <summary>
+        /// Sum of Values about the attempts of Massen Vorne
+        /// </summary>
         public int MassenVorneSumme { get { return SummeVon(MassenVorne); } }
-        public int MassenHintenSumme { get { return SummeVon(MassenHinten); } }
+
+        /// <summary>
+        /// Sum of Values about the attempts of Schüsse
+        /// </summary>
         public int SchüsseSumme { get { return SummeVon(Schüsse); } }
+        /// <summary>
+        /// Sum of Values about the attempts of Massen Hinten
+        /// </summary>
+        public int MassenHintenSumme { get { return SummeVon(MassenHinten); } }
+
+        /// <summary>
+        /// Sum of Values about the attempts of Kombinieren
+        /// </summary>
         public int KombinierenSumme { get { return SummeVon(Kombinieren); } }
 
+        /// <summary>
+        /// Sum of Values over all attempts
+        /// </summary>
         public int GesamtSumme
         {
             get
@@ -24,45 +43,69 @@ namespace StockTV.Classes
             }
         }
 
+        #endregion
+
+        #region private Fields
+
+        private readonly ConcurrentStack<byte> MassenVorne;
+        private readonly ConcurrentStack<byte> Schüsse;
+        private readonly ConcurrentStack<byte> MassenHinten;
+        private readonly ConcurrentStack<byte> Kombinieren;
+
+        #endregion
+
         public Zielbewerb()
         {
             this.MassenVorne = new ConcurrentStack<byte>();
             this.MassenHinten = new ConcurrentStack<byte>();
             this.Schüsse = new ConcurrentStack<byte>();
             this.Kombinieren = new ConcurrentStack<byte>();
+
+            this.LoadTurnsFromLocalSettings();
         }
 
-        private readonly ConcurrentStack<byte> MassenVorne;
-        private readonly ConcurrentStack<byte> MassenHinten;
-        private readonly ConcurrentStack<byte> Schüsse;
-        private readonly ConcurrentStack<byte> Kombinieren;
 
+
+        /// <summary>
+        /// Checks if Value is for actual Block of attempts allowed and insertes the value if true
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         internal bool AddValueToVersuche(sbyte value)
         {
-            if (MassenVorne.Count() < 6)
+            if (CountOfVersuche() < 24)
             {
-                if (!IsMassValue(value)) return false;
-                MassenVorne.Push(Convert.ToByte(value));
-            }
-            else if (Schüsse.Count() < 6)
-            {
-                if (!IsSchussValue(value)) return false;
-                Schüsse.Push(Convert.ToByte(value));
-            }
-            else if (MassenHinten.Count() < 6)
-            {
-                if (!IsMassValue(value)) return false;
-                MassenHinten.Push(Convert.ToByte(value));
-            }
-            else if (Kombinieren.Count() < 6)
-            {
-                if (!IsMassValue(value)) return false;
-                Kombinieren.Push(Convert.ToByte(value));
+                if (MassenVorne.Count() < 6)
+                {
+                    if (IsMassValue(value))
+                        MassenVorne.Push(Convert.ToByte(value));
+                }
+                else if (Schüsse.Count() < 6)
+                {
+                    if (IsSchussValue(value))
+                        Schüsse.Push(Convert.ToByte(value));
+                }
+                else if (MassenHinten.Count() < 6)
+                {
+                    if (IsMassValue(value))
+                        MassenHinten.Push(Convert.ToByte(value));
+                }
+                else if (Kombinieren.Count() < 6)
+                {
+                    if (IsMassValue(value))
+                        Kombinieren.Push(Convert.ToByte(value));
+                }
+
+                SaveTurnsToLocalSettings();
+                return true;
             }
 
-            return true;
+            return false;
         }
 
+        /// <summary>
+        /// Delete the last inserted value
+        /// </summary>
         internal void DeleteLastValue()
         {
             if (Kombinieren.Count > 0)
@@ -81,15 +124,57 @@ namespace StockTV.Classes
             {
                 MassenVorne.TryPop(out _);
             }
+
+            SaveTurnsToLocalSettings();
         }
 
+
+        /// <summary>
+        /// Delete all Values in all Blocks of Attempts
+        /// </summary>
         internal void Reset()
         {
             MassenVorne.Clear();
             MassenHinten.Clear();
             Schüsse.Clear();
             Kombinieren.Clear();
+            SaveTurnsToLocalSettings();
         }
+
+
+        /// <summary>
+        /// Save all turns as long as <see cref="GameSettings.GameModus"/> isn´t <see cref="GameSettings.GameModis.Training"/>
+        /// </summary>
+        private void SaveTurnsToLocalSettings()
+        {
+            Settings.Instance.SaveZielValues(ListOfAllValues);
+        }
+
+        private void LoadTurnsFromLocalSettings()
+        {
+            foreach (var t in Settings.Instance.LoadZielValues())
+            {
+                this.AddValueToVersuche(Convert.ToSByte(t));
+            }
+
+        }
+
+        private List<byte> ListOfAllValues
+        {
+            get
+            {
+                var values = new List<byte>();
+
+                values.AddRange(MassenVorne.Reverse().ToList());
+                values.AddRange(Schüsse.Reverse().ToList());
+                values.AddRange(MassenHinten.Reverse().ToList());
+                values.AddRange(Kombinieren.Reverse().ToList());
+
+                return values;
+            }
+        }
+
+
 
 
         /// <summary>
@@ -132,7 +217,7 @@ namespace StockTV.Classes
                 case 8:
                 case 10:
                     return true;
-                
+
                 default:
                     return false;
             }
@@ -192,22 +277,11 @@ namespace StockTV.Classes
             values.Add(courtNumber);
 
             //Add for each attempt the value 
-            foreach (var a in MassenVorne)
+            foreach (var a in ListOfAllValues)
             {
                 values.Add(a);
             }
-            foreach (var a in Schüsse)
-            {
-                values.Add(a);
-            }
-            foreach (var a in MassenHinten)
-            {
-                values.Add(a);
-            }
-            foreach (var a in Kombinieren)
-            {
-                values.Add(a);
-            }
+
 
             //Convert the list of values to an array
             var data = values.ToArray();
