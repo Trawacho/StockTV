@@ -16,8 +16,10 @@ namespace StockTV.Classes
         /// </summary>
         public Match()
         {
-            games = new List<Game>();
-            games.Add(new Game(1));
+            games = new List<Game>
+            {
+                new Game(1)
+            };
 
             LoadTurnsFromLocalSettings();
         }

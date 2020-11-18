@@ -15,15 +15,16 @@ Dies kann sehr lange dauern. Auch nach dem erforderlichen Neustart vergeht nochm
 
 ## StockTV installieren
 Zur installation von StockTV am Raspi gibt es verschiedene Möglichkeiten
-* per VisualStudio
-  * Den SourceCode downloaden und das sln-File mit VisualStudio öffnen. 
-  * In den Debug-Properties "RemoteMaschine" wählen. Dort sollte der Raspi gefunden und ausgewählt werden. 
-  * Danach kann mit F5 der Debug vorgang gestartet werden. Es werden alle notwendigen Files auf den Raspi kopiert.
 
-* per GerätePortal
-  * Im GerätePortal unter Apps - AppsManager kann die Software auch auf den Raspi geladen werden. Hierzu muss aber zuvor einmalig ein  Zertifikat installiert werden (oder wenn das Zertifikat abgelaufen ist). Dazu wählen Sie im GerätePortal "Install Certificate". Das Zertifikat finden Sie im Verzeichnis \src\StockTV\AppPackages\StockTV_..\StockTV_*_arm.cer . Mit einem Klick auf Install wird das Zertifikat dann installiert. 
-  * Anschließend "Local Storage" wählen um die erforderlichen Pakete zu installieren. Dazu wählen sie die StockTV*.appxbundle Datei aus, aktiviern die CheckBox für "Allow me to select framework packages" und klicken auf Next. Dann für jede Datei im Ordner "AppPackages\StockTV_...\Dependencies\arm\*.appx" "Datei auswählen" klicken und die Dateien hinzufügen. 
-  * Erst wenn alle Dateien in der Liste angezeigt werden auf "Install" klicken und die Pakte installieren. Nach kurzer Zeit wird in der unteren Liste die App "StockTV" zusätzlich angezeigt.
+### VisualStudio
+  - Den SourceCode downloaden und das sln-File mit VisualStudio öffnen. 
+  - In den Debug-Properties "RemoteMaschine" wählen. Dort sollte der Raspi gefunden und ausgewählt werden. 
+  - Danach kann mit F5 der Debug vorgang gestartet werden. Es werden alle notwendigen Files auf den Raspi kopiert.
+
+### GerätePortal
+  - Im GerätePortal unter Apps - AppsManager kann die Software auch auf den Raspi geladen werden. Hierzu muss aber zuvor einmalig ein  Zertifikat installiert werden (oder wenn das Zertifikat abgelaufen ist). Dazu wählen Sie im GerätePortal "Install Certificate". Das Zertifikat finden Sie im Verzeichnis \src\StockTV\AppPackages\StockTV_..\StockTV_*_arm.cer . Mit einem Klick auf Install wird das Zertifikat dann installiert. 
+  - Anschließend "Local Storage" wählen um die erforderlichen Pakete zu installieren. Dazu wählen sie die StockTV*.appxbundle Datei aus, aktiviern die CheckBox für "Allow me to select framework packages" und klicken auf Next. Dann für jede Datei im Ordner "AppPackages\StockTV_...\Dependencies\arm\*.appx" "Datei auswählen" klicken und die Dateien hinzufügen. 
+  - Erst wenn alle Dateien in der Liste angezeigt werden auf "Install" klicken und die Pakte installieren. Nach kurzer Zeit wird in der unteren Liste die App "StockTV" zusätzlich angezeigt.
 	
 ## StockTV als StartUp
 In der Liste der Apps muss die App StockTV als StartUp aktiviert werden. Alle anderen Foreground Apps können gestoppt werden.

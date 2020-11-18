@@ -67,8 +67,7 @@ namespace StockTV.Classes
         public static (IPAddress address, IPAddress mask, IPAddress broadcast) GetIPAddresses()
         {
             (IPAddress address, IPAddress mask) = GetIPAddressAndSubnetMask();
-            IPAddress broadcast = default;
-            broadcast = GetBroadcastAddress(address, mask);
+            IPAddress broadcast = GetBroadcastAddress(address, mask);
             return (address, mask, broadcast);
         }
 

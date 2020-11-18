@@ -142,9 +142,8 @@ namespace StockTV.ViewModel
             if (_inputValue == -1)
                 return;
 
-            _zielbewerb.AddValueToVersuche(_inputValue);
-
-            _inputValue = -1;
+            if (_zielbewerb.AddValueToVersuche(_inputValue))
+                _inputValue = -1;
         }
 
 
@@ -163,6 +162,9 @@ namespace StockTV.ViewModel
         /// </summary>
         private void Reset()
         {
+            if (_zielbewerb.CountOfVersuche() < 24)
+                return;
+
             _zielbewerb.Reset();
             _inputValue = -1;
         }
@@ -206,7 +208,7 @@ namespace StockTV.ViewModel
                 }
             }
 
-            
+
 
             /*
              * ScanCode of KeyPad
