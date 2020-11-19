@@ -30,12 +30,13 @@ Die Navigation erfolgt mit den Tasten 8 und 2. Die Wert-Änderung mit 4 und 6. V
 - Networking: Im Turniermodus und Zielmodus werden bei ON die Daten im Netzwerk zur Verfügung gestellt. Mit der Software StockMaster können die Daten empfangen und live ausgewertet werden.
 
 ### Blaue Taste
-Mit der blauen Taste kann immer die letzte Eingabe gelöscht werden. Sollten viele Eingaben gelöscht werden (zum Beispiel nach einem Turnier), kann man die Eingabeverzögerung umgehen, in dem man eine "0" eingibt und dann die Blaue Taste nutzt
+Mit der blauen Taste kann die Eingabe oder die letzte Kehre bzw. der letzte Versuch gelöscht werden. Sollten viele Eingaben gelöscht werden (zum Beispiel nach einem Turnier), kann man die Eingabeverzögerung umgehen, in dem man eine "0" eingibt und dann die Blaue Taste nutzt. 
+Die 0 in der Eingabe kann mit der blauen Taste nicht gelöscht werden. Hierzu die 0 mit einer anderen beliebigen Zahl überschreiben.
 
 ### Eingabeverzögerung
 Um die Eingabe bedienerfreundlich zu gestalten, ist eine Eingabeverzögerung von ca. 1 Sekunde eingestellt. Das bedeutet dass die gleiche Taste nur einmal pro Sekunde vom System akzeptiert wird.
 
 ### Eingabewert
-In den Settings kann ein maximaler Wert pro Kehre festgelegt werden. Wenn dieser mit der Eingabe überschritten wird, wird die Eingabe automatisch wieder gelöscht. 
+In den Settings kann ein maximaler Wert pro Kehre festgelegt werden. Wenn dieser mit der Eingabe überschritten wird, wird die Eingabe automatisch überschrieben. 
 Im Modus "Ziel" können nur die üblichen Werte eingegeben werden. Bei den Mass-Versuchen die Werte 0,2,4,6,8,10. Bei den Schussversuchen die Werte 0,2,5,10.
 
