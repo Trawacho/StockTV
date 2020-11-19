@@ -9,7 +9,7 @@
   <Identity
     Name="StockTV"
     Publisher="CN=Daniel Sturm"
-    Version="1.1.10.0" />
+    Version="1.1.11.0" />
 
   <mp:PhoneIdentity PhoneProductId="cc486ab5-62b7-46a4-9353-bf08abe930b9" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
