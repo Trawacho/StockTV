@@ -20,8 +20,8 @@
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Versuche -->
@@ -47,11 +47,23 @@
         </Viewbox>
         
         <!--EingabeWert-->
-        <Viewbox  Margin="0,5,0,0" Grid.Column="0" Grid.Row="1"
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Viewbox  Margin="0,5,0,0"
                   HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
-                       Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
-        </Viewbox>
+                <TextBlock Text="{Binding Path=LastValue, Mode=OneWay}"
+                           Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
+            </Viewbox>
+            <Viewbox Margin="0,5,0,0" Grid.Column="1"
+                     HorizontalAlignment="Stretch">
+                <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
+            </Viewbox>
+        </Grid>
+        
 
         <!--Werte der Disziplinen-->
         <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"

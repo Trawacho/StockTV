@@ -141,6 +141,11 @@ namespace StockTV.Classes
             SaveTurnsToLocalSettings();
         }
 
+        internal int LastValue()
+        {
+            return ListOfAllValues.LastOrDefault();
+        }
+
 
         /// <summary>
         /// Save all turns as long as <see cref="GameSettings.GameModus"/> isn´t <see cref="GameSettings.GameModis.Training"/>

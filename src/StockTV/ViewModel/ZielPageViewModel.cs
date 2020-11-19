@@ -47,6 +47,18 @@ namespace StockTV.ViewModel
             }
         }
 
+        public string LastValue
+        {
+            get
+            {
+                return _inputValue == -1
+                        ? _zielbewerb.CountOfVersuche() > 0 
+                            ? _zielbewerb.LastValue().ToString() 
+                            : string.Empty
+                        : string.Empty;
+            }
+        }
+
         /// <summary>
         /// Label to Display for GesamtPunkteText
         /// </summary>
@@ -129,7 +141,7 @@ namespace StockTV.ViewModel
             }
             else
             {
-                _inputValue = -1;
+                _inputValue = value;
             }
         }
 
@@ -152,9 +164,13 @@ namespace StockTV.ViewModel
         /// </summary>
         private void DeleteLastValue()
         {
-            _zielbewerb.DeleteLastValue();
-            if (_inputValue != 0)
+            if (_inputValue > 0)
+            {
                 _inputValue = -1;
+                return;
+            }
+
+            _zielbewerb.DeleteLastValue();
         }
 
         /// <summary>
