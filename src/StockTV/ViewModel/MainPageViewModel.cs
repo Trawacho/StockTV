@@ -334,10 +334,13 @@ namespace StockTV.ViewModel
 
         private void DeleteLastTurn()
         {
-            Match.DeleteLastTurn();
-
-            if (_inputValue != 0)
+            if (_inputValue > 0)
+            {
                 _inputValue = -1;
+                return;
+            }
+
+            Match.DeleteLastTurn();
         }
 
         private void AddToRed()
@@ -395,13 +398,13 @@ namespace StockTV.ViewModel
             }
             else
             {
-                _inputValue = -1;
+                _inputValue = value;
             }
         }
 
         private void ShowSettingsPage()
         {
-            if(settingsCounter >= 5)
+            if (settingsCounter >= 5)
             {
                 settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
