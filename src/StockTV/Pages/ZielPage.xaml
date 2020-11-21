@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:StockTV.ViewModel"
+    xmlns:cv="using:StockTV.Converter"
     mc:Ignorable="d"
     Background="{Binding Path=Settings.ColorScheme.MainBackground}"
     FontWeight="SemiBold"
@@ -12,7 +13,12 @@
     <Page.DataContext>
         <vm:ZielPageViewModel />
     </Page.DataContext>
-
+    
+    <Page.Resources>
+        <cv:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <cv:BooleanToVisibilityConverterInverted x:Key="BoolToVisConverterInverted"/>
+    </Page.Resources>
+    
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="0.75*"/>
@@ -31,39 +37,56 @@
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
                        HorizontalAlignment="Left"/>
         </Viewbox>
-        
+
         <!-- Gesamt Text-->
         <Viewbox Margin="15,5,15,0"  Grid.Column="1" Grid.Row="0"
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtText}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
         </Viewbox>
-        
+
         <!-- GesatPunkte -->
         <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
                  HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
             Foreground="{Binding Path=Settings.ColorScheme.ZielSummeGesamtForeGround}" />
         </Viewbox>
-        
-        <!--EingabeWert-->
+
+        <!--EingabeWert und vorheriger Versuch-->
         <Grid Grid.Row="1" Grid.Column="0">
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            
+            <!--vorheriger Versuch-->
             <Viewbox  Margin="0,5,0,0"
                   HorizontalAlignment="Stretch">
                 <TextBlock Text="{Binding Path=LastValue, Mode=OneWay}"
                            Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
             </Viewbox>
+
+            <!--Eingabe-->
             <Viewbox Margin="0,5,0,0" Grid.Column="1"
-                     HorizontalAlignment="Stretch">
+                     HorizontalAlignment="Stretch"
+                     Visibility="{Binding Path=IsInvalidInput, Converter={StaticResource BoolToVisConverterInverted}}">
                 <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
             </Viewbox>
+
+            <!--ungültig-->
+            <Viewbox HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Grid.ColumnSpan="2" 
+                Visibility="{Binding Path=IsInvalidInput, Converter={StaticResource BoolToVisConverter}}">
+                <TextBlock Text="ungültig"  Foreground="red">
+                    <TextBlock.Projection>
+                        <PlaneProjection RotationX="0" RotationY="0" RotationZ="20" CenterOfRotationX="0.5" CenterOfRotationY="0.5"/>
+                    </TextBlock.Projection>
+                </TextBlock>
+            </Viewbox>
+
         </Grid>
-        
+
 
         <!--Werte der Disziplinen-->
         <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
