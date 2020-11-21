@@ -75,25 +75,25 @@ namespace StockTV.Classes
         {
             if (CountOfVersuche() < 24)
             {
-                if (MassenVorne.Count() < 6)
+                if (MassenVorne.Count() < 6 && IsMassValue(value))
                 {
-                    if (IsMassValue(value))
-                        MassenVorne.Push(Convert.ToByte(value));
+                    MassenVorne.Push(Convert.ToByte(value));
                 }
-                else if (Schüsse.Count() < 6)
+                else if (CountOfVersuche() >= 6 && Schüsse.Count() < 6 && IsSchussValue(value))
                 {
-                    if (IsSchussValue(value))
-                        Schüsse.Push(Convert.ToByte(value));
+                    Schüsse.Push(Convert.ToByte(value));
                 }
-                else if (MassenHinten.Count() < 6)
+                else if (CountOfVersuche() >= 12 && MassenHinten.Count() < 6 && IsMassValue(value))
                 {
-                    if (IsMassValue(value))
-                        MassenHinten.Push(Convert.ToByte(value));
+                    MassenHinten.Push(Convert.ToByte(value));
                 }
-                else if (Kombinieren.Count() < 6)
+                else if (CountOfVersuche() >= 18 && Kombinieren.Count() < 6 && IsMassValue(value))
                 {
-                    if (IsMassValue(value))
-                        Kombinieren.Push(Convert.ToByte(value));
+                    Kombinieren.Push(Convert.ToByte(value));
+                }
+                else
+                {
+                    return false;
                 }
 
                 SaveTurnsToLocalSettings();
