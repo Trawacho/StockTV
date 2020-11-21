@@ -142,6 +142,7 @@
     <Compile Include="Classes\Zielbewerb.cs" />
     <Compile Include="Converter\ActiveSettingToVisibilityConverter.cs" />
     <Compile Include="Converter\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converter\BooleanToVisibilityConverterInverted.cs" />
     <Compile Include="Converter\DoubleDivisionConverter.cs" />
     <Compile Include="Converter\GameModusToVisibilityConverter.cs" />
     <Compile Include="Pages\MainPage.xaml.cs">

@@ -33,6 +33,8 @@ namespace StockTV.ViewModel
         private sbyte _inputValue;
         private readonly Zielbewerb _zielbewerb;
         private byte settingsCounter;
+        private readonly DispatcherTimer _isInvalidTimer = new DispatcherTimer();
+
 
         #region Public READONLY Properties to display in View
 
@@ -52,8 +54,8 @@ namespace StockTV.ViewModel
             get
             {
                 return _inputValue == -1
-                        ? _zielbewerb.CountOfVersuche() > 0 
-                            ? _zielbewerb.LastValue().ToString() 
+                        ? _zielbewerb.CountOfVersuche() > 0
+                            ? _zielbewerb.LastValue().ToString()
                             : string.Empty
                         : string.Empty;
             }
@@ -102,6 +104,27 @@ namespace StockTV.ViewModel
 
         #endregion
 
+        private bool isInvalidInput;
+        /// <summary>
+        /// TRUE, wenn auf der Anzeige "ungültig" angezeigt werden soll
+        /// </summary>
+        public bool IsInvalidInput
+        {
+            get
+            {
+                return isInvalidInput;
+            }
+            set
+            {
+                if (isInvalidInput != value)
+                {
+                    isInvalidInput = value;
+                    RaisePropertyChange();
+                }
+            }
+        }
+
+
         /// <summary>
         /// Settings
         /// </summary>
@@ -121,6 +144,8 @@ namespace StockTV.ViewModel
         {
             this._inputValue = -1;
             this._zielbewerb = new Zielbewerb();
+            _isInvalidTimer.Tick += IsInvalidTimer_Tick;
+            _isInvalidTimer.Interval = TimeSpan.FromMilliseconds(500);
         }
 
         #region Private Functions
@@ -145,7 +170,6 @@ namespace StockTV.ViewModel
             }
         }
 
-
         /// <summary>
         /// Den Wert von _inputValue den zu den Versuchen schreiben
         /// </summary>
@@ -155,9 +179,15 @@ namespace StockTV.ViewModel
                 return;
 
             if (_zielbewerb.AddValueToVersuche(_inputValue))
+            {
                 _inputValue = -1;
+            }
+            else
+            {
+                _isInvalidTimer.Start();
+                IsInvalidTimer_Tick(null,null);
+            }
         }
-
 
         /// <summary>
         /// Denn letzten Versuche wieder löschen
@@ -196,6 +226,22 @@ namespace StockTV.ViewModel
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }
+        }
+
+        /// <summary>
+        /// Setzt <see cref="IsInvalidInput"/> auf TRUE oder auf FALSE und beendet dem Timer
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void IsInvalidTimer_Tick(object sender, object e)
+        {
+            if (IsInvalidInput == false)
+            {
+                IsInvalidInput = true;
+                return;
+            }
+            IsInvalidInput = false;
+            _isInvalidTimer.Stop();
         }
 
         #endregion
@@ -320,6 +366,10 @@ namespace StockTV.ViewModel
         }
 
         #endregion
+
+
+       
+
 
 
     }
