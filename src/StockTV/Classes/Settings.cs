@@ -217,6 +217,11 @@ namespace StockTV.Classes
                     if (address == null || broadcast == null)
                     {
                         isBroadcasting = false;
+                        MdnsService.Unadvertise();
+                    }
+                    else
+                    {
+                        MdnsService.Advertise();
                     }
                 }
             }

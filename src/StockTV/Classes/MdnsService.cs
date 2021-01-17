@@ -20,10 +20,10 @@ namespace StockTV.Classes
         internal static void Unadvertise()
         {
             service?.Unadvertise();
-            service?.Dispose();
+            MdnsService.Dispose();
         }
 
-        public static void Dispose()
+        internal static void Dispose()
         {
             profile = null;
             service?.Dispose();
