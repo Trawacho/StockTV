@@ -10,7 +10,7 @@ namespace StockTV.Classes
         internal static void Advertise()
         {
             if (profile == null)
-                profile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.local.", 4747);
+                profile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.", 4747);
             if (service == null)
                 service = new ServiceDiscovery();
 
