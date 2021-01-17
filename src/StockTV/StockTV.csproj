@@ -134,6 +134,7 @@
     <Compile Include="Classes\Game.cs" />
     <Compile Include="Classes\GameSettings.cs" />
     <Compile Include="Classes\Match.cs" />
+    <Compile Include="Classes\MdnsService.cs" />
     <Compile Include="Classes\NetworkService.cs" />
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\StringExtension.cs" />
