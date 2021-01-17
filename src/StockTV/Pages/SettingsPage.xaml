@@ -19,30 +19,31 @@
     <Page.Resources>
         <c:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Page.Resources>
+    
+    <Viewbox>
+        <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
 
-    <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
 
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-
-        <!--#region ColorScheme -->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region ColorScheme -->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsColorSchemeActive,
                                 Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center"
@@ -50,28 +51,28 @@
                    Margin="20"
                    Grid.Column="0" Grid.Row="0"/>
 
-        <TextBlock Text="Farbschema:" 
+            <TextBlock Text="Farbschema:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="0"/>
 
-        <TextBlock Grid.Row="0"
+            <TextBlock Grid.Row="0"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=ColorSchemeValue}"
                    Margin="20"/>
 
-        <TextBlock Text="Normal oder Dark" 
+            <TextBlock Text="Normal oder Dark" 
                    Grid.Row="0" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region ColorScheme RightToLeft-->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region ColorScheme RightToLeft-->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsColorSchemeRightToLeftActive,
                                 Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center"
@@ -79,29 +80,29 @@
                    Margin="20"
                    Grid.Column="0" Grid.Row="1"/>
 
-        <TextBlock Text="nächste Bahn:" 
+            <TextBlock Text="nächste Bahn:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="1"/>
 
-        <TextBlock Grid.Row="1"
+            <TextBlock Grid.Row="1"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=RightToLeftValue}"
                    Margin="20"/>
 
-        <TextBlock Text="Links oder Rechts" 
+            <TextBlock Text="Links oder Rechts" 
                    Grid.Row="1" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
 
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region GameModus -->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region GameModus -->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsGameModusActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center"
@@ -109,28 +110,28 @@
                    Margin="20"
                    Grid.Column="0" Grid.Row="2"/>
 
-        <TextBlock Text="Spielmodus:" 
+            <TextBlock Text="Spielmodus:" 
                    HorizontalAlignment="Right"
                    Margin="20"  
                    Grid.Column="1" 
                    Grid.Row="2"/>
 
-        <TextBlock Grid.Row="2"
+            <TextBlock Grid.Row="2"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=GameModusValue}"
                    Margin="20"/>
 
-        <TextBlock Text="Training, BestOf, Turnier, Ziel" 
+            <TextBlock Text="Training, BestOf, Turnier, Ziel" 
                    Grid.Row="2" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region MaxPointPerTurn-->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region MaxPointPerTurn-->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsPointsPerTurnActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -138,28 +139,28 @@
                    Grid.Column="0" 
                    Grid.Row="3"/>
 
-        <TextBlock Text="Max Punkte pro Kehre:" 
+            <TextBlock Text="Max Punkte pro Kehre:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="3"/>
 
-        <TextBlock Grid.Row="3"
+            <TextBlock Grid.Row="3"
                    Grid.Column="2"
                    HorizontalAlignment="Center"
                    Text="{Binding Path=PointsPerTurnValue}"
                    Margin="20"/>
 
-        <TextBlock Text="15 bis 99 (30)" 
+            <TextBlock Text="15 bis 99 (30)" 
                    Grid.Row="3" 
                    Grid.Column="3"
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region TurnsPerGame-->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region TurnsPerGame-->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsTurnsPerGameActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -167,28 +168,28 @@
                    Grid.Column="0" 
                    Grid.Row="4"/>
 
-        <TextBlock Text="Max Kehren pro Spiel:" 
+            <TextBlock Text="Max Kehren pro Spiel:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="4"/>
 
-        <TextBlock Grid.Row="4"
+            <TextBlock Grid.Row="4"
                    Grid.Column="2"
                    Text="{Binding Path=TurnsPerGameValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
-        <TextBlock Text="4 bis 99 (6 oder 30)" 
+            <TextBlock Text="4 bis 99 (6 oder 30)" 
                    Grid.Row="4" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region CourtNumber-->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region CourtNumber-->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsCourtNumberActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -196,28 +197,28 @@
                    Grid.Column="0" 
                    Grid.Row="5"/>
 
-        <TextBlock Text="Bahnnummer:" 
+            <TextBlock Text="Bahnnummer:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="5"/>
 
-        <TextBlock Grid.Row="5"
+            <TextBlock Grid.Row="5"
                    Grid.Column="2"
                    Text="{Binding Path=CourtNumberValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
-        <TextBlock Text="1 bis 99" 
+            <TextBlock Text="1 bis 99" 
                    Grid.Row="5" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region Netorking -->
-        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+            <!--#region Netorking -->
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
                    Visibility="{Binding Path=IsNetworkingActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -225,40 +226,41 @@
                    Grid.Column="0" 
                    Grid.Row="6"/>
 
-        <TextBlock Text="Networking:" 
+            <TextBlock Text="Networking:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="6"/>
 
-        <TextBlock Grid.Row="6"
+            <TextBlock Grid.Row="6"
                    Grid.Column="2"
                    Text="{Binding Path=NetworkingValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
-        <TextBlock Text="{Binding Path=NetworkingDescription}"
+            <TextBlock Text="{Binding Path=NetworkingDescription}"
                    Grid.Row="6" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-        <!--#endregion-->
+            <!--#endregion-->
 
-        <!--#region Misc at the buttom -->
-        <TextBox Grid.Row="8" Grid.Column="3" Background="Transparent" 
+            <!--#region Misc at the buttom -->
+            <TextBox Grid.Row="8" Grid.Column="3" Background="Transparent" 
                  BorderThickness="0"
                  IsReadOnly="True"/>
 
-        <TextBlock Grid.Row="8"
+            <TextBlock Grid.Row="8"
                    Grid.Column="0"
                    Grid.ColumnSpan="4"
                    Margin="20"
                    TextWrapping="Wrap"
                    Text="Tasten: 2 + 8 Navigation, 4 + 6 Wert ändern, + (gelb) zurück"
                    />
-        <!--#endregion-->
+            <!--#endregion-->
 
-    </Grid>
-
+        </Grid>
+    </Viewbox>
+    
 </Page>
