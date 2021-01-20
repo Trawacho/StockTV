@@ -5,7 +5,7 @@ using System.Net.Sockets;
 
 namespace StockTV.Classes
 {
-    public static class NetworkService
+    public static class BroadcastService
     {
         class UdpState
         {

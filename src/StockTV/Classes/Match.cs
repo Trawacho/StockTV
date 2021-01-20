@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 
 namespace StockTV.Classes
 {
     public class Match
     {
+        public event EventHandler TurnsChanged;
+        protected void RaiseTurnsChanged()
+        {
+            var handler = TurnsChanged;
+            handler?.Invoke(this, EventArgs.Empty);
+        }
+
         #region Constructor
 
         /// <summary>
@@ -20,6 +26,8 @@ namespace StockTV.Classes
             {
                 new Game(1)
             };
+
+            Begegnungen = new List<Begegnung>();
 
             LoadTurnsFromLocalSettings();
         }
@@ -85,6 +93,12 @@ namespace StockTV.Classes
                 return games;
             }
         }
+
+        /// <summary>
+        /// List of Begegnungen if sent per NetMQServer
+        /// </summary>
+        public List<Begegnung> Begegnungen { get; set; }
+
         #endregion
 
 
@@ -102,6 +116,7 @@ namespace StockTV.Classes
             {
                 CurrentGame.Turns.Add(turn);
                 SaveTurnsToLocalSettings();
+                RaiseTurnsChanged();
             }
         }
 
@@ -120,6 +135,7 @@ namespace StockTV.Classes
             }
 
             SaveTurnsToLocalSettings();
+            RaiseTurnsChanged();
         }
 
         /// <summary>
@@ -129,9 +145,11 @@ namespace StockTV.Classes
         {
             if (force)
             {
+                this.Begegnungen.Clear();
                 this.games.Clear();
                 this.games.Add(new Game(1));
                 SaveTurnsToLocalSettings();
+                RaiseTurnsChanged();
                 return;
             }
 
@@ -150,9 +168,15 @@ namespace StockTV.Classes
             }
 
             SaveTurnsToLocalSettings();
+            RaiseTurnsChanged();
         }
 
-
+        /// <summary>
+        /// Returns a Byte[] with the Result of a Turnier
+        /// </summary>
+        /// <param name="compressed">if true, the array is compressed</param>
+        /// <param name="courtNumber">if 0, it takes the courtNumber from Settings</param>
+        /// <returns></returns>
         public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
         {
             /* 
@@ -220,6 +244,9 @@ namespace StockTV.Classes
             Settings.Instance.SaveTurns(turns);
         }
 
+        /// <summary>
+        /// if GameModus is not Training, the Turns are loaded from the local settings
+        /// </summary>
         private void LoadTurnsFromLocalSettings()
         {
             if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Training)
@@ -232,7 +259,33 @@ namespace StockTV.Classes
             }
 
         }
+       
         #endregion
 
+
+    }
+
+    public class Begegnung
+    {
+        public Begegnung(byte spielNummer, string TeamA, string TeamB)
+        {
+            Spielnummer = spielNummer;
+            Mannschaft_A = TeamA;
+            Mannschaft_B = TeamB;
+        }
+
+        public byte Spielnummer { get; set; }
+        private readonly string Mannschaft_A;
+        private readonly string Mannschaft_B;
+
+        public string TeamNameLeft(bool colorSchemeRightToLeft)
+        {
+            return colorSchemeRightToLeft ? Mannschaft_A : Mannschaft_B;
+        }
+
+        public string TeamNameRight(bool colorSchemeRightToLeft)
+        {
+            return colorSchemeRightToLeft ? Mannschaft_B : Mannschaft_A;
+        }
     }
 }

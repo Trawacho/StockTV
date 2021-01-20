@@ -1,8 +1,8 @@
-﻿using StockTV.Classes;
+﻿using NetMQ;
+using StockTV.Classes;
+using StockTV.Classes.NetMQUtil;
 using System;
-using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -17,7 +17,8 @@ namespace StockTV.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChange([CallerMemberName] string propertyname = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
+            var handler = PropertyChanged;
+            handler?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
 
         public void RaiseAllPropertysChanged()
@@ -146,6 +147,40 @@ namespace StockTV.ViewModel
             this._zielbewerb = new Zielbewerb();
             _isInvalidTimer.Tick += IsInvalidTimer_Tick;
             _isInvalidTimer.Interval = TimeSpan.FromMilliseconds(500);
+
+            RespServer.RespServerDataReceived += MqServer_MqServerDataReceived;
+
+            System.Diagnostics.Debug.WriteLine("ZielPageViewModel erzeugt...");
+        }
+
+        private void MqServer_MqServerDataReceived(NetMQSocket socket, MqServerDataReceivedEventArgs e)
+        {
+            if (!((Window.Current.Content as Frame).Content is Pages.ZielPage)) return;
+
+            if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
+            {
+                _ = socket.TrySignalOK();
+                RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
+                var rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(Pages.MainPage));
+            }
+
+            if (e.IsColorScheme)
+            {
+                Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+            }
+
+            if (e.IsReset)
+            {
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Ziel)
+                    _zielbewerb.Reset();
+            }
+
+            if (socket.HasOut)
+            {
+                _ = socket.TrySignalOK();
+            }
+
         }
 
         #region Private Functions
@@ -361,7 +396,7 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
             {
-                NetworkService.SendData(_zielbewerb.Serialize(true));
+                BroadcastService.SendData(_zielbewerb.Serialize(true));
             }
         }
 

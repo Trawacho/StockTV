@@ -1,11 +1,9 @@
-﻿using System;
-using Windows.Storage;
+﻿using Windows.Storage;
 
 namespace StockTV.Classes
 {
-    public class GameSettings
+    public class GameSettings 
     {
-
         #region Public Enumeration 
 
         /// <summary>
@@ -42,7 +40,7 @@ namespace StockTV.Classes
         /// Set the modus
         /// </summary>
         /// <param name="modus"></param>
-        private void SetModus(GameModis modus)
+        internal void SetModus(GameModis modus)
         {
             GameModus = modus;
 
@@ -131,10 +129,6 @@ namespace StockTV.Classes
             var pointsperturn = localSettings.Values[nameof(PointsPerTurn)] as string;
 
             var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>());
-            //if(gamesettings.GameModus == GameModis.Ziel)
-            //{
-            //    gamesettings.GameModus = GameModis.Training;
-            //}
             gamesettings.TurnsPerGame = byte.Parse(turnspergame ?? "30");
             gamesettings.PointsPerTurn = byte.Parse(pointsperturn ?? "30");
 
@@ -156,7 +150,7 @@ namespace StockTV.Classes
             {
                 return turnsPerGame;
             }
-            private set
+            internal set
             {
                 if (turnsPerGame == value ||
                            value < 4 ||

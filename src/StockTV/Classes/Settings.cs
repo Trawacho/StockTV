@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Windows.Storage;
+using StockTV.Classes.NetMQUtil;
 
 namespace StockTV.Classes
 {
     /// <summary>
-    /// Singleton-Class for the Settings from the app
+    /// Singleton-Class for the App-Settings
     /// </summary>
     public sealed class Settings
     {
@@ -25,7 +28,12 @@ namespace StockTV.Classes
 
             var broadcasting = localSettings.Values[nameof(IsBroadcasting)] as string;
             this.IsBroadcasting = bool.Parse(broadcasting ?? "false");
+
+            Debug.WriteLine("Settings loaded...");
+
+
         }
+
 
         /// <summary>
         /// Instanz of the settings
@@ -119,8 +127,8 @@ namespace StockTV.Classes
             _turns.Clear();
 
             var localSettings = ApplicationData.Current.LocalSettings;
-            var turnStringComplete = localSettings.Values["Turns"] as string;
-            if (turnStringComplete == null)
+
+            if (!(localSettings.Values["Turns"] is string turnStringComplete))
                 return _turns;
 
             var turnStrings = turnStringComplete?.Split(';');
@@ -165,8 +173,7 @@ namespace StockTV.Classes
             var _vals = new List<byte>();
             _vals.Clear();
             var localSettings = ApplicationData.Current.LocalSettings;
-            var zielStringComplete = localSettings.Values["Ziel"] as string;
-            if (zielStringComplete == null)
+            if (!(localSettings.Values["Ziel"] is string zielStringComplete))
                 return _vals;
 
             var zielStrings = zielStringComplete?.Split(';');
@@ -210,22 +217,34 @@ namespace StockTV.Classes
 
                 if (value)
                 {
-                    var (address, _, broadcast) = NetworkService.GetIPAddresses();
+                    var (address, _, broadcast) = BroadcastService.GetIPAddresses();
                     BroadcastAddress = broadcast;
                     IPAddress = address;
 
                     if (address == null || broadcast == null)
                     {
                         isBroadcasting = false;
-                        MdnsService.Unadvertise();
                     }
                     else
                     {
                         MdnsService.Advertise();
+                        RespServer.Start();
+                        if (PServer == null)
+                        {
+                            PServer = new PubServer();
+                        }
+                        PServer.Start();
                     }
+                }
+                else
+                {
+                    //Dienste abschalten
+                    RespServer.Cancel();
+                    MdnsService.Unadvertise();
                 }
             }
         }
+        PubServer PServer;
 
         /// <summary>
         /// Broadcast IP-Address
@@ -233,7 +252,6 @@ namespace StockTV.Classes
         public IPAddress BroadcastAddress { get; private set; }
         public IPAddress IPAddress { get; private set; }
 
-        const int broadcastPort = 4711;
 
         /// <summary>
         /// Broadcast Port
@@ -242,10 +260,18 @@ namespace StockTV.Classes
         {
             get
             {
-                return broadcastPort;
+                return 4711;
             }
         }
 
         #endregion
+
+
+        public void SendGameResults(byte[] message)
+        {
+            PServer.SendDataMessage("SendingResultInfo", message);
+        }
+
+
     }
 }

@@ -129,13 +129,16 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Classes\NetMQUtil\PubServer.cs" />
+    <Compile Include="Classes\NetMQUtil\RespServer.cs" />
     <Compile Include="Classes\ColorScheme.cs" />
     <Compile Include="Classes\Debounce.cs" />
     <Compile Include="Classes\Game.cs" />
     <Compile Include="Classes\GameSettings.cs" />
     <Compile Include="Classes\Match.cs" />
     <Compile Include="Classes\MdnsService.cs" />
-    <Compile Include="Classes\NetworkService.cs" />
+    <Compile Include="Classes\NetMQUtil\MqServerDataReceivedEventArgs.cs" />
+    <Compile Include="Classes\BroadcastService.cs" />
     <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\StringExtension.cs" />
     <Compile Include="Classes\StructExtension.cs" />
@@ -226,12 +229,19 @@
       <Version>0.27.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.9</Version>
+      <Version>6.2.11</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="StockTV_TemporaryKey.pfx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\netmq-uwp\NetMQ-UWP\NetMQ-UWP.csproj">
+      <Project>{df40ce2c-3112-43cb-b90e-08ec6e8614eb}</Project>
+      <Name>NetMQ-UWP</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

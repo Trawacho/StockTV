@@ -1,9 +1,11 @@
-﻿using StockTV.Classes;
+﻿using NetMQ;
+using StockTV.Classes;
+using StockTV.Classes.NetMQUtil;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -20,7 +22,8 @@ namespace StockTV.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChange([CallerMemberName] string propertyname = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
+            var handler = PropertyChanged;
+            handler?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
 
         public void RaiseAllPropertysChanged()
@@ -42,6 +45,8 @@ namespace StockTV.ViewModel
 
         private byte settingsCounter;
 
+        private DispatcherTimer timer;
+
         #endregion
 
 
@@ -53,10 +58,88 @@ namespace StockTV.ViewModel
         public MainPageViewModel()
         {
             Match = new Match();
+            Match.TurnsChanged += Match_TurnsChanged;
             _inputValue = -1;
+           
+            RespServer.RespServerDataReceived += RespServer_RespServerDataReceived;
+        }
+
+
+
+        private void Match_TurnsChanged(object sender, EventArgs e)
+        {
+            Match m = sender as Match;
+            var data = m.Serialize(false);
+            Debug.WriteLine($"{m.Games.First().Turns.Sum(t => t.PointsLeft)} : {m.Games.First().Turns.Sum(t => t.PointsRight)}");
+            Settings.Instance.SendGameResults(data);
         }
 
         #endregion
+
+
+        private void RespServer_RespServerDataReceived(NetMQ.NetMQSocket socket, MqServerDataReceivedEventArgs e)
+        {
+            if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
+
+            if (e.IsGameModus && e.GameModus == GameSettings.GameModis.Ziel)
+            {
+                _ = socket.TrySignalOK();
+                RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+                var rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(Pages.ZielPage));
+            }
+
+            if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
+            {
+                Settings.Instance.GameSettings.SetModus(e.GameModus);
+            }
+
+            if (e.IsPointsPerTurn)
+            {
+                Settings.Instance.GameSettings.PointsPerTurn = e.PointsPerTurn;
+            }
+
+            if (e.IsTurnsPerGame)
+            {
+                Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
+            }
+
+            if (e.IsColorScheme)
+            {
+                Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+            }
+
+            if (e.IsReset)
+            {
+                if (Settings.Instance.GameSettings.GameModus != GameSettings.GameModis.Ziel)
+                    this.Match.Reset(true);
+            }
+
+            if (e.IsSetBegegnungen)
+            {
+                Match.Begegnungen.Clear();
+                foreach (var item in e.Begegnungen)
+                {
+                    Match.Begegnungen.Add(item);
+                }
+            }
+
+            if (e.IsGetResult)
+            {
+                _ = socket.TrySendFrame(Match.Serialize(false), false);
+            }
+
+            if (socket.HasOut)
+            {
+                _ = socket.TrySignalOK();
+            }
+
+            RaiseAllPropertysChanged();
+        }
+
+
+       
+
 
 
         #region Public Function
@@ -185,7 +268,7 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.Instance.IsBroadcasting)
             {
-                NetworkService.SendData(Match.Serialize(true));
+                BroadcastService.SendData(Match.Serialize(true));
             }
         }
 
@@ -289,6 +372,16 @@ namespace StockTV.ViewModel
                     temp += String.IsNullOrEmpty(temp) ? "" : "-";
                     temp += $"{item.PointsLeft}";
                 }
+
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                    Match.Begegnungen.Count > 0 &&
+                    string.IsNullOrEmpty(temp))
+                {
+                    temp = Match.Begegnungen
+                        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                        .FirstOrDefault()?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                }
+
                 return temp;
             }
         }
@@ -306,6 +399,16 @@ namespace StockTV.ViewModel
                     temp += String.IsNullOrEmpty(temp) ? "" : "-";
                     temp += $"{item.PointsRight}";
                 }
+
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                    Match.Begegnungen.Count > 0 &&
+                    string.IsNullOrEmpty(temp))
+                {
+                    temp = Match.Begegnungen
+                        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                        .FirstOrDefault()?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                }
+
                 return temp;
             }
         }
@@ -413,6 +516,15 @@ namespace StockTV.ViewModel
         }
 
         #endregion
+
+
+        public bool ShowBegegnung
+        {
+            get
+            {
+                return true;
+            }
+        }
 
     }
 }

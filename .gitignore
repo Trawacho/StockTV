@@ -2,10 +2,30 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/src/.vs/StockTV/v16
-/src/StockTV/obj
-/src/StockTV/bin
-/src/StockTV/StockTV.csproj.user
-/StockTV/.vs
-/.vs
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+.vs/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Windows Store app package directories and files
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+
 /src/StockTV/AppPackages/StockTV_1.1.13.0_Debug_Test

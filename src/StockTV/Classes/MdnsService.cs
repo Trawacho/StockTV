@@ -1,5 +1,6 @@
 ﻿using Makaretu.Dns;
 using System;
+using Windows.ApplicationModel;
 
 namespace StockTV.Classes
 {
@@ -10,7 +11,11 @@ namespace StockTV.Classes
         internal static void Advertise()
         {
             if (profile == null)
+            {
                 profile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.", 4747);
+                profile.AddProperty("pkgVer", Package.Current.Id.Version.ToString());
+                profile.AddProperty("ResultInfo", "4748");
+            }
             if (service == null)
                 service = new ServiceDiscovery();
 
@@ -20,13 +25,8 @@ namespace StockTV.Classes
         internal static void Unadvertise()
         {
             service?.Unadvertise();
-            MdnsService.Dispose();
         }
 
-        internal static void Dispose()
-        {
-            profile = null;
-            service?.Dispose();
-        }
+       
     }
 }

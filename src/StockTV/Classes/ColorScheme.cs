@@ -25,7 +25,8 @@ namespace StockTV.Classes
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propeertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propeertyName));
+            var handler = PropertyChanged;
+            handler?.Invoke(this, new PropertyChangedEventArgs(propeertyName));
         }
         private void NotifyPropertyChangedAllProperties()
         {
@@ -105,7 +106,6 @@ namespace StockTV.Classes
         internal void RightToLeftUp()
         {
             SwitchRightToLeft();
-
         }
 
         internal void RightToLeftDown()
@@ -165,6 +165,10 @@ namespace StockTV.Classes
 
         #endregion
 
+        public byte[] AsByteArray()
+        {
+            return System.Text.Encoding.UTF8.GetBytes(Scheme.ToString());
+        }
 
         #region ReadOnly Properties
 
