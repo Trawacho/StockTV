@@ -172,20 +172,45 @@ namespace StockTV.Classes.NetMQUtil
         {
             get
             {
-                var data = table["SetBegegnungen"].ToString();
-                var a = data.TrimEnd(';').Split(';');
+                var retVal = new List<Begegnung>();
+                var s1 = Encoding.UTF8.GetString(Data).Split("=");
+                if (!s1[0].Contains("SetBegegnungen")) return retVal;
+
+                var a = s1[1].TrimEnd(';').Split(';');
                 foreach (var b in a)
                 {
                     var c = b.Split(':');
                     if (byte.TryParse(c[0], out byte _spielNummer))
                     {
-                        yield return new Begegnung(_spielNummer, c[1], c[2]);
+                        retVal.Add(new Begegnung(_spielNummer, c[1], c[2]));
                     }
+                }
+                return retVal;
+            }
+        }
+
+        #endregion
+
+        #region Nächste Bahn Links/Rechts
+        public bool IsNextCourtLeft => table.ContainsKey("NextLeft");
+        public bool NextCourtLeft
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToBoolean(table["NextLeft"]);
+                }
+                catch (Exception)
+                {
+                    return false;
                 }
             }
         }
 
         #endregion
+
+
 
         #region GetResult
         public bool IsGetResult => table.ContainsKey("GetResult");

@@ -265,27 +265,5 @@ namespace StockTV.Classes
 
     }
 
-    public class Begegnung
-    {
-        public Begegnung(byte spielNummer, string TeamA, string TeamB)
-        {
-            Spielnummer = spielNummer;
-            Mannschaft_A = TeamA;
-            Mannschaft_B = TeamB;
-        }
-
-        public byte Spielnummer { get; set; }
-        private readonly string Mannschaft_A;
-        private readonly string Mannschaft_B;
-
-        public string TeamNameLeft(bool colorSchemeRightToLeft)
-        {
-            return colorSchemeRightToLeft ? Mannschaft_A : Mannschaft_B;
-        }
-
-        public string TeamNameRight(bool colorSchemeRightToLeft)
-        {
-            return colorSchemeRightToLeft ? Mannschaft_B : Mannschaft_A;
-        }
-    }
+    
 }

@@ -19,14 +19,14 @@
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>arm</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <PackageCertificateThumbprint>E8BE66E973748812D24DF0802BB20DB2F7E39B4F</PackageCertificateThumbprint>
     <PackageCertificateKeyFile />
-    <AppxPackageSigningTimestampServerUrl>http://timestamp.globalsign.com/scripts/timstamp.dll</AppxPackageSigningTimestampServerUrl>
+    <AppxPackageSigningTimestampServerUrl>http://timestamp.globalsign.com/scripts/timestamp.dll</AppxPackageSigningTimestampServerUrl>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -129,6 +129,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Classes\Begegnung.cs" />
     <Compile Include="Classes\NetMQUtil\PubServer.cs" />
     <Compile Include="Classes\NetMQUtil\RespServer.cs" />
     <Compile Include="Classes\ColorScheme.cs" />
@@ -236,12 +237,13 @@
     <None Include="StockTV_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\netmq-uwp\NetMQ-UWP\NetMQ-UWP.csproj">
-      <Project>{df40ce2c-3112-43cb-b90e-08ec6e8614eb}</Project>
-      <Name>NetMQ-UWP</Name>
-    </ProjectReference>
+    <Reference Include="AsyncIO">
+      <HintPath>..\..\netmq-uwp\NetMQ-UWP\bin\Release\AsyncIO.dll</HintPath>
+    </Reference>
+    <Reference Include="NetMQ-UWP">
+      <HintPath>..\..\netmq-uwp\NetMQ-UWP\bin\Release\NetMQ-UWP.dll</HintPath>
+    </Reference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

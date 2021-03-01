@@ -45,8 +45,6 @@ namespace StockTV.ViewModel
 
         private byte settingsCounter;
 
-        private DispatcherTimer timer;
-
         #endregion
 
 
@@ -60,7 +58,7 @@ namespace StockTV.ViewModel
             Match = new Match();
             Match.TurnsChanged += Match_TurnsChanged;
             _inputValue = -1;
-           
+
             RespServer.RespServerDataReceived += RespServer_RespServerDataReceived;
         }
 
@@ -79,10 +77,13 @@ namespace StockTV.ViewModel
 
         private void RespServer_RespServerDataReceived(NetMQ.NetMQSocket socket, MqServerDataReceivedEventArgs e)
         {
+            bool answerSend = false;
+
             if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
 
             if (e.IsGameModus && e.GameModus == GameSettings.GameModis.Ziel)
             {
+                answerSend = true;
                 _ = socket.TrySignalOK();
                 RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
                 var rootFrame = Window.Current.Content as Frame;
@@ -109,6 +110,11 @@ namespace StockTV.ViewModel
                 Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
             }
 
+            if (e.IsNextCourtLeft)
+            {
+                Settings.Instance.ColorScheme.RightToLeft = e.NextCourtLeft;
+            }
+
             if (e.IsReset)
             {
                 if (Settings.Instance.GameSettings.GameModus != GameSettings.GameModis.Ziel)
@@ -126,10 +132,12 @@ namespace StockTV.ViewModel
 
             if (e.IsGetResult)
             {
-                _ = socket.TrySendFrame(Match.Serialize(false), false);
+                answerSend = true;
+                if (socket.HasOut)
+                    _ = socket.TrySendFrame(Match.Serialize(false), false);
             }
 
-            if (socket.HasOut)
+            if (socket.HasOut && !answerSend)
             {
                 _ = socket.TrySignalOK();
             }
@@ -138,7 +146,7 @@ namespace StockTV.ViewModel
         }
 
 
-       
+
 
 
 
