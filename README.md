@@ -21,6 +21,20 @@ Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und
 Wenn die erste Bahn erledigt ist, hat man es schon fast geschafft. Man hat die Möglichkeit das System zu Hause am Computermonitor oder TV zu testen. Für unter 100€ ist ein testen zu Hause möglich,
 ohne ein Risiko einzugehen.
 
+### Bilder
+Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfrage)  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Keypad.jpg" width="150" /> 
+
+#### Installationen
+ - ESF Hankofen<br>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF1.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF2.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF4.jpg" width="300" />
+
+ - TV Geiselhöring<br>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG1.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG2.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG3.jpg" width="300" />
+
+### Unterstützung
+Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
+In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung. Durch sein strukturiertes Testen, seine Ideen sowie seine konstruktiven Kritiken konnte das Projekt nochmal einen Schritt nach vorne machen. Danke Mich!
 
 [Raspberry Pi 3]: <https://www.amazon.de/gp/product/B01CI5879A/ref=ppx_yo_dt_b_asin_title_o00_s01?ie=UTF8&th=1>
 [Kabelloser Ziffernblock]: <https://www.amazon.de/gp/product/B00KYPJAMK/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1>
