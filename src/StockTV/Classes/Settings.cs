@@ -266,6 +266,10 @@ namespace StockTV.Classes
 
         #endregion
 
+        public override string ToString()
+        {
+            return $"Bahn={CourtNumber};ColorScheme={ColorScheme.Scheme};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextLeft={ColorScheme.RightToLeft}";
+        }
 
         public void SendGameResults(byte[] message)
         {

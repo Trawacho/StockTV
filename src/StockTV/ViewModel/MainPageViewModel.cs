@@ -134,7 +134,26 @@ namespace StockTV.ViewModel
             {
                 answerSend = true;
                 if (socket.HasOut)
-                    _ = socket.TrySendFrame(Match.Serialize(false), false);
+                {
+                    NetMQMessage back = new NetMQMessage(2);
+                    back.Append("Result");
+                    back.Append(Match.Serialize(false));
+
+                    _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(10), back);
+                }
+            }
+
+            if (e.IsGetSettings)
+            {
+                answerSend = true;
+                if (socket.HasOut)
+                {
+                    NetMQMessage back = new NetMQMessage(2);
+                    back.Append("Settings");
+                    back.Append(Settings.Instance.ToString());
+
+                    _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(10), back);
+                }
             }
 
             if (socket.HasOut && !answerSend)

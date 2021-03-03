@@ -210,10 +210,14 @@ namespace StockTV.Classes.NetMQUtil
 
         #endregion
 
+        #region GetSettings
 
+        public bool IsGetSettings => table.ContainsKey("Get") && table.ContainsValue("Settings");
+        #endregion
 
         #region GetResult
-        public bool IsGetResult => table.ContainsKey("GetResult");
+        public bool IsGetResult => table.ContainsKey("Get") && table.ContainsValue("Result");
+        
         #endregion
     }
 }
