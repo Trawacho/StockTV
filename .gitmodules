@@ -1,0 +1,3 @@
+[submodule "netmq-uwp"]
+    path = netmq-uwp
+    url = https://github.com/abraaocaldas/netmq-uwp.git
