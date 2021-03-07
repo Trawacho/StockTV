@@ -2,7 +2,7 @@
 
 namespace StockTV.Classes
 {
-    public class GameSettings 
+    public class GameSettings
     {
         #region Public Enumeration 
 
@@ -47,19 +47,19 @@ namespace StockTV.Classes
             switch (modus)
             {
                 case GameModis.Training:
-                    TurnsPerGame = 30;
+                    TurnsPerGame = TurnsPerGameTrainingDefault;
                     break;
                 case GameModis.BestOf:
-                    TurnsPerGame = 6;
+                    TurnsPerGame = TurnsPerGameTurnierDefault;
                     break;
                 case GameModis.Turnier:
-                    TurnsPerGame = 6;
+                    TurnsPerGame = TurnsPerGameTurnierDefault;
                     break;
                 default:
                     break;
             }
 
-            PointsPerTurn = 30;
+            PointsPerTurn = PointsPerTurnDefault;
 
         }
 
@@ -155,8 +155,8 @@ namespace StockTV.Classes
             internal set
             {
                 if (turnsPerGame == value ||
-                           value < 4 ||
-                           value > 99)
+                           value < TurnsPerGameMin ||
+                           value > TurnsPerGameMax)
                     return;
 
                 turnsPerGame = value;
@@ -164,8 +164,26 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(TurnsPerGame)] = value.ToString();
             }
         }
-        public byte TurnsPerGameMin => 4;
-        public byte TurnsPerGameMax => 99;
+
+        /// <summary>
+        /// Min Value for <see cref="TurnsPerGame"/>
+        /// </summary>
+        const byte TurnsPerGameMin = 4;
+
+        /// <summary>
+        /// Max Value for <see cref="TurnsPerGame"/>
+        /// </summary>
+        const byte TurnsPerGameMax = 99;
+
+        /// <summary>
+        /// Default for <see cref="TurnsPerGame"/> in <see cref="GameModis.Training"/>
+        /// </summary>
+        const byte TurnsPerGameTrainingDefault = 30;
+
+        /// <summary>
+        /// Default for <see cref="TurnsPerGame"/> in <see cref="GameModis.Turnier"/> or <see cref="GameModis.BestOf"/>
+        /// </summary>
+        const byte TurnsPerGameTurnierDefault = 6;
 
         #endregion
 
@@ -191,9 +209,22 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(PointsPerTurn)] = value.ToString();
             }
         }
-        public byte PointsPerTurnMax => 99;
-        public byte PointsPerTurnMin => 15;
 
+        /// <summary>
+        /// Max Value for <see cref="PointsPerTurn"/>
+        /// </summary>
+        const byte PointsPerTurnMax = 99;
+
+        /// <summary>
+        /// Min Value for <see cref="PointsPerTurn"/>
+        /// </summary>
+        const byte PointsPerTurnMin = 15;
+
+        /// <summary>
+        /// Default Value for <see cref="PointsPerTurn"/>
+        /// </summary>
+        const byte PointsPerTurnDefault = 30;
+        
         #endregion
 
 
