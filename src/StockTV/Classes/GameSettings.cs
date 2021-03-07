@@ -140,6 +140,8 @@ namespace StockTV.Classes
 
         #region Properties
 
+        #region Kehren Pro Spiel
+
         private byte turnsPerGame;
         /// <summary>
         /// Max count of Turns per Game
@@ -162,6 +164,12 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(TurnsPerGame)] = value.ToString();
             }
         }
+        public byte TurnsPerGameMin => 4;
+        public byte TurnsPerGameMax => 99;
+
+        #endregion
+
+        #region Punkte Pro Kehre
 
         private byte pointsPerTurn;
         /// <summary>
@@ -175,7 +183,7 @@ namespace StockTV.Classes
             }
             set
             {
-                if (pointsPerTurn == value || value < 15 || value > 99)
+                if (pointsPerTurn == value || value < PointsPerTurnMin || PointsPerTurnMax > 99)
                     return;
 
                 pointsPerTurn = value;
@@ -183,6 +191,11 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(PointsPerTurn)] = value.ToString();
             }
         }
+        public byte PointsPerTurnMax => 99;
+        public byte PointsPerTurnMin => 15;
+
+        #endregion
+
 
         private GameModis modis;
         /// <summary>
