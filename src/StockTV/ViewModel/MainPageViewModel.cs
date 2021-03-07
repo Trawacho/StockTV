@@ -3,9 +3,9 @@ using StockTV.Classes;
 using StockTV.Classes.NetMQUtil;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -62,106 +62,110 @@ namespace StockTV.ViewModel
             RespServer.RespServerDataReceived += RespServer_RespServerDataReceived;
         }
 
+        #endregion
 
 
         private void Match_TurnsChanged(object sender, EventArgs e)
         {
             Match m = sender as Match;
             var data = m.Serialize(false);
-            Debug.WriteLine($"{m.Games.First().Turns.Sum(t => t.PointsLeft)} : {m.Games.First().Turns.Sum(t => t.PointsRight)}");
             Settings.Instance.SendGameResults(data);
         }
 
-        #endregion
 
 
-        private void RespServer_RespServerDataReceived(NetMQ.NetMQSocket socket, MqServerDataReceivedEventArgs e)
+        private void RespServer_RespServerDataReceived(NetMQSocket socket, MqServerDataReceivedEventArgs e)
         {
-            bool answerSend = false;
-
-            if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
-
-            if (e.IsGameModus && e.GameModus == GameSettings.GameModis.Ziel)
-            {
-                answerSend = true;
-                _ = socket.TrySignalOK();
-                RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-                var rootFrame = Window.Current.Content as Frame;
-                rootFrame.Navigate(typeof(Pages.ZielPage));
-            }
-
-            if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
-            {
-                Settings.Instance.GameSettings.SetModus(e.GameModus);
-            }
-
-            if (e.IsPointsPerTurn)
-            {
-                Settings.Instance.GameSettings.PointsPerTurn = e.PointsPerTurn;
-            }
-
-            if (e.IsTurnsPerGame)
-            {
-                Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
-            }
-
-            if (e.IsColorScheme)
-            {
-                Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
-            }
-
-            if (e.IsNextCourtLeft)
-            {
-                Settings.Instance.ColorScheme.RightToLeft = e.NextCourtLeft;
-            }
-
-            if (e.IsReset)
-            {
-                if (Settings.Instance.GameSettings.GameModus != GameSettings.GameModis.Ziel)
-                    this.Match.Reset(true);
-            }
-
-            if (e.IsSetBegegnungen)
-            {
-                Match.Begegnungen.Clear();
-                foreach (var item in e.Begegnungen)
+            _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
                 {
-                    Match.Begegnungen.Add(item);
-                }
-            }
+                    bool answerSend = false;
 
-            if (e.IsGetResult)
-            {
-                answerSend = true;
-                if (socket.HasOut)
-                {
-                    NetMQMessage back = new NetMQMessage(2);
-                    back.Append("Result");
-                    back.Append(Match.Serialize(false));
+                    if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
 
-                    _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(10), back);
-                }
-            }
+                    if (e.IsGameModus && e.GameModus == GameSettings.GameModis.Ziel)
+                    {
+                        answerSend = true;
+                        _ = socket.TrySignalOK();
+                        RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+                        var rootFrame = Window.Current.Content as Frame;
+                        rootFrame.Navigate(typeof(Pages.ZielPage));
+                    }
 
-            if (e.IsGetSettings)
-            {
-                answerSend = true;
-                if (socket.HasOut)
-                {
-                    NetMQMessage back = new NetMQMessage(2);
-                    back.Append("Settings");
-                    back.Append(Settings.Instance.ToString());
+                    if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
+                    {
+                        Settings.Instance.GameSettings.SetModus(e.GameModus);
+                    }
 
-                    _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(10), back);
-                }
-            }
+                    if (e.IsPointsPerTurn)
+                    {
+                        Settings.Instance.GameSettings.PointsPerTurn = e.PointsPerTurn;
+                    }
 
-            if (socket.HasOut && !answerSend)
-            {
-                _ = socket.TrySignalOK();
-            }
+                    if (e.IsTurnsPerGame)
+                    {
+                        Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
+                    }
 
-            RaiseAllPropertysChanged();
+                    if (e.IsColorScheme)
+                    {
+                        Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+                    }
+
+                    if (e.IsNextCourtLeft)
+                    {
+                        Settings.Instance.ColorScheme.RightToLeft = e.NextCourtLeft;
+                    }
+
+                    if (e.IsReset)
+                    {
+                        if (Settings.Instance.GameSettings.GameModus != GameSettings.GameModis.Ziel)
+                            this.Match.Reset(true);
+                    }
+
+                    if (e.IsSetBegegnungen)
+                    {
+                        Match.Begegnungen.Clear();
+                        foreach (var item in e.Begegnungen)
+                        {
+                            Match.Begegnungen.Add(item);
+                        }
+                    }
+
+                    if (e.IsGetResult)
+                    {
+                        answerSend = true;
+                        if (socket.HasOut)
+                        {
+                            NetMQMessage back = new NetMQMessage(2);
+                            back.Append("Result");
+                            back.Append(Match.Serialize(false));
+
+                            _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(50), back);
+                        }
+                    }
+
+                    if (e.IsGetSettings)
+                    {
+                        answerSend = true;
+                        if (socket.HasOut)
+                        {
+                            NetMQMessage back = new NetMQMessage(2);
+                            back.Append("Settings");
+                            back.Append(Settings.Instance.ToString());
+
+                            _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(50), back);
+                        }
+                    }
+
+                    if (socket.HasOut && !answerSend)
+                    {
+                        _ = socket.TrySignalOK();
+                    }
+
+                    RaiseAllPropertysChanged();
+                });
         }
 
 
@@ -545,13 +549,7 @@ namespace StockTV.ViewModel
         #endregion
 
 
-        public bool ShowBegegnung
-        {
-            get
-            {
-                return true;
-            }
-        }
+
 
     }
 }

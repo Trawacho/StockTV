@@ -4,6 +4,7 @@ using StockTV.Classes.NetMQUtil;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -155,32 +156,36 @@ namespace StockTV.ViewModel
 
         private void MqServer_MqServerDataReceived(NetMQSocket socket, MqServerDataReceivedEventArgs e)
         {
-            if (!((Window.Current.Content as Frame).Content is Pages.ZielPage)) return;
+            _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    if (!((Window.Current.Content as Frame).Content is Pages.ZielPage)) return;
 
-            if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
-            {
-                _ = socket.TrySignalOK();
-                RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
-                var rootFrame = Window.Current.Content as Frame;
-                rootFrame.Navigate(typeof(Pages.MainPage));
-            }
+                    if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
+                    {
+                        _ = socket.TrySignalOK();
+                        RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
+                        var rootFrame = Window.Current.Content as Frame;
+                        rootFrame.Navigate(typeof(Pages.MainPage));
+                    }
 
-            if (e.IsColorScheme)
-            {
-                Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
-            }
+                    if (e.IsColorScheme)
+                    {
+                        Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+                    }
 
-            if (e.IsReset)
-            {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Ziel)
-                    _zielbewerb.Reset();
-            }
+                    if (e.IsReset)
+                    {
+                        if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Ziel)
+                            _zielbewerb.Reset();
+                    }
 
-            if (socket.HasOut)
-            {
-                _ = socket.TrySignalOK();
-            }
-
+                    if (socket.HasOut)
+                    {
+                        _ = socket.TrySignalOK();
+                    }
+                });
         }
 
         #region Private Functions
@@ -220,7 +225,7 @@ namespace StockTV.ViewModel
             else
             {
                 _isInvalidTimer.Start();
-                IsInvalidTimer_Tick(null,null);
+                IsInvalidTimer_Tick(null, null);
             }
         }
 
@@ -403,7 +408,7 @@ namespace StockTV.ViewModel
         #endregion
 
 
-       
+
 
 
 

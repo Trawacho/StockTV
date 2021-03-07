@@ -15,6 +15,7 @@ namespace StockTV.Classes.NetMQUtil
             private PairSocket shim;
             private NetMQPoller poller;
             private PublisherSocket publisher;
+            private NetMQTimer aliveTimer;
             public void Initalise(object state)
             {
 
@@ -23,15 +24,21 @@ namespace StockTV.Classes.NetMQUtil
             {
                 using (publisher = new PublisherSocket())
                 {
+                    aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(1));
+                    aliveTimer.Elapsed += (sender, eventArgs) => { publisher.SendMoreFrame("Alive").SendFrameEmpty(); };
+
                     publisher.Bind("tcp://*:4748");
                     publisher.Options.SendHighWatermark = 100;
+
                     this.shim = shim;
                     shim.ReceiveReady += OnShimReady;
                     shim.SignalOK();
-                    poller = new NetMQPoller { shim, publisher };
+                    poller = new NetMQPoller { shim, publisher, aliveTimer };
                     poller.Run();
                 }
             }
+
+           
 
             private void OnShimReady(object sender, NetMQSocketEventArgs e)
             {
@@ -80,7 +87,7 @@ namespace StockTV.Classes.NetMQUtil
             message.Append(stringToSend);
             actor.SendMultipartMessage(message);
         }
-       
+
         public void SendDataMessage(string command, byte[] dataToSend)
         {
             if (actor == null) return;

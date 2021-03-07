@@ -13,19 +13,27 @@ namespace StockTV.Classes.NetMQUtil
     /// Response Server
     /// </summary>
     internal static class RespServer
-
     {
-        internal static event MqServerDataReceivedEventHandler RespServerDataReceived;
+        #region DataReceived EventHandler
 
-        private static CancellationTokenSource _cts;
+        internal static event MqServerDataReceivedEventHandler RespServerDataReceived;
 
         private static void RaiseMqServerDataReceived(NetMQSocket socket, byte[] messageData)
         {
             var handler = RespServerDataReceived;
             handler?.Invoke(socket, new MqServerDataReceivedEventArgs(messageData));
         }
+
+        #endregion
+
+
+        private static CancellationTokenSource _cts;
+
         private static Task _task;
+
+
         public static bool IsFaulted => _task?.IsFaulted ?? true;
+
         internal static void Start()
         {
             _cts = new CancellationTokenSource();
@@ -52,6 +60,8 @@ namespace StockTV.Classes.NetMQUtil
             _cts?.Cancel();
         }
 
+
+
         private static void NetMqWorkerRoutine(CancellationToken _token)
         {
             using (var server = new ResponseSocket("@tcp://*:4747"))
@@ -75,19 +85,13 @@ namespace StockTV.Classes.NetMQUtil
             message.InitEmpty();
             socket.Receive(ref message);
 
-            try
+            if (Encoding.UTF8.GetString(message.Data) == "ALIVE")
             {
-                _ = Windows.ApplicationModel.Core.CoreApplication.MainView
-                    .CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () =>
-                        {
-                            RaiseMqServerDataReceived(e.Socket, message.Data);
-                        });
+                socket.TrySignalOK();
+                return;
             }
-            catch
-            {
-                socket.TrySignalError();
-            }
+
+            RaiseMqServerDataReceived(socket, message.Data);
         }
 
     }
