@@ -13,13 +13,13 @@ namespace StockTV.Classes
         {
             if (appProfile == null)
             {
-                appProfile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.local", 4747);
+                appProfile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.", 4747);
                 appProfile.AddProperty("pkgVer", GetAppVersion());
             }
 
             if (publishProfile == null)
             {
-                publishProfile = new ServiceProfile(Environment.MachineName, "_stockpub._tcp.local", 4748);
+                publishProfile = new ServiceProfile(Environment.MachineName, "_stockpub._tcp.", 4748);
                 publishProfile.AddProperty("pkgVer", GetAppVersion());
             }
 

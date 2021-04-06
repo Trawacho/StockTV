@@ -84,18 +84,20 @@ namespace StockTV.ViewModel
 
                     if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
 
-                    if (e.IsGameModus && e.GameModus == GameSettings.GameModis.Ziel)
+                    if (e.IsGameModus)
                     {
-                        answerSend = true;
-                        _ = socket.TrySignalOK();
-                        RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-                        var rootFrame = Window.Current.Content as Frame;
-                        rootFrame.Navigate(typeof(Pages.ZielPage));
-                    }
-
-                    if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
-                    {
-                        Settings.Instance.GameSettings.SetModus(e.GameModus);
+                        if(e.GameModus == GameSettings.GameModis.Ziel)
+                        {
+                            answerSend = true;
+                            _ = socket.TrySignalOK();
+                            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+                            var rootFrame = Window.Current.Content as Frame;
+                            rootFrame.Navigate(typeof(Pages.ZielPage));
+                        }
+                        else
+                        {
+                            Settings.Instance.GameSettings.SetModus(e.GameModus);
+                        }
                     }
 
                     if (e.IsPointsPerTurn)
@@ -159,10 +161,9 @@ namespace StockTV.ViewModel
                         }
                     }
 
-                    if (socket.HasOut && !answerSend)
-                    {
-                        _ = socket.TrySignalOK();
-                    }
+                    if (!answerSend)
+                        if (socket.HasOut)
+                            _ = socket.TrySignalOK();
 
                     RaiseAllPropertysChanged();
                 });
