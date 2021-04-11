@@ -154,7 +154,7 @@ namespace StockTV.ViewModel
             System.Diagnostics.Debug.WriteLine("ZielPageViewModel erzeugt...");
         }
 
-        private void MqServer_MqServerDataReceived(NetMQSocket socket, MqServerDataReceivedEventArgs e)
+        private void MqServer_MqServerDataReceived(MqServerDataReceivedEventArgs e)
         {
             _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
@@ -164,7 +164,6 @@ namespace StockTV.ViewModel
 
                     if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
                     {
-                        _ = socket.TrySignalOK();
                         RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
                         var rootFrame = Window.Current.Content as Frame;
                         rootFrame.Navigate(typeof(Pages.MainPage));
@@ -181,10 +180,7 @@ namespace StockTV.ViewModel
                             _zielbewerb.Reset();
                     }
 
-                    if (socket.HasOut)
-                    {
-                        _ = socket.TrySignalOK();
-                    }
+                    
                 });
         }
 

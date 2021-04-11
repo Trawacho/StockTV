@@ -276,6 +276,5 @@ namespace StockTV.Classes
             PServer.SendDataMessage("SendingResultInfo", message);
         }
 
-
     }
 }

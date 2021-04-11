@@ -43,7 +43,7 @@ namespace StockTV.ViewModel
 
         private readonly Match Match;
 
-        private byte settingsCounter;
+        private byte _settingsCounter;
 
         #endregion
 
@@ -74,22 +74,18 @@ namespace StockTV.ViewModel
 
 
 
-        private void RespServer_RespServerDataReceived(NetMQSocket socket, MqServerDataReceivedEventArgs e)
+        private void RespServer_RespServerDataReceived( MqServerDataReceivedEventArgs e)
         {
             _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
                 () =>
                 {
-                    bool answerSend = false;
-
                     if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
 
                     if (e.IsGameModus)
                     {
                         if(e.GameModus == GameSettings.GameModis.Ziel)
                         {
-                            answerSend = true;
-                            _ = socket.TrySignalOK();
                             RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
                             var rootFrame = Window.Current.Content as Frame;
                             rootFrame.Navigate(typeof(Pages.ZielPage));
@@ -137,34 +133,20 @@ namespace StockTV.ViewModel
 
                     if (e.IsGetResult)
                     {
-                        answerSend = true;
-                        if (socket.HasOut)
-                        {
                             NetMQMessage back = new NetMQMessage(2);
                             back.Append("Result");
                             back.Append(Match.Serialize(false));
-
-                            _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(50), back);
-                        }
+                            RespServer.AddOutbound(back);
                     }
 
                     if (e.IsGetSettings)
                     {
-                        answerSend = true;
-                        if (socket.HasOut)
-                        {
                             NetMQMessage back = new NetMQMessage(2);
                             back.Append("Settings");
                             back.Append(Settings.Instance.ToString());
-
-                            _ = socket.TrySendMultipartMessage(TimeSpan.FromMilliseconds(50), back);
-                        }
+                            RespServer.AddOutbound(back);
                     }
-
-                    if (!answerSend)
-                        if (socket.HasOut)
-                            _ = socket.TrySignalOK();
-
+                        
                     RaiseAllPropertysChanged();
                 });
         }
@@ -181,11 +163,11 @@ namespace StockTV.ViewModel
             //Settings
             if (_inputValue == 0 && ScanCode == 28)
             {
-                settingsCounter++;
+                _settingsCounter++;
             }
             else
             {
-                settingsCounter = 0;
+                _settingsCounter = 0;
             }
 
             //Debouncing 
@@ -539,9 +521,9 @@ namespace StockTV.ViewModel
 
         private void ShowSettingsPage()
         {
-            if (settingsCounter >= 5)
+            if (_settingsCounter >= 5)
             {
-                settingsCounter = 0;
+                _settingsCounter = 0;
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.SettingsPage));
             }

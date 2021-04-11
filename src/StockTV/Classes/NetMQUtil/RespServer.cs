@@ -1,11 +1,7 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
 using System;
-using System.Diagnostics;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.UI.Core;
 
 namespace StockTV.Classes.NetMQUtil
 {
@@ -18,81 +14,75 @@ namespace StockTV.Classes.NetMQUtil
 
         internal static event MqServerDataReceivedEventHandler RespServerDataReceived;
 
-        private static void RaiseMqServerDataReceived(NetMQSocket socket, byte[] messageData)
+        private static void RaiseMqServerDataReceived(NetMQMessage message)
         {
             var handler = RespServerDataReceived;
-            handler?.Invoke(socket, new MqServerDataReceivedEventArgs(messageData));
+            handler?.Invoke(new MqServerDataReceivedEventArgs(message));
         }
 
         #endregion
 
-
-        private static CancellationTokenSource _cts;
-
-        private static Task _task;
-
-
-        public static bool IsFaulted => _task?.IsFaulted ?? true;
-
         internal static void Start()
         {
-            _cts = new CancellationTokenSource();
-            var _token = _cts.Token;
+            outbound = new NetMQQueue<NetMQMessage>();
 
-            _task = Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    NetMqWorkerRoutine(_token);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("Exception on WorkerRoutine: {0}", ex.Message);
-                }
-            }
-            , _token
-            , TaskCreationOptions.LongRunning
-            , TaskScheduler.Default);
+            server = new ResponseSocket("@tcp://*:4747");
+            server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName);
+            server.ReceiveReady += Server_ReceiveReady;
+
+            poller = new NetMQPoller() { server };
+            poller.RunAsync();
         }
 
         internal static void Cancel()
         {
-            _cts?.Cancel();
+            poller.Stop();
+            server.Dispose();
+            poller.Dispose();
         }
 
+        static ResponseSocket server;
+        static NetMQPoller poller;
+        static NetMQQueue<NetMQMessage> outbound;
+        private static int _errCnt = 0;
 
-
-        private static void NetMqWorkerRoutine(CancellationToken _token)
+        internal static void AddOutbound(NetMQMessage data)
         {
-            using (var server = new ResponseSocket("@tcp://*:4747"))
-            {
-                server.Options.Identity = Encoding.UTF8.GetBytes($"{Environment.MachineName}");
-                server.ReceiveReady += Server_ReceiveReady;
-
-                while (!_token.IsCancellationRequested)
-                {
-                    server.Poll(TimeSpan.FromMilliseconds(100.0));
-                }
-            }
-
+            outbound.Enqueue(data);
         }
 
         private static void Server_ReceiveReady(object sender, NetMQSocketEventArgs e)
         {
-            var socket = e.Socket;
-
-            var message = new Msg();
-            message.InitEmpty();
-            socket.Receive(ref message);
-
-            if (Encoding.UTF8.GetString(message.Data) == "ALIVE")
+            e.Socket.ReceiveReady -= Server_ReceiveReady;
+            try
             {
-                socket.TrySignalOK();
-                return;
+                var message = e.Socket.ReceiveMultipartMessage();
+
+                RaiseMqServerDataReceived(message);
+
+                if (outbound.TryDequeue(out NetMQMessage result, TimeSpan.FromMilliseconds(100)))
+                {
+                    e.Socket.SendMultipartMessage(result);
+                }
+                else
+                {
+                    e.Socket.SignalOK();
+                }
+
+                _errCnt = 0;
+                e.Socket.ReceiveReady += Server_ReceiveReady;
+            }
+            catch
+            {
+                _errCnt++;
+                Cancel();
+                if (_errCnt < 5)
+                    Start();
             }
 
-            RaiseMqServerDataReceived(socket, message.Data);
         }
+
+
 
     }
 }

@@ -6,15 +6,17 @@ using System.Text;
 
 namespace StockTV.Classes.NetMQUtil
 {
-    internal delegate void MqServerDataReceivedEventHandler(NetMQSocket socket, MqServerDataReceivedEventArgs e);
+    internal delegate void MqServerDataReceivedEventHandler(MqServerDataReceivedEventArgs e);
 
     internal class MqServerDataReceivedEventArgs : EventArgs
     {
         private byte[] Data { get; set; }
+        private NetMQMessage Message { get; set; }
         private Hashtable table = new Hashtable();
-        public MqServerDataReceivedEventArgs(byte[] data)
+        public MqServerDataReceivedEventArgs(NetMQMessage message)
         {
-            this.Data = data;
+            this.Message = message;
+            this.Data = message.Last.ToByteArray();
             var l = Encoding.UTF8.GetString(Data).TrimEnd(';').Split(';');
             foreach (var item in l)
             {
