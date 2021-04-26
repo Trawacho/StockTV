@@ -74,7 +74,7 @@ namespace StockTV.ViewModel
 
 
 
-        private void RespServer_RespServerDataReceived( MqServerDataReceivedEventArgs e)
+        private void RespServer_RespServerDataReceived(MqServerDataReceivedEventArgs e)
         {
             _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
@@ -84,7 +84,7 @@ namespace StockTV.ViewModel
 
                     if (e.IsGameModus)
                     {
-                        if(e.GameModus == GameSettings.GameModis.Ziel)
+                        if (e.GameModus == GameSettings.GameModis.Ziel)
                         {
                             RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
                             var rootFrame = Window.Current.Content as Frame;
@@ -133,20 +133,20 @@ namespace StockTV.ViewModel
 
                     if (e.IsGetResult)
                     {
-                            NetMQMessage back = new NetMQMessage(2);
-                            back.Append("Result");
-                            back.Append(Match.Serialize(false));
-                            RespServer.AddOutbound(back);
+                        NetMQMessage back = new NetMQMessage(2);
+                        back.Append("Result");
+                        back.Append(Match.Serialize(false));
+                        RespServer.AddOutbound(back);
                     }
 
                     if (e.IsGetSettings)
                     {
-                            NetMQMessage back = new NetMQMessage(2);
-                            back.Append("Settings");
-                            back.Append(Settings.Instance.ToString());
-                            RespServer.AddOutbound(back);
+                        NetMQMessage back = new NetMQMessage(2);
+                        back.Append("Settings");
+                        back.Append(Settings.Instance.ToString());
+                        RespServer.AddOutbound(back);
                     }
-                        
+
                     RaiseAllPropertysChanged();
                 });
         }
@@ -387,16 +387,33 @@ namespace StockTV.ViewModel
                     temp += $"{item.PointsLeft}";
                 }
 
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                    Match.Begegnungen.Count > 0 &&
-                    string.IsNullOrEmpty(temp))
-                {
-                    temp = Match.Begegnungen
-                        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                        .FirstOrDefault()?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
-                }
+                //if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                //    Match.Begegnungen.Count > 0 &&
+                //    string.IsNullOrEmpty(temp))
+                //{
+                //    temp = Match.Begegnungen
+                //        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                //        .FirstOrDefault()?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                //}
 
                 return temp;
+            }
+        }
+
+        public string LeftTeamName
+        {
+            get
+            {
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                    Match.Begegnungen.Count > 0)
+                {
+                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                                            ?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 
@@ -414,16 +431,33 @@ namespace StockTV.ViewModel
                     temp += $"{item.PointsRight}";
                 }
 
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                    Match.Begegnungen.Count > 0 &&
-                    string.IsNullOrEmpty(temp))
-                {
-                    temp = Match.Begegnungen
-                        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                        .FirstOrDefault()?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
-                }
+                //if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                //    Match.Begegnungen.Count > 0 &&
+                //    string.IsNullOrEmpty(temp))
+                //{
+                //    temp = Match.Begegnungen
+                //        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                //        .FirstOrDefault()?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                //}
 
                 return temp;
+            }
+        }
+
+        public string RightTeamName
+        {
+            get
+            {
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                    Match.Begegnungen.Count > 0)
+                {
+                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                                            ?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 

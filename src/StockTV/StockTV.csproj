@@ -150,6 +150,7 @@
     <Compile Include="Converter\BooleanToVisibilityConverterInverted.cs" />
     <Compile Include="Converter\DoubleDivisionConverter.cs" />
     <Compile Include="Converter\GameModusToVisibilityConverter.cs" />
+    <Compile Include="Converter\LayoutTransformer.cs" />
     <Compile Include="Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
