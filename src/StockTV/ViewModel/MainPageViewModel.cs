@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using static StockTV.Classes.ColorScheme;
 
 namespace StockTV.ViewModel
 {
@@ -86,9 +87,7 @@ namespace StockTV.ViewModel
                     {
                         if (e.GameModus == GameSettings.GameModis.Ziel)
                         {
-                            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-                            var rootFrame = Window.Current.Content as Frame;
-                            rootFrame.Navigate(typeof(Pages.ZielPage));
+                            ShowZielPage();
                         }
                         else
                         {
@@ -101,19 +100,24 @@ namespace StockTV.ViewModel
                         Settings.Instance.GameSettings.PointsPerTurn = e.PointsPerTurn;
                     }
 
+                    if (e.IsBahnNummer)
+                    {
+                        Settings.Instance.CourtNumber = e.BahnNummer;
+                    }
+
                     if (e.IsTurnsPerGame)
                     {
                         Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
                     }
 
-                    if (e.IsColorScheme)
+                    if (e.IsColorModus)
                     {
-                        Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+                        Settings.Instance.ColorScheme.ColorModus = e.ColorModus;
                     }
 
-                    if (e.IsNextCourtLeft)
+                    if (e.IsNextBahn)
                     {
-                        Settings.Instance.ColorScheme.RightToLeft = e.NextCourtLeft;
+                        Settings.Instance.ColorScheme.NextBahnModus = e.NextBahn;
                     }
 
                     if (e.IsReset)
@@ -408,7 +412,8 @@ namespace StockTV.ViewModel
                     Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                                            ?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                                            ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left) 
+                                            ?? string.Empty;
                 }
                 else
                 {
@@ -452,7 +457,8 @@ namespace StockTV.ViewModel
                     Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                                            ?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
+                                            ?.TeamNameRight(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left) 
+                                            ?? string.Empty;
                 }
                 else
                 {
@@ -501,7 +507,7 @@ namespace StockTV.ViewModel
 
             var turn = new Turn();
 
-            if (!Settings.Instance.ColorScheme.RightToLeft)
+            if (Settings.Instance.ColorScheme.NextBahnModus == NextBahnModis.Right )
             {
                 turn.PointsRight = Convert.ToByte(_inputValue);
             }
@@ -522,7 +528,7 @@ namespace StockTV.ViewModel
 
             var turn = new Turn();
 
-            if (Settings.Instance.ColorScheme.RightToLeft)
+            if (Settings.Instance.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
             {
                 turn.PointsRight = Convert.ToByte(_inputValue);
             }
@@ -555,12 +561,19 @@ namespace StockTV.ViewModel
 
         private void ShowSettingsPage()
         {
-            if (_settingsCounter >= 5)
-            {
-                _settingsCounter = 0;
-                var rootFrame = Window.Current.Content as Frame;
-                rootFrame.Navigate(typeof(Pages.SettingsPage));
-            }
+            if (_settingsCounter < 5) return;
+
+            _settingsCounter = 0;
+            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+            var rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(Pages.SettingsPage));
+        }
+
+        private void ShowZielPage()
+        {
+            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+            var rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(Pages.ZielPage));
         }
 
         #endregion

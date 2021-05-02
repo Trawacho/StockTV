@@ -57,10 +57,9 @@ namespace StockTV.Classes.NetMQUtil
             try
             {
                 var message = e.Socket.ReceiveMultipartMessage();
-
                 RaiseMqServerDataReceived(message);
 
-                if (outbound.TryDequeue(out NetMQMessage result, TimeSpan.FromMilliseconds(100)))
+                if (outbound.TryDequeue(out NetMQMessage result, TimeSpan.FromMilliseconds(500)))
                 {
                     e.Socket.SendMultipartMessage(result);
                 }

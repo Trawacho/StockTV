@@ -1,5 +1,4 @@
-﻿using NetMQ;
-using StockTV.Classes;
+﻿using StockTV.Classes;
 using StockTV.Classes.NetMQUtil;
 using System;
 using System.ComponentModel;
@@ -150,8 +149,6 @@ namespace StockTV.ViewModel
             _isInvalidTimer.Interval = TimeSpan.FromMilliseconds(500);
 
             RespServer.RespServerDataReceived += MqServer_MqServerDataReceived;
-
-            System.Diagnostics.Debug.WriteLine("ZielPageViewModel erzeugt...");
         }
 
         private void MqServer_MqServerDataReceived(MqServerDataReceivedEventArgs e)
@@ -164,14 +161,12 @@ namespace StockTV.ViewModel
 
                     if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
                     {
-                        RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
-                        var rootFrame = Window.Current.Content as Frame;
-                        rootFrame.Navigate(typeof(Pages.MainPage));
+                        ShowMainPage();
                     }
 
-                    if (e.IsColorScheme)
+                    if (e.IsColorModus)
                     {
-                        Settings.Instance.ColorScheme.Scheme = e.ColorScheme;
+                        Settings.Instance.ColorScheme.ColorModus = e.ColorModus;
                     }
 
                     if (e.IsReset)
@@ -180,7 +175,7 @@ namespace StockTV.ViewModel
                             _zielbewerb.Reset();
                     }
 
-                    
+
                 });
         }
 
@@ -256,12 +251,22 @@ namespace StockTV.ViewModel
         /// </summary>
         private void ShowSettingsPage()
         {
-            if (settingsCounter >= 5)
-            {
-                settingsCounter = 0;
-                var rootFrame = Window.Current.Content as Frame;
-                rootFrame.Navigate(typeof(Pages.SettingsPage));
-            }
+            if (settingsCounter < 5) return;
+
+            settingsCounter = 0;
+            RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
+            var rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(Pages.SettingsPage));
+        }
+
+        /// <summary>
+        /// Switch to MainPage
+        /// </summary>
+        private void ShowMainPage()
+        {
+            RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
+            var rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(Pages.MainPage));
         }
 
         /// <summary>

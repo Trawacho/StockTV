@@ -265,7 +265,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.Instance.ColorScheme.Scheme.ToString();
+                return Settings.Instance.ColorScheme.ColorModus.ToString();
             }
         }
 
@@ -273,7 +273,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.Instance.ColorScheme.RightToLeft
+                return Settings.Instance.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left
                     ? "Links"
                     : "Rechts";
             }

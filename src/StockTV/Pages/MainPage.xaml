@@ -24,16 +24,16 @@
     <Grid >
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Viewbox  Grid.Column="0">
+        <Viewbox  Grid.Column="0" MaxWidth="100">
             <common:LayoutTransformer Margin="2">
                 <common:LayoutTransformer.LayoutTransform>
                     <RotateTransform Angle="-90"/>
@@ -185,7 +185,7 @@
 
         </Grid>
 
-        <Viewbox Grid.Column="2">
+        <Viewbox Grid.Column="2" MaxWidth="100">
             <common:LayoutTransformer Margin="2">
                 <common:LayoutTransformer.LayoutTransform>
                     <RotateTransform Angle="90"/>

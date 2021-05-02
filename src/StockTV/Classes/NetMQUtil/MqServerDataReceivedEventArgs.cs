@@ -27,6 +27,26 @@ namespace StockTV.Classes.NetMQUtil
 
         }
 
+        #region BahnNummer
+
+        public byte BahnNummer
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToByte(table["Bahn"]);
+                }
+                catch (Exception)
+                {
+                    return 1;
+                }
+            }
+        }
+        public bool IsBahnNummer => table.ContainsKey("Bahn");
+
+        #endregion
+
         #region GameModus
 
         public GameSettings.GameModis GameModus
@@ -109,26 +129,26 @@ namespace StockTV.Classes.NetMQUtil
 
         #region ColorScheme
 
-        public ColorScheme.Schemes ColorScheme
+        public ColorScheme.ColorModis ColorModus
         {
             get
             {
                 try
                 {
-                    return (Classes.ColorScheme.Schemes)Enum.Parse(typeof(Classes.ColorScheme.Schemes), table[nameof(Classes.ColorScheme)].ToString());
+                    return (ColorScheme.ColorModis)Enum.Parse(typeof(ColorScheme.ColorModis), table[nameof(ColorModus)].ToString());
                 }
                 catch (Exception)
                 {
-                    return Classes.ColorScheme.Schemes.Normal;
+                    return ColorScheme.ColorModis.Normal;
                 }
             }
         }
 
-        public bool IsColorScheme
+        public bool IsColorModus
         {
             get
             {
-                return table.ContainsKey(nameof(ColorScheme));
+                return table.ContainsKey(nameof(ColorModus));
             }
         }
         #endregion
@@ -194,22 +214,23 @@ namespace StockTV.Classes.NetMQUtil
         #endregion
 
         #region Nächste Bahn Links/Rechts
-        public bool IsNextCourtLeft => table.ContainsKey("NextLeft");
-        public bool NextCourtLeft
+        public bool IsNextBahn => table.ContainsKey(nameof(Classes.ColorScheme.NextBahnModus));
+        public ColorScheme.NextBahnModis NextBahn
         {
             get
             {
                 try
                 {
-                    return Convert.ToBoolean(table["NextLeft"]);
+                    return (Classes.ColorScheme.NextBahnModis)Enum.Parse(typeof(Classes.ColorScheme.NextBahnModis), table[nameof(Classes.ColorScheme.NextBahnModus)].ToString());
                 }
                 catch (Exception)
                 {
-                    return false;
+                    return Classes.ColorScheme.NextBahnModis.Left;
                 }
+
             }
         }
-
+        
         #endregion
 
         #region GetSettings
@@ -219,7 +240,7 @@ namespace StockTV.Classes.NetMQUtil
 
         #region GetResult
         public bool IsGetResult => table.ContainsKey("Get") && table.ContainsValue("Result");
-        
+
         #endregion
     }
 }

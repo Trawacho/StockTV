@@ -268,7 +268,7 @@ namespace StockTV.Classes
 
         public override string ToString()
         {
-            return $"Bahn={CourtNumber};ColorScheme={ColorScheme.Scheme};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextLeft={ColorScheme.RightToLeft}";
+            return $"Bahn={CourtNumber};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus}";
         }
 
         public void SendGameResults(byte[] message)

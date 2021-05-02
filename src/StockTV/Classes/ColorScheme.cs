@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
 using Windows.UI;
@@ -11,10 +10,15 @@ namespace StockTV.Classes
     {
         #region Public Enumeration
 
-        public enum Schemes
+        public enum ColorModis
         {
             Normal,
             Dark
+        }
+        public enum NextBahnModis
+        {
+            Left,
+            Right
         }
 
         #endregion
@@ -44,11 +48,11 @@ namespace StockTV.Classes
         /// <summary>
         /// Default-Constructor
         /// </summary>
-        /// <param name="scheme"></param>
-        public ColorScheme(Schemes scheme = Schemes.Normal, bool rightToLeft = true)
+        /// <param name="colorModus"></param>
+        public ColorScheme(ColorModis colorModus = ColorModis.Normal, NextBahnModis nextBahn = NextBahnModis.Left)
         {
-            Scheme = scheme;
-            RightToLeft = rightToLeft;
+            ColorModus = colorModus;
+            NextBahnModus = nextBahn;
         }
 
         #endregion
@@ -61,9 +65,9 @@ namespace StockTV.Classes
         /// </summary>
         private void SwitchColorScheme()
         {
-            Scheme = Scheme == Schemes.Normal
-                              ? Schemes.Dark
-                              : Schemes.Normal;
+            ColorModus = ColorModus == ColorModis.Normal
+                              ? ColorModis.Dark
+                              : ColorModis.Normal;
         }
 
         /// <summary>
@@ -71,7 +75,7 @@ namespace StockTV.Classes
         /// </summary>
         private void SwitchRightToLeft()
         {
-            RightToLeft = !RightToLeft;
+            NextBahnModus = NextBahnModus == NextBahnModis.Left ? NextBahnModis.Right : NextBahnModis.Left;
         }
 
         /// <summary>
@@ -82,12 +86,12 @@ namespace StockTV.Classes
         {
             var localSettings = ApplicationData.Current.LocalSettings;
 
-            var colorschema = localSettings.Values["ColorScheme"] as string;
-            var righttoleft = localSettings.Values["RightToLeft"] as string;
+            var colorschema = localSettings.Values[nameof(ColorModus)] as string;
+            var nextbahn = localSettings.Values[nameof(NextBahnModus)] as string;
+
             return new ColorScheme(
-                colorschema.ToEnum<ColorScheme.Schemes>(),
-                Convert.ToBoolean(righttoleft)
-                );
+                colorschema.ToEnum<ColorScheme.ColorModis>(),
+                nextbahn.ToEnum<ColorScheme.NextBahnModis>());
         }
 
 
@@ -115,59 +119,55 @@ namespace StockTV.Classes
 
         #region Properties
 
-        private Schemes schemes;
+        private ColorModis colormodus;
 
         /// <summary>
         /// ColorScheme
         /// </summary>
-        internal Schemes Scheme
+        internal ColorModis ColorModus
         {
             get
             {
-                return schemes;
+                return colormodus;
             }
             set
             {
-                if (schemes == value)
+                if (colormodus == value)
                     return;
 
-                schemes = value;
+                colormodus = value;
                 NotifyPropertyChangedAllProperties();
 
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["ColorScheme"] = value.ToString();
+                localSettings.Values[nameof(ColorModus)] = value.ToString();
             }
         }
 
-        private bool rightToLeft;
 
+        private NextBahnModis nextbahnmodus;
         /// <summary>
-        /// RightToLeft Direction
+        /// Next Bahn Left or Right
         /// </summary>
-        internal bool RightToLeft
+        internal NextBahnModis NextBahnModus
         {
-            get
-            {
-                return rightToLeft;
-            }
-
+            get => nextbahnmodus;
             set
             {
-                if (rightToLeft == value)
+                if (nextbahnmodus == value)
                     return;
-                rightToLeft = value;
+
+                nextbahnmodus = value;
                 NotifyPropertyChangedAllProperties();
 
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["RightToLeft"] = value.ToString();
+                localSettings.Values[nameof(NextBahnModus)] = value.ToString();
             }
         }
-
         #endregion
 
         public byte[] AsByteArray()
         {
-            return System.Text.Encoding.UTF8.GetBytes(Scheme.ToString());
+            return System.Text.Encoding.UTF8.GetBytes(ColorModus.ToString());
         }
 
         #region ReadOnly Properties
@@ -179,11 +179,11 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
-                    case Schemes.Dark:
+                    case ColorModis.Dark:
                         return new SolidColorBrush(Colors.LightGray);
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                     default:
                         return new SolidColorBrush(Colors.Black);
                 }
@@ -198,11 +198,11 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
-                    case Schemes.Dark:
+                    case ColorModis.Dark:
                         return new SolidColorBrush(Colors.Black);
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                     default:
                         return new SolidColorBrush(Colors.White);
                 }
@@ -216,17 +216,16 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
 
-                    case Schemes.Dark:
-                        return RightToLeft
-                            ? new SolidColorBrush(Colors.Red)
+                    case ColorModis.Dark:
+                        return NextBahnModus == NextBahnModis.Left
+                             ? new SolidColorBrush(Colors.Red)
                             : new SolidColorBrush(Colors.YellowGreen);
-
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                     default:
-                        return RightToLeft
+                        return NextBahnModus == NextBahnModis.Left
                             ? new SolidColorBrush(Colors.Red)
                             : new SolidColorBrush(Colors.Green);
                 }
@@ -240,17 +239,17 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
 
-                    case Schemes.Dark:
-                        return RightToLeft
+                    case ColorModis.Dark:
+                        return NextBahnModus == NextBahnModis.Left
                             ? new SolidColorBrush(Colors.YellowGreen)
                             : new SolidColorBrush(Colors.Red);
 
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                     default:
-                        return RightToLeft
+                        return NextBahnModus == NextBahnModis.Left
                             ? new SolidColorBrush(Colors.Green)
                             : new SolidColorBrush(Colors.Red);
                 }
@@ -261,12 +260,12 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                         return new SolidColorBrush(Colors.DarkMagenta);
 
-                    case Schemes.Dark:
+                    case ColorModis.Dark:
                     default:
                         return new SolidColorBrush(Colors.Magenta);
                 }
@@ -277,12 +276,12 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (Scheme)
+                switch (ColorModus)
                 {
-                    case Schemes.Normal:
+                    case ColorModis.Normal:
                         return new SolidColorBrush(Colors.DarkCyan);
-                    
-                    case Schemes.Dark:
+
+                    case ColorModis.Dark:
                     default:
                         return new SolidColorBrush(Colors.Cyan);
                 }
