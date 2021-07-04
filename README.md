@@ -33,7 +33,7 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG1.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG2.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG3.jpg" width="300" />
 
  - EC EBRA Aiterhofen<br>
- <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/EC_EBRA_Aiterhofen.jpg" width="600"/>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/EC_EBRA_Aiterhofen.jpg" width="600"/>
  
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
