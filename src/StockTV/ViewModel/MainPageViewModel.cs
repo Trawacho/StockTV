@@ -283,6 +283,11 @@ namespace StockTV.ViewModel
         {
             get
             {
+                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf 
+                    && Match.CurrentGame.Turns.Count == 0
+                    && Match.CurrentGame.GameNumber > 1)
+                    return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsLeft)).ToString();
+                
                 string temp = string.Empty;
                 foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
                 {
@@ -300,6 +305,11 @@ namespace StockTV.ViewModel
         {
             get
             {
+                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf 
+                    && Match.CurrentGame.Turns.Count == 0
+                    && Match.CurrentGame.GameNumber > 1)
+                    return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsRight)).ToString();
+
                 string temp = string.Empty;
                 foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
                 {
