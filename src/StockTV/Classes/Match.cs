@@ -153,17 +153,18 @@ namespace StockTV.Classes
         }
 
 
-        public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
+        public byte[] Serialize(bool compressed = false)
         {
             /* 
-             *  the byte[] should have as first byte the courtnumber, follow by the values of the Games
+             *  the byte[] should have as first byte the courtnumber, as 2nd byte the groupnumber follow by the values of the Games
              *  for each Game the first byte is the sum of values from the turns of the left
              *  the next byte is the sum of values form the turns of the right
              *  followed by the next game
              *  
              *  e.g.
-             *  01 09 03 15 05 03 00
+             *  01 02 09 03 15 05 03 00
              *  Court 1
+             *  Group 2
              *  Game1: 9:3
              *  Game2: 15:5
              *  Game3: 3:0
@@ -174,10 +175,10 @@ namespace StockTV.Classes
             var values = new List<byte>();
 
             //First byte is CourtNumber
-            if (courtNumber == 0)
-                courtNumber = Settings.Instance.CourtNumber;
+            values.Add(Settings.Instance.CourtNumber);
 
-            values.Add(courtNumber);
+            //Second byte is GroupNumber
+            values.Add(Settings.Instance.GroupNumber);
 
             //Add for each Game the sum of the turn-value for left and right
             foreach (var g in Games)

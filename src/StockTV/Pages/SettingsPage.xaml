@@ -37,6 +37,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
@@ -215,6 +216,35 @@
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
         <!--#endregion-->
+        
+        <!--#region GroupNumber-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsGroupNumberActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" 
+                   Grid.Row="6"/>
+
+        <TextBlock Text="Gruppe:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="6"/>
+
+        <TextBlock Grid.Row="6"
+                   Grid.Column="2"
+                   Text="{Binding Path=GroupNumberValue}"
+                   HorizontalAlignment="Center"
+                   Margin="20"/>
+
+        <TextBlock Text="- bis J" 
+                   Grid.Row="6" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
 
         <!--#region Netorking -->
         <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
@@ -223,22 +253,22 @@
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
-                   Grid.Row="6"/>
+                   Grid.Row="7"/>
 
         <TextBlock Text="Networking:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
-                   Grid.Row="6"/>
+                   Grid.Row="7"/>
 
-        <TextBlock Grid.Row="6"
+        <TextBlock Grid.Row="7"
                    Grid.Column="2"
                    Text="{Binding Path=NetworkingValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
         <TextBlock Text="{Binding Path=NetworkingDescription}"
-                   Grid.Row="6" 
+                   Grid.Row="7" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
@@ -246,11 +276,11 @@
         <!--#endregion-->
 
         <!--#region Misc at the buttom -->
-        <TextBox Grid.Row="8" Grid.Column="3" Background="Transparent" 
+        <TextBox Grid.Row="9" Grid.Column="3" Background="Transparent" 
                  BorderThickness="0"
                  IsReadOnly="True"/>
 
-        <TextBlock Grid.Row="8"
+        <TextBlock Grid.Row="9"
                    Grid.Column="0"
                    Grid.ColumnSpan="4"
                    Margin="20"

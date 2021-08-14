@@ -254,14 +254,15 @@ namespace StockTV.Classes
         /// <param name="compressed"></param>
         /// <param name="courtNumber"></param>
         /// <returns></returns>
-        public byte[] Serialize(bool compressed = false, byte courtNumber = 0)
+        public byte[] Serialize(bool compressed = false)
         {
             /* 
-             *  the byte[] should have as first byte the courtnumber, follow by the values of the attempts
+             *  the byte[] should have as first byte the courtnumber, the 2nd byte for the groupNumber is always 0, follow by the values of the attempts
              *  
              *  e.g.
-             *  01 04 08 00 10 04 08 05
+             *  01 00 04 08 00 10 04 08 05
              *  Court 1
+             *  Group 0
              *  Attempt 1: 4    (Massen Vorne)
              *  Attempt 2: 8    (Massen Vorne)
              *  Attempt 3: 0    (Massen Vorne)
@@ -276,10 +277,10 @@ namespace StockTV.Classes
             var values = new List<byte>();
 
             //First byte is CourtNumber
-            if (courtNumber == 0)
-                courtNumber = Settings.Instance.CourtNumber;
+            values.Add(Settings.Instance.CourtNumber);
 
-            values.Add(courtNumber);
+            //2nd byte is GroupNumber. Always 0 by Modus Zielschiessen
+            values.Add(0);
 
             //Add for each attempt the value 
             foreach (var a in ListOfAllValues)

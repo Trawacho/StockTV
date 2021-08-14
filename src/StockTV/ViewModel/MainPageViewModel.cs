@@ -215,7 +215,10 @@ namespace StockTV.ViewModel
                 if (Match.CurrentGame.GameNumber == 1 &&
                     Match.CurrentGame.Turns.Count == 0)
                 {
-                    return $"Bahn: {Settings.Instance.CourtNumber}";
+                    if (Settings.Instance.GroupNumberLetter == string.Empty)
+                        return $"Bahn: {Settings.Instance.CourtNumber}";
+                    else
+                        return $"Bahn: {Settings.Instance.GroupNumberLetter}-{Settings.Instance.CourtNumber}";
                 }
 
                 switch (Settings.Instance.GameSettings.GameModus)
@@ -225,7 +228,10 @@ namespace StockTV.ViewModel
                     case GameSettings.GameModis.BestOf:
                         return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
                     case GameSettings.GameModis.Turnier:
-                        return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                        if (Settings.Instance.GroupNumberLetter == string.Empty)
+                            return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                        else
+                            return $"Bahn: {Settings.Instance.GroupNumberLetter}-{Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
                     default:
                         return "unknown Status";
                 }
@@ -283,11 +289,11 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf 
+                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf
                     && Match.CurrentGame.Turns.Count == 0
                     && Match.CurrentGame.GameNumber > 1)
                     return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsLeft)).ToString();
-                
+
                 string temp = string.Empty;
                 foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
                 {
@@ -305,7 +311,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf 
+                if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf
                     && Match.CurrentGame.Turns.Count == 0
                     && Match.CurrentGame.GameNumber > 1)
                     return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsRight)).ToString();
