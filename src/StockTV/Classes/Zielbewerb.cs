@@ -257,30 +257,29 @@ namespace StockTV.Classes
         public byte[] Serialize(bool compressed = false)
         {
             /* 
-             *  the byte[] should have as first byte the courtnumber, the 2nd byte for the groupNumber is always 0, follow by the values of the attempts
+             *   the byte array starts with ten bytes, containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
              *  
              *  e.g.
-             *  01 00 04 08 00 10 04 08 05
+             *  01 00 00 00 00 00 00 00 00 00 04 08 00 10 04 08 05
              *  Court 1
-             *  Group 0
-             *  Attempt 1: 4    (Massen Vorne)
-             *  Attempt 2: 8    (Massen Vorne)
-             *  Attempt 3: 0    (Massen Vorne)
-             *  Attempt 4: 10   (Massen Vorne)
-             *  Attempt 5: 4    (Massen Vorne)
-             *  Attempt 6: 8    (Massen Vorne)
-             *  Attempt 7: 5    (Schiessen)
+             *     Group 0
+             *        Modus 0
+             *           direction 0
+             *           .....
+             *                                 Attempt 1: 4    (Massen Vorne)
+             *                                    Attempt 2: 8    (Massen Vorne)
+             *                                       Attempt 3: 0    (Massen Vorne)
+             *                                          Attempt 4: 10   (Massen Vorne)
+             *                                             Attempt 5: 4    (Massen Vorne)
+             *                                                Attempt 6: 8    (Massen Vorne)
+             *                                                   Attempt 7: 5    (Schiessen)
              *  
              */
 
 
             var values = new List<byte>();
-
-            //First byte is CourtNumber
-            values.Add(Settings.Instance.CourtNumber);
-
-            //2nd byte is GroupNumber. Always 0 by Modus Zielschiessen
-            values.Add(0);
+            values.AddRange(Settings.Instance.GetDataHeader());
+            
 
             //Add for each attempt the value 
             foreach (var a in ListOfAllValues)

@@ -326,6 +326,27 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        ///  returns a byte array with ten bytes containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+        /// </summary>
+        /// <returns></returns>
+        public byte[] GetDataHeader()
+        {
+            List<byte> data = new List<byte>
+            {
+                CourtNumber,                                        //Bahnnummer
+                GroupNumber,                                        //SpielGruppe    
+                Convert.ToByte((int)GameSettings.GameModus),        //Modus
+                Convert.ToByte(ColorScheme.RightToLeft),            //Spielrichtung
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            };
+            return data.ToArray();
+        }
         #endregion
     }
 }

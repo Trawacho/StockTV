@@ -13,10 +13,10 @@ namespace StockTV.Classes
         /// </summary>
         public enum GameModis
         {
-            Training,
-            BestOf,
-            Turnier,
-            Ziel
+            Training = 0,
+            BestOf = 1,
+            Turnier = 2,
+            Ziel = 100
         }
 
         #endregion

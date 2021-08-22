@@ -156,49 +156,49 @@ namespace StockTV.Classes
         public byte[] Serialize(bool compressed = false)
         {
             /* 
-             *  the byte[] should have as first byte the courtnumber, as 2nd byte the groupnumber follow by the values of the Games
-             *  for each Game the first byte is the sum of values from the turns of the left
-             *  the next byte is the sum of values form the turns of the right
-             *  followed by the next game
+             *  the byte array starts with ten bytes, containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+             *  starting with the 11th byte the values from the games are following, always two bytes per game.
+             *  the first byte is the sum of the left team, the second is the sum of the right team followed by the next game with also 2 bytes length
              *  
              *  e.g.
-             *  01 02 09 03 15 05 03 00
+             *  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+             *  01 02 09 03 15 05 03 00 00 00 09 03 03 15 05 03 
              *  Court 1
-             *  Group 2
-             *  Game1: 9:3
-             *  Game2: 15:5
-             *  Game3: 3:0
+             *     Group 2
+             *        Modus 09
+             *           Direction 03
+             *  ...
+             *                                 Game1: 9:3
+             *                                      Game2: 3:15
+             *                                           Game3: 5:3
              *  
              */
 
 
-            var values = new List<byte>();
+            List<byte> values = new List<byte>();
 
-            //First byte is CourtNumber
-            values.Add(Settings.Instance.CourtNumber);
-
-            //Second byte is GroupNumber
-            values.Add(Settings.Instance.GroupNumber);
+            values.AddRange(Settings.Instance.GetDataHeader());
 
             //Add for each Game the sum of the turn-value for left and right
-            foreach (var g in Games)
+            foreach (Game g in Games)
             {
                 values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
                 values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
             }
 
             //Convert the list of values to an array
-            var data = values.ToArray();
+            byte[] data = values.ToArray();
 
-            if (!compressed)
-                return data;
+            if (!compressed) return data;
 
-            var output = new MemoryStream();
-            using (var datastream = new DeflateStream(output, CompressionLevel.Optimal))
+            using (MemoryStream output = new MemoryStream())
             {
-                datastream.Write(data, 0, data.Length);
+                using (DeflateStream datastream = new DeflateStream(output, CompressionLevel.Optimal))
+                {
+                    datastream.Write(data, 0, data.Length);
+                }
+                return output.ToArray();
             }
-            return output.ToArray();
         }
 
         /// <summary>
