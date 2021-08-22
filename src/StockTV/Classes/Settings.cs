@@ -26,6 +26,9 @@ namespace StockTV.Classes
             var coursenr = localSettings.Values[nameof(CourtNumber)] as string;
             this.CourtNumber = byte.Parse(coursenr ?? "1");
 
+            var groupnr = localSettings.Values[nameof(GroupNumber)] as string;
+            this.GroupNumber = byte.Parse(groupnr ?? "0");
+
             var broadcasting = localSettings.Values[nameof(IsBroadcasting)] as string;
             this.IsBroadcasting = bool.Parse(broadcasting ?? "false");
 
@@ -96,8 +99,90 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(CourtNumber)] = value.ToString();
             }
         }
+       
 
         #endregion
+
+        #region GroupNumber
+
+        /// <summary>
+        /// Changes the GroupNumber up or down
+        /// </summary>
+        /// <param name="up"></param>
+        public void GroupNumberChange(bool up = true)
+        {
+            if (up)
+                GroupNumber++;
+            else
+                GroupNumber--;
+        }
+
+        private byte groupNumber;
+        /// <summary>
+        /// Number of the group (CourtNumber Group)
+        /// </summary>
+        public byte GroupNumber
+        {
+            internal get => groupNumber;
+            set
+            {
+                if (groupNumber == value ||
+                    value < 0 ||
+                    value > 10)
+                    return;
+
+                groupNumber = value;
+
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values[nameof(GroupNumber)] = value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// GroupNumber as Letter
+        /// <br>0 =></br>
+        /// <br> 1 => A</br>
+        /// <br> 2 => B</br>
+        /// <br> .</br>
+        /// <br> .</br>
+        /// <br> .</br>
+        /// <br>10 => J</br>
+        /// </summary>
+        public string GroupNumberLetter
+        {
+            get
+            {
+                switch (groupNumber)
+                {
+                    case 1:
+                        return "A";
+                    case 2:
+                        return "B";
+                    case 3:
+                        return "C";
+                    case 4:
+                        return "D";
+                    case 5:
+                        return "E";
+                    case 6:
+                        return "F";
+                    case 7:
+                        return "G";
+                    case 8:
+                        return "H";
+                    case 9:
+                        return "I";
+                    case 10:
+                        return "J";
+                    case 0:
+                    default:
+                        return string.Empty;
+                }
+            }
+        }
+
+        #endregion
+
 
         #region Turns of a Game
 
@@ -127,7 +212,6 @@ namespace StockTV.Classes
             _turns.Clear();
 
             var localSettings = ApplicationData.Current.LocalSettings;
-
             if (!(localSettings.Values["Turns"] is string turnStringComplete))
                 return _turns;
 
@@ -264,6 +348,27 @@ namespace StockTV.Classes
             }
         }
 
+        /// <summary>
+        ///  returns a byte array with ten bytes containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+        /// </summary>
+        /// <returns></returns>
+        public byte[] GetDataHeader()
+        {
+            List<byte> data = new List<byte>
+            {
+                CourtNumber,                                        //Bahnnummer
+                GroupNumber,                                        //SpielGruppe    
+                Convert.ToByte((int)GameSettings.GameModus),        //Modus
+                Convert.ToByte(ColorScheme.RightToLeft),            //Spielrichtung
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            };
+            return data.ToArray();
+        }
         #endregion
 
         public override string ToString()

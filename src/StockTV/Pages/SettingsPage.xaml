@@ -19,7 +19,7 @@
     <Page.Resources>
         <c:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Page.Resources>
-    
+
     <Viewbox>
         <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
 
@@ -29,18 +29,19 @@
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="*"/>
 
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="auto"/>
-            </Grid.RowDefinitions>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
 
             <!--#region ColorScheme -->
             <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
@@ -215,43 +216,72 @@
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
-            <!--#endregion-->
-
-            <!--#region Netorking -->
-            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
-                   Visibility="{Binding Path=IsNetworkingActive,
+        <!--#endregion-->
+        
+        <!--#region GroupNumber-->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsGroupNumberActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
                    Grid.Column="0" 
                    Grid.Row="6"/>
 
-            <TextBlock Text="Networking:" 
+        <TextBlock Text="Gruppe:" 
                    Margin="20" 
                    HorizontalAlignment="Right"
                    Grid.Column="1" 
                    Grid.Row="6"/>
 
-            <TextBlock Grid.Row="6"
+        <TextBlock Grid.Row="6"
+                   Grid.Column="2"
+                   Text="{Binding Path=GroupNumberValue}"
+                   HorizontalAlignment="Center"
+                   Margin="20"/>
+
+        <TextBlock Text="- bis J" 
+                   Grid.Row="6" 
+                   Grid.Column="3" 
+                   Margin="30,20"
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Center"/>
+        <!--#endregion-->
+
+        <!--#region Netorking -->
+        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
+                   Visibility="{Binding Path=IsNetworkingActive,
+                                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Margin="20"
+                   Grid.Column="0" 
+                   Grid.Row="7"/>
+
+            <TextBlock Text="Networking:" 
+                   Margin="20" 
+                   HorizontalAlignment="Right"
+                   Grid.Column="1" 
+                   Grid.Row="7"/>
+
+        <TextBlock Grid.Row="7"
                    Grid.Column="2"
                    Text="{Binding Path=NetworkingValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 
-            <TextBlock Text="{Binding Path=NetworkingDescription}"
-                   Grid.Row="6" 
+        <TextBlock Text="{Binding Path=NetworkingDescription}"
+                   Grid.Row="7" 
                    Grid.Column="3" 
                    Margin="30,20"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Center"/>
             <!--#endregion-->
 
-            <!--#region Misc at the buttom -->
-            <TextBox Grid.Row="8" Grid.Column="3" Background="Transparent" 
+        <!--#region Misc at the buttom -->
+        <TextBox Grid.Row="9" Grid.Column="3" Background="Transparent" 
                  BorderThickness="0"
                  IsReadOnly="True"/>
 
-            <TextBlock Grid.Row="8"
+        <TextBlock Grid.Row="9"
                    Grid.Column="0"
                    Grid.ColumnSpan="4"
                    Margin="20"
@@ -260,7 +290,6 @@
                    />
             <!--#endregion-->
 
-        </Grid>
+    </Grid>
     </Viewbox>
-    
 </Page>

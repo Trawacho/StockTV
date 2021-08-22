@@ -11,10 +11,10 @@ namespace StockTV.Classes
         /// </summary>
         public enum GameModis
         {
-            Training,
-            BestOf,
-            Turnier,
-            Ziel
+            Training = 0,
+            BestOf = 1,
+            Turnier = 2,
+            Ziel = 100
         }
 
         #endregion
@@ -128,9 +128,11 @@ namespace StockTV.Classes
             var turnspergame = localSettings.Values[nameof(TurnsPerGame)] as string;
             var pointsperturn = localSettings.Values[nameof(PointsPerTurn)] as string;
 
-            var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>());
-            gamesettings.TurnsPerGame = byte.Parse(turnspergame ?? "30");
-            gamesettings.PointsPerTurn = byte.Parse(pointsperturn ?? "30");
+            var gamesettings = new GameSettings(gamemodus.ToEnum<GameSettings.GameModis>())
+            {
+                TurnsPerGame = byte.Parse(turnspergame ?? "30"),
+                PointsPerTurn = byte.Parse(pointsperturn ?? "30")
+            };
 
             return gamesettings;
         }
