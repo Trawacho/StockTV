@@ -204,8 +204,7 @@ namespace StockTV.Classes
             _turns.Clear();
 
             var localSettings = ApplicationData.Current.LocalSettings;
-            var turnStringComplete = localSettings.Values["Turns"] as string;
-            if (turnStringComplete == null)
+            if (!(localSettings.Values["Turns"] is string turnStringComplete))
                 return _turns;
 
             var turnStrings = turnStringComplete?.Split(';');
@@ -250,8 +249,7 @@ namespace StockTV.Classes
             var _vals = new List<byte>();
             _vals.Clear();
             var localSettings = ApplicationData.Current.LocalSettings;
-            var zielStringComplete = localSettings.Values["Ziel"] as string;
-            if (zielStringComplete == null)
+            if (!(localSettings.Values["Ziel"] is string zielStringComplete))
                 return _vals;
 
             var zielStrings = zielStringComplete?.Split(';');

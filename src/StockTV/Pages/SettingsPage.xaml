@@ -20,7 +20,8 @@
         <c:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Page.Resources>
 
-    <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
+    <Viewbox>
+        <Grid BorderBrush="Black" BorderThickness="2" Margin="10">
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
@@ -290,5 +291,5 @@
         <!--#endregion-->
 
     </Grid>
-
+    </Viewbox>
 </Page>
