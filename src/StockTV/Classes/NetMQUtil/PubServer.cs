@@ -1,7 +1,6 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
 using System;
-using System.Diagnostics;
 
 namespace StockTV.Classes.NetMQUtil
 {

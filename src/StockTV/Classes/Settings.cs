@@ -359,7 +359,7 @@ namespace StockTV.Classes
                 CourtNumber,                                        //Bahnnummer
                 GroupNumber,                                        //SpielGruppe    
                 Convert.ToByte((int)GameSettings.GameModus),        //Modus
-                Convert.ToByte(ColorScheme.RightToLeft),            //Spielrichtung
+                Convert.ToByte(ColorScheme.NextBahnModus),          //Spielrichtung
                 0,
                 0,
                 0,

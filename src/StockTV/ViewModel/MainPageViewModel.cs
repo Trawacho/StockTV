@@ -87,6 +87,7 @@ namespace StockTV.ViewModel
                     {
                         if (e.GameModus == GameSettings.GameModis.Ziel)
                         {
+                            Settings.Instance.GameSettings.SetModus(GameSettings.GameModis.Ziel);
                             ShowZielPage();
                         }
                         else
