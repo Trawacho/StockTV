@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using static StockTV.Classes.GameSettings;
 
 namespace StockTV.ViewModel
 {
@@ -35,7 +36,7 @@ namespace StockTV.ViewModel
             RespServer.RespServerDataReceived += RespServer_RespServerDataReceived;
         }
 
-        internal abstract void SwitchToOtherPage();
+        internal abstract void SwitchToOtherPage(GameModis gameModus);
         internal abstract void SetBegegnungen(IEnumerable<Begegnung> begegnungen);
         internal abstract void SetMatchReset();
         internal abstract byte[] GetSerializedResult();
@@ -43,6 +44,17 @@ namespace StockTV.ViewModel
         private byte _settingsCounter;
         internal void SettingsCounterIncrease() => _settingsCounter++;
         internal void SettingsCounterReset() => _settingsCounter = 0;
+
+        /// <summary>
+        /// Settings
+        /// </summary>
+        public Settings Settings
+        {
+            get
+            {
+                return Settings.Instance;
+            }
+        }
 
         private protected void ShowSettingsPage()
         {
@@ -60,19 +72,12 @@ namespace StockTV.ViewModel
                 .RunAsync(CoreDispatcherPriority.Normal,
                 () =>
                 {
-                    if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
+                   // if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
 
                     if (e.IsGameModus)
                     {
-                        if (e.GameModus == GameSettings.GameModis.Ziel)
-                        {
-                            Settings.Instance.GameSettings.SetModus(GameSettings.GameModis.Ziel);
-                            SwitchToOtherPage();
-                        }
-                        else
-                        {
-                            Settings.Instance.GameSettings.SetModus(e.GameModus);
-                        }
+                        Settings.Instance.GameSettings.SetModus(e.GameModus);
+                        SwitchToOtherPage(e.GameModus);
                     }
 
                     if (e.IsPointsPerTurn)

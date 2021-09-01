@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using static StockTV.Classes.GameSettings;
 
 namespace StockTV.ViewModel
 {
@@ -30,8 +31,9 @@ namespace StockTV.ViewModel
             return;
         }
 
-        internal override void SwitchToOtherPage()
+        internal override void SwitchToOtherPage(GameModis gameModus)
         {
+            if (gameModus == GameModis.Ziel) return;
             RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(Pages.MainPage));
@@ -329,7 +331,7 @@ namespace StockTV.ViewModel
         /// <summary>
         /// TRUE, wenn auf der Anzeige "ungültig" angezeigt werden soll
         /// </summary>
-        internal bool IsInvalidInput
+        public bool IsInvalidInput
         {
             get
             {
