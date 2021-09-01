@@ -1,10 +1,8 @@
-﻿using NetMQ;
-using StockTV.Classes;
+﻿using StockTV.Classes;
 using StockTV.Classes.NetMQUtil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using static StockTV.Classes.ColorScheme;

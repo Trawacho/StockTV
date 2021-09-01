@@ -2,9 +2,6 @@
 using StockTV.Classes.NetMQUtil;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using static StockTV.Classes.GameSettings;
