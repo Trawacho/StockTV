@@ -1,6 +1,7 @@
 ﻿using StockTV.Classes;
 using StockTV.Classes.NetMQUtil;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Core;
@@ -9,33 +10,41 @@ using Windows.UI.Xaml.Controls;
 
 namespace StockTV.ViewModel
 {
-    public class ZielPageViewModel : INotifyPropertyChanged
+    public class ZielPageViewModel : BaseViewModel
     {
+        /// <summary>
+        /// UWP ViewModel for ZielPage
+        /// </summary>
 
-        #region NotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void RaisePropertyChange([CallerMemberName] string propertyname = null)
+        #region BaseClass Functions
+        internal override byte[] GetSerializedResult()
         {
-            var handler = PropertyChanged;
-            handler?.Invoke(this, new PropertyChangedEventArgs(propertyname));
+            return _zielbewerb.Serialize(false);
+        }
+        internal override void SetMatchReset()
+        {
+            _zielbewerb.Reset();
+        }
+        internal override void SetBegegnungen(IEnumerable<Begegnung> begegnungen)
+        {
+            return;
         }
 
-        public void RaiseAllPropertysChanged()
+        internal override void SwitchToOtherPage()
         {
-            foreach (var prop in this.GetType().GetProperties())
-            {
-                RaisePropertyChange(prop.Name);
-            }
+            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+            var rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(Pages.MainPage));
         }
-
         #endregion
+
+        #region Private Fields
 
         private sbyte _inputValue;
         private readonly Zielbewerb _zielbewerb;
-        private byte settingsCounter;
         private readonly DispatcherTimer _isInvalidTimer = new DispatcherTimer();
-
+        
+        #endregion
 
         #region Public READONLY Properties to display in View
 
@@ -105,184 +114,19 @@ namespace StockTV.ViewModel
 
         #endregion
 
-        private bool isInvalidInput;
-        /// <summary>
-        /// TRUE, wenn auf der Anzeige "ungültig" angezeigt werden soll
-        /// </summary>
-        public bool IsInvalidInput
-        {
-            get
-            {
-                return isInvalidInput;
-            }
-            set
-            {
-                if (isInvalidInput != value)
-                {
-                    isInvalidInput = value;
-                    RaisePropertyChange();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Settings
-        /// </summary>
-        public Settings Settings
-        {
-            get
-            {
-                return Settings.Instance;
-            }
-        }
-
+        #region Constructor
 
         /// <summary>
         /// Default Konstruktur
         /// </summary>
-        public ZielPageViewModel()
+        public ZielPageViewModel() : base()
         {
-            this._inputValue = -1;
-            this._zielbewerb = new Zielbewerb();
+            _inputValue = -1;
+
+            _zielbewerb = new Zielbewerb();
+
             _isInvalidTimer.Tick += IsInvalidTimer_Tick;
             _isInvalidTimer.Interval = TimeSpan.FromMilliseconds(500);
-
-            RespServer.RespServerDataReceived += MqServer_MqServerDataReceived;
-        }
-
-        private void MqServer_MqServerDataReceived(MqServerDataReceivedEventArgs e)
-        {
-            _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
-                .RunAsync(CoreDispatcherPriority.Normal,
-                () =>
-                {
-                    if (!((Window.Current.Content as Frame).Content is Pages.ZielPage)) return;
-
-                    if (e.IsGameModus && e.GameModus != GameSettings.GameModis.Ziel)
-                    {
-                        ShowMainPage();
-                    }
-
-                    if (e.IsColorModus)
-                    {
-                        Settings.Instance.ColorScheme.ColorModus = e.ColorModus;
-                    }
-
-                    if (e.IsReset)
-                    {
-                        if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Ziel)
-                            _zielbewerb.Reset();
-                    }
-
-
-                });
-        }
-
-        #region Private Functions
-
-        /// <summary>
-        /// Werte von der Tastatur der internen Variable _inputValue zuweisen
-        /// </summary>
-        /// <param name="value"></param>
-        private void AddInput(sbyte value)
-        {
-            if (_inputValue < 0)
-            {
-                _inputValue = value;
-            }
-            else if ((_inputValue * 10) + value < Settings.Instance.GameSettings.PointsPerTurn)
-            {
-                _inputValue = Convert.ToSByte((_inputValue * 10) + value);
-            }
-            else
-            {
-                _inputValue = value;
-            }
-        }
-
-        /// <summary>
-        /// Den Wert von _inputValue den zu den Versuchen schreiben
-        /// </summary>
-        private void AddValueToVersuche()
-        {
-            if (_inputValue == -1)
-                return;
-
-            if (_zielbewerb.AddValueToVersuche(_inputValue))
-            {
-                _inputValue = -1;
-            }
-            else
-            {
-                _isInvalidTimer.Start();
-                IsInvalidTimer_Tick(null, null);
-            }
-        }
-
-        /// <summary>
-        /// Denn letzten Versuche wieder löschen
-        /// </summary>
-        private void DeleteLastValue()
-        {
-            if (_inputValue > 0)
-            {
-                _inputValue = -1;
-                return;
-            }
-
-            _zielbewerb.DeleteLastValue();
-        }
-
-        /// <summary>
-        /// Alle Werte zurücksetzen
-        /// </summary>
-        private void Reset()
-        {
-            if (_zielbewerb.CountOfVersuche() < 24)
-                return;
-
-            _zielbewerb.Reset();
-            _inputValue = -1;
-        }
-
-        /// <summary>
-        /// Switch to SettingsPage
-        /// </summary>
-        private void ShowSettingsPage()
-        {
-            if (settingsCounter < 5) return;
-
-            settingsCounter = 0;
-            RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Pages.SettingsPage));
-        }
-
-        /// <summary>
-        /// Switch to MainPage
-        /// </summary>
-        private void ShowMainPage()
-        {
-            RespServer.RespServerDataReceived -= MqServer_MqServerDataReceived;
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Pages.MainPage));
-        }
-
-        /// <summary>
-        /// Setzt <see cref="IsInvalidInput"/> auf TRUE oder auf FALSE und beendet dem Timer
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void IsInvalidTimer_Tick(object sender, object e)
-        {
-            if (IsInvalidInput == false)
-            {
-                IsInvalidInput = true;
-                return;
-            }
-            IsInvalidInput = false;
-            _isInvalidTimer.Stop();
         }
 
         #endregion
@@ -294,11 +138,11 @@ namespace StockTV.ViewModel
             //Settings
             if (_inputValue == 0 && ScanCode == 28)
             {
-                settingsCounter++;
+                SettingsCounterIncrease();
             }
             else
             {
-                settingsCounter = 0;
+                SettingsCounterReset();
             }
 
 
@@ -408,10 +252,117 @@ namespace StockTV.ViewModel
 
         #endregion
 
+        #region Private Functions
+
+        /// <summary>
+        /// Werte von der Tastatur der internen Variable _inputValue zuweisen
+        /// </summary>
+        /// <param name="value"></param>
+        private void AddInput(sbyte value)
+        {
+            if (_inputValue < 0)
+            {
+                _inputValue = value;
+            }
+            else if ((_inputValue * 10) + value < Settings.Instance.GameSettings.PointsPerTurn)
+            {
+                _inputValue = Convert.ToSByte((_inputValue * 10) + value);
+            }
+            else
+            {
+                _inputValue = value;
+            }
+        }
+
+        /// <summary>
+        /// Den Wert von _inputValue den zu den Versuchen schreiben
+        /// </summary>
+        private void AddValueToVersuche()
+        {
+            if (_inputValue == -1)
+                return;
+
+            if (_zielbewerb.AddValueToVersuche(_inputValue))
+            {
+                _inputValue = -1;
+            }
+            else
+            {
+                _isInvalidTimer.Start();
+                IsInvalidTimer_Tick(null, null);
+            }
+        }
+
+        /// <summary>
+        /// Denn letzten Versuche wieder löschen
+        /// </summary>
+        private void DeleteLastValue()
+        {
+            if (_inputValue > 0)
+            {
+                _inputValue = -1;
+                return;
+            }
+
+            _zielbewerb.DeleteLastValue();
+        }
+
+        /// <summary>
+        /// Alle Werte zurücksetzen
+        /// </summary>
+        private void Reset()
+        {
+            if (_zielbewerb.CountOfVersuche() < 24)
+                return;
+
+            _zielbewerb.Reset();
+            _inputValue = -1;
+        }
+
+        #endregion
 
 
 
+        #region IsInvalidInput Implementation
 
+        private bool isInvalidInput;
+        /// <summary>
+        /// TRUE, wenn auf der Anzeige "ungültig" angezeigt werden soll
+        /// </summary>
+        internal bool IsInvalidInput
+        {
+            get
+            {
+                return isInvalidInput;
+            }
+            set
+            {
+                if (isInvalidInput != value)
+                {
+                    isInvalidInput = value;
+                    RaisePropertyChange();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Setzt <see cref="IsInvalidInput"/> auf TRUE oder auf FALSE und beendet dem Timer
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void IsInvalidTimer_Tick(object sender, object e)
+        {
+            if (!IsInvalidInput)
+            {
+                IsInvalidInput = true;
+                return;
+            }
+            IsInvalidInput = false;
+            _isInvalidTimer.Stop();
+        }
+
+        #endregion
 
     }
 }

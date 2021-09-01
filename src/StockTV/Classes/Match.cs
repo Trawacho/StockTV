@@ -171,7 +171,11 @@ namespace StockTV.Classes
             RaiseTurnsChanged();
         }
 
-
+        /// <summary>
+        /// Returns a byte[] with HeaderInformations and Match Results
+        /// </summary>
+        /// <param name="compressed"></param>
+        /// <returns></returns>
         public byte[] Serialize(bool compressed = false)
         {
             /* 
