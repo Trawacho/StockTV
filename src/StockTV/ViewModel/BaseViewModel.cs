@@ -72,8 +72,6 @@ namespace StockTV.ViewModel
                 .RunAsync(CoreDispatcherPriority.Normal,
                 () =>
                 {
-                   // if (!((Window.Current.Content as Frame).Content is Pages.MainPage)) return;
-
                     if (e.IsGameModus)
                     {
                         Settings.Instance.GameSettings.SetModus(e.GameModus);

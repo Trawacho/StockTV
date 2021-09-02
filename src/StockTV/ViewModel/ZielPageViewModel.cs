@@ -123,12 +123,23 @@ namespace StockTV.ViewModel
             _inputValue = -1;
 
             _zielbewerb = new Zielbewerb();
+            _zielbewerb.ValuesChanged += Bewerb_ValuesChanged;
 
             _isInvalidTimer.Tick += IsInvalidTimer_Tick;
             _isInvalidTimer.Interval = TimeSpan.FromMilliseconds(500);
         }
 
+
+
         #endregion
+
+
+        private void Bewerb_ValuesChanged(object sender, EventArgs e)
+        {
+            Zielbewerb m = sender as Zielbewerb;
+            Settings.Instance.SendGameResults(m.Serialize(false));
+        }
+
 
         #region Public Function
 

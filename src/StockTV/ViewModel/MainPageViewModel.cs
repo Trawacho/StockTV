@@ -41,6 +41,8 @@ namespace StockTV.ViewModel
         {
             if (gameModus != GameModis.Ziel) return;
             RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+            Match.TurnsChanged -= Match_TurnsChanged;
+
             var rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(Pages.ZielPage));
         }
