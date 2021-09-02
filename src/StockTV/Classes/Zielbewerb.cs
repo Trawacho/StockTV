@@ -4,13 +4,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StockTV.Classes
 {
     public class Zielbewerb
     {
+        public event EventHandler ValuesChanged;
+        protected void RaiseValuesChanged()
+        {
+            var handler = ValuesChanged;
+            handler?.Invoke(this, EventArgs.Empty);
+        }
+
         #region Public Properties of SUMs
 
         /// <summary>
@@ -95,8 +100,8 @@ namespace StockTV.Classes
                 {
                     return false;
                 }
-
                 SaveTurnsToLocalSettings();
+                RaiseValuesChanged();
                 return true;
             }
 
@@ -126,6 +131,7 @@ namespace StockTV.Classes
             }
 
             SaveTurnsToLocalSettings();
+            RaiseValuesChanged();
         }
 
 
@@ -139,6 +145,7 @@ namespace StockTV.Classes
             Schüsse.Clear();
             Kombinieren.Clear();
             SaveTurnsToLocalSettings();
+            RaiseValuesChanged();
         }
 
         internal int LastValue()
@@ -279,7 +286,7 @@ namespace StockTV.Classes
 
             var values = new List<byte>();
             values.AddRange(Settings.Instance.GetDataHeader());
-            
+
 
             //Add for each attempt the value 
             foreach (var a in ListOfAllValues)
