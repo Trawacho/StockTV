@@ -47,6 +47,28 @@ namespace StockTV.Classes.NetMQUtil
 
         #endregion
 
+        #region GroupNumber
+
+        public byte GroupNumber
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToByte(table["Spielgruppe"]);
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public bool IsGroupNumber => table.ContainsKey("Spielgruppe");
+        #endregion
+
+
+
         #region GameModus
 
         public GameSettings.GameModis GameModus

@@ -53,7 +53,7 @@ namespace StockTV.ViewModel
             MaxPointsPerTurn = 3,
             MaxCountOfTurnsPerGame = 4,
             CourtNumber = 5,
-            GroupNumber = 6,
+            Spielgruppe = 6,
             Networking = 7,
 
         }
@@ -164,8 +164,8 @@ namespace StockTV.ViewModel
                 case ActiveSettings.CourtNumber:
                     Settings.Instance.CourtNumberChange();
                     break;
-                case ActiveSettings.GroupNumber:
-                    Settings.Instance.GroupNumberChange();
+                case ActiveSettings.Spielgruppe:
+                    Settings.Instance.SpielgruppeChange();
                     break;
                 case ActiveSettings.Networking:
                     Settings.Instance.IsBroadcastingChange();
@@ -197,8 +197,8 @@ namespace StockTV.ViewModel
                 case ActiveSettings.CourtNumber:
                     Settings.Instance.CourtNumberChange(false);
                     break;
-                case ActiveSettings.GroupNumber:
-                    Settings.Instance.GroupNumberChange(false);
+                case ActiveSettings.Spielgruppe:
+                    Settings.Instance.SpielgruppeChange(false);
                     break;
                 case ActiveSettings.Networking:
                     Settings.Instance.IsBroadcastingChange();
@@ -261,9 +261,9 @@ namespace StockTV.ViewModel
             }
         }
 
-        public bool IsGroupNumberActive
+        public bool IsSpielgruppeActive
         {
-            get => ActiveSetting == ActiveSettings.GroupNumber;
+            get => ActiveSetting == ActiveSettings.Spielgruppe;
         }
 
         public bool IsNetworkingActive
@@ -324,9 +324,9 @@ namespace StockTV.ViewModel
             }
         }
 
-        public string GroupNumberValue
+        public string SpielgruppeValue
         {
-            get => Settings.Instance.GroupNumberLetter;
+            get => Settings.Instance.SpielgruppeLetter;
         }
 
         public string NetworkingValue

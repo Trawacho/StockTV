@@ -218,9 +218,9 @@
                    VerticalAlignment="Center"/>
         <!--#endregion-->
         
-        <!--#region GroupNumber-->
+        <!--#region Spielgruppe-->
         <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE104;" 
-                   Visibility="{Binding Path=IsGroupNumberActive,
+                   Visibility="{Binding Path=IsSpielgruppeActive,
                                         Converter={StaticResource BooleanToVisibilityConverter}}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Margin="20"
@@ -235,7 +235,7 @@
 
         <TextBlock Grid.Row="6"
                    Grid.Column="2"
-                   Text="{Binding Path=GroupNumberValue}"
+                   Text="{Binding Path=SpielgruppeValue}"
                    HorizontalAlignment="Center"
                    Margin="20"/>
 

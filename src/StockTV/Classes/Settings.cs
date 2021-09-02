@@ -26,8 +26,8 @@ namespace StockTV.Classes
             var coursenr = localSettings.Values[nameof(CourtNumber)] as string;
             this.CourtNumber = byte.Parse(coursenr ?? "1");
 
-            var groupnr = localSettings.Values[nameof(GroupNumber)] as string;
-            this.GroupNumber = byte.Parse(groupnr ?? "0");
+            var groupnr = localSettings.Values[nameof(Spielgruppe)] as string;
+            this.Spielgruppe = byte.Parse(groupnr ?? "0");
 
             var broadcasting = localSettings.Values[nameof(IsBroadcasting)] as string;
             this.IsBroadcasting = bool.Parse(broadcasting ?? "false");
@@ -109,32 +109,32 @@ namespace StockTV.Classes
         /// Changes the GroupNumber up or down
         /// </summary>
         /// <param name="up"></param>
-        public void GroupNumberChange(bool up = true)
+        public void SpielgruppeChange(bool up = true)
         {
             if (up)
-                GroupNumber++;
+                Spielgruppe++;
             else
-                GroupNumber--;
+                Spielgruppe--;
         }
 
-        private byte groupNumber;
+        private byte spielgruppe;
         /// <summary>
         /// Number of the group (CourtNumber Group)
         /// </summary>
-        public byte GroupNumber
+        public byte Spielgruppe
         {
-            internal get => groupNumber;
+            internal get => spielgruppe;
             set
             {
-                if (groupNumber == value ||
+                if (spielgruppe == value ||
                     value < 0 ||
                     value > 10)
                     return;
 
-                groupNumber = value;
+                spielgruppe = value;
 
                 var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(GroupNumber)] = value.ToString();
+                localSettings.Values[nameof(Spielgruppe)] = value.ToString();
             }
         }
 
@@ -148,11 +148,11 @@ namespace StockTV.Classes
         /// <br> .</br>
         /// <br>10 => J</br>
         /// </summary>
-        public string GroupNumberLetter
+        public string SpielgruppeLetter
         {
             get
             {
-                switch (groupNumber)
+                switch (spielgruppe)
                 {
                     case 1:
                         return "A";
@@ -357,7 +357,7 @@ namespace StockTV.Classes
             List<byte> data = new List<byte>
             {
                 CourtNumber,                                        //Bahnnummer
-                GroupNumber,                                        //SpielGruppe    
+                Spielgruppe,                                        //SpielGruppe    
                 Convert.ToByte((int)GameSettings.GameModus),        //Modus
                 Convert.ToByte(ColorScheme.NextBahnModus),          //Spielrichtung
                 0,
@@ -373,7 +373,7 @@ namespace StockTV.Classes
 
         public override string ToString()
         {
-            return $"Bahn={CourtNumber};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus}";
+            return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus}";
         }
 
         public void SendGameResults(byte[] message)

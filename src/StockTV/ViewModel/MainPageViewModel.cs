@@ -68,10 +68,10 @@ namespace StockTV.ViewModel
                 if (Match.CurrentGame.GameNumber == 1 &&
                     Match.CurrentGame.Turns.Count == 0)
                 {
-                    if (Settings.Instance.GroupNumberLetter == string.Empty)
+                    if (Settings.Instance.SpielgruppeLetter == string.Empty)
                         return $"Bahn: {Settings.Instance.CourtNumber}";
                     else
-                        return $"Bahn: {Settings.Instance.GroupNumberLetter}-{Settings.Instance.CourtNumber}";
+                        return $"Bahn: {Settings.Instance.SpielgruppeLetter}-{Settings.Instance.CourtNumber}";
                 }
 
                 switch (Settings.Instance.GameSettings.GameModus)
@@ -81,10 +81,10 @@ namespace StockTV.ViewModel
                     case GameSettings.GameModis.BestOf:
                         return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
                     case GameSettings.GameModis.Turnier:
-                        if (Settings.Instance.GroupNumberLetter == string.Empty)
+                        if (Settings.Instance.SpielgruppeLetter == string.Empty)
                             return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
                         else
-                            return $"Bahn: {Settings.Instance.GroupNumberLetter}-{Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                            return $"Bahn: {Settings.Instance.SpielgruppeLetter}-{Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
                     default:
                         return "unknown Status";
                 }

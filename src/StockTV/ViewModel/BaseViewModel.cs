@@ -90,6 +90,11 @@ namespace StockTV.ViewModel
                         Settings.Instance.CourtNumber = e.BahnNummer;
                     }
 
+                    if (e.IsGroupNumber)
+                    {
+                        Settings.Instance.Spielgruppe = e.GroupNumber;
+                    }
+
                     if (e.IsTurnsPerGame)
                     {
                         Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
