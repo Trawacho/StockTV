@@ -47,9 +47,9 @@ namespace StockTV.Classes.NetMQUtil
 
         #endregion
 
-        #region GroupNumber
+        #region Spielgruppe
 
-        public byte GroupNumber
+        public byte Spielgruppe
         {
             get
             {
@@ -64,7 +64,7 @@ namespace StockTV.Classes.NetMQUtil
             }
         }
 
-        public bool IsGroupNumber => table.ContainsKey("Spielgruppe");
+        public bool IsSpielgruppe => table.ContainsKey("Spielgruppe");
         #endregion
 
 
