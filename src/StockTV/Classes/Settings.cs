@@ -378,7 +378,7 @@ namespace StockTV.Classes
 
         public void SendGameResults(byte[] message)
         {
-            PServer.SendDataMessage("SendingResultInfo", message);
+            PServer?.SendDataMessage("SendingResultInfo", message);
         }
 
     }
