@@ -34,7 +34,10 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 
  - EC EBRA Aiterhofen<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/EC_EBRA_Aiterhofen.jpg" width="600"/>
- 
+
+ - EC Straßkirchen<br>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECS1.jpg" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECS2.jpg" width="450"/>
+
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
 In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung. Durch sein strukturiertes Testen, seine Ideen sowie seine konstruktiven Kritiken konnte das Projekt nochmal einen Schritt nach vorne machen. Danke Mich!
