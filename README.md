@@ -7,6 +7,10 @@ interessanter macht. Die Bediengung ist denkbar einfach und für jedes Alter gee
 Es sind momentan vier verschiedene Modis möglich. Neben dem Trainingsmodus kann man auch Turniere, BestOf-Begegnungen oder das Zielschiessen abbilden.
 Die Anzeige ist auf jeden Modus individuell angepasst.
 
+Training|Turnier|BestOf|Ziel
+--------|-------|-------|-----
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Training.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Turnier.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/BestOf.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Ziel.png" width="225" />|
+
 ### Was wird benötigt (pro Spielbahn):
  - 1x [Raspberry Pi 3]
  - 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
@@ -23,7 +27,7 @@ ohne ein Risiko einzugehen.
 
 ### Bilder
 Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfrage)  
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Keypad.jpg" width="150" /> 
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Keypad.jpg" width="150"/> 
 
 #### Installationen
  - ESF Hankofen<br>
