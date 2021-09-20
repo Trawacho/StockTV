@@ -1,7 +1,7 @@
 # StockTV - Die Anzeige für den Stocksport
 Der Zuschauer kann auf jeder Bahn den aktuellen Spielstand erkennen. Ein Mehrwert für Verein und Zuschauer. 
 Ein Spiel genau beobachten und trotzdem alle Spiele im Blick haben. Auch für die Schützen wird es interessanter. Sie sehen nicht nur den eigenen Spielstand sondern auch die Spielstände auf den anderen Bahnen, was Turniere nochmal 
-interessanter macht. Die Bediengung ist denkbar einfach und für jedes Alter geeignet (ältester bisher bekannter Schütze und Bediener des Systems ist 82 Jahre alt).
+interessanter macht. Die Bedienung ist denkbar einfach und für jedes Alter geeignet (ältester bisher bekannter Schütze und Bediener des Systems ist 82 Jahre alt).
 
 ### ..für die typischen Wettbewerbe
 Es sind momentan vier verschiedene Modis möglich. Neben dem Trainingsmodus kann man auch Turniere, BestOf-Begegnungen oder das Zielschiessen abbilden.
