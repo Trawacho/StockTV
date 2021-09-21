@@ -58,7 +58,6 @@ namespace StockTV.ViewModel
 
         #region Public READONLY Properties
 
-       
 
         /// <summary>
         /// HeaderText
@@ -96,46 +95,22 @@ namespace StockTV.ViewModel
         /// <summary>
         /// Sum of the LEFT Points
         /// </summary>
-        public string LeftPointsSum
-        {
-            get
-            {
-                return Match.CurrentGame.Turns.Sum(t => t.PointsLeft).ToString();
-            }
-        }
+        public string LeftPointsSum => Match.CurrentGame.Turns.Sum(t => t.PointsLeft).ToString();
 
         /// <summary>
         /// Sum of the Left MatchPoints
         /// </summary>
-        public string LeftMatchPoints
-        {
-            get
-            {
-                return Match.MatchPointsLeft.ToString();
-            }
-        }
+        public string LeftMatchPoints => Match.MatchPointsLeft.ToString();
 
         /// <summary>
         /// Sum of the RIGHT Points
         /// </summary>
-        public string RightPointsSum
-        {
-            get
-            {
-                return Match.CurrentGame.Turns.Sum(t => t.PointsRight).ToString();
-            }
-        }
+        public string RightPointsSum => Match.CurrentGame.Turns.Sum(t => t.PointsRight).ToString();
 
         /// <summary>
         /// Sum of the Right MatchPoints
         /// </summary>
-        public string RightMatchPoints
-        {
-            get
-            {
-                return Match.MatchPointsRight.ToString();
-            }
-        }
+        public string RightMatchPoints => Match.MatchPointsRight.ToString();
 
         /// <summary>
         /// Turn-Details of the Left 
@@ -156,34 +131,7 @@ namespace StockTV.ViewModel
                     temp += $"{item.PointsLeft}";
                 }
 
-                //if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                //    Match.Begegnungen.Count > 0 &&
-                //    string.IsNullOrEmpty(temp))
-                //{
-                //    temp = Match.Begegnungen
-                //        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                //        .FirstOrDefault()?.TeamNameLeft(Settings.ColorScheme.RightToLeft) ?? string.Empty;
-                //}
-
                 return temp;
-            }
-        }
-
-        public string LeftTeamName
-        {
-            get
-            {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                    Match.Begegnungen.Count > 0)
-                {
-                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                                            ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left)
-                                            ?? string.Empty;
-                }
-                else
-                {
-                    return string.Empty;
-                }
             }
         }
 
@@ -206,16 +154,29 @@ namespace StockTV.ViewModel
                     temp += $"{item.PointsRight}";
                 }
 
-                //if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                //    Match.Begegnungen.Count > 0 &&
-                //    string.IsNullOrEmpty(temp))
-                //{
-                //    temp = Match.Begegnungen
-                //        .Where(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                //        .FirstOrDefault()?.TeamNameRight(Settings.ColorScheme.RightToLeft) ?? string.Empty;
-                //}
-
                 return temp;
+            }
+        }
+
+        #region TeamNames
+
+        public bool IsTeamNameAvailable => !string.IsNullOrEmpty(LeftTeamName);
+
+        public string LeftTeamName
+        {
+            get
+            {
+                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
+                    Match.Begegnungen.Count > 0)
+                {
+                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                                            ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left)
+                                            ?? string.Empty;
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 
@@ -236,6 +197,9 @@ namespace StockTV.ViewModel
                 }
             }
         }
+
+        #endregion
+
 
         /// <summary>
         /// InputValue to Display
