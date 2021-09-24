@@ -27,7 +27,7 @@ namespace StockTV.Classes.NetMQUtil
             outbound = new NetMQQueue<NetMQMessage>();
 
             server = new ResponseSocket("@tcp://*:4747");
-            server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName);
+            server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName + "-" + Guid.NewGuid().ToString());
             server.ReceiveReady += Server_ReceiveReady;
 
             poller = new NetMQPoller() { server };

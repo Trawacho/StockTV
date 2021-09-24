@@ -146,6 +146,7 @@
     <Compile Include="Classes\Turn.cs" />
     <Compile Include="Classes\Zielbewerb.cs" />
     <Compile Include="Converter\ActiveSettingToVisibilityConverter.cs" />
+    <Compile Include="Converter\BooleanToGridlengthConverter.cs" />
     <Compile Include="Converter\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converter\BooleanToVisibilityConverterInverted.cs" />
     <Compile Include="Converter\DoubleDivisionConverter.cs" />
