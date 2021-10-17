@@ -1,6 +1,7 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace StockTV.Classes.NetMQUtil
@@ -24,14 +25,29 @@ namespace StockTV.Classes.NetMQUtil
 
         internal static void Start()
         {
-            outbound = new NetMQQueue<NetMQMessage>();
+            toSenderQueue = new NetMQQueue<NetMQMessage>();
+            fromSenderQueue = new NetMQQueue<NetMQMessage>();
 
-            server = new ResponseSocket("@tcp://*:4747");
+            server = new RouterSocket("@tcp://*:4747");
             server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName + "-" + Guid.NewGuid().ToString());
             server.ReceiveReady += Server_ReceiveReady;
 
-            poller = new NetMQPoller() { server };
+            toSenderQueue.ReceiveReady += ToSenderQueue_ReceiveReady;
+            fromSenderQueue.ReceiveReady += FromSenderQueue_ReceiveReady;
+
+
+            poller = new NetMQPoller() { server, toSenderQueue, fromSenderQueue };
             poller.RunAsync();
+        }
+
+        private static void FromSenderQueue_ReceiveReady(object sender, NetMQQueueEventArgs<NetMQMessage> e)
+        {
+            RaiseMqServerDataReceived(e.Queue.Dequeue());
+        }
+
+        private static void ToSenderQueue_ReceiveReady(object sender, NetMQQueueEventArgs<NetMQMessage> e)
+        {
+            server.SendMultipartMessage(e.Queue.Dequeue());
         }
 
         internal static void Cancel()
@@ -41,42 +57,35 @@ namespace StockTV.Classes.NetMQUtil
             poller.Dispose();
         }
 
-        static ResponseSocket server;
+        static RouterSocket server;
         static NetMQPoller poller;
-        static NetMQQueue<NetMQMessage> outbound;
+        static NetMQQueue<NetMQMessage> toSenderQueue;
+        static NetMQQueue<NetMQMessage> fromSenderQueue;
         private static int _errCnt = 0;
 
         internal static void AddOutbound(NetMQMessage data)
         {
-            outbound.Enqueue(data);
+            toSenderQueue.Enqueue(data);
         }
 
         private static void Server_ReceiveReady(object sender, NetMQSocketEventArgs e)
         {
-            e.Socket.ReceiveReady -= Server_ReceiveReady;
-            try
-            {
-                var message = e.Socket.ReceiveMultipartMessage();
-                RaiseMqServerDataReceived(message);
+            var message = e.Socket.ReceiveMultipartMessage();
 
-                if (outbound.TryDequeue(out NetMQMessage result, TimeSpan.FromMilliseconds(500)))
+            if (message.FrameCount == 3)
+            {
+                System.Diagnostics.Debug.WriteLine($"Received...{message[0].ConvertToString()} Frames: {message.FrameCount} - {message[1].ConvertToString()} - {message[2].ConvertToString()} ");
+
+                if (message.Last.ConvertToString().Equals("Hello"))
                 {
-                    e.Socket.SendMultipartMessage(result);
+                    NetMQMessage welcomeMessage = new NetMQMessage();
+                    welcomeMessage.Append(message[0]);
+                    welcomeMessage.AppendEmptyFrame();
+                    welcomeMessage.Append("Welcome");
+                    AddOutbound(welcomeMessage);
                 }
                 else
-                {
-                    e.Socket.SignalOK();
-                }
-
-                _errCnt = 0;
-                e.Socket.ReceiveReady += Server_ReceiveReady;
-            }
-            catch
-            {
-                _errCnt++;
-                Cancel();
-                if (_errCnt < 5)
-                    Start();
+                    fromSenderQueue.Enqueue(message);
             }
 
         }

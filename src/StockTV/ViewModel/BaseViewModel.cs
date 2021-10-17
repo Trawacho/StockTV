@@ -120,7 +120,9 @@ namespace StockTV.ViewModel
 
                     if (e.IsGetResult)
                     {
-                        NetMQMessage back = new NetMQMessage(2);
+                        NetMQMessage back = new NetMQMessage(3);
+                        back.Append(e.SenderID);
+                        back.AppendEmptyFrame();
                         back.Append("Result");
                         back.Append(GetSerializedResult());
                         RespServer.AddOutbound(back);
@@ -128,9 +130,11 @@ namespace StockTV.ViewModel
 
                     if (e.IsGetSettings)
                     {
-                        NetMQMessage back = new NetMQMessage(2);
+                        NetMQMessage back = new NetMQMessage(3);
+                        back.Append(e.SenderID);
+                        back.AppendEmptyFrame();
                         back.Append("Settings");
-                        back.Append(Settings.Instance.ToString());
+                        back.Append(Settings.Instance.GetDataHeader());
                         RespServer.AddOutbound(back);
                     }
 

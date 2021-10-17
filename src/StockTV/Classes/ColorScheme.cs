@@ -12,13 +12,13 @@ namespace StockTV.Classes
 
         public enum ColorModis
         {
-            Normal,
-            Dark
+            Normal = 0,
+            Dark = 1
         }
         public enum NextBahnModis
         {
-            Left,
-            Right
+            Left = 0,
+            Right = 1
         }
 
         #endregion

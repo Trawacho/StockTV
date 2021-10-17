@@ -26,6 +26,7 @@ namespace StockTV.Classes.NetMQUtil
             }
 
         }
+        public NetMQFrame SenderID => Message[0];
 
         #region BahnNummer
 

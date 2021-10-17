@@ -360,9 +360,9 @@ namespace StockTV.Classes
                 Spielgruppe,                                        //SpielGruppe    
                 Convert.ToByte((int)GameSettings.GameModus),        //Modus
                 Convert.ToByte(ColorScheme.NextBahnModus),          //Spielrichtung
-                0,
-                0,
-                0,
+                Convert.ToByte(ColorScheme.ColorModus),             //FarbModus (hell,dunkel)
+                GameSettings.PointsPerTurn,                         //Anzahl max. Punkte pro Kehre
+                GameSettings.TurnsPerGame,                          //Anzahl der Kehren
                 0,
                 0,
                 0
