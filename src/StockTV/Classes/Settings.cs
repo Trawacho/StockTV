@@ -32,9 +32,10 @@ namespace StockTV.Classes
             var broadcasting = localSettings.Values[nameof(IsBroadcasting)] as string;
             this.IsBroadcasting = bool.Parse(broadcasting ?? "false");
 
+            var midcolLen = localSettings.Values[nameof(MidColumnLength)] as string;
+            this.MidColumnLength = byte.Parse(midcolLen ?? "10");
+
             Debug.WriteLine("Settings loaded...");
-
-
         }
 
 
@@ -99,7 +100,7 @@ namespace StockTV.Classes
                 localSettings.Values[nameof(CourtNumber)] = value.ToString();
             }
         }
-       
+
 
         #endregion
 
@@ -182,7 +183,6 @@ namespace StockTV.Classes
         }
 
         #endregion
-
 
         #region Turns of a Game
 
@@ -272,6 +272,36 @@ namespace StockTV.Classes
 
         #endregion
 
+
+        #region MidColumnFaktor
+
+        private byte midColumnLength;
+
+        /// <summary>
+        /// Breite der mittleren Spalte<br></br>
+        /// Nur relevant, wenn TeamNamen angezeigt werden<br></br>
+        /// Wert kann nur zwischen 1 und 20 liegen (default bei 10)
+        /// </summary>
+        public byte MidColumnLength
+        {
+            get => midColumnLength;
+            set
+            {
+                if (midColumnLength == value ||
+                                    value < 1 ||
+                                    value > 20)
+                    return;
+
+                midColumnLength = value;
+
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values[nameof(MidColumnLength)] = value.ToString();
+            }
+        }
+
+        #endregion
+
+
         #region Broadcasting / Networking
 
         /// <summary>
@@ -348,11 +378,26 @@ namespace StockTV.Classes
             }
         }
 
+        #endregion
+
+
         /// <summary>
-        ///  returns a byte array with ten bytes containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+        /// returns a byte array with ten bytes containing the settings
+        /// <para>
+        /// 0   Bahnnummer<br></br>  
+        /// 1   SpielGruppe<br></br>
+        /// 2   Modus<br></br>
+        /// 3   Spielrichtung<br></br>
+        /// 4   Farbmodus<br></br>
+        /// 5   Anzahl max. Punkte pro Kehre<br></br>
+        /// 6   Anzahl der Kehren pro Spiel<br></br>
+        /// 7   reserve<br></br>
+        /// 8   reserve<br></br>
+        /// 9   reserve<br></br>
+        /// </para>
         /// </summary>
         /// <returns></returns>
-        public byte[] GetDataHeader()
+        public byte[] GetSettings()
         {
             List<byte> data = new List<byte>
             {
@@ -363,13 +408,43 @@ namespace StockTV.Classes
                 Convert.ToByte(ColorScheme.ColorModus),             //FarbModus (hell,dunkel)
                 GameSettings.PointsPerTurn,                         //Anzahl max. Punkte pro Kehre
                 GameSettings.TurnsPerGame,                          //Anzahl der Kehren
-                0,
+                MidColumnLength,                                    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
                 0,
                 0
             };
             return data.ToArray();
         }
-        #endregion
+
+
+        /// <summary>
+        /// Set settings as in array specified. Needs a byte array with ten bytes
+        /// <para>
+        /// 0   Bahnnummer<br></br>  
+        /// 1   SpielGruppe<br></br>
+        /// 2   Modus<br></br>
+        /// 3   Spielrichtung<br></br>
+        /// 4   Farbmodus<br></br>
+        /// 5   Anzahl max. Punkte pro Kehre<br></br>
+        /// 6   Anzahl der Kehren pro Spiel<br></br>
+        /// 7   reserve<br></br>
+        /// 8   reserve<br></br>
+        /// 9   reserve<br></br>
+        /// </para>
+        /// </summary>
+        /// <param name="settingsArray"></param>
+        public void SetSettings(byte[] settingsArray)
+        {
+            this.CourtNumber = settingsArray[0];
+            this.Spielgruppe = settingsArray[1];
+            this.GameSettings.SetModus(settingsArray[2]);
+            this.ColorScheme.SetNextBahnModus(settingsArray[3]);
+            this.ColorScheme.SetColorModus(settingsArray[4]);
+            this.GameSettings.PointsPerTurn = settingsArray[5];
+            this.GameSettings.TurnsPerGame = settingsArray[6];
+            this.MidColumnLength = settingsArray[7];
+            _ = settingsArray[8];
+            _ = settingsArray[9];
+        }
 
         public override string ToString()
         {
@@ -378,6 +453,7 @@ namespace StockTV.Classes
 
         public void SendGameResults(byte[] message)
         {
+            System.Diagnostics.Debug.WriteLine($"{string.Join('-', message)}");
             PServer?.SendDataMessage("SendingResultInfo", message);
         }
 

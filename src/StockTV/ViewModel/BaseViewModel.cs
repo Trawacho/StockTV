@@ -108,6 +108,11 @@ namespace StockTV.ViewModel
                         Settings.Instance.ColorScheme.NextBahnModus = e.NextBahn;
                     }
 
+                    if (e.IsMidColumnValue)
+                    {
+                        Settings.Instance.MidColumnLength = e.MidColumnLength;
+                    }
+
                     if (e.IsReset)
                     {
                         SetMatchReset();
@@ -134,7 +139,7 @@ namespace StockTV.ViewModel
                         back.Append(e.SenderID);
                         back.AppendEmptyFrame();
                         back.Append("Settings");
-                        back.Append(Settings.Instance.GetDataHeader());
+                        back.Append(Settings.Instance.GetSettings());
                         RespServer.AddOutbound(back);
                     }
 

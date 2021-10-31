@@ -1,4 +1,5 @@
-﻿using Windows.Storage;
+﻿using System;
+using Windows.Storage;
 
 namespace StockTV.Classes
 {
@@ -61,6 +62,12 @@ namespace StockTV.Classes
 
             PointsPerTurn = PointsPerTurnDefault;
 
+        }
+
+        internal void SetModus(byte value)
+        {
+            var e = (GameSettings.GameModis)Enum.Parse(typeof(GameSettings.GameModis), value.ToString());
+            SetModus(e);
         }
 
         /// <summary>

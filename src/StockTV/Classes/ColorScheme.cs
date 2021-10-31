@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
 using Windows.UI;
@@ -143,6 +144,11 @@ namespace StockTV.Classes
             }
         }
 
+        internal void SetColorModus(byte value)
+        {
+            var e = (ColorModis)Enum.Parse(typeof(ColorModis), value.ToString());
+            ColorModus = e;
+        }
 
         private NextBahnModis nextbahnmodus;
         /// <summary>
@@ -162,6 +168,12 @@ namespace StockTV.Classes
                 var localSettings = ApplicationData.Current.LocalSettings;
                 localSettings.Values[nameof(NextBahnModus)] = value.ToString();
             }
+        }
+
+        internal void SetNextBahnModus(byte value)
+        {
+            var e = (NextBahnModis)Enum.Parse(typeof(NextBahnModis), value.ToString());
+            NextBahnModus = e;
         }
         #endregion
 
@@ -287,6 +299,8 @@ namespace StockTV.Classes
                 }
             }
         }
+
+       
         #endregion
 
 

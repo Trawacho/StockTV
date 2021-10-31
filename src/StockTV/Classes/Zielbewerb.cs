@@ -285,7 +285,7 @@ namespace StockTV.Classes
 
 
             var values = new List<byte>();
-            values.AddRange(Settings.Instance.GetDataHeader());
+            values.AddRange(Settings.Instance.GetSettings());
 
 
             //Add for each attempt the value 

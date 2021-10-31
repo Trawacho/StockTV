@@ -200,7 +200,7 @@ namespace StockTV.Classes
 
             List<byte> values = new List<byte>();
 
-            values.AddRange(Settings.Instance.GetDataHeader());
+            values.AddRange(Settings.Instance.GetSettings());
 
             //Add for each Game the sum of the turn-value for left and right
             foreach (Game g in Games)

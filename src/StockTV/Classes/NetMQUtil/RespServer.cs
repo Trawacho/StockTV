@@ -1,7 +1,6 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
 using System;
-using System.Collections.Concurrent;
 using System.Text;
 
 namespace StockTV.Classes.NetMQUtil
@@ -61,7 +60,6 @@ namespace StockTV.Classes.NetMQUtil
         static NetMQPoller poller;
         static NetMQQueue<NetMQMessage> toSenderQueue;
         static NetMQQueue<NetMQMessage> fromSenderQueue;
-        private static int _errCnt = 0;
 
         internal static void AddOutbound(NetMQMessage data)
         {

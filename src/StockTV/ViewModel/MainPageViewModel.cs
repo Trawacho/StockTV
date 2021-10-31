@@ -200,6 +200,10 @@ namespace StockTV.ViewModel
 
         #endregion
 
+        public GridLength MidColumnLength
+        {
+            get => new GridLength(Settings.MidColumnLength, GridUnitType.Star);
+        }
 
         /// <summary>
         /// InputValue to Display

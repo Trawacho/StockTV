@@ -10,14 +10,14 @@ namespace StockTV.Classes.NetMQUtil
 
     internal class MqServerDataReceivedEventArgs : EventArgs
     {
-        private byte[] Data { get; set; }
+        private string Data { get; set; }
         private NetMQMessage Message { get; set; }
         private Hashtable table = new Hashtable();
         public MqServerDataReceivedEventArgs(NetMQMessage message)
         {
             this.Message = message;
-            this.Data = message.Last.ToByteArray();
-            var l = Encoding.UTF8.GetString(Data).TrimEnd(';').Split(';');
+            this.Data = message.Last.ConvertToString();
+            var l = Data.TrimEnd(';').Split(';');
             foreach (var item in l)
             {
                 var t = item.Split('=');
@@ -68,8 +68,6 @@ namespace StockTV.Classes.NetMQUtil
         public bool IsSpielgruppe => table.ContainsKey("Spielgruppe");
         #endregion
 
-
-
         #region GameModus
 
         public GameSettings.GameModis GameModus
@@ -94,6 +92,27 @@ namespace StockTV.Classes.NetMQUtil
                 return table.ContainsKey("GameModus");
             }
         }
+
+        #endregion
+
+        #region MidColumnLenght
+
+        public byte MidColumnLength
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToByte(table["MidColumnLength"]);
+                }
+                catch (Exception)
+                {
+                    return 10;
+                }
+            }
+        }
+
+        public bool IsMidColumnValue => table.ContainsKey("MidColumnLength");
 
         #endregion
 
@@ -218,7 +237,7 @@ namespace StockTV.Classes.NetMQUtil
             get
             {
                 var retVal = new List<Begegnung>();
-                var s1 = Encoding.UTF8.GetString(Data).Split("=");
+                var s1 = Data.Split("=");
                 if (!s1[0].Contains("SetBegegnungen")) return retVal;
 
                 var a = s1[1].TrimEnd(';').Split(';');
