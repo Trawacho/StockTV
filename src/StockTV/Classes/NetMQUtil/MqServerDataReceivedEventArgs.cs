@@ -16,7 +16,7 @@ namespace StockTV.Classes.NetMQUtil
         public MqServerDataReceivedEventArgs(NetMQMessage message)
         {
             this.Message = message;
-            this.Data = message.Last.ConvertToString();
+            this.Data = Encoding.UTF8.GetString(message.Last.ToByteArray(true));
             var l = Data.TrimEnd(';').Split(';');
             foreach (var item in l)
             {
