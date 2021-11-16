@@ -70,18 +70,20 @@ namespace StockTV.Classes.NetMQUtil
         {
             var message = e.Socket.ReceiveMultipartMessage();
 
-            if (message.FrameCount == 3)
+            if (message.FrameCount >= 4)
             {
                 System.Diagnostics.Debug.WriteLine($"Received...{message[0].ConvertToString()} Frames: {message.FrameCount} - {message[1].ConvertToString()} - {message[2].ConvertToString()} ");
 
-                if (message.Last.ConvertToString().Equals("Hello"))
+                if (message[2].ConvertToString().Equals(MessageTopic.Hello.ToString()))
                 {
                     NetMQMessage welcomeMessage = new NetMQMessage();
                     welcomeMessage.Append(message[0]);
                     welcomeMessage.AppendEmptyFrame();
-                    welcomeMessage.Append("Welcome");
+                    welcomeMessage.Append(MessageTopic.Welcome.ToString());
                     AddOutbound(welcomeMessage);
                 }
+
+
                 else
                     fromSenderQueue.Enqueue(message);
             }

@@ -1,11 +1,11 @@
-﻿using System;
+﻿using StockTV.Classes.NetMQUtil;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Text;
 using Windows.Storage;
-using StockTV.Classes.NetMQUtil;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace StockTV.Classes
 {
@@ -456,6 +456,9 @@ namespace StockTV.Classes
             System.Diagnostics.Debug.WriteLine($"{string.Join('-', message)}");
             PServer?.SendDataMessage("SendingResultInfo", message);
         }
+
+       
+        public BitmapImage MarketingImage { get; set; }
 
     }
 }

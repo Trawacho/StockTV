@@ -1,12 +1,7 @@
 ﻿using StockTV.Classes;
-using StockTV.Classes.NetMQUtil;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using static StockTV.Classes.ColorScheme;
-using static StockTV.Classes.GameSettings;
 
 namespace StockTV.ViewModel
 {
@@ -28,24 +23,33 @@ namespace StockTV.ViewModel
             this.Match.Reset(true);
         }
 
-        internal override void SetBegegnungen(IEnumerable<Begegnung> begegnungen)
+        internal override void SetTeamNames(string begegnungen)
         {
             Match.Begegnungen.Clear();
-            foreach (var item in begegnungen)
+
+            var parts = begegnungen.TrimEnd(';').Split(';');
+            foreach (var b in parts)
             {
-                Match.Begegnungen.Add(item);
+                var c = b.Split(':');
+                if (byte.TryParse(c[0], out byte _spielNummer))
+                {
+                    Match.Begegnungen.Add(new Begegnung(_spielNummer, c[1], c[2]));
+                }
             }
         }
 
-        internal override void SwitchToOtherPage(GameModis gameModus)
+        internal override void SetSettings(byte[] settings)
         {
-            if (gameModus != GameModis.Ziel) return;
-            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-            Match.TurnsChanged -= Match_TurnsChanged;
+            Settings.SetSettings(settings);
 
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Pages.ZielPage));
+            if (Settings.GameSettings.GameModus == GameSettings.GameModis.Ziel)
+            {
+                Match.TurnsChanged -= Match_TurnsChanged;
+                base.NavigateTo(typeof(Pages.ZielPage));
+            }
+
         }
+
 
         #endregion
 
@@ -170,7 +174,7 @@ namespace StockTV.ViewModel
                     Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                                            ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left)
+                                            ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
                                             ?? string.Empty;
                 }
                 else
@@ -188,7 +192,7 @@ namespace StockTV.ViewModel
                     Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-                                            ?.TeamNameRight(Settings.ColorScheme.NextBahnModus == NextBahnModis.Left)
+                                            ?.TeamNameRight(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
                                             ?? string.Empty;
                 }
                 else
@@ -249,15 +253,17 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
-            //Settings
-            if (_inputValue == 0 && ScanCode == 28)
+            //Settings Or Marekting SpecialCounter
+            if ((_inputValue == 0 || _inputValue == 10) 
+                && ScanCode == 28)
             {
-                base.SettingsCounterIncrease();
+                base.SpecialCounterIncrease();
             }
             else
             {
-                base.SettingsCounterReset();
+                base.SpecialCounterReset();
             }
+            
 
             //Debouncing 
             if (!(ScanCode == 74 && _inputValue == 0))
@@ -299,7 +305,7 @@ namespace StockTV.ViewModel
                     break;
 
                 case 28:    // Enter
-                    ShowSettingsPage();
+                    ShowSpecialPage(_inputValue);
                     break;
 
                 case 55:    // *                    --> GRÜN
@@ -369,7 +375,7 @@ namespace StockTV.ViewModel
             RaiseAllPropertysChanged();
 
             // Send after each key press a network notification
-            if (Settings.Instance.IsBroadcasting)
+            if (Settings.IsBroadcasting)
             {
                 BroadcastService.SendData(Match.Serialize(true));
             }
@@ -403,7 +409,7 @@ namespace StockTV.ViewModel
 
             var turn = new Turn();
 
-            if (Settings.Instance.ColorScheme.NextBahnModus == NextBahnModis.Right)
+            if (Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Right)
             {
                 turn.PointsRight = Convert.ToByte(_inputValue);
             }
@@ -424,7 +430,7 @@ namespace StockTV.ViewModel
 
             var turn = new Turn();
 
-            if (Settings.Instance.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
+            if (Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
             {
                 turn.PointsRight = Convert.ToByte(_inputValue);
             }
@@ -445,7 +451,7 @@ namespace StockTV.ViewModel
             {
                 _inputValue = value;
             }
-            else if ((_inputValue * 10) + value < Settings.Instance.GameSettings.PointsPerTurn)
+            else if ((_inputValue * 10) + value < Settings.GameSettings.PointsPerTurn)
             {
                 _inputValue = Convert.ToSByte((_inputValue * 10) + value);
             }
@@ -455,10 +461,9 @@ namespace StockTV.ViewModel
             }
         }
 
+
+
         #endregion
-
-
-
 
     }
 }

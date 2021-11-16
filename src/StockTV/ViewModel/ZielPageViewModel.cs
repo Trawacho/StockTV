@@ -1,9 +1,6 @@
 ﻿using StockTV.Classes;
-using StockTV.Classes.NetMQUtil;
 using System;
-using System.Collections.Generic;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using static StockTV.Classes.GameSettings;
 
 namespace StockTV.ViewModel
@@ -23,18 +20,22 @@ namespace StockTV.ViewModel
         {
             _zielbewerb.Reset();
         }
-        internal override void SetBegegnungen(IEnumerable<Begegnung> begegnungen)
+        internal override void SetTeamNames(string begegnungen)
         {
             return;
         }
 
-        internal override void SwitchToOtherPage(GameModis gameModus)
+        internal override void SetSettings(byte[] settings)
         {
-            if (gameModus == GameModis.Ziel) return;
-            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Pages.MainPage));
+            Settings.SetSettings(settings);
+
+            if (Settings.GameSettings.GameModus != GameModis.Ziel)
+            {
+                base.NavigateTo(typeof(Pages.MainPage));
+            }
         }
+
+
         #endregion
 
         #region Private Fields
@@ -42,7 +43,7 @@ namespace StockTV.ViewModel
         private sbyte _inputValue;
         private readonly Zielbewerb _zielbewerb;
         private readonly DispatcherTimer _isInvalidTimer = new DispatcherTimer();
-        
+
         #endregion
 
         #region Public READONLY Properties to display in View
@@ -50,66 +51,33 @@ namespace StockTV.ViewModel
         /// <summary>
         /// InputValue to Display
         /// </summary>
-        public string InputValueText
-        {
-            get
-            {
-                return _inputValue == -1 ? string.Empty : _inputValue.ToString();
-            }
-        }
+        public string InputValueText => _inputValue == -1 ? string.Empty : _inputValue.ToString();
 
-        public string LastValue
-        {
-            get
-            {
-                return _inputValue == -1
+        public string LastValue => _inputValue == -1
                         ? _zielbewerb.CountOfVersuche() > 0
                             ? _zielbewerb.LastValue().ToString()
                             : string.Empty
                         : string.Empty;
-            }
-        }
 
         /// <summary>
         /// Label to Display for GesamtPunkteText
         /// </summary>
-        public string GesamtText
-        {
-            get
-            {
-                return "Gesamt";
-            }
-        }
+        public string GesamtText => "Gesamt";
 
         /// <summary>
         /// GesamtPunkte to Display
         /// </summary>
-        public string GesamtPunkteText
-        {
-            get { return _zielbewerb.GesamtSumme.ToString(); }
-        }
+        public string GesamtPunkteText => _zielbewerb.GesamtSumme.ToString();
 
         /// <summary>
         /// Anzahl Versuche to Display
         /// </summary>
-        public string VersucheText
-        {
-            get
-            {
-                return $"{_zielbewerb.CountOfVersuche()}/24";
-            }
-        }
+        public string VersucheText => $"{_zielbewerb.CountOfVersuche()}/24";
 
         /// <summary>
         /// AnzeigeText für die vier Einzelsummen
         /// </summary>
-        public string VersuchsWerte
-        {
-            get
-            {
-                return $"{_zielbewerb.MassenVorneSumme} - {_zielbewerb.SchüsseSumme} - {_zielbewerb.MassenHintenSumme} - {_zielbewerb.KombinierenSumme}";
-            }
-        }
+        public string VersuchsWerte => $"{_zielbewerb.MassenVorneSumme} - {_zielbewerb.SchüsseSumme} - {_zielbewerb.MassenHintenSumme} - {_zielbewerb.KombinierenSumme}";
 
         #endregion
 
@@ -137,7 +105,7 @@ namespace StockTV.ViewModel
         private void Bewerb_ValuesChanged(object sender, EventArgs e)
         {
             Zielbewerb m = sender as Zielbewerb;
-            Settings.Instance.SendGameResults(m.Serialize(false));
+            Settings.SendGameResults(m.Serialize(false));
         }
 
 
@@ -145,14 +113,15 @@ namespace StockTV.ViewModel
 
         public void GetScanCode(uint ScanCode)
         {
-            //Settings
-            if (_inputValue == 0 && ScanCode == 28)
+            //Counter for Settings or Marketing
+            if ((_inputValue == 0 || _inputValue == 10)
+                && ScanCode == 28)
             {
-                SettingsCounterIncrease();
+                SpecialCounterIncrease();
             }
             else
             {
-                SettingsCounterReset();
+                SpecialCounterReset();
             }
 
 
@@ -197,7 +166,7 @@ namespace StockTV.ViewModel
                     break;
 
                 case 28:    // Enter
-                    ShowSettingsPage();
+                    ShowSpecialPage(_inputValue);
                     break;
 
                 case 74:    // -                    --> BLAU
@@ -254,7 +223,7 @@ namespace StockTV.ViewModel
             RaiseAllPropertysChanged();
 
             // Send after each key press a network notification
-            if (Settings.Instance.IsBroadcasting)
+            if (Settings.IsBroadcasting)
             {
                 BroadcastService.SendData(_zielbewerb.Serialize(true));
             }
@@ -274,7 +243,7 @@ namespace StockTV.ViewModel
             {
                 _inputValue = value;
             }
-            else if ((_inputValue * 10) + value < Settings.Instance.GameSettings.PointsPerTurn)
+            else if ((_inputValue * 10) + value < Settings.GameSettings.PointsPerTurn)
             {
                 _inputValue = Convert.ToSByte((_inputValue * 10) + value);
             }
