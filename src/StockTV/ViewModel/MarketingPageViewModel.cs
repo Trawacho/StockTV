@@ -35,10 +35,7 @@ namespace StockTV.ViewModel
         /// </summary>
         internal override void SetMatchReset()
         {
-            if (Settings.GameSettings.GameModus == GameSettings.GameModis.Ziel)
-                base.NavigateTo(typeof(Pages.ZielPage));
-            else
-                base.NavigateTo(typeof(Pages.MainPage));
+            return;
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace StockTV.ViewModel
         {
             DefaultImage = new BitmapImage()
             {
-                UriSource = new Uri(GetMediaFiles("Media").First())
+                UriSource = new Uri(GetMediaFiles("Assets/Logo").First())
             };
         }
 
@@ -118,7 +115,7 @@ namespace StockTV.ViewModel
                     Windows.ApplicationModel.Package.Current.InstalledLocation.Path,
                     rootPath.Replace('/', '\\').TrimStart('\\')
                 );
-            return Directory.GetFiles(folderPath, "*.jpg").AsEnumerable();
+            return Directory.GetFiles(folderPath, "*.png").AsEnumerable();
         }
 
     }
