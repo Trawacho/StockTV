@@ -89,7 +89,7 @@ namespace StockTV.ViewModel
              */
 
             if (scanCode == 74 || scanCode == 78)
-                SetMatchReset();
+                NavigateTo(typeof(Pages.MarketingPage));
         }
 
         /// <summary>
