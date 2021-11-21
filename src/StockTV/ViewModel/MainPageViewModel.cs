@@ -5,12 +5,11 @@ using Windows.UI.Xaml;
 
 namespace StockTV.ViewModel
 {
+    /// <summary>
+    /// UWP ViewModel for MainPAge
+    /// </summary>
     public class MainPageViewModel : BaseViewModel
     {
-        /// <summary>
-        /// UWP ViewModel for MainPage
-        /// </summary>
-
         #region BaseClass Functions
 
         internal override byte[] GetSerializedResult()
@@ -237,24 +236,12 @@ namespace StockTV.ViewModel
 
         #endregion
 
-        /// <summary>
-        /// Send match-result via Pub-Server after a change in the Match values
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Match_TurnsChanged(object sender, EventArgs e)
-        {
-            Match m = sender as Match;
-            Settings.Instance.SendGameResults(m.Serialize(false));
-        }
-
-
         #region Public Function
 
         public void GetScanCode(uint ScanCode)
         {
             //Settings Or Marekting SpecialCounter
-            if ((_inputValue == 0 || _inputValue == 10) 
+            if ((_inputValue == 0 || _inputValue == 10)
                 && ScanCode == 28)
             {
                 base.SpecialCounterIncrease();
@@ -263,7 +250,7 @@ namespace StockTV.ViewModel
             {
                 base.SpecialCounterReset();
             }
-            
+
 
             //Debouncing 
             if (!(ScanCode == 74 && _inputValue == 0))
@@ -461,7 +448,16 @@ namespace StockTV.ViewModel
             }
         }
 
-
+        /// <summary>
+        /// Send match-result via Pub-Server after a change in the Match values
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Match_TurnsChanged(object sender, EventArgs e)
+        {
+            Match m = sender as Match;
+            Settings.Instance.SendGameResults(m.Serialize(false));
+        }
 
         #endregion
 

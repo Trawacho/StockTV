@@ -9,12 +9,16 @@ namespace StockTV.Classes
 {
     public class Zielbewerb
     {
+        #region EventHandler for ValuesChanged
+
         public event EventHandler ValuesChanged;
         protected void RaiseValuesChanged()
         {
             var handler = ValuesChanged;
             handler?.Invoke(this, EventArgs.Empty);
         }
+
+        #endregion
 
         #region Public Properties of SUMs
 
@@ -57,8 +61,33 @@ namespace StockTV.Classes
         private readonly ConcurrentStack<byte> MassenHinten;
         private readonly ConcurrentStack<byte> Kombinieren;
 
+
+        /// <summary>
+        /// List of all Values (MassenVorne, Schüsse, MassenHinten, Kombinieren)
+        /// </summary>
+        private List<byte> ListOfAllValues
+        {
+            get
+            {
+                var values = new List<byte>();
+
+                values.AddRange(MassenVorne.Reverse().ToList());
+                values.AddRange(Schüsse.Reverse().ToList());
+                values.AddRange(MassenHinten.Reverse().ToList());
+                values.AddRange(Kombinieren.Reverse().ToList());
+
+                return values;
+            }
+        }
+
+
         #endregion
 
+        #region Constructor
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Zielbewerb()
         {
             this.MassenVorne = new ConcurrentStack<byte>();
@@ -68,7 +97,8 @@ namespace StockTV.Classes
 
             this.LoadTurnsFromLocalSettings();
         }
-
+        
+        #endregion
 
 
         /// <summary>
@@ -134,7 +164,6 @@ namespace StockTV.Classes
             RaiseValuesChanged();
         }
 
-
         /// <summary>
         /// Delete all Values in all Blocks of Attempts
         /// </summary>
@@ -148,6 +177,10 @@ namespace StockTV.Classes
             RaiseValuesChanged();
         }
 
+        /// <summary>
+        /// Last value of all Values
+        /// </summary>
+        /// <returns></returns>
         internal int LastValue()
         {
             return ListOfAllValues.LastOrDefault();
@@ -155,38 +188,23 @@ namespace StockTV.Classes
 
 
         /// <summary>
-        /// Save all turns as long as <see cref="GameSettings.GameModus"/> isn´t <see cref="GameSettings.GameModis.Training"/>
+        /// Save all Values
         /// </summary>
         private void SaveTurnsToLocalSettings()
         {
             Settings.Instance.SaveZielValues(ListOfAllValues);
         }
 
+        /// <summary>
+        /// Load all Values from Settings
+        /// </summary>
         private void LoadTurnsFromLocalSettings()
         {
             foreach (var t in Settings.Instance.LoadZielValues())
             {
                 this.AddValueToVersuche(Convert.ToSByte(t));
             }
-
         }
-
-        private List<byte> ListOfAllValues
-        {
-            get
-            {
-                var values = new List<byte>();
-
-                values.AddRange(MassenVorne.Reverse().ToList());
-                values.AddRange(Schüsse.Reverse().ToList());
-                values.AddRange(MassenHinten.Reverse().ToList());
-                values.AddRange(Kombinieren.Reverse().ToList());
-
-                return values;
-            }
-        }
-
-
 
 
         /// <summary>

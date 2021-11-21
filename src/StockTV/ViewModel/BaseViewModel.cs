@@ -41,9 +41,19 @@ namespace StockTV.ViewModel
         /// </summary>
         public Settings Settings => Settings.Instance;
 
-
+        /// <summary>
+        /// Value to determine count of keystrokes for SpecialPage
+        /// </summary>
         private byte _specialCounter;
+
+        /// <summary>
+        /// Increase SpecialCounter
+        /// </summary>
         internal protected void SpecialCounterIncrease() => _specialCounter++;
+
+        /// <summary>
+        /// Set SpecialCounter to 0
+        /// </summary>
         internal protected void SpecialCounterReset() => _specialCounter = 0;
 
 
@@ -68,11 +78,27 @@ namespace StockTV.ViewModel
 
         }
 
-
-
+        /// <summary>
+        /// Set values to Settings Instance
+        /// </summary>
+        /// <param name="settings"></param>
         internal abstract void SetSettings(byte[] settings);
+
+        /// <summary>
+        /// Set Team Names 
+        /// </summary>
+        /// <param name="begegnungen"></param>
         internal abstract void SetTeamNames(string begegnungen);
+
+        /// <summary>
+        /// Reset Match 
+        /// </summary>
         internal abstract void SetMatchReset();
+
+        /// <summary>
+        /// Send Result as byte array
+        /// </summary>
+        /// <returns></returns>
         internal abstract byte[] GetSerializedResult();
       
 
@@ -113,6 +139,7 @@ namespace StockTV.ViewModel
         private protected void SetImage(byte[] value, string fileName)
         {
             var dataSource = new byte[value.Length];
+            _ = fileName;
             System.Array.Copy(value, dataSource, value.Length);
 
             using (var randomAccess = new InMemoryRandomAccessStream())
@@ -138,11 +165,13 @@ namespace StockTV.ViewModel
             Settings.MarketingImage = null;
         }
 
+        /// <summary>
+        /// Navigiere zur MarketingPage
+        /// </summary>
         private protected void GoToImage()
         {
             NavigateTo(typeof(Pages.MarketingPage));
         }
-
 
         /// <summary>
         /// Navigate to the page from given Type if other than the actual one<br></br>
@@ -168,9 +197,6 @@ namespace StockTV.ViewModel
                     NavigateTo(typeof(Pages.MainPage));
             }
         }
-
-
-
 
         /// <summary>
         /// Depending on the args the appropiate function get called

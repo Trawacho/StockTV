@@ -62,6 +62,11 @@ namespace StockTV.Classes
         /// </summary>
         public GameSettings GameSettings { get; set; }
 
+        /// <summary>
+        /// Image zur Anzeige in der MarketingPage
+        /// </summary>
+        public BitmapImage MarketingImage { get; set; }
+
         #region CourtNumber
         /// <summary>
         /// Changes the CourtNumber up or down
@@ -103,6 +108,7 @@ namespace StockTV.Classes
 
 
         #endregion
+
 
         #region GroupNumber
 
@@ -184,6 +190,7 @@ namespace StockTV.Classes
 
         #endregion
 
+
         #region Turns of a Game
 
         /// <summary>
@@ -230,6 +237,7 @@ namespace StockTV.Classes
         }
 
         #endregion
+
 
         #region Zielschiessen
 
@@ -381,6 +389,8 @@ namespace StockTV.Classes
         #endregion
 
 
+        #region Get und Set Funktionen
+
         /// <summary>
         /// returns a byte array with ten bytes containing the settings
         /// <para>
@@ -391,7 +401,7 @@ namespace StockTV.Classes
         /// 4   Farbmodus<br></br>
         /// 5   Anzahl max. Punkte pro Kehre<br></br>
         /// 6   Anzahl der Kehren pro Spiel<br></br>
-        /// 7   reserve<br></br>
+        /// 7   Breitenverhältnis der mittleren Spalte zu den beiden äußeren Spalten mit Mannschaftsnamen<br></br>
         /// 8   reserve<br></br>
         /// 9   reserve<br></br>
         /// </para>
@@ -426,7 +436,7 @@ namespace StockTV.Classes
         /// 4   Farbmodus<br></br>
         /// 5   Anzahl max. Punkte pro Kehre<br></br>
         /// 6   Anzahl der Kehren pro Spiel<br></br>
-        /// 7   reserve<br></br>
+        /// 7   Breitenverhältnis der mittleren Spalte zu den beiden äußeren Spalten mit Mannschaftsnamen<br></br>
         /// 8   reserve<br></br>
         /// 9   reserve<br></br>
         /// </para>
@@ -434,31 +444,37 @@ namespace StockTV.Classes
         /// <param name="settingsArray"></param>
         public void SetSettings(byte[] settingsArray)
         {
-            this.CourtNumber = settingsArray[0];
-            this.Spielgruppe = settingsArray[1];
-            this.GameSettings.SetModus(settingsArray[2]);
-            this.ColorScheme.SetNextBahnModus(settingsArray[3]);
-            this.ColorScheme.SetColorModus(settingsArray[4]);
-            this.GameSettings.PointsPerTurn = settingsArray[5];
-            this.GameSettings.TurnsPerGame = settingsArray[6];
-            this.MidColumnLength = settingsArray[7];
+            CourtNumber = settingsArray[0];
+            Spielgruppe = settingsArray[1];
+            GameSettings.SetModus(settingsArray[2]);
+            ColorScheme.SetNextBahnModus(settingsArray[3]);
+            ColorScheme.SetColorModus(settingsArray[4]);
+            GameSettings.PointsPerTurn = settingsArray[5];
+            GameSettings.TurnsPerGame = settingsArray[6];
+            MidColumnLength = settingsArray[7];
             _ = settingsArray[8];
             _ = settingsArray[9];
         }
 
+        #endregion
+
+
         public override string ToString()
         {
-            return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus}";
+            return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus};MidColumnLength={MidColumnLength}";
         }
 
+
+        /// <summary>
+        /// Message per NetMQ-Publisher versenden
+        /// </summary>
+        /// <param name="message"></param>
         public void SendGameResults(byte[] message)
         {
+#if DEBUG
             System.Diagnostics.Debug.WriteLine($"{string.Join('-', message)}");
+#endif
             PServer?.SendDataMessage("SendingResultInfo", message);
         }
-
-       
-        public BitmapImage MarketingImage { get; set; }
-
     }
 }
