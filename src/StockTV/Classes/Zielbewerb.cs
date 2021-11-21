@@ -97,9 +97,92 @@ namespace StockTV.Classes
 
             this.LoadTurnsFromLocalSettings();
         }
-        
+
         #endregion
 
+        #region Save and Load Values to Settings
+
+        /// <summary>
+        /// Save all Values
+        /// </summary>
+        private void SaveTurnsToLocalSettings()
+        {
+            Settings.Instance.SaveZielValues(ListOfAllValues);
+        }
+
+        /// <summary>
+        /// Load all Values from Settings
+        /// </summary>
+        private void LoadTurnsFromLocalSettings()
+        {
+            foreach (var t in Settings.Instance.LoadZielValues())
+            {
+                this.AddValueToVersuche(Convert.ToSByte(t));
+            }
+        }
+
+        #endregion
+
+        #region Private helper Functions
+
+        /// <summary>
+        /// Summe aller Werte von stack
+        /// </summary>
+        /// <param name="stack"></param>
+        /// <returns></returns>
+        private int SummeVon(ConcurrentStack<byte> stack)
+        {
+            int value = 0;
+            foreach (var v in stack)
+            {
+                value += Convert.ToInt32(v);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Ist der Wert bei einem Mass-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsMassValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 4:
+                case 6:
+                case 8:
+                case 10:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Ist der Wert bei einem Schuss-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsSchussValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 5:
+                case 10:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Checks if Value is for actual Block of attempts allowed and insertes the value if true
@@ -186,27 +269,6 @@ namespace StockTV.Classes
             return ListOfAllValues.LastOrDefault();
         }
 
-
-        /// <summary>
-        /// Save all Values
-        /// </summary>
-        private void SaveTurnsToLocalSettings()
-        {
-            Settings.Instance.SaveZielValues(ListOfAllValues);
-        }
-
-        /// <summary>
-        /// Load all Values from Settings
-        /// </summary>
-        private void LoadTurnsFromLocalSettings()
-        {
-            foreach (var t in Settings.Instance.LoadZielValues())
-            {
-                this.AddValueToVersuche(Convert.ToSByte(t));
-            }
-        }
-
-
         /// <summary>
         /// Anzahl aller Versuche die bereits hinterlegt sind
         /// </summary>
@@ -214,63 +276,6 @@ namespace StockTV.Classes
         internal int CountOfVersuche()
         {
             return MassenVorne.Count + Schüsse.Count + MassenHinten.Count + Kombinieren.Count;
-        }
-
-        /// <summary>
-        /// Summe aller Werte von stack
-        /// </summary>
-        /// <param name="stack"></param>
-        /// <returns></returns>
-        private int SummeVon(ConcurrentStack<byte> stack)
-        {
-            int value = 0;
-            foreach (var v in stack)
-            {
-                value += Convert.ToInt32(v);
-            }
-            return value;
-        }
-
-        /// <summary>
-        /// Ist der Wert bei einem Mass-Versuch gültig
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool IsMassValue(sbyte value)
-        {
-            switch (value)
-            {
-                case 0:
-                case 2:
-                case 4:
-                case 6:
-                case 8:
-                case 10:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Ist der Wert bei einem Schuss-Versuch gültig
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool IsSchussValue(sbyte value)
-        {
-            switch (value)
-            {
-                case 0:
-                case 2:
-                case 5:
-                case 10:
-                    return true;
-
-                default:
-                    return false;
-            }
         }
 
         /// <summary>
