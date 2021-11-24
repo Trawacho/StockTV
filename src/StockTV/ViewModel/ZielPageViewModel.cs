@@ -105,7 +105,7 @@ namespace StockTV.ViewModel
         private void Bewerb_ValuesChanged(object sender, EventArgs e)
         {
             Zielbewerb m = sender as Zielbewerb;
-            Settings.SendGameResults(m.Serialize(false));
+            Settings.PublishGameResult(m.Serialize(false));
         }
 
 

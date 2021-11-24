@@ -173,6 +173,7 @@ namespace StockTV.ViewModel
                 default:
                     break;
             }
+            Settings.Instance.PublishSettings();
         }
 
         public void DecreaseSetting()
@@ -206,6 +207,7 @@ namespace StockTV.ViewModel
                 default:
                     break;
             }
+            Settings.Instance.PublishSettings();
         }
 
         #endregion

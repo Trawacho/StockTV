@@ -456,7 +456,7 @@ namespace StockTV.ViewModel
         private void Match_TurnsChanged(object sender, EventArgs e)
         {
             Match m = sender as Match;
-            Settings.Instance.SendGameResults(m.Serialize(false));
+            Settings.Instance.PublishGameResult(m.Serialize(false));
         }
 
         #endregion

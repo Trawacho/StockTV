@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
@@ -127,21 +128,8 @@ namespace StockTV.Classes
         /// </summary>
         internal ColorModis ColorModus
         {
-            get
-            {
-                return colormodus;
-            }
-            set
-            {
-                if (colormodus == value)
-                    return;
-
-                colormodus = value;
-                NotifyPropertyChangedAllProperties();
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(ColorModus)] = value.ToString();
-            }
+            get => colormodus;
+            set => SetSaveProperty(ref colormodus, value, nameof(ColorModus));
         }
 
         internal void SetColorModus(byte value)
@@ -157,17 +145,7 @@ namespace StockTV.Classes
         internal NextBahnModis NextBahnModus
         {
             get => nextbahnmodus;
-            set
-            {
-                if (nextbahnmodus == value)
-                    return;
-
-                nextbahnmodus = value;
-                NotifyPropertyChangedAllProperties();
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(NextBahnModus)] = value.ToString();
-            }
+            set => SetSaveProperty(ref nextbahnmodus, value, nameof(NextBahnModus));
         }
 
         internal void SetNextBahnModus(byte value)
@@ -300,9 +278,22 @@ namespace StockTV.Classes
             }
         }
 
-       
+
         #endregion
 
+        private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+            storage = value;
+
+            NotifyPropertyChangedAllProperties();
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[propertyName] = value.ToString();
+
+            return true;
+        }
 
     }
 }

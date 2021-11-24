@@ -9,6 +9,7 @@ namespace StockTV.Classes.NetMQUtil
     {
         Hello = 01,
         Welcome = 02,
+        Alive = 03,
         SetResult = 10,
         GetResult = 11,
         SetSettings = 20,

@@ -98,11 +98,8 @@ namespace StockTV.Classes
                           value < 1 ||
                           value > 99)
                     return;
-
-                courtNumber = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(CourtNumber)] = value.ToString();
+             
+                SetSaveProperty(ref courtNumber, value, nameof(CourtNumber));
             }
         }
 
@@ -138,10 +135,7 @@ namespace StockTV.Classes
                     value > 10)
                     return;
 
-                spielgruppe = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(Spielgruppe)] = value.ToString();
+                SetSaveProperty(ref spielgruppe, value, nameof(Spielgruppe));
             }
         }
 
@@ -300,10 +294,7 @@ namespace StockTV.Classes
                                     value > 20)
                     return;
 
-                midColumnLength = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(MidColumnLength)] = value.ToString();
+                SetSaveProperty(ref midColumnLength, value, nameof(MidColumnLength));
             }
         }
 
@@ -333,9 +324,7 @@ namespace StockTV.Classes
                 if (isBroadcasting == value)
                     return;
 
-                isBroadcasting = value;
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(IsBroadcasting)] = value.ToString();
+                SetSaveProperty(ref isBroadcasting, value, nameof(IsBroadcasting));
 
                 if (value)
                 {
@@ -459,22 +448,38 @@ namespace StockTV.Classes
         #endregion
 
 
+        private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+            storage = value;
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[propertyName] = value.ToString();
+
+            return true;
+        }
+
         public override string ToString()
         {
             return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus};MidColumnLength={MidColumnLength}";
         }
 
+        /// <summary>
+        /// Settings per NetMQ-Publisher versenden
+        /// </summary>
+        public void PublishSettings()
+        {
+            PServer?.SendDataMessage(MessageTopic.GetSettings, GetSettings());
+        }
 
         /// <summary>
-        /// Message per NetMQ-Publisher versenden
+        /// Spielergebnis per NetMQ-Publisher versenden
         /// </summary>
         /// <param name="message"></param>
-        public void SendGameResults(byte[] message)
+        public void PublishGameResult(byte[] message)
         {
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine($"{string.Join('-', message)}");
-#endif
-            PServer?.SendDataMessage("SendingResultInfo", message);
+            PServer?.SendDataMessage(MessageTopic.GetResult, message);
         }
     }
 }
