@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Storage;
 using Windows.UI;
@@ -12,13 +14,13 @@ namespace StockTV.Classes
 
         public enum ColorModis
         {
-            Normal,
-            Dark
+            Normal = 0,
+            Dark = 1
         }
         public enum NextBahnModis
         {
-            Left,
-            Right
+            Left = 0,
+            Right = 1
         }
 
         #endregion
@@ -126,23 +128,15 @@ namespace StockTV.Classes
         /// </summary>
         internal ColorModis ColorModus
         {
-            get
-            {
-                return colormodus;
-            }
-            set
-            {
-                if (colormodus == value)
-                    return;
-
-                colormodus = value;
-                NotifyPropertyChangedAllProperties();
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(ColorModus)] = value.ToString();
-            }
+            get => colormodus;
+            set => SetSaveProperty(ref colormodus, value, nameof(ColorModus));
         }
 
+        internal void SetColorModus(byte value)
+        {
+            var e = (ColorModis)Enum.Parse(typeof(ColorModis), value.ToString());
+            ColorModus = e;
+        }
 
         private NextBahnModis nextbahnmodus;
         /// <summary>
@@ -151,17 +145,13 @@ namespace StockTV.Classes
         internal NextBahnModis NextBahnModus
         {
             get => nextbahnmodus;
-            set
-            {
-                if (nextbahnmodus == value)
-                    return;
+            set => SetSaveProperty(ref nextbahnmodus, value, nameof(NextBahnModus));
+        }
 
-                nextbahnmodus = value;
-                NotifyPropertyChangedAllProperties();
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(NextBahnModus)] = value.ToString();
-            }
+        internal void SetNextBahnModus(byte value)
+        {
+            var e = (NextBahnModis)Enum.Parse(typeof(NextBahnModis), value.ToString());
+            NextBahnModus = e;
         }
         #endregion
 
@@ -287,8 +277,23 @@ namespace StockTV.Classes
                 }
             }
         }
+
+
         #endregion
 
+        private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+            storage = value;
+
+            NotifyPropertyChangedAllProperties();
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[propertyName] = value.ToString();
+
+            return true;
+        }
 
     }
 }

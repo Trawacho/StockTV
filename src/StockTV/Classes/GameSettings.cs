@@ -1,4 +1,6 @@
-﻿using Windows.Storage;
+﻿using System;
+using System.Collections.Generic;
+using Windows.Storage;
 
 namespace StockTV.Classes
 {
@@ -61,6 +63,12 @@ namespace StockTV.Classes
 
             PointsPerTurn = PointsPerTurnDefault;
 
+        }
+
+        internal void SetModus(byte value)
+        {
+            var e = (GameSettings.GameModis)Enum.Parse(typeof(GameSettings.GameModis), value.ToString());
+            SetModus(e);
         }
 
         /// <summary>
@@ -150,10 +158,7 @@ namespace StockTV.Classes
         /// </summary>
         public byte TurnsPerGame
         {
-            get
-            {
-                return turnsPerGame;
-            }
+            get => turnsPerGame;
             internal set
             {
                 if (turnsPerGame == value ||
@@ -161,9 +166,7 @@ namespace StockTV.Classes
                            value > TurnsPerGameMax)
                     return;
 
-                turnsPerGame = value;
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(TurnsPerGame)] = value.ToString();
+                SetSaveProperty(ref turnsPerGame, value, nameof(TurnsPerGame));
             }
         }
 
@@ -197,18 +200,13 @@ namespace StockTV.Classes
         /// </summary>
         public byte PointsPerTurn
         {
-            get
-            {
-                return pointsPerTurn;
-            }
+            get => pointsPerTurn;
             set
             {
-                if (pointsPerTurn == value || value < PointsPerTurnMin || PointsPerTurnMax > 99)
+                if (pointsPerTurn == value || value < PointsPerTurnMin || value > PointsPerTurnMax)
                     return;
 
-                pointsPerTurn = value;
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(PointsPerTurn)] = value.ToString();
+                SetSaveProperty(ref pointsPerTurn, value, nameof(PointsPerTurn));
             }
         }
 
@@ -226,7 +224,7 @@ namespace StockTV.Classes
         /// Default Value for <see cref="PointsPerTurn"/>
         /// </summary>
         const byte PointsPerTurnDefault = 30;
-        
+
         #endregion
 
 
@@ -236,23 +234,23 @@ namespace StockTV.Classes
         /// </summary>
         public GameModis GameModus
         {
-            get
-            {
-                return modis;
-            }
-            private set
-            {
-                if (modis == value)
-                    return;
-
-                modis = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(GameModus)] = value.ToString();
-            }
+            get => modis;
+            private set => SetSaveProperty(ref modis, value, nameof(GameModus));
         }
 
         #endregion
+
+        private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+            storage = value;
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[propertyName] = value.ToString();
+
+            return true;
+        }
 
     }
 }

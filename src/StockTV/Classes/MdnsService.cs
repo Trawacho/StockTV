@@ -6,28 +6,22 @@ namespace StockTV.Classes
 {
     public static class MdnsService
     {
-        static ServiceProfile appProfile;
         static ServiceDiscovery service;
-        static ServiceProfile publishProfile;
+        static ServiceProfile stocktvProfile;
         internal static void Advertise()
         {
-            if (appProfile == null)
+            if(stocktvProfile == null)
             {
-                appProfile = new ServiceProfile(Environment.MachineName, "_stockapp._tcp.", 4747);
-                appProfile.AddProperty("pkgVer", GetAppVersion());
-            }
-
-            if (publishProfile == null)
-            {
-                publishProfile = new ServiceProfile(Environment.MachineName, "_stockpub._tcp.", 4748);
-                publishProfile.AddProperty("pkgVer", GetAppVersion());
+                stocktvProfile = new ServiceProfile(Environment.MachineName, "_stockTV._tcp.", 4747);
+                stocktvProfile.AddProperty("pubSvc", "4748");
+                stocktvProfile.AddProperty("ctrSvc", "4747");
+                stocktvProfile.AddProperty("pkgVer", GetAppVersion());
             }
 
             if (service == null)
                 service = new ServiceDiscovery();
 
-            service.Advertise(appProfile);
-            service.Advertise(publishProfile);
+            service.Advertise(stocktvProfile);
         }
 
         internal static void Unadvertise()

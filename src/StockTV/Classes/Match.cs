@@ -6,14 +6,23 @@ using System.Linq;
 
 namespace StockTV.Classes
 {
+    /// <summary>
+    /// Match-Class as Base for Training, Turnier and BestOf with n-Games<br></br>
+    /// Functions to add or delete Turns, Save and Load Turns to local Settings, ...
+    /// </summary>
     public class Match
     {
+        #region EventHandler for TurnsChanged
+        
         public event EventHandler TurnsChanged;
         protected void RaiseTurnsChanged()
         {
             var handler = TurnsChanged;
             handler?.Invoke(this, EventArgs.Empty);
         }
+
+        #endregion
+
 
         #region Constructor
 
@@ -200,7 +209,7 @@ namespace StockTV.Classes
 
             List<byte> values = new List<byte>();
 
-            values.AddRange(Settings.Instance.GetDataHeader());
+            values.AddRange(Settings.Instance.GetSettings());
 
             //Add for each Game the sum of the turn-value for left and right
             foreach (Game g in Games)
@@ -261,9 +270,5 @@ namespace StockTV.Classes
         }
        
         #endregion
-
-
     }
-
-    
 }

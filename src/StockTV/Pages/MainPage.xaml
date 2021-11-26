@@ -25,7 +25,7 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="{Binding IsTeamNameAvailable, Converter={StaticResource BoolToGridLengthConverter}}"/>
-            <ColumnDefinition Width="12*"/>
+            <ColumnDefinition Width="{Binding MidColumnLength, Mode=OneWay}"/>
             <ColumnDefinition Width="{Binding IsTeamNameAvailable, Converter={StaticResource BoolToGridLengthConverter}}"/>
         </Grid.ColumnDefinitions>
 

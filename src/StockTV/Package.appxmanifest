@@ -9,7 +9,7 @@
   <Identity
     Name="StockTV"
     Publisher="CN=Daniel Sturm"
-    Version="1.2.3.0" />
+    Version="1.3.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="cc486ab5-62b7-46a4-9353-bf08abe930b9" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -49,5 +49,6 @@
   <Capabilities>
     <Capability Name="internetClient"/>
     <Capability Name="internetClientServer"/>
-    <Capability Name="privateNetworkClientServer"/></Capabilities>
+    <Capability Name="privateNetworkClientServer"/>
+    <uap:Capability Name="picturesLibrary"/></Capabilities>
 </Package>

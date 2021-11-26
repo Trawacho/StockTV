@@ -1,13 +1,13 @@
 ﻿using NetMQ;
 using StockTV.Classes;
 using StockTV.Classes.NetMQUtil;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using static StockTV.Classes.GameSettings;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace StockTV.ViewModel
 {
@@ -36,102 +36,210 @@ namespace StockTV.ViewModel
             RespServer.RespServerDataReceived += RespServer_RespServerDataReceived;
         }
 
-        internal abstract void SwitchToOtherPage(GameModis gameModus);
-        internal abstract void SetBegegnungen(IEnumerable<Begegnung> begegnungen);
-        internal abstract void SetMatchReset();
-        internal abstract byte[] GetSerializedResult();
-
-        private byte _settingsCounter;
-        internal void SettingsCounterIncrease() => _settingsCounter++;
-        internal void SettingsCounterReset() => _settingsCounter = 0;
+        /// <summary>
+        /// Settings from Singleton Instance
+        /// </summary>
+        public Settings Settings => Settings.Instance;
 
         /// <summary>
-        /// Settings
+        /// Value to determine count of keystrokes for SpecialPage
         /// </summary>
-        public Settings Settings
+        private byte _specialCounter;
+
+        /// <summary>
+        /// Increase SpecialCounter
+        /// </summary>
+        internal protected void SpecialCounterIncrease() => _specialCounter++;
+
+        /// <summary>
+        /// Set SpecialCounter to 0
+        /// </summary>
+        internal protected void SpecialCounterReset() => _specialCounter = 0;
+
+
+        /// <summary>
+        /// If <see cref="_specialCounter"/> is eq to 5, Navigate to the SettingsPage or MarketingPage 
+        /// </summary>
+        /// <param name="inputValue"></param>
+        private protected void ShowSpecialPage(sbyte inputValue)
         {
-            get
+            if (_specialCounter < 5) return;
+            _specialCounter = 0;
+
+            if (inputValue == 0)
             {
-                return Settings.Instance;
+                NavigateTo(typeof(Pages.SettingsPage));
+            }
+            else if (inputValue == 10)
+            {
+                NavigateTo(typeof(Pages.MarketingPage));
+            }
+
+
+        }
+
+        /// <summary>
+        /// Set values to Settings Instance
+        /// </summary>
+        /// <param name="settings"></param>
+        internal abstract void SetSettings(byte[] settings);
+
+        /// <summary>
+        /// Set Team Names 
+        /// </summary>
+        /// <param name="begegnungen"></param>
+        internal abstract void SetTeamNames(string begegnungen);
+
+        /// <summary>
+        /// Reset Match 
+        /// </summary>
+        internal abstract void SetMatchReset();
+
+        /// <summary>
+        /// Send Result as byte array
+        /// </summary>
+        /// <returns></returns>
+        internal abstract byte[] GetSerializedResult();
+      
+
+        /// <summary>
+        /// Send NetMQ Message to sender with Settings
+        /// </summary>
+        /// <param name="senderFrame"></param>
+        private protected void SendSettings(NetMQFrame senderFrame)
+        {
+            NetMQMessage back = new NetMQMessage(4);
+            back.Append(senderFrame);
+            back.AppendEmptyFrame();
+            back.Append(MessageTopic.GetSettings.ToString());
+            back.Append(Settings.GetSettings());
+            RespServer.AddOutbound(back);
+        }
+
+        /// <summary>
+        /// Send NetMQ Message to sender with the Result as Value part<br></br>
+        /// </summary>
+        /// <param name="senderFrame"></param>
+        private protected void SendResult(NetMQFrame senderFrame)
+        {
+            NetMQMessage back = new NetMQMessage(4);
+            back.Append(senderFrame);
+            back.AppendEmptyFrame();
+            back.Append(MessageTopic.GetResult.ToString());
+            back.Append(GetSerializedResult());
+            RespServer.AddOutbound(back);
+        }
+
+        /// <summary>
+        /// Save Byte-Array to Settings<para></para>
+        /// Creates a copy of value and creates a BitmapImage. This is saved in Settings
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="fileName"></param>
+        private protected void SetImage(byte[] value, string fileName)
+        {
+            var dataSource = new byte[value.Length];
+            _ = fileName;
+            System.Array.Copy(value, dataSource, value.Length);
+
+            using (var randomAccess = new InMemoryRandomAccessStream())
+            using (var writer = new DataWriter(randomAccess.GetOutputStreamAt(0)))
+            {
+                writer.WriteBytes(dataSource);
+                writer.StoreAsync().GetResults();
+                BitmapImage bm = new BitmapImage();
+                bm.SetSource(randomAccess);
+
+                Settings.MarketingImage = bm;
+            }
+
+            NavigateTo(typeof(Pages.MarketingPage), true);
+
+        }
+
+        /// <summary>
+        /// The <see cref="Settings.MarketingImage"/> is set to null
+        /// </summary>
+        private protected void ClearImage()
+        {
+            Settings.MarketingImage = null;
+        }
+
+        /// <summary>
+        /// Navigiere zur MarketingPage
+        /// </summary>
+        private protected void GoToImage()
+        {
+            NavigateTo(typeof(Pages.MarketingPage));
+        }
+
+        /// <summary>
+        /// Navigate to the page from given Type if other than the actual one<br></br>
+        /// De-register from ResponseServer<para></para>
+        /// if stayOnPage is set to TRUE, no change if still on MarketingPage
+        /// </summary>
+        /// <param name="pageTypeToNavigate"></param>
+        internal void NavigateTo(System.Type pageTypeToNavigate, bool stayOnPage = false)
+        {
+            var rootFrame = Window.Current.Content as Frame;
+            if (rootFrame.Content.GetType() != pageTypeToNavigate)
+            {
+                RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
+                rootFrame.Navigate(pageTypeToNavigate);
+            }
+            else if (!stayOnPage &&
+                     rootFrame.Content.GetType() == typeof(Pages.MarketingPage) &&
+                     typeof(Pages.MarketingPage) == pageTypeToNavigate)
+            {
+                if (Settings.GameSettings.GameModus == GameSettings.GameModis.Ziel)
+                    NavigateTo(typeof(Pages.ZielPage));
+                else
+                    NavigateTo(typeof(Pages.MainPage));
             }
         }
 
-        private protected void ShowSettingsPage()
-        {
-            if (_settingsCounter < 5) return;
-
-            _settingsCounter = 0;
-            RespServer.RespServerDataReceived -= RespServer_RespServerDataReceived;
-            var rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Pages.SettingsPage));
-        }
-
-        private protected void RespServer_RespServerDataReceived(MqServerDataReceivedEventArgs e)
+        /// <summary>
+        /// Depending on the args the appropiate function get called
+        /// </summary>
+        /// <param name="args"></param>
+        private protected void RespServer_RespServerDataReceived(MqServerDataReceivedEventArgs args)
         {
             _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
                 () =>
                 {
-                    if (e.IsGameModus)
+                    switch (args.Topic)
                     {
-                        Settings.Instance.GameSettings.SetModus(e.GameModus);
-                        SwitchToOtherPage(e.GameModus);
-                    }
-
-                    if (e.IsPointsPerTurn)
-                    {
-                        Settings.Instance.GameSettings.PointsPerTurn = e.PointsPerTurn;
-                    }
-
-                    if (e.IsBahnNummer)
-                    {
-                        Settings.Instance.CourtNumber = e.BahnNummer;
-                    }
-
-                    if (e.IsSpielgruppe)
-                    {
-                        Settings.Instance.Spielgruppe = e.Spielgruppe;
-                    }
-
-                    if (e.IsTurnsPerGame)
-                    {
-                        Settings.Instance.GameSettings.TurnsPerGame = e.TurnsPerGame;
-                    }
-
-                    if (e.IsColorModus)
-                    {
-                        Settings.Instance.ColorScheme.ColorModus = e.ColorModus;
-                    }
-
-                    if (e.IsNextBahn)
-                    {
-                        Settings.Instance.ColorScheme.NextBahnModus = e.NextBahn;
-                    }
-
-                    if (e.IsReset)
-                    {
-                        SetMatchReset();
-                    }
-
-                    if (e.IsSetBegegnungen)
-                    {
-                        SetBegegnungen(e.Begegnungen);
-                    }
-
-                    if (e.IsGetResult)
-                    {
-                        NetMQMessage back = new NetMQMessage(2);
-                        back.Append("Result");
-                        back.Append(GetSerializedResult());
-                        RespServer.AddOutbound(back);
-                    }
-
-                    if (e.IsGetSettings)
-                    {
-                        NetMQMessage back = new NetMQMessage(2);
-                        back.Append("Settings");
-                        back.Append(Settings.Instance.ToString());
-                        RespServer.AddOutbound(back);
+                        case MessageTopic.SetResult:
+                            break;
+                        case MessageTopic.GetResult:
+                            SendResult(args.SenderID);
+                            break;
+                        case MessageTopic.SetSettings:
+                            SetSettings(args.Value);
+                            break;
+                        case MessageTopic.GetSettings:
+                            SendSettings(args.SenderID);
+                            break;
+                        case MessageTopic.ResetResult:
+                            SetMatchReset();
+                            break;
+                        case MessageTopic.SetTeamNames:
+                            SetTeamNames(System.Text.Encoding.UTF8.GetString(args.Value));
+                            break;
+                        case MessageTopic.SetImage:
+                            SetImage(
+                                args.Value,
+                                System.Text.Encoding.UTF8.GetString(args.GetAdditionals()));
+                            break;
+                        case MessageTopic.GoToImage:
+                            GoToImage();
+                            break;
+                        case MessageTopic.ClearImage:
+                            ClearImage();
+                            break;
+                        default:
+                            break;
                     }
 
                     RaiseAllPropertysChanged();

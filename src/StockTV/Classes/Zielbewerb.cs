@@ -9,12 +9,16 @@ namespace StockTV.Classes
 {
     public class Zielbewerb
     {
+        #region EventHandler for ValuesChanged
+
         public event EventHandler ValuesChanged;
         protected void RaiseValuesChanged()
         {
             var handler = ValuesChanged;
             handler?.Invoke(this, EventArgs.Empty);
         }
+
+        #endregion
 
         #region Public Properties of SUMs
 
@@ -57,8 +61,33 @@ namespace StockTV.Classes
         private readonly ConcurrentStack<byte> MassenHinten;
         private readonly ConcurrentStack<byte> Kombinieren;
 
+
+        /// <summary>
+        /// List of all Values (MassenVorne, Schüsse, MassenHinten, Kombinieren)
+        /// </summary>
+        private List<byte> ListOfAllValues
+        {
+            get
+            {
+                var values = new List<byte>();
+
+                values.AddRange(MassenVorne.Reverse().ToList());
+                values.AddRange(Schüsse.Reverse().ToList());
+                values.AddRange(MassenHinten.Reverse().ToList());
+                values.AddRange(Kombinieren.Reverse().ToList());
+
+                return values;
+            }
+        }
+
+
         #endregion
 
+        #region Constructor
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Zielbewerb()
         {
             this.MassenVorne = new ConcurrentStack<byte>();
@@ -69,7 +98,91 @@ namespace StockTV.Classes
             this.LoadTurnsFromLocalSettings();
         }
 
+        #endregion
 
+        #region Save and Load Values to Settings
+
+        /// <summary>
+        /// Save all Values
+        /// </summary>
+        private void SaveTurnsToLocalSettings()
+        {
+            Settings.Instance.SaveZielValues(ListOfAllValues);
+        }
+
+        /// <summary>
+        /// Load all Values from Settings
+        /// </summary>
+        private void LoadTurnsFromLocalSettings()
+        {
+            foreach (var t in Settings.Instance.LoadZielValues())
+            {
+                this.AddValueToVersuche(Convert.ToSByte(t));
+            }
+        }
+
+        #endregion
+
+        #region Private helper Functions
+
+        /// <summary>
+        /// Summe aller Werte von stack
+        /// </summary>
+        /// <param name="stack"></param>
+        /// <returns></returns>
+        private int SummeVon(ConcurrentStack<byte> stack)
+        {
+            int value = 0;
+            foreach (var v in stack)
+            {
+                value += Convert.ToInt32(v);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Ist der Wert bei einem Mass-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsMassValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 4:
+                case 6:
+                case 8:
+                case 10:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Ist der Wert bei einem Schuss-Versuch gültig
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool IsSchussValue(sbyte value)
+        {
+            switch (value)
+            {
+                case 0:
+                case 2:
+                case 5:
+                case 10:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Checks if Value is for actual Block of attempts allowed and insertes the value if true
@@ -134,7 +247,6 @@ namespace StockTV.Classes
             RaiseValuesChanged();
         }
 
-
         /// <summary>
         /// Delete all Values in all Blocks of Attempts
         /// </summary>
@@ -148,46 +260,14 @@ namespace StockTV.Classes
             RaiseValuesChanged();
         }
 
+        /// <summary>
+        /// Last value of all Values
+        /// </summary>
+        /// <returns></returns>
         internal int LastValue()
         {
             return ListOfAllValues.LastOrDefault();
         }
-
-
-        /// <summary>
-        /// Save all turns as long as <see cref="GameSettings.GameModus"/> isn´t <see cref="GameSettings.GameModis.Training"/>
-        /// </summary>
-        private void SaveTurnsToLocalSettings()
-        {
-            Settings.Instance.SaveZielValues(ListOfAllValues);
-        }
-
-        private void LoadTurnsFromLocalSettings()
-        {
-            foreach (var t in Settings.Instance.LoadZielValues())
-            {
-                this.AddValueToVersuche(Convert.ToSByte(t));
-            }
-
-        }
-
-        private List<byte> ListOfAllValues
-        {
-            get
-            {
-                var values = new List<byte>();
-
-                values.AddRange(MassenVorne.Reverse().ToList());
-                values.AddRange(Schüsse.Reverse().ToList());
-                values.AddRange(MassenHinten.Reverse().ToList());
-                values.AddRange(Kombinieren.Reverse().ToList());
-
-                return values;
-            }
-        }
-
-
-
 
         /// <summary>
         /// Anzahl aller Versuche die bereits hinterlegt sind
@@ -196,63 +276,6 @@ namespace StockTV.Classes
         internal int CountOfVersuche()
         {
             return MassenVorne.Count + Schüsse.Count + MassenHinten.Count + Kombinieren.Count;
-        }
-
-        /// <summary>
-        /// Summe aller Werte von stack
-        /// </summary>
-        /// <param name="stack"></param>
-        /// <returns></returns>
-        private int SummeVon(ConcurrentStack<byte> stack)
-        {
-            int value = 0;
-            foreach (var v in stack)
-            {
-                value += Convert.ToInt32(v);
-            }
-            return value;
-        }
-
-        /// <summary>
-        /// Ist der Wert bei einem Mass-Versuch gültig
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool IsMassValue(sbyte value)
-        {
-            switch (value)
-            {
-                case 0:
-                case 2:
-                case 4:
-                case 6:
-                case 8:
-                case 10:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Ist der Wert bei einem Schuss-Versuch gültig
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool IsSchussValue(sbyte value)
-        {
-            switch (value)
-            {
-                case 0:
-                case 2:
-                case 5:
-                case 10:
-                    return true;
-
-                default:
-                    return false;
-            }
         }
 
         /// <summary>
@@ -285,7 +308,7 @@ namespace StockTV.Classes
 
 
             var values = new List<byte>();
-            values.AddRange(Settings.Instance.GetDataHeader());
+            values.AddRange(Settings.Instance.GetSettings());
 
 
             //Add for each attempt the value 

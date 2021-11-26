@@ -1,11 +1,11 @@
-﻿using System;
+﻿using StockTV.Classes.NetMQUtil;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Text;
 using Windows.Storage;
-using StockTV.Classes.NetMQUtil;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace StockTV.Classes
 {
@@ -32,9 +32,10 @@ namespace StockTV.Classes
             var broadcasting = localSettings.Values[nameof(IsBroadcasting)] as string;
             this.IsBroadcasting = bool.Parse(broadcasting ?? "false");
 
+            var midcolLen = localSettings.Values[nameof(MidColumnLength)] as string;
+            this.MidColumnLength = byte.Parse(midcolLen ?? "10");
+
             Debug.WriteLine("Settings loaded...");
-
-
         }
 
 
@@ -60,6 +61,11 @@ namespace StockTV.Classes
         /// Holds the current GameSettings
         /// </summary>
         public GameSettings GameSettings { get; set; }
+
+        /// <summary>
+        /// Image zur Anzeige in der MarketingPage
+        /// </summary>
+        public BitmapImage MarketingImage { get; set; }
 
         #region CourtNumber
         /// <summary>
@@ -92,16 +98,14 @@ namespace StockTV.Classes
                           value < 1 ||
                           value > 99)
                     return;
-
-                courtNumber = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(CourtNumber)] = value.ToString();
+             
+                SetSaveProperty(ref courtNumber, value, nameof(CourtNumber));
             }
         }
-       
+
 
         #endregion
+
 
         #region GroupNumber
 
@@ -131,10 +135,7 @@ namespace StockTV.Classes
                     value > 10)
                     return;
 
-                spielgruppe = value;
-
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(Spielgruppe)] = value.ToString();
+                SetSaveProperty(ref spielgruppe, value, nameof(Spielgruppe));
             }
         }
 
@@ -231,6 +232,7 @@ namespace StockTV.Classes
 
         #endregion
 
+
         #region Zielschiessen
 
         /// <summary>
@@ -272,6 +274,33 @@ namespace StockTV.Classes
 
         #endregion
 
+
+        #region MidColumnFaktor
+
+        private byte midColumnLength;
+
+        /// <summary>
+        /// Breite der mittleren Spalte<br></br>
+        /// Nur relevant, wenn TeamNamen angezeigt werden<br></br>
+        /// Wert kann nur zwischen 1 und 20 liegen (default bei 10)
+        /// </summary>
+        public byte MidColumnLength
+        {
+            get => midColumnLength;
+            set
+            {
+                if (midColumnLength == value ||
+                                    value < 1 ||
+                                    value > 20)
+                    return;
+
+                SetSaveProperty(ref midColumnLength, value, nameof(MidColumnLength));
+            }
+        }
+
+        #endregion
+
+
         #region Broadcasting / Networking
 
         /// <summary>
@@ -295,9 +324,7 @@ namespace StockTV.Classes
                 if (isBroadcasting == value)
                     return;
 
-                isBroadcasting = value;
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(IsBroadcasting)] = value.ToString();
+                SetSaveProperty(ref isBroadcasting, value, nameof(IsBroadcasting));
 
                 if (value)
                 {
@@ -348,11 +375,28 @@ namespace StockTV.Classes
             }
         }
 
+        #endregion
+
+
+        #region Get und Set Funktionen
+
         /// <summary>
-        ///  returns a byte array with ten bytes containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+        /// returns a byte array with ten bytes containing the settings
+        /// <para>
+        /// 0   Bahnnummer<br></br>  
+        /// 1   SpielGruppe<br></br>
+        /// 2   Modus<br></br>
+        /// 3   Spielrichtung<br></br>
+        /// 4   Farbmodus<br></br>
+        /// 5   Anzahl max. Punkte pro Kehre<br></br>
+        /// 6   Anzahl der Kehren pro Spiel<br></br>
+        /// 7   Breitenverhältnis der mittleren Spalte zu den beiden äußeren Spalten mit Mannschaftsnamen<br></br>
+        /// 8   reserve<br></br>
+        /// 9   reserve<br></br>
+        /// </para>
         /// </summary>
         /// <returns></returns>
-        public byte[] GetDataHeader()
+        public byte[] GetSettings()
         {
             List<byte> data = new List<byte>
             {
@@ -360,26 +404,82 @@ namespace StockTV.Classes
                 Spielgruppe,                                        //SpielGruppe    
                 Convert.ToByte((int)GameSettings.GameModus),        //Modus
                 Convert.ToByte(ColorScheme.NextBahnModus),          //Spielrichtung
-                0,
-                0,
-                0,
-                0,
+                Convert.ToByte(ColorScheme.ColorModus),             //FarbModus (hell,dunkel)
+                GameSettings.PointsPerTurn,                         //Anzahl max. Punkte pro Kehre
+                GameSettings.TurnsPerGame,                          //Anzahl der Kehren
+                MidColumnLength,                                    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
                 0,
                 0
             };
             return data.ToArray();
         }
+
+
+        /// <summary>
+        /// Set settings as in array specified. Needs a byte array with ten bytes
+        /// <para>
+        /// 0   Bahnnummer<br></br>  
+        /// 1   SpielGruppe<br></br>
+        /// 2   Modus<br></br>
+        /// 3   Spielrichtung<br></br>
+        /// 4   Farbmodus<br></br>
+        /// 5   Anzahl max. Punkte pro Kehre<br></br>
+        /// 6   Anzahl der Kehren pro Spiel<br></br>
+        /// 7   Breitenverhältnis der mittleren Spalte zu den beiden äußeren Spalten mit Mannschaftsnamen<br></br>
+        /// 8   reserve<br></br>
+        /// 9   reserve<br></br>
+        /// </para>
+        /// </summary>
+        /// <param name="settingsArray"></param>
+        public void SetSettings(byte[] settingsArray)
+        {
+            CourtNumber = settingsArray[0];
+            Spielgruppe = settingsArray[1];
+            GameSettings.SetModus(settingsArray[2]);
+            ColorScheme.SetNextBahnModus(settingsArray[3]);
+            ColorScheme.SetColorModus(settingsArray[4]);
+            GameSettings.PointsPerTurn = settingsArray[5];
+            GameSettings.TurnsPerGame = settingsArray[6];
+            MidColumnLength = settingsArray[7];
+            _ = settingsArray[8];
+            _ = settingsArray[9];
+        }
+
         #endregion
+
+
+        private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+        {
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+            storage = value;
+
+            var localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values[propertyName] = value.ToString();
+
+            return true;
+        }
 
         public override string ToString()
         {
-            return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus}";
+            return $"Bahn={CourtNumber};Spielgruppe={Spielgruppe};ColorModus={ColorScheme.ColorModus};GameModus={GameSettings.GameModus};PointsPerTurn={GameSettings.PointsPerTurn};TurnsPerGame={GameSettings.TurnsPerGame};NextBahn={ColorScheme.NextBahnModus};MidColumnLength={MidColumnLength}";
         }
 
-        public void SendGameResults(byte[] message)
+        /// <summary>
+        /// Settings per NetMQ-Publisher versenden
+        /// </summary>
+        public void PublishSettings()
         {
-            PServer?.SendDataMessage("SendingResultInfo", message);
+            PServer?.SendDataMessage(MessageTopic.GetSettings, GetSettings());
         }
 
+        /// <summary>
+        /// Spielergebnis per NetMQ-Publisher versenden
+        /// </summary>
+        /// <param name="message"></param>
+        public void PublishGameResult(byte[] message)
+        {
+            PServer?.SendDataMessage(MessageTopic.GetResult, message);
+        }
     }
 }
