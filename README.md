@@ -1,3 +1,5 @@
+![StockTVBanner](/Bilder/StockTV_Banner.jpg)
+
 # StockTV - Die Anzeige für den Stocksport
 Der Zuschauer kann auf jeder Bahn den aktuellen Spielstand erkennen. Ein Mehrwert für Verein und Zuschauer. 
 Ein Spiel genau beobachten und trotzdem alle Spiele im Blick haben. Auch für die Schützen wird es interessanter. Sie sehen nicht nur den eigenen Spielstand sondern auch die Spielstände auf den anderen Bahnen, was Turniere nochmal 
