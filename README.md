@@ -47,6 +47,9 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 - SC Schönach<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS2.jpeg" width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS3.jpeg" width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS1.jpeg" width="300"/>
 
+- EC Griesbach (3 Bahnen)
+- ETSV Hainsbach (5 Bahnen)
+
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
 In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung. Durch sein strukturiertes Testen, seine Ideen sowie seine konstruktiven Kritiken konnte das Projekt nochmal einen Schritt nach vorne machen. Danke Mich!  
