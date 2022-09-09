@@ -20,7 +20,8 @@ Training|Turnier|BestOf|Ziel
  - 1x LCD-Display mind. 42"
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
  - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern
-
+#### !!! Info bzgl Raspberry !!!
+Da es aktuell sehr schwierig bis unmöglich ist, die richtigen Raspberry PIs aufzutrieben, möchte ich darauf hinweisen, dass jeder Windows10 PC funktioniert. Alternative Hardware wäre ein Stick-PC oder Mini-PC. Der PC sollte sich automatisch einschalten, wenn er mit Strom versorgt wird. Die StockTV-App kann dann unter Windwos im KIOSK-Modus laufen. Der Preis für einen solchen PC liegt bei ca. €175.  
 
 ### Was sollte vorhanden sein:
 Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und mit einer SD-Karte umgehen kann. Neben der Montage braucht man für die Ersteinrichtung etwas Zeit. 
@@ -32,23 +33,28 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Keypad.jpg" width="150"/> 
 
 #### Installationen
- - ESF Hankofen<br>
+ - ESF Hankofen (4 Bahnen)<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF1.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF2.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ESF4.jpg" width="300" />
 
- - TV Geiselhöring<br>
+ - TV Geiselhöring (3 Bahnen)<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG1.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG2.jpg" width="300" /> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/TVG3.jpg" width="300" />
 
- - EC EBRA Aiterhofen<br>
+ - EC EBRA Aiterhofen (3 Bahnen)<br>
    <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/EC_EBRA_Aiterhofen.jpg" width="600"/>
 
- - EC Straßkirchen<br>
+ - EC Straßkirchen (8 Bahnen)<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECS1.jpg" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECS2.jpg" width="450"/>
 
-- SC Schönach<br>
+- SC Schönach (2 von 4 Bahnen)<br>
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS2.jpeg" width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS3.jpeg" width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SCS1.jpeg" width="300"/>
 
-- EC Griesbach (3 Bahnen)
+- EC Griesbach (3 Bahnen)<br>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_1.png" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_2.png" width="450"/> 
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_3.png" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_4.png" width="450"/>
+
 - ETSV Hainsbach (5 Bahnen)
+
+Weitere Installationen sind bereits in Planung.
 
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
