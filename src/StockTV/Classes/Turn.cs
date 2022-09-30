@@ -1,6 +1,12 @@
 ﻿namespace StockTV.Classes
 {
-    public class Turn
+    public interface ITurn
+    {
+        int TurnNumber { get; set; }
+        byte PointsRight { get; set; }
+        byte PointsLeft { get; set; }
+    }
+    public class Turn : ITurn
     {
         /// <summary>
         /// Default-Constructor

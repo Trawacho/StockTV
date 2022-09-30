@@ -3,7 +3,13 @@ using System.Linq;
 
 namespace StockTV.Classes
 {
-    public class Game
+    public interface IGame
+    {
+        byte GameNumber { get; }
+        List<ITurn> Turns { get; set; }
+    }
+
+    public class Game : IGame
     {
         #region Constructor
 
@@ -13,7 +19,7 @@ namespace StockTV.Classes
         /// <param name="gameNumber">Number of the new Game</param>
         public Game(byte gameNumber)
         {
-            Turns = new List<Turn>();
+            Turns = new List<ITurn>();
             GameNumber = gameNumber;
         }
 
@@ -30,7 +36,7 @@ namespace StockTV.Classes
         /// <summary>
         /// List of all Turns for this Game
         /// </summary>
-        public List<Turn> Turns
+        public List<ITurn> Turns
         {
             get; set;
         }
@@ -123,7 +129,7 @@ namespace StockTV.Classes
                 Turns.RemoveAt(Turns.Count - 1);
             }
         }
-        
+
         #endregion
 
     }
