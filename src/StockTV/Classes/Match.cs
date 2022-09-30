@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -180,6 +181,12 @@ namespace StockTV.Classes
             RaiseTurnsChanged();
         }
 
+        public string SerializeJson()
+        {
+            string json = JsonConvert.SerializeObject(this.Games, Formatting.Indented);
+            return json;
+        }
+
         /// <summary>
         /// Returns a byte[] with HeaderInformations and Match Results
         /// </summary>
@@ -241,7 +248,7 @@ namespace StockTV.Classes
             if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Training)
                 return;
 
-            var turns = new List<Turn>();
+            var turns = new List<ITurn>();
 
             foreach (var g in Games)
             {
