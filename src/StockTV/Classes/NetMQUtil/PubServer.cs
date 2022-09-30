@@ -87,6 +87,16 @@ namespace StockTV.Classes.NetMQUtil
             actor.SendMultipartMessage(message);
         }
 
+        public void SendDataMessage(MessageTopic topic, string dataToSend)
+        {
+            if (actor == null) return;
+
+            var message = new NetMQMessage();
+            message.Append(topic.ToString());
+            message.Append(dataToSend);
+            actor.SendMultipartMessage(message);
+        }
+
 
     }
 }
