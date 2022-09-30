@@ -191,7 +191,7 @@ namespace StockTV.Classes
         /// Save List of Turns to localSettings
         /// </summary>
         /// <param name="turns"></param>
-        internal void SaveTurns(List<Turn> turns)
+        internal void SaveTurns(List<ITurn> turns)
         {
             string turnString = "";
             foreach (var turn in turns)
@@ -478,6 +478,11 @@ namespace StockTV.Classes
         /// </summary>
         /// <param name="message"></param>
         public void PublishGameResult(byte[] message)
+        {
+            PServer?.SendDataMessage(MessageTopic.GetResult, message);
+        }
+
+        public void PublishGameResult(string message)
         {
             PServer?.SendDataMessage(MessageTopic.GetResult, message);
         }
