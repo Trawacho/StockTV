@@ -345,7 +345,7 @@ namespace StockTV.ViewModel
             get
             {
                 return Settings.Instance.IsBroadcasting
-                    ? $"IP: {Settings.Instance.IPAddress} --> {Settings.Instance.BroadcastAddress}:{Settings.Instance.BroadcastPort}"
+                    ? $"IP: {Settings.Instance.IPAddress}"
                     : "On / Off";
             }
         }
