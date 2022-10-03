@@ -385,7 +385,7 @@ namespace StockTV.ViewModel
 
         private void DeleteLastTurn()
         {
-            if (_inputValue != 0)
+            if (_inputValue > 0)
             {
                 _inputValue = -1;
                 return;
