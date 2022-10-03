@@ -213,12 +213,12 @@ namespace StockTV.Classes
         /// <summary>
         /// Max Value for <see cref="PointsPerTurn"/>
         /// </summary>
-        const byte PointsPerTurnMax = 99;
+        public byte PointsPerTurnMax = 99;
 
         /// <summary>
         /// Min Value for <see cref="PointsPerTurn"/>
         /// </summary>
-        const byte PointsPerTurnMin = 15;
+        public byte PointsPerTurnMin = 4;
 
         /// <summary>
         /// Default Value for <see cref="PointsPerTurn"/>

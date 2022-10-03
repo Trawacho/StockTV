@@ -122,7 +122,7 @@ namespace StockTV.ViewModel
                 rootFrame.Navigate(typeof(ZielPage));
             else
                 rootFrame.Navigate(typeof(MainPage));
-            
+
         }
 
         public void GoToNextSetting()
@@ -309,7 +309,8 @@ namespace StockTV.ViewModel
                 return Settings.Instance.GameSettings.PointsPerTurn.ToString();
             }
         }
-
+        public string PointsPerTurnDesctiption => $"{Settings.Instance.GameSettings.PointsPerTurnMin} bis {Settings.Instance.GameSettings.PointsPerTurnMax} (30)";
+        
         public string TurnsPerGameValue
         {
             get

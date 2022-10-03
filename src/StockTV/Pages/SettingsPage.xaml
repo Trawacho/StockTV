@@ -152,7 +152,7 @@
                    Text="{Binding Path=PointsPerTurnValue}"
                    Margin="20"/>
 
-            <TextBlock Text="15 bis 99 (30)" 
+            <TextBlock Text="{Binding Path=PointsPerTurnDesctiption}" 
                    Grid.Row="3" 
                    Grid.Column="3"
                    Margin="30,20"
