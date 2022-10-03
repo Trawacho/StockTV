@@ -98,11 +98,23 @@ namespace StockTV.Classes
                           value < 1 ||
                           value > 99)
                     return;
-             
+
                 SetSaveProperty(ref courtNumber, value, nameof(CourtNumber));
             }
         }
 
+        /// <summary>
+        /// Version des Datenpakets<br></br>
+        /// 0 => es wird pro Spiel nur der Spielstand übertragen<br></br>
+        /// 1 => es wird ein JSON-String übertragen als Liste von Spielen. Jedes Spiel hat eine Liste von Kehren
+        /// </summary>
+        internal byte MessageVersion
+        {
+            get
+            {
+                return 1;
+            }
+        }
 
         #endregion
 
@@ -408,7 +420,7 @@ namespace StockTV.Classes
                 GameSettings.PointsPerTurn,                         //Anzahl max. Punkte pro Kehre
                 GameSettings.TurnsPerGame,                          //Anzahl der Kehren
                 MidColumnLength,                                    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
-                0,
+                MessageVersion,                                     //Version des Datenpakets. 
                 0
             };
             return data.ToArray();
