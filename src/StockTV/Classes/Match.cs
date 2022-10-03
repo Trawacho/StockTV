@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 
 namespace StockTV.Classes
 {
@@ -14,7 +15,7 @@ namespace StockTV.Classes
     public class Match
     {
         #region EventHandler for TurnsChanged
-        
+
         public event EventHandler TurnsChanged;
         protected void RaiseTurnsChanged()
         {
@@ -181,18 +182,25 @@ namespace StockTV.Classes
             RaiseTurnsChanged();
         }
 
-        public string SerializeJson()
+        /// <summary>
+        /// Return a byte[] with HeaderInformation in first 10 bytes following with Json-serialized Games (UTF8)
+        /// </summary>
+        /// <returns></returns>
+        public byte[] SerializeJson()
         {
-            string json = JsonConvert.SerializeObject(this.Games, Formatting.Indented);
-            return json;
+            var values = new List<byte>();
+
+            values.AddRange(Settings.Instance.GetSettings());
+            string json = JsonSerializer.Serialize(Games);
+            values.AddRange(Encoding.UTF8.GetBytes(json));
+            return values.ToArray();
         }
 
         /// <summary>
         /// Returns a byte[] with HeaderInformations and Match Results
         /// </summary>
-        /// <param name="compressed"></param>
         /// <returns></returns>
-        public byte[] Serialize(bool compressed = false)
+        public byte[] Serialize()
         {
             /* 
              *  the byte array starts with ten bytes, containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
@@ -226,18 +234,7 @@ namespace StockTV.Classes
             }
 
             //Convert the list of values to an array
-            byte[] data = values.ToArray();
-
-            if (!compressed) return data;
-
-            using (MemoryStream output = new MemoryStream())
-            {
-                using (DeflateStream datastream = new DeflateStream(output, CompressionLevel.Optimal))
-                {
-                    datastream.Write(data, 0, data.Length);
-                }
-                return output.ToArray();
-            }
+            return values.ToArray();
         }
 
         /// <summary>
@@ -275,7 +272,7 @@ namespace StockTV.Classes
             }
 
         }
-       
+
         #endregion
     }
 }
