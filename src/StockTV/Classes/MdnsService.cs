@@ -29,7 +29,7 @@ namespace StockTV.Classes
             service?.Unadvertise();
         }
 
-        private static string GetAppVersion()
+        internal static string GetAppVersion()
         {
             Package package = Package.Current;
             PackageId packageId = package.Id;
