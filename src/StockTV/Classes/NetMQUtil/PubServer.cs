@@ -1,9 +1,32 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
 using System;
+using System.Text.Json;
 
 namespace StockTV.Classes.NetMQUtil
 {
+    internal class AliveInfo
+    {
+        public string IpAddress { get; set; }
+        public string HostName { get; set; }
+        public string AppVersion { get; set; }
+
+        internal static AliveInfo Create()
+        {
+            return new AliveInfo()
+            {
+                IpAddress = BroadcastService.GetIPAddresses().address.ToString(),
+                HostName = Environment.MachineName,
+                AppVersion = MdnsService.GetAppVersion()
+            };
+        }
+
+        private AliveInfo()
+        {
+
+        }
+    }
+    
     /// <summary>
     /// Server to Publish Messages
     /// </summary>
@@ -15,6 +38,7 @@ namespace StockTV.Classes.NetMQUtil
             private NetMQPoller poller;
             private PublisherSocket publisher;
             private NetMQTimer aliveTimer;
+            public string aliveInfo;
             public void Initalise(object state)
             {
                 _ = state;
@@ -24,10 +48,11 @@ namespace StockTV.Classes.NetMQUtil
             {
                 using (publisher = new PublisherSocket())
                 {
-                    aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(1));
+                    aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
                     aliveTimer.Elapsed += (sender, eventArgs) =>
                     {
-                        publisher.SendMoreFrame(MessageTopic.Alive.ToString()).SendFrameEmpty();
+                        publisher.SendMoreFrame(MessageTopic.Alive.ToString())
+                                 .SendFrame(aliveInfo);
                     };
 
                     publisher.Bind("tcp://*:4748");
@@ -40,8 +65,6 @@ namespace StockTV.Classes.NetMQUtil
                     poller.Run();
                 }
             }
-
-
 
             private void OnShimReady(object sender, NetMQSocketEventArgs e)
             {
@@ -61,11 +84,15 @@ namespace StockTV.Classes.NetMQUtil
         }
 
         private NetMQActor actor;
-
+        
         public void Start()
         {
             if (actor != null) return;
-            actor = NetMQActor.Create(new ShimHandler());
+            actor = NetMQActor.Create(
+                new ShimHandler() 
+                { 
+                    aliveInfo = JsonSerializer.Serialize(AliveInfo.Create()) 
+                });
         }
 
         public void Stop()
@@ -82,7 +109,7 @@ namespace StockTV.Classes.NetMQUtil
             if (actor == null) return;
 
             var message = new NetMQMessage();
-            message.Append(topic.ToString()); 
+            message.Append(topic.ToString());
             message.Append(dataToSend);
             actor.SendMultipartMessage(message);
         }
