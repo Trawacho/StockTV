@@ -385,7 +385,7 @@ namespace StockTV.ViewModel
 
         private void DeleteLastTurn()
         {
-            if (_inputValue > 0)
+            if (_inputValue != 0)
             {
                 _inputValue = -1;
                 return;
@@ -441,15 +441,19 @@ namespace StockTV.ViewModel
         {
             if (_inputValue < 0)
             {
-                _inputValue = value;
+                if (value <= Settings.Instance.GameSettings.PointsPerTurn)
+                    _inputValue = value;
             }
-            else if ((_inputValue * 10) + value < Settings.GameSettings.PointsPerTurn)
+            else if ((_inputValue * 10) + value <= Settings.GameSettings.PointsPerTurn)
             {
                 _inputValue = Convert.ToSByte((_inputValue * 10) + value);
             }
             else
             {
-                _inputValue = value;
+                if (value <= Settings.Instance.GameSettings.PointsPerTurn)
+                    _inputValue = value;
+                else
+                    _inputValue = -1;
             }
         }
 
