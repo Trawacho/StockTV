@@ -14,7 +14,9 @@ namespace StockTV.ViewModel
 
         internal override byte[] GetSerializedResult()
         {
-            return Match.Serialize(false);
+            return Settings.MessageVersion == 0
+                ? Match.Serialize()
+                : Match.SerializeJson();
         }
 
         internal override void SetMatchReset()
@@ -364,7 +366,10 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.IsBroadcasting)
             {
-                BroadcastService.SendData(Match.Serialize(true));
+                if (Settings.MessageVersion == 0)
+                    BroadcastService.SendData(Match.Serialize());
+                else if (Settings.MessageVersion == 1)
+                    BroadcastService.SendData(Match.SerializeJson());
             }
         }
 
@@ -455,8 +460,17 @@ namespace StockTV.ViewModel
         /// <param name="e"></param>
         private void Match_TurnsChanged(object sender, EventArgs e)
         {
-            Match m = sender as Match;
-            Settings.Instance.PublishGameResult(m.Serialize(false));
+            if (sender is Match m)
+            {
+                if (Settings.Instance.MessageVersion == 0)
+                {
+                    Settings.Instance.PublishGameResult(m.Serialize());
+                }
+                else if (Settings.Instance.MessageVersion == 1)
+                {
+                    Settings.Instance.PublishGameResult(m.SerializeJson());
+                }
+            }
         }
 
         #endregion
