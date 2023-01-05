@@ -28,7 +28,7 @@ Die Navigation erfolgt mit den Tasten 8 und 2. Die Wert-Änderung mit 4 und 6. V
 - *Max Kehren pro Spiel*: Im Trainingsmodus 30, Im Turniermodus 6 Kehren als Standard. Kann aber auch angepasst werden.
 - *Bahnnummer*: Auf welcher Bahn wird das System Eingesetzt. Wichtig bei der Netzwerkübertragung
 - *Gruppe*: Bei mehreren Gruppen auf der Spielfläche kann jedes System einer Gruppe zugeordnet werden.
-- *Networking*: Im Turniermodus und Zielmodus werden bei ON die Daten im Netzwerk zur Verfügung gestellt. Mit der Software StockMaster können die Daten empfangen und live ausgewertet werden.
+- *Networking*: Im Turniermodus und Zielmodus werden bei ON die Daten im Netzwerk zur Verfügung gestellt. Mit der Software [StockApp](https://github.com/Trawacho/StockAppV2/releases) können die Daten empfangen und live ausgewertet werden.
 
 ### Blaue Taste
 Mit der blauen Taste kann die Eingabe oder die letzte Kehre bzw. der letzte Versuch gelöscht werden. Sollten viele Eingaben gelöscht werden (zum Beispiel nach einem Turnier), kann man die Eingabeverzögerung umgehen, in dem man eine "0" eingibt und dann die Blaue Taste nutzt. 
