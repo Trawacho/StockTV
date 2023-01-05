@@ -53,14 +53,18 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_3.png" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_4.png" width="450"/>
 
 - ETSV Hainsbach (5 Bahnen)
+- EC Wegscheid (4 Bahnen)
 
 Weitere Installationen sind bereits in Planung.
 
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
 In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung. Durch sein strukturiertes Testen, seine Ideen sowie seine konstruktiven Kritiken konnte das Projekt nochmal einen Schritt nach vorne machen. Danke Mich!  
-Dank auch an [IGEL Design] für die Erstellung der Banner!
+Dank auch an [IGEL Design] für die Erstellung der Banner!  
+Bei weiteren Fragen nutzen Sie bitte den Bereich [Discussions] oder [Issues]. Alternativ auch per Mail an *stocktv at gmx.de*
 
 [Raspberry Pi 3]: <https://www.amazon.de/gp/product/B01CI5879A/ref=ppx_yo_dt_b_asin_title_o00_s01?ie=UTF8&th=1>
 [Kabelloser Ziffernblock]: <https://www.amazon.de/gp/product/B00KYPJAMK/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1>
 [IGEL Design]: <https://webdesign.igel-web.de/>
+[Discussions]: <https://github.com/Trawacho/StockTV/discussions>
+[Issues]: <https://github.com/Trawacho/StockTV/issues>
