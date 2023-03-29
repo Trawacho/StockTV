@@ -55,7 +55,9 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 - ETSV Hainsbach (5 Bahnen)  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH1.jpg" Height="400"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH2.jpg" Height="400"/> 
 
-- EC Wegscheid (4 Bahnen)
+- EC Wegscheid (4 Bahnen)  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid1.jpg" Height="400"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid2.jpg" Height="400"/>  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid4.jpg" Height="400"/>  <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid5.jpg" Height="400"/>  
 
 Weitere Installationen sind bereits in Planung.
 
