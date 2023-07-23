@@ -59,8 +59,8 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid1.jpg" Width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid2.jpg" Width="450"/>  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid4.jpg" Height="400"/>  <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid5.jpg" Height="400"/>  
 
-- EC Perkam (4 Bahnen im Freien)
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP2.jpg" Height="450"/>
+- EC Perkam (4 Bahnen im Freien)  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP2.jpeg" Height="450"/>
 
 Weitere Installationen sind bereits in Planung.
 
