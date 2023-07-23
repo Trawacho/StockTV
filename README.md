@@ -19,7 +19,7 @@ Training|Turnier|BestOf|Ziel
  - 2x [Kabelloser Ziffernblock]
  - 1x LCD-Display mind. 42"
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
- - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern
+ - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
 #### !!! Info bzgl Raspberry !!!
 Da es aktuell sehr schwierig bis unmöglich ist, die richtigen Raspberry PIs aufzutrieben, möchte ich darauf hinweisen, dass jeder Windows10 PC funktioniert. Alternative Hardware wäre ein Stick-PC oder Mini-PC. Der PC sollte sich automatisch einschalten, wenn er mit Strom versorgt wird. Die StockTV-App kann dann unter Windwos im KIOSK-Modus laufen. Der Preis für einen solchen PC liegt bei ca. €175.  
 
@@ -58,6 +58,9 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 - EC Wegscheid (4 Bahnen)  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid1.jpg" Width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid2.jpg" Width="450"/>  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid4.jpg" Height="400"/>  <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid5.jpg" Height="400"/>  
+
+- EC Perkam (4 Bahnen im Freien)
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP2.jpg" Height="450"/>
 
 Weitere Installationen sind bereits in Planung.
 
