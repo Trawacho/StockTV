@@ -17,7 +17,7 @@ Training|Turnier|BestOf|Ziel
  - 1x [Raspberry Pi 3]
  - 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
  - 2x [Kabelloser Ziffernblock]
- - 1x LCD-Display mind. 42"
+ - 1x LCD-Display 55". (kleiner geht, aber nicht zu empfehlen!!)
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
  - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
 #### !!! Info bzgl Raspberry !!!
