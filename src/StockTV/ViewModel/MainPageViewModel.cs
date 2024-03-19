@@ -171,8 +171,8 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                    Match.Begegnungen.Count > 0)
+                if ((Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier || Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf)
+                    && Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
                                             ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
@@ -189,8 +189,8 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier &&
-                    Match.Begegnungen.Count > 0)
+                if ((Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier || Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf)
+                    && Match.Begegnungen.Count > 0)
                 {
                     return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
                                             ?.TeamNameRight(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
