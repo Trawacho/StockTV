@@ -1,2 +1,2 @@
-MainPackage=C:\Users\hct\source\Repos\StockTV\src\StockTV\bin\x64\Release\StockTV_1.2.0.0_x64.appx
-SymbolPackage=C:\Users\hct\source\Repos\StockTV\src\StockTV\obj\x64\Release\Symbols\StockTV_1.2.0.0_x64.appxsym
+MainPackage=C:\Users\daniel\source\repos\StockTV\src\StockTV\bin\x64\Release\StockTV_1.5.0.0_x64.appx
+SymbolPackage=C:\Users\daniel\source\repos\StockTV\src\StockTV\obj\x64\Release\Symbols\StockTV_1.5.0.0_x64.appxsym
