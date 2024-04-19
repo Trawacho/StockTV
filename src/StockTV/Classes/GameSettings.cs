@@ -49,22 +49,22 @@ namespace StockTV.Classes
             switch (modus)
             {
                 case GameModis.Training:
-                    TurnsPerGame = TurnsPerGameTrainingDefault;
+                    TurnsPerGame = _turnsPerGameTrainingDefault;
                     break;
                 case GameModis.BestOf:
-                    TurnsPerGame = TurnsPerGameTurnierDefault;
+                    TurnsPerGame = _turnsPerGameTurnierDefault;
                     break;
                 case GameModis.Turnier:
-                    TurnsPerGame = TurnsPerGameTurnierDefault;
+                    TurnsPerGame = _turnsPerGameTurnierDefault;
                     break;
                 case GameModis.Ziel:
-                    TurnsPerGame = TurnsPerZielSectionDefault;
+                    TurnsPerGame = _turnsPerZielSectionDefault;
                     break;
                 default:
                     break;
             }
 
-            PointsPerTurn = PointsPerTurnDefault;
+            PointsPerTurn = _pointsPerTurnDefault;
 
         }
 
@@ -155,65 +155,65 @@ namespace StockTV.Classes
 
         #region Kehren Pro Spiel
 
-        private byte turnsPerGame;
+        private byte _turnsPerGame;
         /// <summary>
         /// Max count of Turns per Game
         /// </summary>
         public byte TurnsPerGame
         {
-            get => turnsPerGame;
+            get => _turnsPerGame;
             internal set
             {
-                if (turnsPerGame == value ||
-                           value < TurnsPerGameMin ||
-                           value > TurnsPerGameMax)
+                if (_turnsPerGame == value ||
+                           value < _turnsPerGameMin ||
+                           value > _turnsPerGameMax)
                     return;
 
-                SetSaveProperty(ref turnsPerGame, value, nameof(TurnsPerGame));
+                SetSaveProperty(ref _turnsPerGame, value, nameof(TurnsPerGame));
             }
         }
 
         /// <summary>
         /// Min Value for <see cref="TurnsPerGame"/>
         /// </summary>
-        const byte TurnsPerGameMin = 4;
+        const byte _turnsPerGameMin = 4;
 
         /// <summary>
         /// Max Value for <see cref="TurnsPerGame"/>
         /// </summary>
-        const byte TurnsPerGameMax = 99;
+        const byte _turnsPerGameMax = 99;
 
         /// <summary>
         /// Default for <see cref="TurnsPerGame"/> in <see cref="GameModis.Training"/>
         /// </summary>
-        const byte TurnsPerGameTrainingDefault = 30;
+        const byte _turnsPerGameTrainingDefault = 30;
 
         /// <summary>
         /// Default for <see cref="TurnsPerGame"/> in <see cref="GameModis.Turnier"/> or <see cref="GameModis.BestOf"/>
         /// </summary>
-        const byte TurnsPerGameTurnierDefault = 6;
+        const byte _turnsPerGameTurnierDefault = 6;
 
         /// <summary>
         /// Default count of attempts per section in Zielbewerb
         /// </summary>
-        const byte TurnsPerZielSectionDefault = 6;
+        const byte _turnsPerZielSectionDefault = 6;
         #endregion
 
         #region Punkte Pro Kehre
 
-        private byte pointsPerTurn;
+        private byte _pointsPerTurn;
         /// <summary>
         /// Max Points per single Turn
         /// </summary>
         public byte PointsPerTurn
         {
-            get => pointsPerTurn;
+            get => _pointsPerTurn;
             set
             {
-                if (pointsPerTurn == value || value < PointsPerTurnMin || value > PointsPerTurnMax)
+                if (_pointsPerTurn == value || value < PointsPerTurnMin || value > PointsPerTurnMax)
                     return;
 
-                SetSaveProperty(ref pointsPerTurn, value, nameof(PointsPerTurn));
+                SetSaveProperty(ref _pointsPerTurn, value, nameof(PointsPerTurn));
             }
         }
 
@@ -230,19 +230,19 @@ namespace StockTV.Classes
         /// <summary>
         /// Default Value for <see cref="PointsPerTurn"/>
         /// </summary>
-        const byte PointsPerTurnDefault = 30;
+        const byte _pointsPerTurnDefault = 30;
 
         #endregion
 
 
-        private GameModis modis;
+        private GameModis _modis;
         /// <summary>
         /// Modus for the Game
         /// </summary>
         public GameModis GameModus
         {
-            get => modis;
-            private set => SetSaveProperty(ref modis, value, nameof(GameModus));
+            get => _modis;
+            private set => SetSaveProperty(ref _modis, value, nameof(GameModus));
         }
 
         #endregion

@@ -25,21 +25,21 @@ namespace StockTV.Classes
         /// <summary>
         /// Sum of Values about the attempts of Massen Vorne
         /// </summary>
-        public int MassenVorneSumme { get { return SummeVon(MassenVorne); } }
+        public int MassenVorneSumme { get { return SummeVon(_massenVorne); } }
 
         /// <summary>
         /// Sum of Values about the attempts of Schüsse
         /// </summary>
-        public int SchüsseSumme { get { return SummeVon(Schüsse); } }
+        public int SchüsseSumme { get { return SummeVon(_schüsse); } }
         /// <summary>
         /// Sum of Values about the attempts of Massen Hinten
         /// </summary>
-        public int MassenHintenSumme { get { return SummeVon(MassenHinten); } }
+        public int MassenHintenSumme { get { return SummeVon(_massenHinten); } }
 
         /// <summary>
         /// Sum of Values about the attempts of Kombinieren
         /// </summary>
-        public int KombinierenSumme { get { return SummeVon(Kombinieren); } }
+        public int KombinierenSumme { get { return SummeVon(_kombinieren); } }
 
         /// <summary>
         /// Sum of Values over all attempts
@@ -56,10 +56,10 @@ namespace StockTV.Classes
 
         #region private Fields
 
-        private readonly ConcurrentStack<byte> MassenVorne;
-        private readonly ConcurrentStack<byte> Schüsse;
-        private readonly ConcurrentStack<byte> MassenHinten;
-        private readonly ConcurrentStack<byte> Kombinieren;
+        private readonly ConcurrentStack<byte> _massenVorne;
+        private readonly ConcurrentStack<byte> _schüsse;
+        private readonly ConcurrentStack<byte> _massenHinten;
+        private readonly ConcurrentStack<byte> _kombinieren;
 
 
         /// <summary>
@@ -71,10 +71,10 @@ namespace StockTV.Classes
             {
                 var values = new List<byte>();
 
-                values.AddRange(MassenVorne.Reverse().ToList());
-                values.AddRange(Schüsse.Reverse().ToList());
-                values.AddRange(MassenHinten.Reverse().ToList());
-                values.AddRange(Kombinieren.Reverse().ToList());
+                values.AddRange(_massenVorne.Reverse().ToList());
+                values.AddRange(_schüsse.Reverse().ToList());
+                values.AddRange(_massenHinten.Reverse().ToList());
+                values.AddRange(_kombinieren.Reverse().ToList());
 
                 return values;
             }
@@ -90,10 +90,10 @@ namespace StockTV.Classes
         /// </summary>
         public Zielbewerb()
         {
-            this.MassenVorne = new ConcurrentStack<byte>();
-            this.MassenHinten = new ConcurrentStack<byte>();
-            this.Schüsse = new ConcurrentStack<byte>();
-            this.Kombinieren = new ConcurrentStack<byte>();
+            this._massenVorne = new ConcurrentStack<byte>();
+            this._massenHinten = new ConcurrentStack<byte>();
+            this._schüsse = new ConcurrentStack<byte>();
+            this._kombinieren = new ConcurrentStack<byte>();
 
             this.LoadTurnsFromLocalSettings();
         }
@@ -193,28 +193,28 @@ namespace StockTV.Classes
         {
             if (CountOfVersuche() < Settings.Instance.GameSettings.TurnsPerGame * 4)
             {
-                if (MassenVorne.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                if (_massenVorne.Count() < Settings.Instance.GameSettings.TurnsPerGame 
                     && IsMassValue(value))
                 {
-                    MassenVorne.Push(Convert.ToByte(value));
+                    _massenVorne.Push(Convert.ToByte(value));
                 }
                 else if (CountOfVersuche() >= Settings.Instance.GameSettings.TurnsPerGame 
-                    && Schüsse.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && _schüsse.Count() < Settings.Instance.GameSettings.TurnsPerGame 
                     && IsSchussValue(value))
                 {
-                    Schüsse.Push(Convert.ToByte(value));
+                    _schüsse.Push(Convert.ToByte(value));
                 }
                 else if (CountOfVersuche() >= (2 * Settings.Instance.GameSettings.TurnsPerGame) 
-                    && MassenHinten.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && _massenHinten.Count() < Settings.Instance.GameSettings.TurnsPerGame 
                     && IsMassValue(value))
                 {
-                    MassenHinten.Push(Convert.ToByte(value));
+                    _massenHinten.Push(Convert.ToByte(value));
                 }
                 else if (CountOfVersuche() >= (3 * Settings.Instance.GameSettings.TurnsPerGame )
-                    && Kombinieren.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && _kombinieren.Count() < Settings.Instance.GameSettings.TurnsPerGame 
                     && IsMassValue(value))
                 {
-                    Kombinieren.Push(Convert.ToByte(value));
+                    _kombinieren.Push(Convert.ToByte(value));
                 }
                 else
                 {
@@ -233,21 +233,21 @@ namespace StockTV.Classes
         /// </summary>
         internal void DeleteLastValue()
         {
-            if (Kombinieren.Count > 0)
+            if (_kombinieren.Count > 0)
             {
-                Kombinieren.TryPop(out _);
+                _kombinieren.TryPop(out _);
             }
-            else if (MassenHinten.Count > 0)
+            else if (_massenHinten.Count > 0)
             {
-                MassenHinten.TryPop(out _);
+                _massenHinten.TryPop(out _);
             }
-            else if (Schüsse.Count > 0)
+            else if (_schüsse.Count > 0)
             {
-                Schüsse.TryPop(out _);
+                _schüsse.TryPop(out _);
             }
-            else if (MassenVorne.Count > 0)
+            else if (_massenVorne.Count > 0)
             {
-                MassenVorne.TryPop(out _);
+                _massenVorne.TryPop(out _);
             }
 
             SaveTurnsToLocalSettings();
@@ -259,10 +259,10 @@ namespace StockTV.Classes
         /// </summary>
         internal void Reset()
         {
-            MassenVorne.Clear();
-            MassenHinten.Clear();
-            Schüsse.Clear();
-            Kombinieren.Clear();
+            _massenVorne.Clear();
+            _massenHinten.Clear();
+            _schüsse.Clear();
+            _kombinieren.Clear();
             SaveTurnsToLocalSettings();
             RaiseValuesChanged();
         }
@@ -282,7 +282,7 @@ namespace StockTV.Classes
         /// <returns></returns>
         internal int CountOfVersuche()
         {
-            return MassenVorne.Count + Schüsse.Count + MassenHinten.Count + Kombinieren.Count;
+            return _massenVorne.Count + _schüsse.Count + _massenHinten.Count + _kombinieren.Count;
         }
 
         /// <summary>

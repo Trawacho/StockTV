@@ -14,7 +14,7 @@ namespace StockTV.Classes
     /// </summary>
     public sealed class Settings
     {
-        private static readonly Lazy<Settings> settings = new Lazy<Settings>(() => new Settings());
+        private static readonly Lazy<Settings> _settings = new Lazy<Settings>(() => new Settings());
 
         private void Load()
         {
@@ -42,7 +42,7 @@ namespace StockTV.Classes
         /// <summary>
         /// Instanz of the settings
         /// </summary>
-        public static Settings Instance { get { return settings.Value; } }
+        public static Settings Instance { get { return _settings.Value; } }
 
         /// <summary>
         /// Defualt private constructor
@@ -84,22 +84,22 @@ namespace StockTV.Classes
             }
         }
 
-        private byte courtNumber;
+        private byte _courtNumber;
         /// <summary>
         /// Number of the Course
         /// </summary>
         public byte CourtNumber
         {
-            get { return courtNumber; }
+            get { return _courtNumber; }
             set
             {
 
-                if (courtNumber == value ||
+                if (_courtNumber == value ||
                           value < 1 ||
                           value > 99)
                     return;
 
-                SetSaveProperty(ref courtNumber, value, nameof(CourtNumber));
+                SetSaveProperty(ref _courtNumber, value, nameof(CourtNumber));
             }
         }
 
@@ -133,21 +133,21 @@ namespace StockTV.Classes
                 Spielgruppe--;
         }
 
-        private byte spielgruppe;
+        private byte _spielgruppe;
         /// <summary>
         /// Number of the group (CourtNumber Group)
         /// </summary>
         public byte Spielgruppe
         {
-            internal get => spielgruppe;
+            internal get => _spielgruppe;
             set
             {
-                if (spielgruppe == value ||
+                if (_spielgruppe == value ||
                     value < 0 ||
                     value > 10)
                     return;
 
-                SetSaveProperty(ref spielgruppe, value, nameof(Spielgruppe));
+                SetSaveProperty(ref _spielgruppe, value, nameof(Spielgruppe));
             }
         }
 
@@ -165,7 +165,7 @@ namespace StockTV.Classes
         {
             get
             {
-                switch (spielgruppe)
+                switch (_spielgruppe)
                 {
                     case 1:
                         return "A";
@@ -289,7 +289,7 @@ namespace StockTV.Classes
 
         #region MidColumnFaktor
 
-        private byte midColumnLength;
+        private byte _midColumnLength;
 
         /// <summary>
         /// Breite der mittleren Spalte<br></br>
@@ -298,15 +298,15 @@ namespace StockTV.Classes
         /// </summary>
         public byte MidColumnLength
         {
-            get => midColumnLength;
+            get => _midColumnLength;
             set
             {
-                if (midColumnLength == value ||
+                if (_midColumnLength == value ||
                                     value < 1 ||
                                     value > 20)
                     return;
 
-                SetSaveProperty(ref midColumnLength, value, nameof(MidColumnLength));
+                SetSaveProperty(ref _midColumnLength, value, nameof(MidColumnLength));
             }
         }
 
@@ -323,20 +323,20 @@ namespace StockTV.Classes
             IsBroadcasting = !IsBroadcasting;
         }
 
-        private bool isBroadcasting;
+        private bool _isBroadcasting;
 
         /// <summary>
         /// Broadcasting every Result or not
         /// </summary>
         public bool IsBroadcasting
         {
-            get { return isBroadcasting; }
+            get { return _isBroadcasting; }
             set
             {
-                if (isBroadcasting == value)
+                if (_isBroadcasting == value)
                     return;
 
-                SetSaveProperty(ref isBroadcasting, value, nameof(IsBroadcasting));
+                SetSaveProperty(ref _isBroadcasting, value, nameof(IsBroadcasting));
 
                 if (value)
                 {
@@ -346,17 +346,17 @@ namespace StockTV.Classes
 
                     if (address == null || broadcast == null)
                     {
-                        isBroadcasting = false;
+                        _isBroadcasting = false;
                     }
                     else
                     {
                         MdnsService.Advertise();
                         RespServer.Start();
-                        if (PServer == null)
+                        if (_pServer == null)
                         {
-                            PServer = new PubServer();
+                            _pServer = new PubServer();
                         }
-                        PServer.Start();
+                        _pServer.Start();
                     }
                 }
                 else
@@ -367,7 +367,7 @@ namespace StockTV.Classes
                 }
             }
         }
-        PubServer PServer;
+        PubServer _pServer;
 
         /// <summary>
         /// Broadcast IP-Address
@@ -482,7 +482,7 @@ namespace StockTV.Classes
         /// </summary>
         public void PublishSettings()
         {
-            PServer?.SendDataMessage(MessageTopic.GetSettings, GetSettings());
+            _pServer?.SendDataMessage(MessageTopic.GetSettings, GetSettings());
         }
 
         /// <summary>
@@ -491,12 +491,12 @@ namespace StockTV.Classes
         /// <param name="message"></param>
         public void PublishGameResult(byte[] message)
         {
-            PServer?.SendDataMessage(MessageTopic.GetResult, message);
+            _pServer?.SendDataMessage(MessageTopic.GetResult, message);
         }
 
         public void PublishGameResult(string message)
         {
-            PServer?.SendDataMessage(MessageTopic.GetResult, message);
+            _pServer?.SendDataMessage(MessageTopic.GetResult, message);
         }
     }
 }

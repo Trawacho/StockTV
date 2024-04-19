@@ -121,15 +121,15 @@ namespace StockTV.Classes
 
         #region Properties
 
-        private ColorModis colormodus;
+        private ColorModis _colormodus;
 
         /// <summary>
         /// ColorScheme
         /// </summary>
         internal ColorModis ColorModus
         {
-            get => colormodus;
-            set => SetSaveProperty(ref colormodus, value, nameof(ColorModus));
+            get => _colormodus;
+            set => SetSaveProperty(ref _colormodus, value, nameof(ColorModus));
         }
 
         internal void SetColorModus(byte value)
@@ -138,14 +138,14 @@ namespace StockTV.Classes
             ColorModus = e;
         }
 
-        private NextBahnModis nextbahnmodus;
+        private NextBahnModis _nextbahnmodus;
         /// <summary>
         /// Next Bahn Left or Right
         /// </summary>
         internal NextBahnModis NextBahnModus
         {
-            get => nextbahnmodus;
-            set => SetSaveProperty(ref nextbahnmodus, value, nameof(NextBahnModus));
+            get => _nextbahnmodus;
+            set => SetSaveProperty(ref _nextbahnmodus, value, nameof(NextBahnModus));
         }
 
         internal void SetNextBahnModus(byte value)

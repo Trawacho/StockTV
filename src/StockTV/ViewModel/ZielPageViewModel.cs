@@ -324,7 +324,7 @@ namespace StockTV.ViewModel
 
         #region IsInvalidInput Implementation
 
-        private bool isInvalidInput;
+        private bool _isInvalidInput;
         /// <summary>
         /// TRUE, wenn auf der Anzeige "ungültig" angezeigt werden soll
         /// </summary>
@@ -332,13 +332,13 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return isInvalidInput;
+                return _isInvalidInput;
             }
             set
             {
-                if (isInvalidInput != value)
+                if (_isInvalidInput != value)
                 {
-                    isInvalidInput = value;
+                    _isInvalidInput = value;
                     RaisePropertyChange();
                 }
             }

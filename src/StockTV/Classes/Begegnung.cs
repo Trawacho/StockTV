@@ -14,22 +14,22 @@ namespace StockTV.Classes
         public Begegnung(byte spielNummer, string TeamA, string TeamB)
         {
             Spielnummer = spielNummer;
-            Mannschaft_A = TeamA;
-            Mannschaft_B = TeamB;
+            _mannschaft_A = TeamA;
+            _mannschaft_B = TeamB;
         }
 
         public byte Spielnummer { get; set; }
-        private readonly string Mannschaft_A;
-        private readonly string Mannschaft_B;
+        private readonly string _mannschaft_A;
+        private readonly string _mannschaft_B;
 
         public string TeamNameLeft(bool colorSchemeRightToLeft)
         {
-            return colorSchemeRightToLeft ? Mannschaft_B : Mannschaft_A;
+            return colorSchemeRightToLeft ? _mannschaft_B : _mannschaft_A;
         }
 
         public string TeamNameRight(bool colorSchemeRightToLeft)
         {
-            return colorSchemeRightToLeft ? Mannschaft_A : Mannschaft_B;
+            return colorSchemeRightToLeft ? _mannschaft_A : _mannschaft_B;
         }
     }
 }

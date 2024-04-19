@@ -24,19 +24,19 @@ namespace StockTV.Classes.NetMQUtil
 
         internal static void Start()
         {
-            toSenderQueue = new NetMQQueue<NetMQMessage>();
-            fromSenderQueue = new NetMQQueue<NetMQMessage>();
+            _toSenderQueue = new NetMQQueue<NetMQMessage>();
+            _fromSenderQueue = new NetMQQueue<NetMQMessage>();
 
-            server = new RouterSocket("@tcp://*:4747");
-            server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName + "-" + Guid.NewGuid().ToString());
-            server.ReceiveReady += Server_ReceiveReady;
+            _server = new RouterSocket("@tcp://*:4747");
+            _server.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName + "-" + Guid.NewGuid().ToString());
+            _server.ReceiveReady += Server_ReceiveReady;
 
-            toSenderQueue.ReceiveReady += ToSenderQueue_ReceiveReady;
-            fromSenderQueue.ReceiveReady += FromSenderQueue_ReceiveReady;
+            _toSenderQueue.ReceiveReady += ToSenderQueue_ReceiveReady;
+            _fromSenderQueue.ReceiveReady += FromSenderQueue_ReceiveReady;
 
 
-            poller = new NetMQPoller() { server, toSenderQueue, fromSenderQueue };
-            poller.RunAsync();
+            _poller = new NetMQPoller() { _server, _toSenderQueue, _fromSenderQueue };
+            _poller.RunAsync();
         }
 
         private static void FromSenderQueue_ReceiveReady(object sender, NetMQQueueEventArgs<NetMQMessage> e)
@@ -46,24 +46,24 @@ namespace StockTV.Classes.NetMQUtil
 
         private static void ToSenderQueue_ReceiveReady(object sender, NetMQQueueEventArgs<NetMQMessage> e)
         {
-            server.SendMultipartMessage(e.Queue.Dequeue());
+            _server.SendMultipartMessage(e.Queue.Dequeue());
         }
 
         internal static void Cancel()
         {
-            poller.Stop();
-            server.Dispose();
-            poller.Dispose();
+            _poller.Stop();
+            _server.Dispose();
+            _poller.Dispose();
         }
 
-        static RouterSocket server;
-        static NetMQPoller poller;
-        static NetMQQueue<NetMQMessage> toSenderQueue;
-        static NetMQQueue<NetMQMessage> fromSenderQueue;
+        static RouterSocket _server;
+        static NetMQPoller _poller;
+        static NetMQQueue<NetMQMessage> _toSenderQueue;
+        static NetMQQueue<NetMQMessage> _fromSenderQueue;
 
         internal static void AddOutbound(NetMQMessage data)
         {
-            toSenderQueue.Enqueue(data);
+            _toSenderQueue.Enqueue(data);
         }
 
         private static void Server_ReceiveReady(object sender, NetMQSocketEventArgs e)
@@ -85,7 +85,7 @@ namespace StockTV.Classes.NetMQUtil
 
 
                 else
-                    fromSenderQueue.Enqueue(message);
+                    _fromSenderQueue.Enqueue(message);
             }
 
         }

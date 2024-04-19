@@ -33,7 +33,7 @@ namespace StockTV.Classes
         /// </summary>
         public Match()
         {
-            games = new List<Game>
+            _games = new List<Game>
             {
                 new Game(1)
             };
@@ -51,7 +51,7 @@ namespace StockTV.Classes
         /// <summary>
         /// internal List of Games
         /// </summary>
-        private readonly List<Game> games;
+        private readonly List<Game> _games;
 
         #endregion
 
@@ -65,10 +65,10 @@ namespace StockTV.Classes
         {
             get
             {
-                if (games.Count == 0)
-                    games.Add(new Game(1));
+                if (_games.Count == 0)
+                    _games.Add(new Game(1));
 
-                return games.Last();
+                return _games.Last();
             }
         }
 
@@ -79,7 +79,7 @@ namespace StockTV.Classes
         {
             get
             {
-                return games.Sum(g => g.GamePointsLeft);
+                return _games.Sum(g => g.GamePointsLeft);
             }
         }
 
@@ -90,7 +90,7 @@ namespace StockTV.Classes
         {
             get
             {
-                return games.Sum(g => g.GamePointsRight);
+                return _games.Sum(g => g.GamePointsRight);
             }
         }
 
@@ -101,7 +101,7 @@ namespace StockTV.Classes
         {
             get
             {
-                return games;
+                return _games;
             }
         }
 
@@ -136,9 +136,9 @@ namespace StockTV.Classes
         /// </summary>
         public void DeleteLastTurn()
         {
-            if (games.Count > 1 && CurrentGame.Turns.Count == 0)
+            if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
             {
-                games.RemoveAt(games.Count - 1);
+                _games.RemoveAt(_games.Count - 1);
             }
             else
             {
@@ -157,8 +157,8 @@ namespace StockTV.Classes
             if (force)
             {
                 this.Begegnungen.Clear();
-                this.games.Clear();
-                this.games.Add(new Game(1));
+                this._games.Clear();
+                this._games.Add(new Game(1));
                 SaveTurnsToLocalSettings();
                 RaiseTurnsChanged();
                 return;
@@ -170,7 +170,7 @@ namespace StockTV.Classes
             {
                 if (CurrentGame.Turns.Count == Settings.Instance.GameSettings.TurnsPerGame)
                 {
-                    games.Add(new Game(Convert.ToByte(games.Count + 1)));
+                    _games.Add(new Game(Convert.ToByte(_games.Count + 1)));
                 }
             }
             else

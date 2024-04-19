@@ -15,18 +15,18 @@ namespace StockTV.ViewModel
         internal override byte[] GetSerializedResult()
         {
             return Settings.MessageVersion == 0
-                ? Match.Serialize()
-                : Match.SerializeJson();
+                ? _match.Serialize()
+                : _match.SerializeJson();
         }
 
         internal override void SetMatchReset()
         {
-            this.Match.Reset(true);
+            this._match.Reset(true);
         }
 
         internal override void SetTeamNames(string begegnungen)
         {
-            Match.Begegnungen.Clear();
+            _match.Begegnungen.Clear();
 
             var parts = begegnungen.TrimEnd(';').Split(';');
             foreach (var b in parts)
@@ -34,7 +34,7 @@ namespace StockTV.ViewModel
                 var c = b.Split(':');
                 if (byte.TryParse(c[0], out byte _spielNummer))
                 {
-                    Match.Begegnungen.Add(new Begegnung(_spielNummer, c[1], c[2]));
+                    _match.Begegnungen.Add(new Begegnung(_spielNummer, c[1], c[2]));
                 }
             }
         }
@@ -50,7 +50,7 @@ namespace StockTV.ViewModel
 
             if (Settings.GameSettings.GameModus == GameSettings.GameModis.Ziel)
             {
-                Match.TurnsChanged -= Match_TurnsChanged;
+                _match.TurnsChanged -= Match_TurnsChanged;
                 base.NavigateTo(typeof(Pages.ZielPage));
             }
 
@@ -62,7 +62,7 @@ namespace StockTV.ViewModel
         #region private Fields
 
         private sbyte _inputValue;
-        private readonly Match Match;
+        private readonly Match _match;
 
         #endregion
 
@@ -76,8 +76,8 @@ namespace StockTV.ViewModel
         {
             get
             {
-                if (Match.CurrentGame.GameNumber == 1 &&
-                    Match.CurrentGame.Turns.Count == 0)
+                if (_match.CurrentGame.GameNumber == 1 &&
+                    _match.CurrentGame.Turns.Count == 0)
                 {
                     if (Settings.Instance.SpielgruppeLetter == string.Empty)
                         return $"Bahn: {Settings.Instance.CourtNumber}";
@@ -88,14 +88,14 @@ namespace StockTV.ViewModel
                 switch (Settings.Instance.GameSettings.GameModus)
                 {
                     case GameSettings.GameModis.Training:
-                        return $"Bahn: {Settings.Instance.CourtNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                        return $"Bahn: {Settings.Instance.CourtNumber}   Kehre: {_match.CurrentGame.Turns.Count}";
                     case GameSettings.GameModis.BestOf:
-                        return $"Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
+                        return $"Spiel: {_match.CurrentGame.GameNumber}     Kehre: {_match.CurrentGame.Turns.Count}";
                     case GameSettings.GameModis.Turnier:
                         if (Settings.Instance.SpielgruppeLetter == string.Empty)
-                            return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                            return $"Bahn: {Settings.Instance.CourtNumber}   Spiel: {_match.CurrentGame.GameNumber}   Kehre: {_match.CurrentGame.Turns.Count}";
                         else
-                            return $"Bahn: {Settings.Instance.SpielgruppeLetter}-{Settings.Instance.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+                            return $"Bahn: {Settings.Instance.SpielgruppeLetter}-{Settings.Instance.CourtNumber}   Spiel: {_match.CurrentGame.GameNumber}   Kehre: {_match.CurrentGame.Turns.Count}";
                     default:
                         return "unknown Status";
                 }
@@ -105,22 +105,22 @@ namespace StockTV.ViewModel
         /// <summary>
         /// Sum of the LEFT Points
         /// </summary>
-        public string LeftPointsSum => Match.CurrentGame.Turns.Sum(t => t.PointsLeft).ToString();
+        public string LeftPointsSum => _match.CurrentGame.Turns.Sum(t => t.PointsLeft).ToString();
 
         /// <summary>
         /// Sum of the Left MatchPoints
         /// </summary>
-        public string LeftMatchPoints => Match.MatchPointsLeft.ToString();
+        public string LeftMatchPoints => _match.MatchPointsLeft.ToString();
 
         /// <summary>
         /// Sum of the RIGHT Points
         /// </summary>
-        public string RightPointsSum => Match.CurrentGame.Turns.Sum(t => t.PointsRight).ToString();
+        public string RightPointsSum => _match.CurrentGame.Turns.Sum(t => t.PointsRight).ToString();
 
         /// <summary>
         /// Sum of the Right MatchPoints
         /// </summary>
-        public string RightMatchPoints => Match.MatchPointsRight.ToString();
+        public string RightMatchPoints => _match.MatchPointsRight.ToString();
 
         /// <summary>
         /// Turn-Details of the Left 
@@ -130,12 +130,12 @@ namespace StockTV.ViewModel
             get
             {
                 if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf
-                    && Match.CurrentGame.Turns.Count == 0
-                    && Match.CurrentGame.GameNumber > 1)
-                    return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsLeft)).ToString();
+                    && _match.CurrentGame.Turns.Count == 0
+                    && _match.CurrentGame.GameNumber > 1)
+                    return _match.Games.Sum(s => s.Turns.Sum(t => t.PointsLeft)).ToString();
 
                 string temp = string.Empty;
-                foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
+                foreach (var item in _match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
                 {
                     temp += String.IsNullOrEmpty(temp) ? "" : "-";
                     temp += $"{item.PointsLeft}";
@@ -153,12 +153,12 @@ namespace StockTV.ViewModel
             get
             {
                 if (Settings.GameSettings.GameModus == GameSettings.GameModis.BestOf
-                    && Match.CurrentGame.Turns.Count == 0
-                    && Match.CurrentGame.GameNumber > 1)
-                    return Match.Games.Sum(s => s.Turns.Sum(t => t.PointsRight)).ToString();
+                    && _match.CurrentGame.Turns.Count == 0
+                    && _match.CurrentGame.GameNumber > 1)
+                    return _match.Games.Sum(s => s.Turns.Sum(t => t.PointsRight)).ToString();
 
                 string temp = string.Empty;
-                foreach (var item in Match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
+                foreach (var item in _match.CurrentGame.Turns.OrderBy(x => x.TurnNumber))
                 {
                     temp += String.IsNullOrEmpty(temp) ? "" : "-";
                     temp += $"{item.PointsRight}";
@@ -177,9 +177,9 @@ namespace StockTV.ViewModel
             get
             {
                 if ((Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier || Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf)
-                    && Match.Begegnungen.Count > 0)
+                    && _match.Begegnungen.Count > 0)
                 {
-                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                    return _match.Begegnungen.FirstOrDefault(b => b.Spielnummer == _match.CurrentGame.GameNumber)
                                             ?.TeamNameLeft(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
                                             ?? string.Empty;
                 }
@@ -195,9 +195,9 @@ namespace StockTV.ViewModel
             get
             {
                 if ((Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.Turnier || Settings.Instance.GameSettings.GameModus == GameSettings.GameModis.BestOf)
-                    && Match.Begegnungen.Count > 0)
+                    && _match.Begegnungen.Count > 0)
                 {
-                    return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+                    return _match.Begegnungen.FirstOrDefault(b => b.Spielnummer == _match.CurrentGame.GameNumber)
                                             ?.TeamNameRight(Settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
                                             ?? string.Empty;
                 }
@@ -237,8 +237,8 @@ namespace StockTV.ViewModel
         {
             _inputValue = -1;
 
-            Match = new Match();
-            Match.TurnsChanged += Match_TurnsChanged;
+            _match = new Match();
+            _match.TurnsChanged += Match_TurnsChanged;
         }
 
         #endregion
@@ -372,9 +372,9 @@ namespace StockTV.ViewModel
             if (Settings.IsBroadcasting)
             {
                 if (Settings.MessageVersion == 0)
-                    BroadcastService.SendData(Match.Serialize());
+                    BroadcastService.SendData(_match.Serialize());
                 else if (Settings.MessageVersion == 1)
-                    BroadcastService.SendData(Match.SerializeJson());
+                    BroadcastService.SendData(_match.SerializeJson());
             }
         }
 
@@ -384,7 +384,7 @@ namespace StockTV.ViewModel
 
         private void Reset(bool force = false)
         {
-            Match.Reset(force);
+            _match.Reset(force);
             _inputValue = -1;
         }
 
@@ -396,7 +396,7 @@ namespace StockTV.ViewModel
                 return;
             }
 
-            Match.DeleteLastTurn();
+            _match.DeleteLastTurn();
         }
 
         private void AddToRed()
@@ -415,7 +415,7 @@ namespace StockTV.ViewModel
                 turn.PointsLeft = Convert.ToByte(_inputValue);
             }
 
-            this.Match.AddTurn(turn);
+            this._match.AddTurn(turn);
 
             _inputValue = -1;
         }
@@ -436,7 +436,7 @@ namespace StockTV.ViewModel
                 turn.PointsLeft = Convert.ToByte(_inputValue);
             }
 
-            this.Match.AddTurn(turn);
+            this._match.AddTurn(turn);
 
 
             _inputValue = -1;

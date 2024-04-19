@@ -34,10 +34,10 @@ namespace StockTV.Classes.NetMQUtil
     {
         public class ShimHandler : IShimHandler
         {
-            private PairSocket shim;
-            private NetMQPoller poller;
-            private PublisherSocket publisher;
-            private NetMQTimer aliveTimer;
+            private PairSocket _shim;
+            private NetMQPoller _poller;
+            private PublisherSocket _publisher;
+            private NetMQTimer _aliveTimer;
             public string aliveInfo;
             public void Initalise(object state)
             {
@@ -46,23 +46,23 @@ namespace StockTV.Classes.NetMQUtil
 
             public void Run(PairSocket shim)
             {
-                using (publisher = new PublisherSocket())
+                using (_publisher = new PublisherSocket())
                 {
-                    aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
-                    aliveTimer.Elapsed += (sender, eventArgs) =>
+                    _aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
+                    _aliveTimer.Elapsed += (sender, eventArgs) =>
                     {
-                        publisher.SendMoreFrame(MessageTopic.Alive.ToString())
+                        _publisher.SendMoreFrame(MessageTopic.Alive.ToString())
                                  .SendFrame(aliveInfo);
                     };
 
-                    publisher.Bind("tcp://*:4748");
-                    publisher.Options.SendHighWatermark = 100;
+                    _publisher.Bind("tcp://*:4748");
+                    _publisher.Options.SendHighWatermark = 100;
 
-                    this.shim = shim;
-                    this.shim.ReceiveReady += OnShimReady;
-                    this.shim.SignalOK();
-                    poller = new NetMQPoller { shim, publisher, aliveTimer };
-                    poller.Run();
+                    this._shim = shim;
+                    this._shim.ReceiveReady += OnShimReady;
+                    this._shim.SignalOK();
+                    _poller = new NetMQPoller { shim, _publisher, _aliveTimer };
+                    _poller.Run();
                 }
             }
 
@@ -73,22 +73,22 @@ namespace StockTV.Classes.NetMQUtil
                 switch (command)
                 {
                     case NetMQActor.EndShimMessage:
-                        poller.Stop();
+                        _poller.Stop();
                         break;
                     default:
                         string stringMessage = e.Socket.ReceiveFrameString();
-                        publisher.SendMoreFrame(command).SendFrame(stringMessage);
+                        _publisher.SendMoreFrame(command).SendFrame(stringMessage);
                         break;
                 }
             }
         }
 
-        private NetMQActor actor;
+        private NetMQActor _actor;
         
         public void Start()
         {
-            if (actor != null) return;
-            actor = NetMQActor.Create(
+            if (_actor != null) return;
+            _actor = NetMQActor.Create(
                 new ShimHandler() 
                 { 
                     aliveInfo = JsonSerializer.Serialize(AliveInfo.Create()) 
@@ -97,31 +97,31 @@ namespace StockTV.Classes.NetMQUtil
 
         public void Stop()
         {
-            if (actor != null)
+            if (_actor != null)
             {
-                actor.Dispose();
-                actor = null;
+                _actor.Dispose();
+                _actor = null;
             }
         }
 
         public void SendDataMessage(MessageTopic topic, byte[] dataToSend)
         {
-            if (actor == null) return;
+            if (_actor == null) return;
 
             var message = new NetMQMessage();
             message.Append(topic.ToString());
             message.Append(dataToSend);
-            actor.SendMultipartMessage(message);
+            _actor.SendMultipartMessage(message);
         }
 
         public void SendDataMessage(MessageTopic topic, string dataToSend)
         {
-            if (actor == null) return;
+            if (_actor == null) return;
 
             var message = new NetMQMessage();
             message.Append(topic.ToString());
             message.Append(dataToSend);
-            actor.SendMultipartMessage(message);
+            _actor.SendMultipartMessage(message);
         }
 
 
