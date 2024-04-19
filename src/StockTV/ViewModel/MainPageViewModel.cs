@@ -39,6 +39,11 @@ namespace StockTV.ViewModel
             }
         }
 
+        internal override void SetTeilnehmer(string teilnehmer)
+        {
+            return;
+        }
+
         internal override void SetSettings(byte[] settings)
         {
             Settings.SetSettings(settings);

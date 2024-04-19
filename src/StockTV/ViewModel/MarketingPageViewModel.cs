@@ -31,6 +31,15 @@ namespace StockTV.ViewModel
         }
 
         /// <summary>
+        /// <inheritdoc/><br>no action</br>
+        /// </summary>
+        /// <param name="teilnehmer"></param>
+        internal override void SetTeilnehmer(string teilnehmer)
+        {
+            return;
+        }
+
+        /// <summary>
         /// Depending on <see cref="GameSettings.GameModus"/> the page get displayed
         /// </summary>
         internal override void SetMatchReset()
