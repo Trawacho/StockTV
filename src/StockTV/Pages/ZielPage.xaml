@@ -13,90 +13,107 @@
     <Page.DataContext>
         <vm:ZielPageViewModel />
     </Page.DataContext>
-    
+
     <Page.Resources>
         <cv:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <cv:BooleanToVisibilityConverterInverted x:Key="BoolToVisConverterInverted"/>
+        <cv:StringToGridLengthConverter x:Key="StringToGridLengthConverter"/>
     </Page.Resources>
-    
-    <Grid >
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.75*"/>
-            <RowDefinition Height="1.75*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="{Binding Teilnehmer, Converter={StaticResource StringToGridLengthConverter}}"/>
+            <RowDefinition Height="{Binding MidRowLength}"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*" />
-            <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- Versuche -->
-        <Viewbox Margin="15,5,15,0"  Grid.Column="0" Grid.Row="0"
+        <!-- Spielername -->
+        <Viewbox Margin=" 5,2,5,2" Grid.Row="0"
+                 Grid.Column="0"
+                 Grid.ColumnSpan="2" 
                  HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding   Path=VersucheText, Mode=OneWay}" 
+            <TextBlock Text="{Binding Path=Teilnehmer, Mode=OneWay}" 
+                       Foreground="{Binding Path=Settings.ColorScheme.ZielSummeGesamtForeGround}"/>
+        </Viewbox>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.75*"/>
+                <RowDefinition Height="1.75*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+
+
+            <!-- Versuche -->
+            <Viewbox Margin="15,5,15,0"  Grid.Column="0" Grid.Row="0"
+                 HorizontalAlignment="Stretch">
+                <TextBlock Text="{Binding   Path=VersucheText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"
                        HorizontalAlignment="Left"/>
-        </Viewbox>
-
-        <!-- Gesamt Text-->
-        <Viewbox Margin="15,5,15,0"  Grid.Column="1" Grid.Row="0"
-                 HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding Path=GesamtText}" 
-                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
-        </Viewbox>
-
-        <!-- GesatPunkte -->
-        <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
-                 HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
-            Foreground="{Binding Path=Settings.ColorScheme.ZielSummeGesamtForeGround}" />
-        </Viewbox>
-
-        <!--EingabeWert und vorheriger Versuch-->
-        <Grid Grid.Row="1" Grid.Column="0">
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            
-            <!--vorheriger Versuch-->
-            <Viewbox  Margin="0,5,0,0"
-                  HorizontalAlignment="Stretch">
-                <TextBlock Text="{Binding Path=LastValue, Mode=OneWay}"
-                           Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
             </Viewbox>
 
-            <!--Eingabe-->
-            <Viewbox Margin="0,5,0,0" Grid.Column="1"
+            <!-- Gesamt Text-->
+            <Viewbox Margin="15,5,15,0"  Grid.Column="1" Grid.Row="0"
+                 HorizontalAlignment="Stretch">
+                <TextBlock Text="{Binding Path=GesamtText}" 
+                       Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
+            </Viewbox>
+
+            <!-- GesatPunkte -->
+            <Viewbox Margin="0,5,15,0" Grid.Column="1" Grid.Row="1" 
+                 HorizontalAlignment="Stretch">
+                <TextBlock Text="{Binding Path=GesamtPunkteText, Mode=OneWay}" 
+            Foreground="{Binding Path=Settings.ColorScheme.ZielSummeGesamtForeGround}" />
+            </Viewbox>
+
+            <!--EingabeWert und vorheriger Versuch-->
+            <Grid Grid.Row="1" Grid.Column="0">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!--vorheriger Versuch-->
+                <Viewbox  Margin="0,5,0,0"
+                  HorizontalAlignment="Stretch">
+                    <TextBlock Text="{Binding Path=LastValue, Mode=OneWay}"
+                           Foreground="{Binding Path=Settings.ColorScheme.LeftForeground}"/>
+                </Viewbox>
+
+                <!--Eingabe-->
+                <Viewbox Margin="0,5,0,0" Grid.Column="1"
                      HorizontalAlignment="Stretch"
                      Visibility="{Binding Path=IsInvalidInput, Converter={StaticResource BoolToVisConverterInverted}}">
-                <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
+                    <TextBlock Text="{Binding Path=InputValueText, Mode=OneWay}" 
                        Foreground="{Binding Path=Settings.ColorScheme.MainTextForeground}"/>
+                </Viewbox>
+
+                <!--ungültig-->
+                <Viewbox HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Grid.ColumnSpan="2" 
+                Visibility="{Binding Path=IsInvalidInput, Converter={StaticResource BoolToVisConverter}}">
+                    <TextBlock Text="ungültig"  Foreground="red">
+                        <TextBlock.Projection>
+                            <PlaneProjection RotationX="0" RotationY="0" RotationZ="20" CenterOfRotationX="0.5" CenterOfRotationY="0.5"/>
+                        </TextBlock.Projection>
+                    </TextBlock>
+                </Viewbox>
+
+            </Grid>
+
+
+            <!--Werte der Disziplinen-->
+            <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                 HorizontalAlignment="Stretch">
+                <TextBlock Text="{Binding Path=VersuchsWerte, Mode=OneWay}"
+                       Foreground="{Binding Path=Settings.ColorScheme.ZielSummeEinzelForeGround}"/>
             </Viewbox>
 
-            <!--ungültig-->
-            <Viewbox HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Grid.ColumnSpan="2" 
-                Visibility="{Binding Path=IsInvalidInput, Converter={StaticResource BoolToVisConverter}}">
-                <TextBlock Text="ungültig"  Foreground="red">
-                    <TextBlock.Projection>
-                        <PlaneProjection RotationX="0" RotationY="0" RotationZ="20" CenterOfRotationX="0.5" CenterOfRotationY="0.5"/>
-                    </TextBlock.Projection>
-                </TextBlock>
-            </Viewbox>
+
 
         </Grid>
-
-
-        <!--Werte der Disziplinen-->
-        <Viewbox Margin="20,0" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                 HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding Path=VersuchsWerte, Mode=OneWay}"
-            Foreground="{Binding Path=Settings.ColorScheme.ZielSummeEinzelForeGround}"/>
-        </Viewbox>
-
-
-
     </Grid>
-
 </Page>

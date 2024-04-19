@@ -18,11 +18,18 @@ namespace StockTV.ViewModel
         }
         internal override void SetMatchReset()
         {
+            Teilnehmer = string.Empty;
+
             _zielbewerb.Reset();
         }
         internal override void SetTeamNames(string begegnungen)
         {
             return;
+        }
+
+        internal override void SetTeilnehmer(string teilnehmer)
+        {
+            Teilnehmer = teilnehmer;
         }
 
         internal override void SetSettings(byte[] settings)
@@ -43,6 +50,7 @@ namespace StockTV.ViewModel
         private sbyte _inputValue;
         private readonly Zielbewerb _zielbewerb;
         private readonly DispatcherTimer _isInvalidTimer = new DispatcherTimer();
+        private string _teilnehmer;
 
         #endregion
 
@@ -65,6 +73,11 @@ namespace StockTV.ViewModel
         public string GesamtText => "Gesamt";
 
         /// <summary>
+        /// Name des Spielers
+        /// </summary>
+        public string Teilnehmer { get => _teilnehmer; set { _teilnehmer = value; RaisePropertyChange(); } }
+
+        /// <summary>
         /// GesamtPunkte to Display
         /// </summary>
         public string GesamtPunkteText => _zielbewerb.GesamtSumme.ToString();
@@ -72,12 +85,18 @@ namespace StockTV.ViewModel
         /// <summary>
         /// Anzahl Versuche to Display
         /// </summary>
-        public string VersucheText => $"{_zielbewerb.CountOfVersuche()}/24";
+        public string VersucheText => $"{_zielbewerb.CountOfVersuche()}/{Settings.GameSettings.TurnsPerGame * 4}";
 
         /// <summary>
         /// AnzeigeText für die vier Einzelsummen
         /// </summary>
         public string VersuchsWerte => $"{_zielbewerb.MassenVorneSumme} - {_zielbewerb.SchüsseSumme} - {_zielbewerb.MassenHintenSumme} - {_zielbewerb.KombinierenSumme}";
+
+
+        public GridLength MidRowLength
+        {
+            get => new GridLength(Settings.MidColumnLength, GridUnitType.Star);
+        }
 
         #endregion
 
@@ -294,6 +313,7 @@ namespace StockTV.ViewModel
             if (_zielbewerb.CountOfVersuche() < 24)
                 return;
 
+            Teilnehmer = string.Empty;
             _zielbewerb.Reset();
             _inputValue = -1;
         }
