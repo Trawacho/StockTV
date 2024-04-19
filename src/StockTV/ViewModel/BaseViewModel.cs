@@ -91,6 +91,12 @@ namespace StockTV.ViewModel
         internal abstract void SetTeamNames(string begegnungen);
 
         /// <summary>
+        /// Set Name für Zielbewerb
+        /// </summary>
+        /// <param name="teilnehmer"></param>
+        internal abstract void SetTeilnehmer(string teilnehmer);
+        
+        /// <summary>
         /// Reset Match 
         /// </summary>
         internal abstract void SetMatchReset();
@@ -226,6 +232,9 @@ namespace StockTV.ViewModel
                             break;
                         case MessageTopic.SetTeamNames:
                             SetTeamNames(System.Text.Encoding.UTF8.GetString(args.Value));
+                            break;
+                        case MessageTopic.SetTeilnehmer:
+                            SetTeilnehmer(System.Text.Encoding.UTF8.GetString(args.Value));
                             break;
                         case MessageTopic.SetImage:
                             SetImage(
