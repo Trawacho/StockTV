@@ -191,21 +191,28 @@ namespace StockTV.Classes
         /// <returns></returns>
         internal bool AddValueToVersuche(sbyte value)
         {
-            if (CountOfVersuche() < 24)
+            if (CountOfVersuche() < Settings.Instance.GameSettings.TurnsPerGame * 4)
             {
-                if (MassenVorne.Count() < 6 && IsMassValue(value))
+                if (MassenVorne.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && IsMassValue(value))
                 {
                     MassenVorne.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= 6 && Schüsse.Count() < 6 && IsSchussValue(value))
+                else if (CountOfVersuche() >= Settings.Instance.GameSettings.TurnsPerGame 
+                    && Schüsse.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && IsSchussValue(value))
                 {
                     Schüsse.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= 12 && MassenHinten.Count() < 6 && IsMassValue(value))
+                else if (CountOfVersuche() >= (2 * Settings.Instance.GameSettings.TurnsPerGame) 
+                    && MassenHinten.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && IsMassValue(value))
                 {
                     MassenHinten.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= 18 && Kombinieren.Count() < 6 && IsMassValue(value))
+                else if (CountOfVersuche() >= (3 * Settings.Instance.GameSettings.TurnsPerGame )
+                    && Kombinieren.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                    && IsMassValue(value))
                 {
                     Kombinieren.Push(Convert.ToByte(value));
                 }
