@@ -57,6 +57,9 @@ namespace StockTV.Classes
                 case GameModis.Turnier:
                     TurnsPerGame = TurnsPerGameTurnierDefault;
                     break;
+                case GameModis.Ziel:
+                    TurnsPerGame = TurnsPerZielSectionDefault;
+                    break;
                 default:
                     break;
             }
@@ -190,6 +193,10 @@ namespace StockTV.Classes
         /// </summary>
         const byte TurnsPerGameTurnierDefault = 6;
 
+        /// <summary>
+        /// Default count of attempts per section in Zielbewerb
+        /// </summary>
+        const byte TurnsPerZielSectionDefault = 6;
         #endregion
 
         #region Punkte Pro Kehre
