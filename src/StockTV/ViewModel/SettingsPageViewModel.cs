@@ -36,7 +36,7 @@ namespace StockTV.ViewModel
 
         public SettingsPageViewModel()
         {
-            ActiveSetting = ActiveSettings.ColorScheme;
+            _activeSetting = ActiveSettings.ColorScheme;
         }
 
         #endregion
@@ -61,7 +61,7 @@ namespace StockTV.ViewModel
         /// <summary>
         /// Actual Setting to edit
         /// </summary>
-        private ActiveSettings ActiveSetting;
+        private ActiveSettings _activeSetting;
 
 
         #region Functions
@@ -127,24 +127,24 @@ namespace StockTV.ViewModel
 
         public void GoToNextSetting()
         {
-            if (ActiveSetting < Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Max())
+            if (_activeSetting < Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Max())
             {
-                ActiveSetting += 1;
+                _activeSetting += 1;
             }
         }
 
         public void GoToPreviousSettings()
         {
 
-            if (ActiveSetting > Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Min())
+            if (_activeSetting > Enum.GetValues(typeof(ActiveSettings)).Cast<ActiveSettings>().Min())
             {
-                ActiveSetting -= 1;
+                _activeSetting -= 1;
             }
         }
 
         public void IncreaseSetting()
         {
-            switch (ActiveSetting)
+            switch (_activeSetting)
             {
                 case ActiveSettings.ColorScheme:
                     Settings.Instance.ColorScheme.ColorSchemeUp();
@@ -178,7 +178,7 @@ namespace StockTV.ViewModel
 
         public void DecreaseSetting()
         {
-            switch (ActiveSetting)
+            switch (_activeSetting)
             {
                 case ActiveSettings.ColorScheme:
                     Settings.Instance.ColorScheme.ColorSchemeDown();
@@ -218,7 +218,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.ColorScheme;
+                return _activeSetting == ActiveSettings.ColorScheme;
             }
         }
 
@@ -226,7 +226,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.ColorSchemeRightToLeft;
+                return _activeSetting == ActiveSettings.ColorSchemeRightToLeft;
             }
         }
 
@@ -234,7 +234,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.GameMous;
+                return _activeSetting == ActiveSettings.GameMous;
             }
         }
 
@@ -242,7 +242,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.MaxPointsPerTurn;
+                return _activeSetting == ActiveSettings.MaxPointsPerTurn;
             }
         }
 
@@ -250,7 +250,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.MaxCountOfTurnsPerGame;
+                return _activeSetting == ActiveSettings.MaxCountOfTurnsPerGame;
 
             }
         }
@@ -259,20 +259,20 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return ActiveSetting == ActiveSettings.CourtNumber;
+                return _activeSetting == ActiveSettings.CourtNumber;
             }
         }
 
         public bool IsSpielgruppeActive
         {
-            get => ActiveSetting == ActiveSettings.Spielgruppe;
+            get => _activeSetting == ActiveSettings.Spielgruppe;
         }
 
         public bool IsNetworkingActive
         {
             get
             {
-                return ActiveSetting == ActiveSettings.Networking;
+                return _activeSetting == ActiveSettings.Networking;
             }
         }
 

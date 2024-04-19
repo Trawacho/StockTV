@@ -64,7 +64,7 @@ namespace StockTV.ViewModel
 
         public MarketingPageViewModel() : base()
         {
-            DefaultImage = new BitmapImage()
+            _defaultImage = new BitmapImage()
             {
                 UriSource = new Uri(GetMediaFiles("Assets/Logo").First())
             };
@@ -104,7 +104,7 @@ namespace StockTV.ViewModel
         /// <summary>
         /// Default Picture in Project
         /// </summary>
-        private BitmapImage DefaultImage;
+        private readonly BitmapImage _defaultImage;
 
         /// <summary>
         /// Picture from Settings or DefaultImage
@@ -113,7 +113,7 @@ namespace StockTV.ViewModel
         {
             get
             {
-                return Settings.MarketingImage ?? DefaultImage;
+                return Settings.MarketingImage ?? _defaultImage;
             }
         }
 

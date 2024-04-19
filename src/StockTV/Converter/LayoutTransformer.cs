@@ -11,19 +11,19 @@ namespace StockTV.Common
     /// Represents a control that applies a layout transformation to its Content.
     /// </summary>
     /// <QualityBand>Preview</QualityBand>
-    [TemplatePart(Name = TransformRootName, Type = typeof(Grid))]
-    [TemplatePart(Name = PresenterName, Type = typeof(ContentPresenter))]
+    [TemplatePart(Name = _transformRootName, Type = typeof(Grid))]
+    [TemplatePart(Name = _presenterName, Type = typeof(ContentPresenter))]
     public sealed class LayoutTransformer : ContentControl
     {
         /// <summary>
         /// Name of the TransformRoot template part.
         /// </summary>
-        private const string TransformRootName = "TransformRoot";
+        private const string _transformRootName = "TransformRoot";
 
         /// <summary>
         /// Name of the Presenter template part.
         /// </summary>
-        private const string PresenterName = "Presenter";
+        private const string _presenterName = "Presenter";
 
         /// <summary>
         /// Gets or sets the layout transform to apply on the LayoutTransformer 
@@ -60,9 +60,9 @@ namespace StockTV.Common
 
         // Note: AcceptableDelta and DecimalsAfterRound work around double arithmetic rounding issues on Silverlight.
 
-        private const double AcceptableDelta = 0.0001;
+        private const double _acceptableDelta = 0.0001;
 
-        private const int DecimalsAfterRound = 4;
+        private const int _decimalsAfterRound = 4;
 
         private Panel _transformRoot;
 
@@ -96,8 +96,8 @@ namespace StockTV.Common
             // Apply new template
             base.OnApplyTemplate();
             // Find template parts
-            _transformRoot = GetTemplateChild(TransformRootName) as Grid;
-            _contentPresenter = GetTemplateChild(PresenterName) as ContentPresenter;
+            _transformRoot = GetTemplateChild(_transformRootName) as Grid;
+            _contentPresenter = GetTemplateChild(_presenterName) as ContentPresenter;
             _matrixTransform = new MatrixTransform();
             if (null != _transformRoot)
             {
@@ -138,7 +138,7 @@ namespace StockTV.Common
         private void ProcessTransform(Transform transform)
         {
             // Get the transform matrix and apply it
-            _transformation = RoundMatrix(GetTransformMatrix(transform), DecimalsAfterRound);
+            _transformation = RoundMatrix(GetTransformMatrix(transform), _decimalsAfterRound);
             if (null != _matrixTransform)
             {
                 _matrixTransform.Matrix = _transformation;
@@ -160,8 +160,7 @@ namespace StockTV.Common
                 // return transform.Value;
 
                 // Process the TransformGroup
-                TransformGroup transformGroup = transform as TransformGroup;
-                if (null != transformGroup)
+                if (transform is TransformGroup transformGroup)
                 {
                     Matrix groupMatrix = Matrix.Identity;
                     foreach (Transform child in transformGroup.Children)
@@ -172,8 +171,7 @@ namespace StockTV.Common
                 }
 
                 // Process the RotateTransform
-                RotateTransform rotateTransform = transform as RotateTransform;
-                if (null != rotateTransform)
+                if (transform is RotateTransform rotateTransform)
                 {
                     double angle = rotateTransform.Angle;
                     double angleRadians = (2 * Math.PI * angle) / 360;
@@ -183,8 +181,7 @@ namespace StockTV.Common
                 }
 
                 // Process the ScaleTransform
-                ScaleTransform scaleTransform = transform as ScaleTransform;
-                if (null != scaleTransform)
+                if (transform is ScaleTransform scaleTransform)
                 {
                     double scaleX = scaleTransform.ScaleX;
                     double scaleY = scaleTransform.ScaleY;
@@ -192,8 +189,7 @@ namespace StockTV.Common
                 }
 
                 // Process the SkewTransform
-                SkewTransform skewTransform = transform as SkewTransform;
-                if (null != skewTransform)
+                if (transform is SkewTransform skewTransform)
                 {
                     double angleX = skewTransform.AngleX;
                     double angleY = skewTransform.AngleY;
@@ -203,8 +199,7 @@ namespace StockTV.Common
                 }
 
                 // Process the MatrixTransform
-                MatrixTransform matrixTransform = transform as MatrixTransform;
-                if (null != matrixTransform)
+                if (transform is MatrixTransform matrixTransform)
                 {
                     return matrixTransform.Matrix;
                 }
@@ -486,7 +481,7 @@ namespace StockTV.Common
         {
             // WPF equivalent of following code:
             // return ((a.Width < b.Width) || (a.Height < b.Height));
-            return ((a.Width + AcceptableDelta < b.Width) || (a.Height + AcceptableDelta < b.Height));
+            return ((a.Width + _acceptableDelta < b.Width) || (a.Height + _acceptableDelta < b.Height));
         }
 
         /// <summary>
