@@ -14,7 +14,7 @@ namespace StockTV.ViewModel
         #region BaseClass Functions
         internal override byte[] GetSerializedResult()
         {
-            return _zielbewerb.Serialize(false);
+            return Settings.MessageVersion == 0 ? _zielbewerb.Serialize(false) : _zielbewerb.SerializeJson();
         }
         internal override void SetMatchReset()
         {
@@ -123,8 +123,8 @@ namespace StockTV.ViewModel
 
         private void Bewerb_ValuesChanged(object sender, EventArgs e)
         {
-            Zielbewerb m = sender as Zielbewerb;
-            Settings.PublishGameResult(m.Serialize(false));
+            if (sender is Zielbewerb bewerb)
+                Settings.PublishGameResult(Settings.MessageVersion == 0 ? bewerb.Serialize() : bewerb.SerializeJson());
         }
 
 
@@ -244,7 +244,7 @@ namespace StockTV.ViewModel
             // Send after each key press a network notification
             if (Settings.IsBroadcasting)
             {
-                BroadcastService.SendData(_zielbewerb.Serialize(true));
+                BroadcastService.SendData(Settings.MessageVersion == 0 ? _zielbewerb.Serialize(true) : _zielbewerb.SerializeJson());
             }
         }
 

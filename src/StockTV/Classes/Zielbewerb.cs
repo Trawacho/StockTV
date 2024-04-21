@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 
 namespace StockTV.Classes
 {
@@ -193,25 +195,25 @@ namespace StockTV.Classes
         {
             if (CountOfVersuche() < Settings.Instance.GameSettings.TurnsPerGame * 4)
             {
-                if (_massenVorne.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                if (_massenVorne.Count() < Settings.Instance.GameSettings.TurnsPerGame
                     && IsMassValue(value))
                 {
                     _massenVorne.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= Settings.Instance.GameSettings.TurnsPerGame 
-                    && _schüsse.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                else if (CountOfVersuche() >= Settings.Instance.GameSettings.TurnsPerGame
+                    && _schüsse.Count() < Settings.Instance.GameSettings.TurnsPerGame
                     && IsSchussValue(value))
                 {
                     _schüsse.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= (2 * Settings.Instance.GameSettings.TurnsPerGame) 
-                    && _massenHinten.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                else if (CountOfVersuche() >= (2 * Settings.Instance.GameSettings.TurnsPerGame)
+                    && _massenHinten.Count() < Settings.Instance.GameSettings.TurnsPerGame
                     && IsMassValue(value))
                 {
                     _massenHinten.Push(Convert.ToByte(value));
                 }
-                else if (CountOfVersuche() >= (3 * Settings.Instance.GameSettings.TurnsPerGame )
-                    && _kombinieren.Count() < Settings.Instance.GameSettings.TurnsPerGame 
+                else if (CountOfVersuche() >= (3 * Settings.Instance.GameSettings.TurnsPerGame)
+                    && _kombinieren.Count() < Settings.Instance.GameSettings.TurnsPerGame
                     && IsMassValue(value))
                 {
                     _kombinieren.Push(Convert.ToByte(value));
@@ -338,5 +340,78 @@ namespace StockTV.Classes
             }
             return output.ToArray();
         }
+
+        public byte[] SerializeJson()
+        {
+            var values = new List<byte>();
+
+            values.AddRange(Settings.Instance.GetSettings());
+
+            string json = JsonSerializer.Serialize(
+                new StockTVZielbewerb(
+                    _massenVorne.Reverse(),
+                    _schüsse.Reverse(),
+                    _massenHinten.Reverse(),
+                    _kombinieren.Reverse()));
+
+            values.AddRange(Encoding.UTF8.GetBytes(json));
+
+            return values.ToArray();
+        }
+    }
+
+    public interface IStockTVZielbewerb
+    {
+        IStockTVZielDisziplin MassenVorne { get; }
+        IStockTVZielDisziplin Schiessen { get; }
+        IStockTVZielDisziplin MassenSeite { get; }
+        IStockTVZielDisziplin Kombinieren { get; }
+    }
+
+    public class StockTVZielbewerb : IStockTVZielbewerb
+    {
+        public IStockTVZielDisziplin MassenVorne { get; }
+
+        public IStockTVZielDisziplin Schiessen { get; }
+
+        public IStockTVZielDisziplin MassenSeite { get; }
+
+        public IStockTVZielDisziplin Kombinieren { get; }
+
+        public StockTVZielbewerb(IEnumerable<byte> massenVorne,
+                                 IEnumerable<byte> schiessen,
+                                 IEnumerable<byte> massenSeite,
+                                 IEnumerable<byte> kombinieren)
+        {
+            MassenVorne = new StockTVZielDisziplin(StockTVZielDisziplinName.MassenMitte, massenVorne);
+            Schiessen = new StockTVZielDisziplin(StockTVZielDisziplinName.Schiessen, schiessen);
+            MassenSeite = new StockTVZielDisziplin(StockTVZielDisziplinName.MassenSeite, massenSeite);
+            Kombinieren = new StockTVZielDisziplin(StockTVZielDisziplinName.Kombinieren, kombinieren);
+        }
+    }
+
+    public interface IStockTVZielDisziplin
+    {
+        StockTVZielDisziplinName Name { get; }
+        List<byte> Versuche { get; }
+    }
+
+    public class StockTVZielDisziplin : IStockTVZielDisziplin
+    {
+        public List<byte> Versuche { get; }
+        public StockTVZielDisziplinName Name { get; }
+        public StockTVZielDisziplin(StockTVZielDisziplinName name, IEnumerable<byte> versuche)
+        {
+            Name = name;
+            Versuche = new List<byte>(versuche);
+        }
+    }
+
+    public enum StockTVZielDisziplinName
+    {
+        MassenMitte = 1,
+        Schiessen = 2,
+        MassenSeite = 3,
+        Kombinieren = 4
     }
 }

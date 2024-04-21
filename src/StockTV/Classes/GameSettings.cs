@@ -98,10 +98,16 @@ namespace StockTV.Classes
         {
             if (up)
             {
+                //if (GameModus == GameModis.Ziel)
+                //    TurnsPerGame = 12;
+                //else
                 TurnsPerGame++;
             }
             else
             {
+                //if (GameModus == GameModis.Ziel )
+                //    TurnsPerGame = 6;
+                //else
                 TurnsPerGame--;
             }
         }
@@ -165,9 +171,16 @@ namespace StockTV.Classes
             internal set
             {
                 if (_turnsPerGame == value ||
-                           value < _turnsPerGameMin ||
-                           value > _turnsPerGameMax)
-                    return;
+                    _turnsPerGameMin > value ||
+                    _turnsPerGameMax < value) return;
+
+                if (GameModus == GameModis.Ziel)
+                {
+                    if (value > _turnsPerGame) 
+                        value = _turnsPerZielSectionMax;
+                    else 
+                        value = _turnsPerZielSectionDefault;
+                }
 
                 SetSaveProperty(ref _turnsPerGame, value, nameof(TurnsPerGame));
             }
@@ -194,9 +207,14 @@ namespace StockTV.Classes
         const byte _turnsPerGameTurnierDefault = 6;
 
         /// <summary>
-        /// Default count of attempts per section in Zielbewerb
+        /// Default and minimum count of attempts per section in Zielbewerb
         /// </summary>
         const byte _turnsPerZielSectionDefault = 6;
+
+        /// <summary>
+        /// Max count of attempts per section in Zielbewerb
+        /// </summary>
+        const byte _turnsPerZielSectionMax = 12;
         #endregion
 
         #region Punkte Pro Kehre
