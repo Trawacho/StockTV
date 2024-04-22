@@ -68,7 +68,10 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 - EC Sassbach   
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach2.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach3.jpg" Height="450"/>
 
-Weitere Installationen sind bereits umgesetzt bzw sind in Planung.
+- EC Pleinting  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting2.jpg" Height="450"/>
+
+Viele weitere Installationen sind bereits umgesetzt bzw sind in Planung.
 
 ### Unterstützung
 Die Software steht kostenlos zur Verfügung. Im Gegenzug wäre eine Unterstützung des Projekts wünschenswert. Sowohl im Coding als auch bei der Suche nach alternativer Hardware oder beim Testen der Software. Ideen oder Verbesserungsvorschläge sind willkommene Beiträge.  
