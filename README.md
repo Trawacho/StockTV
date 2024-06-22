@@ -53,23 +53,26 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_3.png" width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECGB_4.png" width="450"/>
 
 - ETSV Hainsbach (5 Bahnen)  
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH1.jpg" Height="400"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH2.jpg" Height="400"/> 
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH1.jpg"  Height="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ETSVH2.jpg"  Height="300"/> 
 
 - EC Wegscheid (4 Bahnen)  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid1.jpg" Width="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid2.jpg" Width="450"/>  
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid4.jpg" Height="400"/>  <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECWegscheid5.jpg" Height="400"/>  
 
 - EC Perkam (4 Bahnen im Freien)  
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP2.jpeg" Height="450"/>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP1.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECP2.jpeg" Width="300"/>
 
 - FC Unteriglbach  
   <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/FCUnteriglbach.jpg" Height="450"/> 
 
 - EC Sassbach   
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach2.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach3.jpg" Height="450"/>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach1.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach2.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECSassbach3.jpg" Width="300"/>
 
 - EC Pleinting  
-<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting1.jpg" Height="450"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting2.jpg" Height="450"/>
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting1.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECPleinting2.jpg" Width="300"/>
+
+- EC Rettenbach (4 Bahnen / StockTV mit x86 PCs im Kiosk-Mode)  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECRettenbach1.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECRettenbach3.jpg" Width="300"/> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/ECRettenbach4.jpg" Width="300"/>
 
 Viele weitere Installationen sind bereits umgesetzt bzw sind in Planung.
 
