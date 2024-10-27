@@ -26,13 +26,16 @@ StockTV sollte automatisch gestartet werden.
 ## Netzwerkeinstellungen
 Um den vollen Funktionsumfang nutzen zu können, sollten alle StockTV-Systeme vernetzt werden. Da die WiFi-Qualität der Raspi´s nicht gut ist, sollten alle Geräte per Netzwerkkabel miteinander verbunden werden. WLAN ist nicht zu empfehlen. Verwenden sie am Besten statische IP-Adressen für die Raspi´s. Dazu im Geräteportal auf der linken Seite den Menüpunkt *Connectivity* und dann *Network* wählen. Auf der rechten Seite sind alle Netzwerkadapter aufgeführt. Bei dem Adapter mit Type Ethernet die *IPv4 Configuration* vornehmen. Jeder Raspi benötigt eine eigene IP-Adresse, die sich im selben Subnetz befindet.  
 Beispiel für 3 Bahnen:  
-| Raspi	| IP-Adresse | Subnet-Mask|
-|------|------|------|
-| Bahn1: | 192.168.22.11 | 255.255.255.0 |
-| Bahn2: | 192.168.22.12 | 255.255.255.0 |
-| Bahn3: | 192.168.22.13 | 255.255.255.0 |
-| BahnX: | 192.168.22.1x | 255.255.255.0 |
-| PC mit StockApp: | 192.168.22.50 | 255.255.255.0 |
+| Raspi	| IP-Adresse | Subnet-Mask | Gateway |
+|------|------|------|------|
+| Bahn1: | 192.168.22.11 | 255.255.255.0 | 192.168.22.1 |
+| Bahn2: | 192.168.22.12 | 255.255.255.0 | 192.168.22.1 |
+| Bahn3: | 192.168.22.13 | 255.255.255.0 | 192.168.22.1 |
+| BahnX: | 192.168.22.1x | 255.255.255.0 | 192.168.22.1 |
+| PC mit StockApp: | 192.168.22.50 | 255.255.255.0 | 192.168.22.1 |
+| Router/FritzBox | 192.168.22.1 | 255.255.255.0 |  |
+
+*Bei verwendung der Subnet-Mask von 255.255.255.0 kann man bei den IP-Adressen jede Adresse von 192.168.22.1 bis 192.168.22.254 nutzen. Jede IP-Adresse darf nur 1x vorkommen. Die ersten drei Teile müssen identisch sein (192.168.22.xxx), der letzte Teil ist variabel. Das Gateway ist die IP-Adresse vom Router (oder Fritzbox). Sollte kein Router vorhanden sein, trotzdem ein Gateway eingeben!*
 
 Auf keinen Fall den Raspi mit WLAN und Kabel gleichzeitig betreiben!  
 Zur Verbindung aller Geräte empfiehlt sich ein Netzwerkswitch. Dieser wird am besten in der Nähe der Raspi´s installiert. Mit einem weiteren langen Netzwerkkabel kann der PC/Laptop mit dem Switch verbunden werden.
