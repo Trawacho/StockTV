@@ -1,7 +1,11 @@
 # Installation
 
 ## Mit Hilfe von IoT-Dashboard eine SD-Karte mit Win-IoT flashen. 
-Hier am Besten schon den Gerätenamen festlegen. z.B.: BahnTV1. 
+### Microsoft hat das IoT-Dashboard abgekündigt!!!
+Im Ordner iotdb ist eine gezippte Version des Programm-Ordners. Diesen kann man aktuell downloaden und nutzen. Wie lange das noch funktioniert, ist nicht bekannt.
+
+Wenn es klappt, dann...  
+...hier am Besten schon den Gerätenamen festlegen. z.B.: BahnTV1. 
 Ein Administratorkennwort vergeben und dieses gut merken oder notieren.
 
 ## Raspi mit geflashter SD-Karte booten
