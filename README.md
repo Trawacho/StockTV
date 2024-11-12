@@ -14,14 +14,17 @@ Training|Turnier|BestOf|Ziel
 <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Training.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Turnier.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/BestOf.png" width="225" />|<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Ziel.png" width="225" />|
 
 ### Was wird benötigt (pro Spielbahn):
- - 1x [Raspberry Pi 3]
+ - 1x [Raspberry Pi 3] (alternativ ein Windows-PC)
  - 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
  - 2x [Kabelloser Ziffernblock]
  - 1x LCD-Display 55". (kleiner geht, aber nicht zu empfehlen!!)
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
  - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
 #### !!! Info bzgl Raspberry !!!
-Da es aktuell sehr schwierig bis unmöglich ist, die richtigen Raspberry PIs aufzutrieben, möchte ich darauf hinweisen, dass jeder Windows10 PC funktioniert. Alternative Hardware wäre ein Stick-PC oder Mini-PC. Der PC sollte sich automatisch einschalten, wenn er mit Strom versorgt wird. Die StockTV-App kann dann unter Windwos im KIOSK-Modus laufen. Der Preis für einen solchen PC liegt bei ca. €175.  
+Für die Installation mit einem Raspberry ist das IoT-Dashobard von Microsoft notwendig. Das Produkt wurde eingestellt und ist nicht mehr offiziell verfügbar.  
+Daher empfehle ich aktuell den Einsatz von Windows-PCs. Hier gibt es verschiedene Anbieter von Refurbished-Geräten, bei denen man Windows-PCs unter 100€ erwerben kann.  
+Die StockTV-App wird dann im KIOSK-Modus unter Windows 10/11 eingesetzt.  
+Wichtig wäre, dass sich der PC automatisch einschaltet, sobald er mit Strom versorgt wird!
 
 ### Was sollte vorhanden sein:
 Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und mit einer SD-Karte umgehen kann. Neben der Montage braucht man für die Ersteinrichtung etwas Zeit. 
