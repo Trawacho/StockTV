@@ -83,6 +83,10 @@ Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfra
 - Sportunion Keferfeld-Oed (Österreich)<br>
   <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/SportunionKeferfeldOed.jpg" Width="300"/>
 
+- Union Stocksport Putzleinsdorf ( Österreich )  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Putzleinsdorf01.JPG" Width="450"> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Putzleinsdorf04.JPG" Width="450">  
+<img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Putzleinsdorf03.JPG" Width="300"> <img src="https://github.com/Trawacho/StockTV/blob/master/Bilder/Putzleinsdorf02.JPG" Width="300">
+
 
 Viele weitere Installationen sind bereits umgesetzt bzw sind in Planung.
 
