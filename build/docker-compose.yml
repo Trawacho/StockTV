@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  stocktv:
+    container_name: stocktv
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    image: ${STOCKTV_IMAGE:-stocktv:dev}

@@ -1,0 +1,148 @@
+﻿@page "/training"
+@using StockTvBlazor.Components.Models
+@rendermode InteractiveServer
+@inject Settings Settings
+
+
+<div class="main-container" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;">
+
+	<div class="grid-container" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;">
+		<div class="header">Obere Zeile (Full Width)</div>
+
+		<div class="row2-left">R2 Links</div>
+		<div class="row2-middle">R2 Mitte</div>
+		<div class="row2-right">R2 Rechts</div>
+
+		<div class="row3-left">R3 Links</div>
+		<div class="row3-middle">R3 Mitte</div>
+		<div class="row3-right">R3 Rechts</div>
+	</div>
+
+
+@* 	<!-- Mittlerer Bereich -->
+	<div class="score-center">
+		<header class="header">@Model.HeaderText</header>
+
+		<div class="score-row">
+			<span class="points-sum">@Model.LeftPointsSum</span>
+
+
+
+			<span class="separator">:</span>
+
+
+
+			<span class="points-sum">@Model.RightPointsSum</span>
+		</div>
+
+		<span>@Model.InputValue</span>
+
+	</div> *@
+
+</div>
+
+
+<style>
+	.grid-container {
+		display: grid;
+		/* 3 Spalten mit unterschiedlichen Breiten */
+		grid-template-columns: 200px 1fr 150px;
+		grid-template-rows: auto auto auto;
+		gap: 10px;
+		/* Die "Karte" deines Layouts */
+		grid-template-areas:
+			"header  header  header" /* Zeile 1: Belegt alle 3 Spalten */
+			"sub-l   sub-m   sub-r" /* Zeile 2: Drei separate Bereiche */
+			"foot-l  foot-m  foot-r"; /* Zeile 3: Drei separate Bereiche */
+	}
+
+	/* Zuweisung der Klassen zu den Bereichen */
+	.header {
+		grid-area: header;
+		background: lightblue;
+	}
+
+	.row2-left {
+		grid-area: sub-l;
+		background: lightcoral;
+	}
+
+	.row2-middle {
+		grid-area: sub-m;
+		background: lightgreen;
+	}
+
+	.row2-right {
+		grid-area: sub-r;
+		background: lightyellow;
+	}
+
+	.row3-left {
+		grid-area: foot-l;
+		background: gray;
+	}
+
+	.row3-middle {
+		grid-area: foot-m;
+		background: silver;
+	}
+
+	.row3-right {
+		grid-area: foot-r;
+		background: darkgray;
+	}
+
+	.main-container {
+		display: grid;
+		background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
+		grid-template-columns: auto 1fr auto;
+		height: 100vh;
+		width: 100%;
+		position: fixed;
+		inset: 0;
+	}
+
+	/* Place the center column content in the middle grid column and center it horizontally */
+	.score-center {
+		grid-column: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center; /* centers children horizontally */
+		justify-content: center; /* centers children vertically within the center column */
+		text-align: center;
+	}
+	.header{
+		align-content: center;
+		font-size: 3vw;
+		text-align: center;
+		margin-top: 10px;
+	}	
+	
+
+</style>
+
+@code {
+	private ElementReference inputRef;
+
+	public TrainingViewModel Model = default!;
+
+	protected override void OnInitialized()
+	{
+		Model = new TrainingViewModel(Settings);
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			//await inputRef.FocusAsync();
+		}
+	}
+	private void HandleGlobalKeyDown(KeyboardEventArgs e)
+	{
+		Model.GetScanCode(e.Key);
+		StateHasChanged();
+	}
+
+}
+

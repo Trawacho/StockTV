@@ -1,0 +1,54 @@
+﻿@page "/scoreboard"
+
+<h3 style="text-align:center;">Punkteanzeige</h3>
+
+<div style="display:flex; justify-content:space-between; margin:20px;">
+    <div style="width:45%; background:#007BFF; color:white; padding:20px; text-align:center; border-radius:10px;">
+        <h2>Blau</h2>
+        <h1>@ScoreBlue</h1>
+    </div>
+
+    <div style="width:45%; background:#FF3B30; color:white; padding:20px; text-align:center; border-radius:10px;">
+        <h2>Rot</h2>
+        <h1>@ScoreRed</h1>
+    </div>
+</div>
+
+<div style="text-align:center; margin-top:30px;">
+    <input @bind="InputValue"
+           @bind:event="oninput"
+           @onkeydown="HandleKey"
+           placeholder="Zahl eingeben und / oder * drücken"
+           style="font-size:20px; padding:10px; width:300px; text-align:center;" />
+
+    <p style="margin-top:10px; font-size:18px;">
+        Letzte Eingabe: <strong>@LastInput</strong>
+    </p>
+</div>
+
+@code {
+    private int ScoreBlue = 0;
+    private int ScoreRed = 0;
+
+    private string? InputValue;
+    private string? LastInput;
+
+    private void HandleKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "/" || e.Key == "*")
+        {
+            if (int.TryParse(InputValue, out int value))
+            {
+                LastInput = InputValue;
+
+                if (e.Key == "/")
+                    ScoreBlue += value;
+
+                if (e.Key == "*")
+                    ScoreRed += value;
+
+                InputValue = "";
+            }
+        }
+    }
+}
