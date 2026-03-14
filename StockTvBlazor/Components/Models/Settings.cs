@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
+
 namespace StockTvBlazor.Components.Models
 {
 	public class Settings
@@ -19,11 +20,98 @@ namespace StockTvBlazor.Components.Models
 		public int MessageVersion { get; internal set; }
 		public string SpielgruppeLetter { get; internal set; } = "";
 		public bool BlockLocalChanges { get; internal set; }
-		public int CourtNumber { get; internal set; }
 
 		internal void PublishGameResult(object value)
 		{
-			throw new NotImplementedException();
+			//todo: implement function to publish game result
+		}
+
+
+		/// <summary>
+		/// Changes the CourtNumber up or down
+		/// </summary>
+		/// <param name="up">true = increase, false = decrease</param>
+		public void CourtNumberChange(bool up = true)
+		{
+			CourtNumber += up ? 1 : -1;
+		}
+
+		public void SpielgruppeChange(bool up = true)
+		{
+			Spielgruppe += up ? 1 : -1;
+		}
+
+		public void NetworkOnOffChange()
+		{
+			Networking = !Networking;
+		}
+
+		private bool _networking;
+		public bool Networking
+		{
+			get => _networking;
+			set
+			{
+				if (_networking == value) return;
+				SetSaveProperty(ref _networking, value, nameof(Networking));
+				if (value)
+				{
+					//todo: implement network connection
+				}
+			}
+		}
+
+
+		private int _spielgruppe;
+		public int Spielgruppe
+		{
+			get { return _spielgruppe; }
+			set
+			{
+				if (_spielgruppe == value ||
+					value < 0 ||
+					value > 10)
+					return;
+
+				SetSaveProperty(ref _spielgruppe, value, nameof(Spielgruppe));
+			}
+		}
+
+		private int _courtNumber;
+		/// <summary>
+		/// Number of the Course
+		/// </summary>
+		public int CourtNumber
+		{
+			get { return _courtNumber; }
+			set
+			{
+				if (_courtNumber == value ||
+						  value < 1 ||
+						  value > 99)
+					return;
+
+				SetSaveProperty(ref _courtNumber, value, nameof(CourtNumber));
+			}
+		}
+
+
+		private bool SetSaveProperty<T>(ref T storage, T value, string propertyName)
+		{
+			if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+
+			storage = value;
+
+			//todo: SetSaveProperty needs to be implemented
+			//var localSettings = ApplicationData.Current.LocalSettings;
+			//localSettings.Values[propertyName] = value.ToString();
+
+			return true;
+		}
+
+		internal void PublishSettings()
+		{
+			//todo: implement function to publish settings 
 		}
 	}
 	public class ColorScheme : INotifyPropertyChanged
@@ -106,8 +194,8 @@ namespace StockTvBlazor.Components.Models
 			//todo: Load needs to be implemented
 			// var localSettings = ApplicationData.Current.LocalSettings;
 
-			var colorschema = "1";	// localSettings.Values[nameof(ColorModus)] as string;
-			var nextbahn = "1";		// localSettings.Values[nameof(NextBahnModus)] as string;
+			var colorschema = "1";  // localSettings.Values[nameof(ColorModus)] as string;
+			var nextbahn = "1";     // localSettings.Values[nameof(NextBahnModus)] as string;
 
 			return new ColorScheme(
 				colorschema.ToEnum<ColorScheme.ColorModis>(),

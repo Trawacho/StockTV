@@ -1,21 +1,17 @@
-﻿using StockTvBlazor.Components.Models;
+﻿using Microsoft.AspNetCore.Components;
+using StockTvBlazor.Components.Models;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace StockTvBlazor.Components.ViewModels
 {
-	public abstract class BaseViewModel : INotifyPropertyChanged
+	public abstract class BaseViewModel(Models.Settings settings, NavigationManager navigationManager) : INotifyPropertyChanged
 	{
-		protected BaseViewModel(Models.Settings settings)
-		{
-			_settings = settings;
-			_match = new Models.Match(settings);
-		}
-
 		private int _inputValue;
 		private int _specialCounter;
-		private readonly Models.Match _match;
-		protected readonly Models.Settings _settings;
+		private readonly Models.Match _match = new(settings);
+		protected readonly Models.Settings _settings = settings;
+		private readonly NavigationManager _navigationManager = navigationManager;
 
 		public event PropertyChangedEventHandler? PropertyChanged;
 		internal void RaisePropertyChange([CallerMemberName] string? propertyname = null)
@@ -122,7 +118,23 @@ namespace StockTvBlazor.Components.ViewModels
 			_match.DeleteLastTurn();
 		}
 
-		public void GetScanCode(string value)
+		private protected void ShowSpecialPage()
+		{
+			if (_specialCounter < 5) return;
+			_specialCounter = 0;
+
+			if (_inputValue == 0)
+			{
+				_navigationManager.NavigateTo("/config");
+
+			}
+			else if (_inputValue == 10)
+			{
+				//NavigateTo(typeof(Pages.MarketingPage));
+			}
+
+		}
+		public void ProcessKey(string value)
 		{
 
 			//Settings Or Marekting SpecialCounter
@@ -178,7 +190,7 @@ namespace StockTvBlazor.Components.ViewModels
 					break;
 
 				case "Enter":    // Enter
-								 // ShowSpecialPage(_inputValue);
+					ShowSpecialPage();
 					break;
 
 				case "*":    // *                    --> GRÜN

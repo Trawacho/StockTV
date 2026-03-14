@@ -1,4 +1,6 @@
-﻿namespace StockTvBlazor.Components.Models
+﻿using System.Text.RegularExpressions;
+
+namespace StockTvBlazor.Components.Models
 {
 	public class Game
 	{
@@ -16,11 +18,11 @@
 				return _turns;
 			}
 		}
-		public int GameNumber { get; }
+		internal int GameNumber { get; }
 
 		private readonly Settings _settings;
 
-		public int GamePointsLeft
+		internal int GamePointsLeft
 		{
 			get
 			{
@@ -41,7 +43,8 @@
 				}
 			}
 		}
-		public int GamePointsRight
+
+		internal int GamePointsRight
 		{
 			get
 			{
@@ -64,7 +67,7 @@
 
 		}
 
-		private int LeftPointsSum
+		internal int LeftPointsSum
 		{
 			get
 			{
@@ -72,11 +75,41 @@
 			}
 		}
 
-		private int RightPointsSum
+		internal int RightPointsSum
 		{
 			get
 			{
 				return Turns.Sum(t => t.PointsRight);
+			}
+		}
+
+		internal string LeftPoints
+		{
+			get
+			{
+				string temp = string.Empty;
+				foreach (var item in Turns.OrderBy(x => x.TurnNumber))
+				{
+					temp += String.IsNullOrEmpty(temp) ? "" : "-";
+					temp += $"{item.PointsLeft}";
+				}
+
+				return temp;
+			}
+		}
+
+		internal string RightPoints
+		{
+			get
+			{
+				string temp = string.Empty;
+				foreach (var item in Turns.OrderBy(x => x.TurnNumber))
+				{
+					temp += String.IsNullOrEmpty(temp) ? "" : "-";
+					temp += $"{item.PointsRight}";
+				}
+
+				return temp;
 			}
 		}
 

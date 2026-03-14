@@ -1,0 +1,170 @@
+﻿@page "/config"
+@using StockTvBlazor.Components.Models
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Components.Web
+@rendermode InteractiveServer
+@inject StockTvBlazor.Components.Models.Settings Settings
+@inject NavigationManager NavigationManager
+
+<div class="main-grid" @onkeydown="HandleGlobalKeyDown" @onkeydown:stopPropagation  tabindex="0" style="outline:none;" @ref="inputRef">
+
+    <div class="header-text">Configuration</div>
+
+    <div class="settings-list">
+        <!-- Each row: icon | value | label -->
+        <div class="setting-row">
+            <div class="icon">@(Model.IsColorSchemeActive ? "▶" : "")</div>
+            <div class="value">@Model.ColorSchemeValue</div>
+            <div class="label">Farbmodus</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsColorSchemeRightToLeftActive ? "▶" : "")</div>
+            <div class="value">@Model.RightToLeftValue</div>
+            <div class="label">Richtung (links/rechts)</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsGameMousActive ? "▶" : "")</div>
+            <div class="value">@Model.GameModusValue</div>
+            <div class="label">Spielmodus</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsMaxPointsPerTurnActive ? "▶" : "")</div>
+            <div class="value">@Model.MaxPointsPerTurnValue</div>
+            <div class="label">Max Punkte pro Kehre</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsMaxCountOfTurnsPerGameActive ? "▶" : "")</div>
+            <div class="value">@Model.MaxCountOfTurnsPerGameValue</div>
+            <div class="label">Kehren pro Spiel</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsCourtNumberActive ? "▶" : "")</div>
+            <div class="value">@Model.CourtNumberValue</div>
+            <div class="label">Bahnnr.</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsSpielgruppeActive ? "▶" : "")</div>
+            <div class="value">@Model.SpielgruppeValue</div>
+            <div class="label">Spielgruppe</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(Model.IsNetworkingActive ? "▶" : "")</div>
+            <div class="value">@Model.NetworkingValue</div>
+            <div class="label">Netzwerk</div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: white;
+    }
+
+    /* Haupt-Layout: 3 Spalten (Icon | Value | Label) */
+    .main-grid {
+        background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
+        display: grid;
+        /* left narrow icon, middle value, right label */
+        grid-template-columns: 4rem 1fr 40%;
+        grid-template-rows: auto 1fr; /* header + content */
+        position: fixed;
+        inset: 0;
+        height: 100vh;
+        width: 100vw;
+        box-sizing: border-box;
+        gap: 0;
+        padding: 1rem;
+    }
+
+    .header-text {
+        grid-column: 1 / span 3;
+        font-size: 2rem;
+        font-weight: 700;
+        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        padding-bottom: 1rem;
+    }
+
+    .settings-list {
+        grid-column: 1 / span 3;
+        display: grid;
+        grid-template-columns: 4rem 1fr 40%;
+        grid-auto-rows: minmax(3rem, auto);
+        row-gap: 0.5rem;
+        align-items: center;
+    }
+
+    .setting-row {
+        display: contents; /* allow children to participate in parent grid columns */
+    }
+
+    .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        font-size: 1.25rem;
+    }
+
+    .value {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 1rem;
+        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 1rem;
+        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        font-size: 1.25rem;
+    }
+
+</style>
+
+@code {
+    private ElementReference inputRef;
+    private void SetClicked()
+    {
+        Debug.WriteLine("Configuration: SetClicked invoked");
+        StateHasChanged();
+    }
+
+    public ConfigurationViewModel Model { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Model = new ConfigurationViewModel(Settings, NavigationManager);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await inputRef.FocusAsync();
+        }
+    }
+    public void HandleGlobalKeyDown(KeyboardEventArgs e)
+    {
+        Debug.WriteLine($"Key pressed: {e.Key} - {e.Code}");
+        Model.ProcessKey(e.Key);
+        StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
+    }
+
+
+}

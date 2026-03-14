@@ -1,6 +1,5 @@
-﻿@page "/training"
+﻿@page "/turnier"
 @using StockTvBlazor.Components.Models
-@using System.Diagnostics
 @rendermode InteractiveServer
 @inject StockTvBlazor.Components.Models.Settings Settings
 @inject NavigationManager NavigationManager
@@ -144,26 +143,27 @@
 </style>
 
 @code {
-    private ElementReference inputRef;
+	private ElementReference inputRef;
 
-    public TrainingViewModel Model { get; set; } = default!;
+	public TrainingViewModel Model { get; set; } = default!;
 
-    protected override void OnInitialized()
-    {
-        Model = new TrainingViewModel(Settings, NavigationManager);
-    }
+	protected override void OnInitialized()
+	{
+		Model = new TrainingViewModel(Settings, NavigationManager);
+	}
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
 		{
 			await inputRef.FocusAsync();
 		}
 	}
 	private void HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		Debug.WriteLine($"Key pressed: {e.Key} - {e.Code}");
 		Model.ProcessKey(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}
+
+
 }

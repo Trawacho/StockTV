@@ -61,7 +61,7 @@
 
 		public void AddTurn(Turn turn)
 		{
-			turn.TurnNmber = Convert.ToByte(CurrentGame.Turns.Count + 1);
+			turn.TurnNumber = Convert.ToByte(CurrentGame.Turns.Count + 1);
 
 			if (_settings.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
 			{

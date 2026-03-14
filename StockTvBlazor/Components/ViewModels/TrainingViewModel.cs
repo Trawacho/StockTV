@@ -1,4 +1,6 @@
-﻿using StockTvBlazor.Components.Models;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
+using StockTvBlazor.Components.Models;
 
 namespace StockTvBlazor.Components.ViewModels
 {
@@ -8,7 +10,7 @@ namespace StockTvBlazor.Components.ViewModels
 		private int _inputValue;
 
 
-		public TrainingViewModel(Models.Settings settings) : base(settings)
+		public TrainingViewModel(Models.Settings settings, NavigationManager navigationManager) : base(settings, navigationManager)
 		{
 			_inputValue = -1;
 			Match.TurnsChanged += Match_TurnsChanged;
@@ -21,11 +23,11 @@ namespace StockTvBlazor.Components.ViewModels
 				//todo: implement broadcasting
 				if (_settings.MessageVersion == 0)
 				{
-					//_settings.PublishGameResult(m.Serialize());
+					_settings.PublishGameResult(m.Serialize());
 				}
 				else if (_settings.MessageVersion == 1)
 				{
-					//_settings.PublishGameResult(m.SerializeJson());
+					_settings.PublishGameResult(m.SerializeJson());
 				}
 			}
 		}
@@ -61,8 +63,10 @@ namespace StockTvBlazor.Components.ViewModels
 				}
 			}
 		}
-		public int LeftPointsSum => base.Match.CurrentGame.Turns.Sum(t => t.PointsLeft);
-		public int RightPointsSum => base.Match.CurrentGame.Turns.Sum(t => t.PointsRight);
+		public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
+		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
+		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
+		public string RightPoints => base.Match.CurrentGame.RightPoints;
 		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
 		public void AddInput(int value)
 		{
