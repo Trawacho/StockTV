@@ -206,6 +206,28 @@ namespace StockTvBlazor.Components.Services
 				Console.WriteLine($"Fehler beim Speichern der Config: {ex.Message}");
 			}
 		}
+
+		internal async Task SaveTurns(List<Turn> turns)
+		{
+			if (_settings.Modus == Settings.MODUS.TRAINING)
+			{
+				// Im Trainingsmodus werden die Kehren nicht gespeichert, da sie nur temporär sind
+				return;
+			}
+			_settings.Kehren.Clear();
+			_settings.Kehren.AddRange(turns);
+			await SaveSettingsAsync();
+		}
+
+		internal List<ITurn> LoadTurns()
+		{
+			// Im Trainingsmodus werden die Kehren nicht geladen, da sie nur temporär sind
+			if (_settings.Modus == Settings.MODUS.TRAINING)
+				return new List<ITurn>();
+
+			LoadSettings();
+			return _settings.Kehren;
+		}
 		#endregion
 
 	}

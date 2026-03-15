@@ -10,7 +10,7 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 	private int _inputValue;
 	private int _specialCounter;
-	private readonly Models.Match _match = new(settingsService.CurrentSettings);
+	private readonly Models.Match _match = new(settingsService);
 	protected readonly Settings _currentSettings = settingsService.CurrentSettings;
 	private readonly NavigationManager _navigationManager = navigationManager;
 

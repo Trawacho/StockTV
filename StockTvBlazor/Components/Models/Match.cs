@@ -1,24 +1,24 @@
-﻿namespace StockTvBlazor.Components.Models;
+﻿using StockTvBlazor.Components.Services;
+
+namespace StockTvBlazor.Components.Models;
 
 public class Match
 {
 	private readonly List<Game> _games = [];
 
 	public event Action? OnMatchChanged;
-	protected void RaiseTurnsChanged()
+
+
+	private Settings _settings => _settingsService.CurrentSettings;
+	private readonly SettingsService _settingsService;
+
+	public Match(SettingsService settingsService)
 	{
-		OnMatchChanged?.Invoke();
+		_settingsService = settingsService;
+		_games.Add(new Game(_settingsService, 1));
 		LoadTurnsFromLocalSettings();
 	}
 
-	private readonly Settings _configuration;
-
-	public Match(Settings settings)
-	{
-		_configuration = settings;
-		_games.Add(new Game(settings, 1));
-	}
-	
 	public IEnumerable<Game> Games => _games;
 
 	public Game CurrentGame
@@ -26,7 +26,7 @@ public class Match
 		get
 		{
 			if (_games.Count == 0)
-				_games.Add(new Game(_configuration, 1));
+				_games.Add(new Game(_settingsService, 1));
 
 			return _games.Last();
 		}
@@ -39,15 +39,15 @@ public class Match
 	public List<Begegnung> Begegnungen { get; set; } = [];
 
 
-	public void AddTurn(Turn turn)
+	public void AddTurn(ITurn turn)
 	{
 		turn.TurnNumber = CurrentGame.Turns.Count + 1;
 
-		if (_configuration.MaxKehrenProSpiel > CurrentGame.Turns.Count)
+		if (_settings.MaxKehrenProSpiel > CurrentGame.Turns.Count)
 		{
 			CurrentGame.Turns.Add(turn);
 			SaveTurnsToLocalSettings();
-			RaiseTurnsChanged();
+			OnMatchChanged?.Invoke();
 		}
 	}
 
@@ -63,7 +63,7 @@ public class Match
 		}
 
 		SaveTurnsToLocalSettings();
-		RaiseTurnsChanged();
+		OnMatchChanged?.Invoke();
 	}
 
 	public void Reset(bool force = false)
@@ -72,19 +72,19 @@ public class Match
 		{
 			this.Begegnungen.Clear();
 			this._games.Clear();
-			this._games.Add(new Game(_configuration, 1));
+			this._games.Add(new Game(_settingsService, 1));
 			SaveTurnsToLocalSettings();
-			RaiseTurnsChanged();
+			OnMatchChanged?.Invoke();
 			return;
 		}
 
 
-		if (_configuration.Modus == Settings.MODUS.TURNIER ||
-			_configuration.Modus == Settings.MODUS.BESTOF)
+		if (_settings.Modus == Settings.MODUS.TURNIER ||
+			_settings.Modus == Settings.MODUS.BESTOF)
 		{
-			if (CurrentGame.Turns.Count == _configuration.MaxKehrenProSpiel)
+			if (CurrentGame.Turns.Count == _settings.MaxKehrenProSpiel)
 			{
-				_games.Add(new Game(_configuration, Convert.ToByte(_games.Count + 1)));
+				_games.Add(new Game(_settingsService, Convert.ToByte(_games.Count + 1)));
 			}
 		}
 		else
@@ -93,25 +93,30 @@ public class Match
 		}
 
 		SaveTurnsToLocalSettings();
-		RaiseTurnsChanged();
+		OnMatchChanged?.Invoke();
 	}
 
-	private void SaveTurnsToLocalSettings()
+	private async void SaveTurnsToLocalSettings()
 	{
-		//todo: Implement Save to localsettings
-		return;
+		var allTurns = Games.SelectMany(g => g.Turns).OfType<Turn>().ToList();
+		await _settingsService.SaveTurns(allTurns);
 	}
 
 	private void LoadTurnsFromLocalSettings()
 	{
-			//todo: Implement Save to localsettings
-		return;
+		//todo: Aktuell das Problem, dass die Kehren beim hinzufügen die Liste ändern
+		var allTurns = _settingsService.CurrentSettings.Kehren;
+		//foreach (var turn in allTurns)
+		//{
+		//	AddTurn(turn);
+		//	Reset();
+		//}
 	}
 
 	internal object? Serialize()
 	{
 		//todo: implement Serialization
-		return null;	
+		return null;
 	}
 
 	internal object? SerializeJson()
