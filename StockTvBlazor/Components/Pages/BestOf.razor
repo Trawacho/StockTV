@@ -145,11 +145,11 @@
 @code {
 	private ElementReference inputRef;
 
-	public TrainingViewModel Model { get; set; } = default!;
+	public BestOfViewModel Model { get; set; } = default!;
 
 	protected override void OnInitialized()
 	{
-		Model = new TrainingViewModel(Settings, NavigationManager);
+		Model = new BestOfViewModel(Settings, NavigationManager);
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

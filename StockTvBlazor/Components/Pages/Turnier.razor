@@ -145,11 +145,11 @@
 @code {
 	private ElementReference inputRef;
 
-	public TrainingViewModel Model { get; set; } = default!;
+	public TurnierViewModel Model { get; set; } = default!;
 
 	protected override void OnInitialized()
 	{
-		Model = new TrainingViewModel(Settings, NavigationManager);
+		Model = new TurnierViewModel(Settings, NavigationManager);
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -21,7 +21,7 @@ namespace StockTvBlazor.Components.Models
 		public string SpielgruppeLetter { get; internal set; } = "";
 		public bool BlockLocalChanges { get; internal set; }
 
-		internal void PublishGameResult(object value)
+		internal void PublishGameResult(object? value)
 		{
 			//todo: implement function to publish game result
 		}

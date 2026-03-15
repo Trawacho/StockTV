@@ -26,30 +26,12 @@ namespace StockTvBlazor.Components.ViewModels
 		{
 			switch (value)
 			{
-
-				case "+":    // Enter
-					ExitSettingsPage();
-					break;
-				case "8":    // Up
-				case "ArrowUp":
-					GoToPreviousSettings();
-					break;
-				case "2":    // Down
-				case "ArrowDown":
-					GotToNextSettings();
-					break;
-				case "4":    // Left
-				case "ArrowLeft":
-					DecreaseCurrentSetting();
-					break;
-				case "6":    // Right
-				case "ArrowRight":
-					IncreaseCurrentSetting();
-					break;
-				default:
-					break;
+				case "+":					ExitSettingsPage();			break;
+				case "8" or "ArrowUp":		GoToPreviousSettings();		break;
+				case "2" or "ArrowDown":	GotToNextSettings();		break;
+				case "4" or "ArrowLeft":	DecreaseCurrentSetting();	break;
+				case "6" or "ArrowRight":	IncreaseCurrentSetting();	break;
 			}
-
 		}
 
 		private void IncreaseCurrentSetting()

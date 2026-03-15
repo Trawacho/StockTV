@@ -29,34 +29,8 @@ namespace StockTvBlazor.Components.ViewModels
 		}
 		protected Models.Match Match { get { return _match; } }
 		protected int InputValue => _inputValue;
-		protected void SpecialCounterIncrease()
-		{
-			_specialCounter++;
-		}
-		protected void SpecialCounterReset()
-		{
-			_specialCounter = 0;
-		}
-
-		private void AddInput(int value)
-		{
-			if (_inputValue < 0)
-			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-			}
-			else if ((_inputValue * 10) + value <= _settings.GameSettings.PointsPerTurn)
-			{
-				_inputValue = Convert.ToSByte((_inputValue * 10) + value);
-			}
-			else
-			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-				else
-					_inputValue = -1;
-			}
-		}
+		protected void SpecialCounterIncrease() => _specialCounter++;
+		protected void SpecialCounterReset() => _specialCounter = 0;
 
 		private void AddToGreen()
 		{
@@ -130,10 +104,27 @@ namespace StockTvBlazor.Components.ViewModels
 			}
 			else if (_inputValue == 10)
 			{
+				//todo: implement marketing page navigation
 				//NavigateTo(typeof(Pages.MarketingPage));
 			}
 
 		}
+
+		public void AddInput(int value)
+		{
+			int newValue = (_inputValue < 0) ? value : (_inputValue * 10) + value;
+			int maxPoints = _settings.GameSettings.PointsPerTurn;
+
+			if (newValue <= maxPoints)
+			{
+				_inputValue = newValue;
+			}
+			else
+			{
+				_inputValue = (value <= maxPoints) ? value : -1;
+			}
+		}
+
 		public void ProcessKey(string value)
 		{
 
@@ -159,107 +150,37 @@ namespace StockTvBlazor.Components.ViewModels
 				}
 			}
 
-
-			/*
-             * ScanCode of KeyPad
-             * ScanCode: 69 NumberKeyLock
-             * ScanCode: 82 0
-             * ScanCode: 79 1
-             * ScanCode: 80 2
-             * ScanCode: 81 3
-             * ScanCode: 75 4
-             * ScanCode: 76 5
-             * ScanCode: 77 6
-             * ScanCode: 71 7
-             * ScanCode: 72 8
-             * ScanCode: 73 9
-             * ScanCode: 53 /                   --> ROT
-             * ScanCode: 55 *                   --> GRÜN
-             * ScanCode: 74 -                   --> BLAU
-             * ScanCode: 78 +                   --> GELB
-             * ScanCode: 28 Enter
-             * ScanCode: 83 ,
-             * ScanCode: 14 BackSpace           --> ROT
-             *
-             */
-
 			switch (value)
 			{
-				case "NumLock":    // NumLock
-				case ",":    // ,
-					break;
+				case "Enter":				ShowSpecialPage();	break;
+				case "*":					AddToGreen();		break;
+				case "-":					DeleteLastTurn();	break;
+				case "/" or "Backspace":	AddToRed();			break;
+				case "+":					Reset();			break;
 
-				case "Enter":    // Enter
-					ShowSpecialPage();
-					break;
+				default:
+					int? input = value switch
+					{
+						"1" or "End" =>			1,
+						"2" or "ArrowDown" =>	2,
+						"3" or "PageDown" =>	3,
+						"4" or "ArrowLeft" =>	4,
+						"5" or "Clear" =>		5,
+						"6" or "ArrowRight" =>	6,
+						"7" or "Home" =>		7,
+						"8" or "ArrowUp" =>		8,
+						"9" or "PageUp" =>		9,
+						"0" or "Insert" =>		0,
+						_ => null
+					};
 
-				case "*":    // *                    --> GRÜN
-					AddToGreen();
+					if (input.HasValue) AddInput(input.Value);
 					break;
-
-				case "-":    // -                    --> BLAU
-					DeleteLastTurn();
-					break;
-
-				case "/":    // /                    --> ROT
-				case "Backspace":    // BackSpace
-					AddToRed();
-					break;
-
-				case "+":    // +                    --> GELB
-					Reset();
-					break;
-
-
-				#region Numbers 1 to 0
-
-				case "1":
-					//MyWertung.InputText = "1";
-					AddInput(1);
-					break;
-				case "2":
-					//MyWertung.InputText = "2";
-					AddInput(2);
-					break;
-				case "3":
-					//MyWertung.InputText = "3";
-					AddInput(3);
-					break;
-				case "4":
-					//MyWertung.InputText = "4";
-					AddInput(4);
-					break;
-				case "5":
-					//MyWertung.InputText = "5";
-					AddInput(5);
-					break;
-				case "6":
-					//MyWertung.InputText = "6";
-					AddInput(6);
-					break;
-				case "7":
-					//MyWertung.InputText = "7";
-					AddInput(7);
-					break;
-				case "8":
-					//MyWertung.InputText = "8";
-					AddInput(8);
-					break;
-				case "9":
-					//MyWertung.InputText = "9";
-					AddInput(9);
-					break;
-				case "0":
-					//MyWertung.InputText = "0";
-					AddInput(0);
-					break;
-
-				#endregion
 			}
 
 			RaiseAllPropertysChanged();
 
-			// Send after each key press a network notification
+			//todo: Send after each key press a network notification
 			//if (Settings.IsBroadcasting)
 			//{
 			//	if (Settings.MessageVersion == 0)

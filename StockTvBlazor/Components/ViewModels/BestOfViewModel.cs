@@ -34,7 +34,6 @@ namespace StockTvBlazor.Components.ViewModels
 		{
 			get
 			{
-
 				if (Match.CurrentGame.GameNumber == 1 &&
 					Match.CurrentGame.Turns.Count == 0)
 				{
@@ -53,24 +52,6 @@ namespace StockTvBlazor.Components.ViewModels
 		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 		public string RightPoints => base.Match.CurrentGame.RightPoints;
 		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
-		public void AddInput(int value)
-		{
-			if (_inputValue < 0)
-			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-			}
-			else if ((_inputValue * 10) + value <= _settings.GameSettings.PointsPerTurn)
-			{
-				_inputValue = Convert.ToSByte((_inputValue * 10) + value);
-			}
-			else
-			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-				else
-					_inputValue = -1;
-			}
-		}
+		
 	}
 }

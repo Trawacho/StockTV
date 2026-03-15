@@ -1,144 +1,124 @@
-﻿namespace StockTvBlazor.Components.Models
+﻿namespace StockTvBlazor.Components.Models;
+
+public class Match
 {
-	public class Match
+	private readonly List<Game> _games = [];
+
+	public event EventHandler? TurnsChanged;
+	protected void RaiseTurnsChanged()
 	{
-		public event EventHandler? TurnsChanged;
-		protected void RaiseTurnsChanged()
+		TurnsChanged?.Invoke(this, EventArgs.Empty);
+		LoadTurnsFromLocalSettings();
+	}
+
+	private readonly Settings _settings;
+
+	public Match(Settings settings)
+	{
+		_settings = settings;
+		_games.Add(new Game(settings, 1));
+
+	}
+	
+	public IEnumerable<Game> Games => _games;
+
+	public Game CurrentGame
+	{
+		get
 		{
-			TurnsChanged?.Invoke(this, EventArgs.Empty);
-			//todo: implement Load Settings
-			//LoadTurnsFromLocalSettings();
+			if (_games.Count == 0)
+				_games.Add(new Game(_settings, 1));
+
+			return _games.Last();
 		}
+	}
 
-		private readonly Settings _settings;
+	public int MatchPointsLeft => _games.Sum(g => g.GamePointsLeft);
 
-		public Match(Settings settings)
+	public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
+
+	public List<Begegnung> Begegnungen { get; set; } = [];
+
+
+	public void AddTurn(Turn turn)
+	{
+		turn.TurnNumber = Convert.ToByte(CurrentGame.Turns.Count + 1);
+
+		if (_settings.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
 		{
-			_settings = settings;
-			_games.Add(new Game(settings, 1));
-
-		}
-
-		private readonly List<Game> _games = [];
-		public IEnumerable<Game> Games
-		{
-			get
-			{
-				return _games;
-			}
-		}
-
-		public Game CurrentGame
-		{
-			get
-			{
-				if (_games.Count == 0)
-				{
-					_games.Add(new Game(_settings, 1));
-				}
-				return _games.Last();
-			}
-		}
-
-		public int MatchPointsLeft
-		{
-			get
-			{
-				return _games.Sum(g => g.GamePointsLeft);
-			}
-		}
-
-		public int MatchPointsRight
-		{
-			get
-			{
-				return _games.Sum(g => g.GamePointsRight);
-			}
-		}
-
-		public List<Begegnung> Begegnungen { get; set; } = [];
-
-
-		public void AddTurn(Turn turn)
-		{
-			turn.TurnNumber = Convert.ToByte(CurrentGame.Turns.Count + 1);
-
-			if (_settings.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
-			{
-				CurrentGame.Turns.Add(turn);
-				//todo: implement Save to local Settings
-				//SaveTurnsToLocalSettings();
-				RaiseTurnsChanged();
-			}
-		}
-
-		public void DeleteLastTurn()
-		{
-			if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
-			{
-				_games.RemoveAt(_games.Count - 1);
-			}
-			else
-			{
-				CurrentGame.DeleteLastTurn();
-			}
-
-			//todo: implement Save to local Settings
-			//SaveTurnsToLocalSettings();
+			CurrentGame.Turns.Add(turn);
+			SaveTurnsToLocalSettings();
 			RaiseTurnsChanged();
 		}
+	}
 
-		public void Reset(bool force = false)
+	public void DeleteLastTurn()
+	{
+		if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
 		{
-			if (force)
-			{
-				this.Begegnungen.Clear();
-				this._games.Clear();
-				this._games.Add(new Game(_settings, 1));
-				//todo: implement Save to local Settings
-				//SaveTurnsToLocalSettings();
-				RaiseTurnsChanged();
-				return;
-			}
+			_games.RemoveAt(_games.Count - 1);
+		}
+		else
+		{
+			CurrentGame.DeleteLastTurn();
+		}
 
+		SaveTurnsToLocalSettings();
+		RaiseTurnsChanged();
+	}
 
-			if (_settings.GameSettings.GameModus == GameSettings.GameModis.Turnier ||
-				_settings.GameSettings.GameModus == GameSettings.GameModis.BestOf)
-			{
-				if (CurrentGame.Turns.Count == _settings.GameSettings.TurnsPerGame)
-				{
-					_games.Add(new Game(_settings, Convert.ToByte(_games.Count + 1)));
-				}
-			}
-			else
-			{
-				CurrentGame.Turns.Clear();
-			}
-
-			//todo: implement Save to local Settings
-			//SaveTurnsToLocalSettings();
+	public void Reset(bool force = false)
+	{
+		if (force)
+		{
+			this.Begegnungen.Clear();
+			this._games.Clear();
+			this._games.Add(new Game(_settings, 1));
+			SaveTurnsToLocalSettings();
 			RaiseTurnsChanged();
+			return;
 		}
 
-		private void SaveTurnsToLocalSettings()
+
+		if (_settings.GameSettings.GameModus == GameSettings.GameModis.Turnier ||
+			_settings.GameSettings.GameModus == GameSettings.GameModis.BestOf)
 		{
-			throw new NotImplementedException();
+			if (CurrentGame.Turns.Count == _settings.GameSettings.TurnsPerGame)
+			{
+				_games.Add(new Game(_settings, Convert.ToByte(_games.Count + 1)));
+			}
+		}
+		else
+		{
+			CurrentGame.Turns.Clear();
 		}
 
-		private void LoadTurnsFromLocalSettings()
-		{
-			throw new NotImplementedException();
-		}
+		SaveTurnsToLocalSettings();
+		RaiseTurnsChanged();
+	}
 
-		internal object Serialize()
-		{
-			throw new NotImplementedException();
-		}
+	private void SaveTurnsToLocalSettings()
+	{
+		//todo: Implement Save to localsettings
+		return;
+	}
 
-		internal object SerializeJson()
-		{
-			throw new NotImplementedException();
-		}
+	private void LoadTurnsFromLocalSettings()
+	{
+			//todo: Implement Save to localsettings
+		return;
+	}
+
+	internal object? Serialize()
+	{
+		//todo: implement Serialization
+		return null;	
+	}
+
+	internal object? SerializeJson()
+	{
+		//todo: implement Serialization
+		return null;
 	}
 }
 

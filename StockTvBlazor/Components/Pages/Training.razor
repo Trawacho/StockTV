@@ -7,28 +7,19 @@
 
 <div class="main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
-	<!-- Linke Spalte -->
-	<div class="sidebar-left">Links</div>
+	<div class="header-text">@Model.HeaderText</div>
 
-	<!-- Mittlere Spalte mit 3 Zeilen -->
-	<div class="center-column">
-		<div class="header-text">@Model.HeaderText</div>
-
-		<div class="row-2 sub-grid">
-			<div class="left-point-sum">@Model.LeftPointsSum</div>
-			<div class="seperator">:</div>
-			<div class="right-point-sum">@Model.RightPointsSum</div>
-		</div>
-
-		<div class="row-3 sub-grid">
-			<div class="left-points">@Model.LeftPoins</div>
-			<div class="input-value">@Model.InputValue</div>
-			<div class="right-points">@Model.RightPoints</div>
-		</div>
+	<div class="row-2 sub-grid">
+		<div class="left-point-sum">@Model.LeftPointsSum</div>
+		<div class="seperator">:</div>
+		<div class="right-point-sum">@Model.RightPointsSum</div>
 	</div>
 
-	<!-- Rechte Spalte -->
-	<div class="sidebar-right">Rechts</div>
+	<div class="row-3 sub-grid">
+		<div class="left-points">@Model.LeftPoins</div>
+		<div class="input-value">@Model.InputValue</div>
+		<div class="right-points">@Model.RightPoints</div>
+	</div>
 
 </div>
 
@@ -44,20 +35,11 @@
 	.main-grid {
 		background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
 		display: grid;
-		grid-template-columns: 3vw 1fr 3vw;
+		grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
 		position: fixed;
 		inset: 0;
 		height: 100vh;
 		width: 100vw;
-		/* gap: 10px; */
-	}
-
-	/* Mittlere Spalte: Unterteilung in 3 Zeilen */
-	.center-column {
-		display: grid;
-		grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
-		height: 100vh;
-		/* gap: 10px; */
 	}
 
 	/* Die Sub-Grids für Zeile 2 und 3: Jeweils 3 Spalten */
@@ -67,39 +49,6 @@
 		gap: 5px;
 		align-items: center;
 		text-align: center;
-	}
-
-	.sidebar-left, .sidebar-right {
-		display: grid;
-		place-items: center; /* Zentriert den Text exakt mittig */
-		height: 100vh; /* Füllt die volle Bildschirmhöhe */
-		width: 3vw; /* Füllt die volle Spaltenbreite */
-		overflow: hidden; /* Verhindert Überlaufen */
-		/* SCHRIFT-LOGIK */
-		/* Da die Spalte 3vw breit ist, nehmen wir fast 3vw als Schriftgröße */
-		font-size: 2.8vw;
-		font-weight: 900; /* Extra fett für maximale Füllung */
-		white-space: nowrap; /* Text darf NIEMALS umbrechen */
-		text-transform: uppercase; /* Großbuchstaben wirken oft "blockiger" und füllender */
-		line-height: 1; /* Kein zusätzlicher Zeilenabstand */
-	}
-
-	/* Optik zur Verdeutlichung */
-	/* Linke Sidebar: Text von unten nach oben (90° gegen den Uhrzeigersinn) */
-	.sidebar-left {
-		grid-column: 1;
-		grid-row: 1 / span 3;
-		writing-mode: vertical-rl;
-		transform: rotate(180deg);
-		/* Ergebnis: Text liest sich von unten nach oben */
-	}
-
-	/* Rechte Sidebar: Text von oben nach unten */
-	.sidebar-right {
-		grid-column: 3;
-		grid-row: 1 / span 3;
-		writing-mode: vertical-rl;
-		/* Ergebnis: Text liest sich von oben nach unten */
 	}
 
 	.header-text {
@@ -144,25 +93,24 @@
 </style>
 
 @code {
-    private ElementReference inputRef;
+	private ElementReference inputRef;
 
-    public TrainingViewModel Model { get; set; } = default!;
+	public TrainingViewModel Model { get; set; } = default!;
 
-    protected override void OnInitialized()
-    {
-        Model = new TrainingViewModel(Settings, NavigationManager);
-    }
+	protected override void OnInitialized()
+	{
+		Model = new TrainingViewModel(Settings, NavigationManager);
+	}
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
 		{
 			await inputRef.FocusAsync();
 		}
 	}
 	private void HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		Debug.WriteLine($"Key pressed: {e.Key} - {e.Code}");
 		Model.ProcessKey(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}

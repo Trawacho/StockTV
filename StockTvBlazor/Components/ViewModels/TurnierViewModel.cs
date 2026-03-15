@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Components.ViewModels
 {
@@ -33,7 +34,6 @@ namespace StockTvBlazor.Components.ViewModels
 		{
 			get
 			{
-
 				if (Match.CurrentGame.GameNumber == 1 &&
 					Match.CurrentGame.Turns.Count == 0)
 				{
@@ -48,33 +48,38 @@ namespace StockTvBlazor.Components.ViewModels
 				else
 					return $"T {(_settings.BlockLocalChanges ? "." : "")}Bahn: {_settings.SpielgruppeLetter}-{_settings.CourtNumber}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
 
-
 			}
 		}
 		public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
 		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
 		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 		public string RightPoints => base.Match.CurrentGame.RightPoints;
-		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
-		public void AddInput(int value)
+
+		public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
+		public string LeftTeamName
 		{
-			if (_inputValue < 0)
+			get
 			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-			}
-			else if ((_inputValue * 10) + value <= _settings.GameSettings.PointsPerTurn)
-			{
-				_inputValue = Convert.ToSByte((_inputValue * 10) + value);
-			}
-			else
-			{
-				if (value <= _settings.GameSettings.PointsPerTurn)
-					_inputValue = value;
-				else
-					_inputValue = -1;
+					return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+											?.TeamNameLeft(_settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Left)
+											?? string.Empty;
 			}
 		}
+
+		public string RightTeamName
+		{
+			get
+			{
+				return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+										?.TeamNameRight(_settings.ColorScheme.NextBahnModus == ColorScheme.NextBahnModis.Right)
+										?? string.Empty;
+			}
+		}
+
+		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
+
+	
+		
 	}
 }
 

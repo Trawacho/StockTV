@@ -21,14 +21,14 @@
 		private readonly string _mannschaft_A;
 		private readonly string _mannschaft_B;
 
-		public string TeamNameLeft(bool colorSchemeRightToLeft)
+		public string TeamNameLeft(bool isColorSchemeRightToLeft)
 		{
-			return colorSchemeRightToLeft ? _mannschaft_B : _mannschaft_A;
+			return isColorSchemeRightToLeft ? _mannschaft_B : _mannschaft_A;
 		}
 
-		public string TeamNameRight(bool colorSchemeRightToLeft)
+		public string TeamNameRight(bool isColorSchemeRightToLeft)
 		{
-			return colorSchemeRightToLeft ? _mannschaft_A : _mannschaft_B;
+			return isColorSchemeRightToLeft ? _mannschaft_A : _mannschaft_B;
 		}
 	}
 }
