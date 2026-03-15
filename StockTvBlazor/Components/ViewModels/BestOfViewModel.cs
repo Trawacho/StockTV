@@ -5,12 +5,9 @@ namespace StockTvBlazor.Components.ViewModels
 {
 	public class BestOfViewModel : BaseViewModel
 	{
-		private int _inputValue;
-
 
 		public BestOfViewModel(Settings settings, NavigationManager navigationManager) : base(settings, navigationManager)
 		{
-			_inputValue = -1;
 			Match.TurnsChanged += Match_TurnsChanged;
 		}
 		private void Match_TurnsChanged(object? sender, EventArgs e)

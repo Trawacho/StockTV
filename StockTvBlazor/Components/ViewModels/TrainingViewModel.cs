@@ -6,12 +6,8 @@ namespace StockTvBlazor.Components.ViewModels
 
 	public class TrainingViewModel : BaseViewModel
 	{
-		private int _inputValue;
-
-
 		public TrainingViewModel(Models.Settings settings, NavigationManager navigationManager) : base(settings, navigationManager)
 		{
-			_inputValue = -1;
 			Match.TurnsChanged += Match_TurnsChanged;
 		}
 

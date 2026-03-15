@@ -6,11 +6,9 @@ namespace StockTvBlazor.Components.ViewModels
 {
 	public class TurnierViewModel : BaseViewModel
 	{
-		private int _inputValue;
 
 		public TurnierViewModel(Models.Settings settings, NavigationManager navigationManager) : base(settings, navigationManager)
 		{
-			_inputValue = -1;
 			Match.TurnsChanged += Match_TurnsChanged;
 		}
 
