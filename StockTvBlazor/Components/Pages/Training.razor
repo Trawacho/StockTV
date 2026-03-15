@@ -6,7 +6,7 @@
 @inject NavigationManager _navigationManager
 @implements IDisposable
 
-<div class="main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+<div class="main-grid training" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
 	<div class="header-text">@Model.HeaderText</div>
 
@@ -25,71 +25,6 @@
 </div>
 
 <style>
-	html, body {
-		margin: 0;
-		padding: 0;
-		overflow: hidden;
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-	}
-
-	/* Haupt-Layout: 3 Spalten */
-	.main-grid {
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-		display: grid;
-		grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
-		position: fixed;
-		inset: 0;
-		height: 100vh;
-		width: 100vw;
-	}
-
-	/* Die Sub-Grids für Zeile 2 und 3: Jeweils 3 Spalten */
-	.sub-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr; /* 3 gleich große Spalten */
-		gap: 5px;
-		align-items: center;
-		text-align: center;
-	}
-
-	.header-text {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-		padding: 5px;
-		text-align: center;
-	}
-
-	.left-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
-	}
-
-	.right-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
-	}
-
-	.seperator {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-	}
-
-	.left-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
-	}
-
-	.right-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
-	}
-
-	.input-value {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-	}
-
-	.row-3 {
-		align-self: end;
-		padding-bottom: 5px;
-	}
-
-	.sub-grid div {
-		padding: 5px;
-	}
 
 </style>
 

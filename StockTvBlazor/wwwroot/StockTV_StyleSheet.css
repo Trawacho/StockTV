@@ -1,0 +1,83 @@
+﻿html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Hell */
+.theme-light {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Dunkel */
+.theme-dark {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.main-grid-base {
+    background-color: var(--bg-color);
+    display: grid;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+}
+.main-grid.default {
+    grid-template-columns: 3vw 1fr 3vw;
+}
+
+.main-grid.training {
+    grid-template-rows: auto 1fr auto;
+}
+
+/* Gemeinsame Sub-Grids */
+.sub-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+    align-items: center;
+    text-align: center;
+}
+
+/* Gemeinsame Textfarben */
+.header-text {
+    color: var(--fg-color);
+    padding: 5px;
+    text-align: center;
+}
+
+.left-point-sum {
+    color: var(--fg-left);
+}
+
+.right-point-sum {
+    color: var(--fg-right);
+}
+
+.seperator {
+    color: var(--fg-color);
+}
+
+.left-points {
+    color: var(--fg-left);
+}
+
+.right-points {
+    color: var(--fg-right);
+}
+
+.input-value {
+    color: var(--fg-color);
+}
+
+/* Gemeinsame untere Zeile */
+.row-3 {
+    align-self: end;
+    padding-bottom: 5px;
+}
+
+.sub-grid div {
+    padding: 5px;
+}

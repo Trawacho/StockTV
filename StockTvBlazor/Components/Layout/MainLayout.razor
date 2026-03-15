@@ -1,15 +1,17 @@
 ﻿@inherits LayoutComponentBase
+@inject StockTvBlazor.Components.Models.Settings _settings
+
+<style>
+    :root {
+        --bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
+        --fg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
+        --fg-left: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
+        --fg-right: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
+    }
+</style>
 
 <div class="page">
-@*     <div class="sidebar">
-        <NavMenu />
-    </div> *@
-
-    <main>
-@*         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div> *@
-
+        <main>
         <article>
             @Body
         </article>
