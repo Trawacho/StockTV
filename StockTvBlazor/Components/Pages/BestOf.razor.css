@@ -16,52 +16,6 @@
     height: 100vh;
 }
 
-/* Sub-Grids (werden durch Isolation nur hier angewendet) */
-.sub-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 5px;
-    align-items: center;
-    text-align: center;
-}
 
-/* Textfarben – dynamisch über CSS-Variablen */
-.header-text {
-    color: var(--fg-color);
-    padding: 5px;
-    text-align: center;
-}
 
-.left-point-sum {
-    color: var(--fg-left);
-}
 
-.right-point-sum {
-    color: var(--fg-right);
-}
-
-.seperator {
-    color: var(--fg-color);
-}
-
-.left-points {
-    color: var(--fg-left);
-}
-
-.right-points {
-    color: var(--fg-right);
-}
-
-.input-value {
-    color: var(--fg-color);
-}
-
-/* Untere Zeile */
-.row-3 {
-    align-self: end;
-    padding-bottom: 5px;
-}
-
-.sub-grid div {
-    padding: 5px;
-}

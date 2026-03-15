@@ -16,6 +16,7 @@
     color: #ffffff;
 }
 
+/* Basis-Grid für alle Seiten */
 .main-grid-base {
     background-color: var(--bg-color);
     display: grid;
@@ -24,6 +25,8 @@
     height: 100vh;
     width: 100vw;
 }
+
+/* Layout-Varianten */
 .main-grid.default {
     grid-template-columns: 3vw 1fr 3vw;
 }
@@ -33,7 +36,7 @@
 }
 
 /* Gemeinsame Sub-Grids */
-.sub-grid {
+:root .sub-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 5px;
@@ -42,42 +45,42 @@
 }
 
 /* Gemeinsame Textfarben */
-.header-text {
+:root .header-text {
     color: var(--fg-color);
     padding: 5px;
     text-align: center;
 }
 
-.left-point-sum {
+:root .left-point-sum {
     color: var(--fg-left);
 }
 
-.right-point-sum {
+:root .right-point-sum {
     color: var(--fg-right);
 }
 
-.seperator {
+:root .seperator {
     color: var(--fg-color);
 }
 
-.left-points {
+:root .left-points {
     color: var(--fg-left);
 }
 
-.right-points {
+:root .right-points {
     color: var(--fg-right);
 }
 
-.input-value {
+:root .input-value {
     color: var(--fg-color);
 }
 
 /* Gemeinsame untere Zeile */
-.row-3 {
+:root .row-3 {
     align-self: end;
     padding-bottom: 5px;
 }
 
-.sub-grid div {
+:root .sub-grid div {
     padding: 5px;
 }
