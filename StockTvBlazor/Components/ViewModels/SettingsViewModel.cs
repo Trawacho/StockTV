@@ -4,9 +4,9 @@ using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels
 {
-	public class SettingsViewModel(Settings settings, SettingsService settingsService, NavigationManager navigationManager)
+	public class SettingsViewModel(SettingsService settingsService, NavigationManager navigationManager)
 	{
-		private readonly Settings _settings = settings;
+		private readonly Settings _currentSettings = settingsService.CurrentSettings;
 		private readonly SettingsService _settingsService = settingsService;
 		private readonly NavigationManager _navigationManager = navigationManager;
 		private SettingsOptions _currentSetting = SettingsOptions.Theme;
@@ -121,7 +121,7 @@ namespace StockTvBlazor.Components.ViewModels
 		private void ExitSettingsPage()
 		{
 			_ = _settingsService.SaveSettingsAsync();
-			switch (_settings.Modus)
+			switch (_currentSettings.Modus)
 				{
 				case Settings.MODUS.BESTOF:
 					_navigationManager.NavigateTo("/bestof");
@@ -147,14 +147,14 @@ namespace StockTvBlazor.Components.ViewModels
 
 
 
-		public string ThemeValue => _settings.Theme.ToString();
-		public string RichtungValue => _settings.Richtung.ToString();
-		public string ModusValue => _settings.Modus.ToString();
-		public string MaxPunkteProKehreValue => _settings.MaxPunkteProKehre.ToString();
-		public string MaxKehrenProSpielValue => _settings.MaxKehrenProSpiel.ToString();
-		public string SpielgruppeValue => _settings.SpielgruppeLetter;
-		public string BahnNummerValue => _settings.BahnNummer.ToString();
-		public string NetworkingValue => _settings.Networking ? "An" : "Aus";
+		public string ThemeValue => _currentSettings.Theme.ToString();
+		public string RichtungValue => _currentSettings.Richtung.ToString();
+		public string ModusValue => _currentSettings.Modus.ToString();
+		public string MaxPunkteProKehreValue => _currentSettings.MaxPunkteProKehre.ToString();
+		public string MaxKehrenProSpielValue => _currentSettings.MaxKehrenProSpiel.ToString();
+		public string SpielgruppeValue => _currentSettings.SpielgruppeLetter;
+		public string BahnNummerValue => _currentSettings.BahnNummer.ToString();
+		public string NetworkingValue => _currentSettings.Networking ? "An" : "Aus";
 
 	}
 }

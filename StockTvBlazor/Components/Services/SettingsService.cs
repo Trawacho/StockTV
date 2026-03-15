@@ -15,7 +15,7 @@ namespace StockTvBlazor.Components.Services
 
 		public event Action? OnConfigurationChanged;
 
-		public Settings GetSettings() => _settings;
+		public Settings CurrentSettings => _settings;
 
 		public void ChangeModus(bool forward)
 		{

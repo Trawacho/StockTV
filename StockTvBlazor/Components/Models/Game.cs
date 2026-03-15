@@ -2,7 +2,7 @@
 
 namespace StockTvBlazor.Components.Models
 {
-	public class Game(Settings configuration, int gameNumber)
+	public class Game(Settings settings, int gameNumber)
 	{
 		private readonly List<ITurn> _turns = [];
 		public List<ITurn> Turns
@@ -14,7 +14,7 @@ namespace StockTvBlazor.Components.Models
 		}
 		internal int GameNumber { get; } = gameNumber;
 
-		private readonly Settings _configuration = configuration;
+		private readonly Settings _configuration = settings;
 
 		internal int GamePointsLeft
 		{

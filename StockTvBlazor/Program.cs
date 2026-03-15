@@ -9,8 +9,8 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
-builder.Services.AddSingleton<Settings>(sp =>
-	sp.GetRequiredService<SettingsService>().GetSettings());
+//builder.Services.AddSingleton<Settings>(sp =>
+//	sp.GetRequiredService<SettingsService>().CurrentSettings);
 
 var app = builder.Build();
 
@@ -31,7 +31,7 @@ app.UseAntiforgery();
 // Server-side decision: redirect root ('/') to the configured start page from Settings.
 app.MapGet("/", (context) =>
 {
-	var _settings = context.RequestServices.GetRequiredService<SettingsService>().GetSettings();
+	var _settings = context.RequestServices.GetRequiredService<SettingsService>().CurrentSettings;
 	switch (_settings.Modus)
 	{
 		case Settings.MODUS.TRAINING:

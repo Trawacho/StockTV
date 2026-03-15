@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels
 {
-	public class BestOfViewModel(Settings configuration, NavigationManager navigationManager) : BaseViewModel(configuration, navigationManager)
+	public class BestOfViewModel(SettingsService settingsService, NavigationManager navigationManager) : BaseViewModel(settingsService, navigationManager)
 	{
 		public string HeaderText
 		{
@@ -12,13 +13,14 @@ namespace StockTvBlazor.Components.ViewModels
 				if (Match.CurrentGame.GameNumber == 1 &&
 					Match.CurrentGame.Turns.Count == 0)
 				{
-					if (_configuration.SpielgruppeLetter == string.Empty)
-						return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.BahnNummer}";
+					if (_currentSettings.SpielgruppeLetter == string.Empty)
+						return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}";
 					else
-						return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.SpielgruppeLetter}-{_configuration.BahnNummer}";
+						return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.SpielgruppeLetter}-{_currentSettings.BahnNummer}";
 				}
 
-				return $"B {(_configuration.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
+				return $"0" +
+					$"{(_currentSettings.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
 			}
 		}
 

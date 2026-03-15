@@ -4,20 +4,19 @@ public class Match
 {
 	private readonly List<Game> _games = [];
 
-	public event EventHandler? TurnsChanged;
+	public event Action? OnMatchChanged;
 	protected void RaiseTurnsChanged()
 	{
-		TurnsChanged?.Invoke(this, EventArgs.Empty);
+		OnMatchChanged?.Invoke();
 		LoadTurnsFromLocalSettings();
 	}
 
 	private readonly Settings _configuration;
 
-	public Match(Settings configuration)
+	public Match(Settings settings)
 	{
-		_configuration = configuration;
-		_games.Add(new Game(configuration, 1));
-
+		_configuration = settings;
+		_games.Add(new Game(settings, 1));
 	}
 	
 	public IEnumerable<Game> Games => _games;

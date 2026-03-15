@@ -1,7 +1,7 @@
 ﻿@page "/turnier"
 @using StockTvBlazor.Components.Models
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Models.Settings _settings
+@inject StockTvBlazor.Components.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @implements IDisposable
 
@@ -145,12 +145,14 @@
 
 @code {
 	private ElementReference inputRef;
+	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+
 
 	public TurnierViewModel Model { get; set; } = default!;
 
 	protected override void OnInitialized()
 	{
-		Model = new TurnierViewModel(_settings, _navigationManager);
+		Model = new TurnierViewModel(_settingsService, _navigationManager);
 		Model.OnViewModelChanged += StateHasChanged;
 
 	}

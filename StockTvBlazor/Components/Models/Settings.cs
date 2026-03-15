@@ -77,6 +77,9 @@ public class Settings
 	/// </summary>
 	public int MessageVersion { get; set; } = 1;
 
+	public List<Turn> Kehren { get; set; } = [];
+
+	[JsonIgnore]
 	public string SpielgruppeLetter => Spielgruppe switch
 	{
 		0 => "",
