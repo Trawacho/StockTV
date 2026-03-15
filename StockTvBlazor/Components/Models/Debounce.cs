@@ -1,4 +1,4 @@
-﻿namespace StockTvBlazor.Components.ViewModels
+﻿namespace StockTvBlazor.Components.Models
 {
 	public static class Debounce
 	{
@@ -15,7 +15,6 @@
 			_lastTick = DateTime.Now.Ticks;
 			_lastValue = val;
 			return true;
-
 		}
 	}
 }

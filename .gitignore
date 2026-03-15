@@ -361,4 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/StockTvBlazor/stocktv.config.json
+
+# Settings Datei von StockTV
+stocktv.config.json

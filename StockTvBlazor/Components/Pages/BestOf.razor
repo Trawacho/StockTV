@@ -1,8 +1,9 @@
 ﻿@page "/bestof"
 @using StockTvBlazor.Components.Models
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Models.Settings Settings
-@inject NavigationManager NavigationManager
+@inject StockTvBlazor.Components.Models.Settings _settings
+@inject NavigationManager _navigationManager
+@implements IDisposable
 
 <div class="main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
@@ -36,12 +37,12 @@
 		margin: 0;
 		padding: 0;
 		overflow: hidden;
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
+		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
 	}
 
 	/* Haupt-Layout: 3 Spalten */
 	.main-grid {
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
+		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
 		display: grid;
 		grid-template-columns: 3vw 1fr 3vw;
 		position: fixed;
@@ -102,33 +103,33 @@
 	}
 
 	.header-text {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
 		padding: 5px;
 		text-align: center;
 	}
 
 	.left-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.LeftForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
 	}
 
 	.right-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.RightForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
 	}
 
 	.seperator {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
 	}
 
 	.left-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.LeftForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
 	}
 
 	.right-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.RightForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
 	}
 
 	.input-value {
-		color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
 	}
 
 	.row-3 {
@@ -149,7 +150,13 @@
 
 	protected override void OnInitialized()
 	{
-		Model = new BestOfViewModel(Settings, NavigationManager);
+		Model = new BestOfViewModel(_settings, _navigationManager);
+		Model.OnViewModelChanged += StateHasChanged;
+	}
+
+	public void Dispose()
+	{
+		Model.OnViewModelChanged -= StateHasChanged;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

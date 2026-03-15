@@ -1,10 +1,12 @@
-﻿@page "/config"
+﻿@page "/settings"
 @using StockTvBlazor.Components.Models
 @using System.Diagnostics
 @using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Models.Settings Settings
-@inject NavigationManager NavigationManager
+@inject StockTvBlazor.Components.Models.Settings _settings
+@inject StockTvBlazor.Components.Services.SettingsService _settingsService
+@inject NavigationManager _navigationManager
+@implements IDisposable
 
 <div class="main-grid" @onkeydown="HandleGlobalKeyDown" @onkeydown:stopPropagation  tabindex="0" style="outline:none;" @ref="inputRef">
 
@@ -13,39 +15,39 @@
     <div class="settings-list">
         <!-- Each row: icon | value | label -->
         <div class="setting-row">
-            <div class="icon">@(Model.IsColorSchemeActive ? "▶" : "")</div>
-            <div class="value">@Model.ColorSchemeValue</div>
-            <div class="label">Farbmodus</div>
+            <div class="icon">@(Model.IsThemeActive ? "▶" : "")</div>
+            <div class="value">@Model.ThemeValue</div>
+            <div class="label">Theme</div>
         </div>
 
         <div class="setting-row">
-            <div class="icon">@(Model.IsColorSchemeRightToLeftActive ? "▶" : "")</div>
-            <div class="value">@Model.RightToLeftValue</div>
+            <div class="icon">@(Model.IsRichtungActive ? "▶" : "")</div>
+            <div class="value">@Model.RichtungValue</div>
             <div class="label">Richtung (links/rechts)</div>
         </div>
 
         <div class="setting-row">
-            <div class="icon">@(Model.IsGameMousActive ? "▶" : "")</div>
-            <div class="value">@Model.GameModusValue</div>
-            <div class="label">Spielmodus</div>
+            <div class="icon">@(Model.IsModusActive ? "▶" : "")</div>
+            <div class="value">@Model.ModusValue</div>
+            <div class="label">Modus</div>
+        </div>
+
+         <div class="setting-row">
+            <div class="icon">@(Model.IsBahnNummerActive ? "▶" : "")</div>
+            <div class="value">@Model.BahnNummerValue</div>
+            <div class="label">Bahnnr.</div>
         </div>
 
         <div class="setting-row">
-            <div class="icon">@(Model.IsMaxPointsPerTurnActive ? "▶" : "")</div>
-            <div class="value">@Model.MaxPointsPerTurnValue</div>
+            <div class="icon">@(Model.IsMaxPunkteProKehreActive ? "▶" : "")</div>
+            <div class="value">@Model.MaxPunkteProKehreValue</div>
             <div class="label">Max Punkte pro Kehre</div>
         </div>
 
         <div class="setting-row">
-            <div class="icon">@(Model.IsMaxCountOfTurnsPerGameActive ? "▶" : "")</div>
-            <div class="value">@Model.MaxCountOfTurnsPerGameValue</div>
+            <div class="icon">@(Model.IsMaxKehrenProSpielActive ? "▶" : "")</div>
+            <div class="value">@Model.MaxKehrenProSpielValue</div>
             <div class="label">Kehren pro Spiel</div>
-        </div>
-
-        <div class="setting-row">
-            <div class="icon">@(Model.IsCourtNumberActive ? "▶" : "")</div>
-            <div class="value">@Model.CourtNumberValue</div>
-            <div class="label">Bahnnr.</div>
         </div>
 
         <div class="setting-row">
@@ -73,7 +75,7 @@
 
     /* Haupt-Layout: 3 Spalten (Icon | Value | Label) */
     .main-grid {
-        background-color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainBackground));
+        background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
         display: grid;
         /* left narrow icon, middle value, right label */
         grid-template-columns: 4rem 1fr 40%;
@@ -91,7 +93,7 @@
         grid-column: 1 / span 3;
         font-size: 2rem;
         font-weight: 700;
-        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
         padding-bottom: 1rem;
     }
 
@@ -112,7 +114,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
         font-size: 1.25rem;
     }
 
@@ -121,7 +123,7 @@
         align-items: center;
         justify-content: flex-start;
         padding-left: 1rem;
-        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
         font-size: 1.5rem;
         font-weight: 600;
     }
@@ -131,7 +133,7 @@
         align-items: center;
         justify-content: flex-start;
         padding-left: 1rem;
-        color: @(System.Drawing.ColorTranslator.ToHtml(Settings.ColorScheme.MainTextForeground));
+        color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
         font-size: 1.25rem;
     }
 
@@ -139,17 +141,18 @@
 
 @code {
     private ElementReference inputRef;
-    private void SetClicked()
-    {
-        Debug.WriteLine("Configuration: SetClicked invoked");
-        StateHasChanged();
-    }
 
-    public ConfigurationViewModel Model { get; set; } = default!;
+    public SettingsViewModel Model { get; set; } = default!;
 
     protected override void OnInitialized()
     {
-        Model = new ConfigurationViewModel(Settings, NavigationManager);
+        Model = new SettingsViewModel(_settings, _settingsService, _navigationManager);
+        _settingsService.OnConfigurationChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        _settingsService.OnConfigurationChanged -= StateHasChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -161,7 +164,6 @@
     }
     public void HandleGlobalKeyDown(KeyboardEventArgs e)
     {
-        Debug.WriteLine($"Key pressed: {e.Key} - {e.Code}");
         Model.ProcessKey(e.Key);
         StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
     }

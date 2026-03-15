@@ -11,12 +11,12 @@ public class Match
 		LoadTurnsFromLocalSettings();
 	}
 
-	private readonly Settings _settings;
+	private readonly Settings _configuration;
 
-	public Match(Settings settings)
+	public Match(Settings configuration)
 	{
-		_settings = settings;
-		_games.Add(new Game(settings, 1));
+		_configuration = configuration;
+		_games.Add(new Game(configuration, 1));
 
 	}
 	
@@ -27,7 +27,7 @@ public class Match
 		get
 		{
 			if (_games.Count == 0)
-				_games.Add(new Game(_settings, 1));
+				_games.Add(new Game(_configuration, 1));
 
 			return _games.Last();
 		}
@@ -42,9 +42,9 @@ public class Match
 
 	public void AddTurn(Turn turn)
 	{
-		turn.TurnNumber = Convert.ToByte(CurrentGame.Turns.Count + 1);
+		turn.TurnNumber = CurrentGame.Turns.Count + 1;
 
-		if (_settings.GameSettings.TurnsPerGame > CurrentGame.Turns.Count)
+		if (_configuration.MaxKehrenProSpiel > CurrentGame.Turns.Count)
 		{
 			CurrentGame.Turns.Add(turn);
 			SaveTurnsToLocalSettings();
@@ -73,19 +73,19 @@ public class Match
 		{
 			this.Begegnungen.Clear();
 			this._games.Clear();
-			this._games.Add(new Game(_settings, 1));
+			this._games.Add(new Game(_configuration, 1));
 			SaveTurnsToLocalSettings();
 			RaiseTurnsChanged();
 			return;
 		}
 
 
-		if (_settings.GameSettings.GameModus == GameSettings.GameModis.Turnier ||
-			_settings.GameSettings.GameModus == GameSettings.GameModis.BestOf)
+		if (_configuration.Modus == Settings.MODUS.TURNIER ||
+			_configuration.Modus == Settings.MODUS.BESTOF)
 		{
-			if (CurrentGame.Turns.Count == _settings.GameSettings.TurnsPerGame)
+			if (CurrentGame.Turns.Count == _configuration.MaxKehrenProSpiel)
 			{
-				_games.Add(new Game(_settings, Convert.ToByte(_games.Count + 1)));
+				_games.Add(new Game(_configuration, Convert.ToByte(_games.Count + 1)));
 			}
 		}
 		else

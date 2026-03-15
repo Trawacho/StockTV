@@ -8,18 +8,11 @@
 		string TeamNameRight(bool colorSchemeRightToLeft);
 	}
 
-	public class Begegnung : IBegegnung
+	public class Begegnung(byte spielNummer, string TeamA, string TeamB) : IBegegnung
 	{
-		public Begegnung(byte spielNummer, string TeamA, string TeamB)
-		{
-			Spielnummer = spielNummer;
-			_mannschaft_A = TeamA;
-			_mannschaft_B = TeamB;
-		}
-
-		public byte Spielnummer { get; set; }
-		private readonly string _mannschaft_A;
-		private readonly string _mannschaft_B;
+		public byte Spielnummer { get; set; } = spielNummer;
+		private readonly string _mannschaft_A = TeamA;
+		private readonly string _mannschaft_B = TeamB;
 
 		public string TeamNameLeft(bool isColorSchemeRightToLeft)
 		{

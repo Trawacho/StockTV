@@ -2,14 +2,8 @@
 
 namespace StockTvBlazor.Components.Models
 {
-	public class Game
+	public class Game(Settings configuration, int gameNumber)
 	{
-		public Game(Settings settings, int gameNumber)
-		{
-			GameNumber = gameNumber;
-			_settings = settings;
-		}
-
 		private readonly List<ITurn> _turns = [];
 		public List<ITurn> Turns
 		{
@@ -18,15 +12,15 @@ namespace StockTvBlazor.Components.Models
 				return _turns;
 			}
 		}
-		internal int GameNumber { get; }
+		internal int GameNumber { get; } = gameNumber;
 
-		private readonly Settings _settings;
+		private readonly Settings _configuration = configuration;
 
 		internal int GamePointsLeft
 		{
 			get
 			{
-				if (Turns.Count < _settings.GameSettings.TurnsPerGame)
+				if (Turns.Count < _configuration.MaxKehrenProSpiel)
 					return 0;
 
 				if (LeftPointsSum > RightPointsSum)
@@ -48,7 +42,7 @@ namespace StockTvBlazor.Components.Models
 		{
 			get
 			{
-				if (Turns.Count < _settings.GameSettings.TurnsPerGame)
+				if (Turns.Count < _configuration.MaxKehrenProSpiel)
 					return 0;
 
 				if (RightPointsSum > LeftPointsSum)

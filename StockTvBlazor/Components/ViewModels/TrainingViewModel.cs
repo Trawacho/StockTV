@@ -4,30 +4,8 @@ using StockTvBlazor.Components.Models;
 namespace StockTvBlazor.Components.ViewModels
 {
 
-	public class TrainingViewModel : BaseViewModel
+	public class TrainingViewModel(Settings configuration, NavigationManager navigationManager) : BaseViewModel(configuration, navigationManager)
 	{
-		public TrainingViewModel(Models.Settings settings, NavigationManager navigationManager) : base(settings, navigationManager)
-		{
-			Match.TurnsChanged += Match_TurnsChanged;
-		}
-
-		private void Match_TurnsChanged(object? sender, EventArgs e)
-		{
-			if (sender is Models.Match m)
-			{
-				//todo: implement broadcasting
-				if (_settings.MessageVersion == 0)
-				{
-					_settings.PublishGameResult(m.Serialize());
-				}
-				else if (_settings.MessageVersion == 1)
-				{
-					_settings.PublishGameResult(m.SerializeJson());
-				}
-			}
-		}
-
-
 		public string HeaderText
 		{
 			get
@@ -35,11 +13,11 @@ namespace StockTvBlazor.Components.ViewModels
 				if (Match.CurrentGame.GameNumber == 1 &&
 					Match.CurrentGame.Turns.Count == 0)
 				{
-					return $"{(_settings.BlockLocalChanges ? "." : "")}Bahn: {_settings.CourtNumber}";
+					return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.BahnNummer}";
 				}
 				else
 				{
-					return $"{(_settings.BlockLocalChanges ? "." : "")}Bahn: {_settings.CourtNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+					return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.BahnNummer}   Kehre: {Match.CurrentGame.Turns.Count}";
 				}
 			}
 		}
