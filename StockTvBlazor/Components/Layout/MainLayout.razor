@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
-@inject StockTvBlazor.Components.Models.Settings _settings
-
+@* @inject StockTvBlazor.Components.Models.Settings _settings *@
+@inject StockTvBlazor.Components.Services.SettingsService _settingsService
 <style>
     :root {
         --bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
@@ -23,3 +23,8 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+@code {
+
+    private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+
+}
