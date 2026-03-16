@@ -1,0 +1,46 @@
+﻿
+
+/* Haupt-Layout: 3 Spalten */
+.main-grid.turnier {
+    background-color: var(--bg-color);
+    display: grid;
+    grid-template-columns: 3vw 1fr 3vw;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+    /* gap: 10px; */
+}
+
+.sidebar-left, .sidebar-right {
+    display: grid;
+    place-items: center; /* Zentriert den Text exakt mittig */
+    height: 100vh; /* Füllt die volle Bildschirmhöhe */
+    width: 3vw; /* Füllt die volle Spaltenbreite */
+    overflow: hidden; /* Verhindert Überlaufen */
+    /* SCHRIFT-LOGIK */
+    /* Da die Spalte 3vw breit ist, nehmen wir fast 3vw als Schriftgröße */
+    font-size: 2.8vw;
+    font-weight: 900; /* Extra fett für maximale Füllung */
+    white-space: nowrap; /* Text darf NIEMALS umbrechen */
+    text-transform: uppercase; /* Großbuchstaben wirken oft "blockiger" und füllender */
+    line-height: 1; /* Kein zusätzlicher Zeilenabstand */
+}
+
+/* Optik zur Verdeutlichung */
+/* Linke Sidebar: Text von unten nach oben (90° gegen den Uhrzeigersinn) */
+.sidebar-left {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    /* Ergebnis: Text liest sich von unten nach oben */
+}
+
+/* Rechte Sidebar: Text von oben nach unten */
+.sidebar-right {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    writing-mode: vertical-rl;
+    /* Ergebnis: Text liest sich von oben nach unten */
+}

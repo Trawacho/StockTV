@@ -9,12 +9,7 @@
     width: 100vw;
 }
 
-/* Mittlere Spalte: Unterteilung in 3 Zeilen */
-.center-column {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    height: 100vh;
-}
+
 
 
 
