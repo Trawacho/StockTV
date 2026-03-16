@@ -1,8 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.Models
 {
-	public class Game(Settings configuration, int gameNumber)
+	public class Game(SettingsService settingsService, int gameNumber)
 	{
 		private readonly List<ITurn> _turns = [];
 		public List<ITurn> Turns
@@ -14,13 +14,14 @@ namespace StockTvBlazor.Components.Models
 		}
 		internal int GameNumber { get; } = gameNumber;
 
-		private readonly Settings _configuration = configuration;
+		private readonly SettingsService _settingsService = settingsService;
+		private Settings Settings => _settingsService.CurrentSettings;
 
 		internal int GamePointsLeft
 		{
 			get
 			{
-				if (Turns.Count < _configuration.MaxKehrenProSpiel)
+				if (Turns.Count < Settings.MaxKehrenProSpiel)
 					return 0;
 
 				if (LeftPointsSum > RightPointsSum)
@@ -42,7 +43,7 @@ namespace StockTvBlazor.Components.Models
 		{
 			get
 			{
-				if (Turns.Count < _configuration.MaxKehrenProSpiel)
+				if (Turns.Count < Settings.MaxKehrenProSpiel)
 					return 0;
 
 				if (RightPointsSum > LeftPointsSum)

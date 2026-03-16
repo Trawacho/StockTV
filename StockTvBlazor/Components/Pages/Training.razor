@@ -2,7 +2,7 @@
 @using StockTvBlazor.Components.Models
 @using System.Diagnostics
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Models.Settings _settings
+@inject StockTvBlazor.Components.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @implements IDisposable
 
@@ -30,12 +30,13 @@
 
 @code {
 	private ElementReference inputRef;
+	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
 
 	public TrainingViewModel Model { get; set; } = default!;
 
 	protected override void OnInitialized()
 	{
-		Model = new TrainingViewModel(_settings, _navigationManager);
+		Model = new TrainingViewModel(_settingsService, _navigationManager);
 		Model.OnViewModelChanged += StateHasChanged;
 	}
 	public void Dispose()

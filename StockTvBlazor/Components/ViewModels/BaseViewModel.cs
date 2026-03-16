@@ -1,14 +1,17 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public abstract class BaseViewModel(Settings configuration, NavigationManager navigationManager) 
+public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager) 
 {
+	private readonly SettingsService _settingsService = settingsService;
+
 	private int _inputValue;
 	private int _specialCounter;
-	private readonly Models.Match _match = new(configuration);
-	protected readonly Settings _configuration = configuration;
+	private readonly Models.Match _match = new(settingsService);
+	protected readonly Settings _currentSettings = settingsService.CurrentSettings;
 	private readonly NavigationManager _navigationManager = navigationManager;
 
 	public event Action? OnViewModelChanged;
@@ -25,7 +28,7 @@ public abstract class BaseViewModel(Settings configuration, NavigationManager na
 
 		var turn = new Turn();
 
-		if(_configuration.Richtung == Settings.RICHTUNG.LINKS)
+		if(_currentSettings.Richtung == Settings.RICHTUNG.LINKS)
 		{
 			turn.PointsRight = _inputValue;
 		}
@@ -47,7 +50,7 @@ public abstract class BaseViewModel(Settings configuration, NavigationManager na
 
 		var turn = new Turn();
 
-		if(_configuration.Richtung == Settings.RICHTUNG.RECHTS)
+		if(_currentSettings.Richtung == Settings.RICHTUNG.RECHTS)
 		{
 			turn.PointsRight = _inputValue;
 		}
@@ -98,7 +101,7 @@ public abstract class BaseViewModel(Settings configuration, NavigationManager na
 	public void AddInput(int value)
 	{
 		int newValue = (_inputValue < 0) ? value : (_inputValue * 10) + value;
-		int maxPoints = _configuration.MaxPunkteProKehre;
+		int maxPoints = _currentSettings.MaxPunkteProKehre;
 
 		if (newValue <= maxPoints)
 		{
@@ -116,7 +119,7 @@ public abstract class BaseViewModel(Settings configuration, NavigationManager na
 		//Settings Or Marekting SpecialCounter
 		if ((_inputValue == 0 || _inputValue == 10)
 			&& value == "Enter"
-			&& !_configuration.BlockLocalChanges)
+			&& !_currentSettings.BlockLocalChanges)
 		{
 			SpecialCounterIncrease();
 		}
@@ -127,7 +130,7 @@ public abstract class BaseViewModel(Settings configuration, NavigationManager na
 
 
 		//Debouncing 
-		if (!(value == "-" && _inputValue == 0 && !_configuration.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
+		if (!(value == "-" && _inputValue == 0 && !_currentSettings.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
 		{
 			if (!Debounce.IsDebounceOk(value))
 			{

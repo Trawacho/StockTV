@@ -76,7 +76,10 @@ public class Settings
 	/// Hier wird festgelegt, welche Version der Nachrichtenschnittstelle verwendet wird.
 	/// </summary>
 	public int MessageVersion { get; set; } = 1;
+	
+	public List<ITurn> Kehren { get; set; } = [];
 
+	[JsonIgnore]
 	public string SpielgruppeLetter => Spielgruppe switch
 	{
 		0 => "",

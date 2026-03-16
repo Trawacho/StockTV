@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Services;
 using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class TurnierViewModel(Settings configuration, NavigationManager navigationManager) : BaseViewModel(configuration, navigationManager)
+public class TurnierViewModel(SettingsService settingsService, NavigationManager navigationManager) : BaseViewModel(settingsService, navigationManager)
 {
 	public string HeaderText
 	{
@@ -13,16 +14,16 @@ public class TurnierViewModel(Settings configuration, NavigationManager navigati
 			if (Match.CurrentGame.GameNumber == 1 &&
 				Match.CurrentGame.Turns.Count == 0)
 			{
-				if (_configuration.SpielgruppeLetter == string.Empty)
-					return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.BahnNummer}";
+				if (_currentSettings.SpielgruppeLetter == string.Empty)
+					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}";
 				else
-					return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.SpielgruppeLetter}-{_configuration.BahnNummer}";
+					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.SpielgruppeLetter}-{_currentSettings.BahnNummer}";
 			}
 
-			if (_configuration.SpielgruppeLetter == string.Empty)
-				return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+			if (_currentSettings.SpielgruppeLetter == string.Empty)
+				return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
 			else
-				return $"{(_configuration.BlockLocalChanges ? "." : "")}Bahn: {_configuration.SpielgruppeLetter}-{_configuration.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+				return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.SpielgruppeLetter}-{_currentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
 
 		}
 	}
@@ -37,7 +38,7 @@ public class TurnierViewModel(Settings configuration, NavigationManager navigati
 		get
 		{
 				return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-										?.TeamNameLeft(_configuration.Richtung == Settings.RICHTUNG.LINKS)
+										?.TeamNameLeft(_currentSettings.Richtung == Settings.RICHTUNG.LINKS)
 										?? string.Empty;
 		}
 	}
@@ -47,7 +48,7 @@ public class TurnierViewModel(Settings configuration, NavigationManager navigati
 		get
 		{
 			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-									?.TeamNameLeft(_configuration.Richtung == Settings.RICHTUNG.RECHTS)
+									?.TeamNameLeft(_currentSettings.Richtung == Settings.RICHTUNG.RECHTS)
 									?? string.Empty;
 		}
 	}

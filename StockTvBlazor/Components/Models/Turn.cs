@@ -1,5 +1,8 @@
-﻿namespace StockTvBlazor.Components.Models
+﻿using System.Text.Json.Serialization;
+
+namespace StockTvBlazor.Components.Models
 {
+	[JsonDerivedType(typeof(Turn), typeDiscriminator: "Kehre")]
 	public interface ITurn
 	{
 		int PointsLeft { get; set; }
