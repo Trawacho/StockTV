@@ -1,8 +1,6 @@
-﻿using StockTvBlazor.Components.Services;
-
-namespace StockTvBlazor.Components.Models
+﻿namespace StockTvBlazor.Components.Models
 {
-	public class Game(SettingsService settingsService, int gameNumber)
+	public class Game(Settings settings, int gameNumber)
 	{
 		private readonly List<ITurn> _turns = [];
 		public List<ITurn> Turns
@@ -14,14 +12,13 @@ namespace StockTvBlazor.Components.Models
 		}
 		internal int GameNumber { get; } = gameNumber;
 
-		private readonly SettingsService _settingsService = settingsService;
-		private Settings Settings => _settingsService.CurrentSettings;
+		private readonly Settings _settings = settings;
 
 		internal int GamePointsLeft
 		{
 			get
 			{
-				if (Turns.Count < Settings.MaxKehrenProSpiel)
+				if (Turns.Count < _settings.MaxKehrenProSpiel)
 					return 0;
 
 				if (LeftPointsSum > RightPointsSum)
@@ -43,7 +40,7 @@ namespace StockTvBlazor.Components.Models
 		{
 			get
 			{
-				if (Turns.Count < Settings.MaxKehrenProSpiel)
+				if (Turns.Count < _settings.MaxKehrenProSpiel)
 					return 0;
 
 				if (RightPointsSum > LeftPointsSum)

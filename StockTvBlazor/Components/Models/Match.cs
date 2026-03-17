@@ -15,7 +15,7 @@ public class Match
 	public Match(SettingsService settingsService)
 	{
 		_settingsService = settingsService;
-		_games.Add(new Game(_settingsService, 1));
+		_games.Add(new Game(_settingsService.CurrentSettings, 1));
 		LoadTurnsFromLocalSettings();
 	}
 
@@ -26,7 +26,7 @@ public class Match
 		get
 		{
 			if (_games.Count == 0)
-				_games.Add(new Game(_settingsService, 1));
+				_games.Add(new Game(_settingsService.CurrentSettings, 1));
 
 			return _games.Last();
 		}
@@ -72,7 +72,7 @@ public class Match
 		{
 			this.Begegnungen.Clear();
 			this._games.Clear();
-			this._games.Add(new Game(_settingsService, 1));
+			this._games.Add(new Game(_settingsService.CurrentSettings, 1));
 			SaveTurnsToLocalSettings();
 			OnMatchChanged?.Invoke();
 			return;
@@ -84,7 +84,7 @@ public class Match
 		{
 			if (CurrentGame.Turns.Count == _settings.MaxKehrenProSpiel)
 			{
-				_games.Add(new Game(_settingsService, Convert.ToByte(_games.Count + 1)));
+				_games.Add(new Game(_settingsService.CurrentSettings, Convert.ToByte(_games.Count + 1)));
 			}
 		}
 		else
