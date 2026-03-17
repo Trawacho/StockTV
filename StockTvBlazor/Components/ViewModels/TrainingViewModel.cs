@@ -14,11 +14,11 @@ namespace StockTvBlazor.Components.ViewModels
 				if (Match.CurrentGame.GameNumber == 1 &&
 					Match.CurrentGame.Turns.Count == 0)
 				{
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}";
+					return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.BahnNummer}";
 				}
 				else
 				{
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}   Kehre: {Match.CurrentGame.Turns.Count}";
+					return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.BahnNummer}   Kehre: {Match.CurrentGame.Turns.Count}";
 				}
 			}
 		}

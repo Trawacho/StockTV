@@ -6,70 +6,52 @@ namespace StockTvBlazor.Components.ViewModels;
 
 public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager) 
 {
-	private readonly SettingsService _settingsService = settingsService;
+	protected readonly SettingsService _settingsService = settingsService;
+	private readonly NavigationManager _navigationManager = navigationManager;
 
 	private int _inputValue;
 	private int _specialCounter;
 	private readonly Models.Match _match = new(settingsService);
-	protected readonly Settings _currentSettings = settingsService.CurrentSettings;
-	private readonly NavigationManager _navigationManager = navigationManager;
 
 	public event Action? OnViewModelChanged;
-	protected Models.Match Match { get { return _match; } }
+	protected Models.Match Match => _match; 
 	protected int InputValue => _inputValue;
-	protected void SpecialCounterIncrease() => _specialCounter++;
-	protected void SpecialCounterReset() => _specialCounter = 0;
+	
 
-	private void AddToGreen()
+	private async Task AddToGreenAsync()
 	{
 
 		if (_inputValue == -1)
 			return;
 
-		var turn = new Turn();
+		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, true);
 
-		if(_currentSettings.Richtung == Settings.RICHTUNG.LINKS)
-		{
-			turn.PointsRight = _inputValue;
-		}
-		else
-		{
-			turn.PointsLeft = _inputValue;
-		}
-
-		this._match.AddTurn(turn);
-
+		_match.AddTurn(turn);
+		await _match.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 
 	}
-	private void AddToRed()
+	private async Task AddToRedAsync()
 	{
 		if (_inputValue == -1)
 			return;
 
-		var turn = new Turn();
+		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, true);
 
-		if(_currentSettings.Richtung == Settings.RICHTUNG.RECHTS)
-		{
-			turn.PointsRight = _inputValue;
-		}
-		else
-		{
-			turn.PointsLeft = _inputValue;
-		}
-
-		this._match.AddTurn(turn);
+		_match.AddTurn(turn);
+		await _match.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 	}
-	private void Reset(bool force = false)
+	private async Task ResetAsync(bool force = false)
 	{
 		_match.Reset(force);
+		await _match.SaveTurnsToLocalSettingsAsync();
 		_inputValue = -1;
 	}
 
-	private void DeleteLastTurn()
+	private async Task DeleteLastTurnAsync()
 	{
 		if (_inputValue > 0)
 		{
@@ -78,6 +60,7 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 		}
 
 		_match.DeleteLastTurn();
+		await _match.SaveTurnsToLocalSettingsAsync();
 	}
 
 	private protected void ShowSpecialPage()
@@ -101,7 +84,7 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 	public void AddInput(int value)
 	{
 		int newValue = (_inputValue < 0) ? value : (_inputValue * 10) + value;
-		int maxPoints = _currentSettings.MaxPunkteProKehre;
+		int maxPoints = _settingsService.CurrentSettings.MaxPunkteProKehre;
 
 		if (newValue <= maxPoints)
 		{
@@ -113,24 +96,24 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 		}
 	}
 
-	public void ProcessKey(string value)
+	public async Task ProcessKeyAsync(string value)
 	{
 
 		//Settings Or Marekting SpecialCounter
 		if ((_inputValue == 0 || _inputValue == 10)
 			&& value == "Enter"
-			&& !_currentSettings.BlockLocalChanges)
+			&& !_settingsService.CurrentSettings.BlockLocalChanges)
 		{
-			SpecialCounterIncrease();
+			_specialCounter++;
 		}
 		else
 		{
-			SpecialCounterReset();
+			_specialCounter = 0;
 		}
 
 
 		//Debouncing 
-		if (!(value == "-" && _inputValue == 0 && !_currentSettings.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
+		if (!(value == "-" && _inputValue == 0 && !_settingsService.CurrentSettings.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
 		{
 			if (!Debounce.IsDebounceOk(value))
 			{
@@ -140,11 +123,11 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 		switch (value)
 		{
-			case "Enter":				ShowSpecialPage();	break;
-			case "*":					AddToGreen();		break;
-			case "-":					DeleteLastTurn();	break;
-			case "/" or "Backspace":	AddToRed();			break;
-			case "+":					Reset();			break;
+			case "Enter":				ShowSpecialPage();				break;
+			case "*":					await AddToGreenAsync();		break;
+			case "-":					await DeleteLastTurnAsync();	break;
+			case "/" or "Backspace":	await AddToRedAsync();			break;
+			case "+":					await ResetAsync();				break;
 
 			default:
 				int? input = value switch
@@ -162,7 +145,9 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 					_ => null
 				};
 
-				if (input.HasValue) AddInput(input.Value);
+				if (input.HasValue) 
+					AddInput(input.Value);
+
 				break;
 		}
 

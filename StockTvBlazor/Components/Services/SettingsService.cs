@@ -207,7 +207,7 @@ namespace StockTvBlazor.Components.Services
 			}
 		}
 
-		internal async Task SaveTurns(List<Turn> turns)
+		internal async Task SaveTurnsAsync(List<Turn> turns)
 		{
 			if (_settings.Modus == Settings.MODUS.TRAINING)
 			{

@@ -8,12 +8,11 @@ public class Match
 
 	public event Action? OnMatchChanged;
 
-
-	private Settings _settings => _settingsService.CurrentSettings;
 	private readonly SettingsService _settingsService;
 
 	public Match(SettingsService settingsService)
 	{
+		System.Diagnostics.Debug.WriteLine("new Match created");
 		_settingsService = settingsService;
 		_games.Add(new Game(_settingsService.CurrentSettings, 1));
 		LoadTurnsFromLocalSettings();
@@ -38,19 +37,26 @@ public class Match
 
 	public List<Begegnung> Begegnungen { get; set; } = [];
 
-
+	/// <summary>
+	/// Es wird die übergeben Kehre zum aktuellen Spiel hinzugefügt, sofern die maximale Anzahl an Kehren pro Spiel nicht überschritten wird. Ansonsten wird ein neues Spiel begonnen und die Kehre diesem Spiel hinzugefügt.
+	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
+	/// </summary>
+	/// <param name="turn"></param>
 	public void AddTurn(ITurn turn)
 	{
 		turn.TurnNumber = CurrentGame.Turns.Count + 1;
 
-		if (_settings.MaxKehrenProSpiel > CurrentGame.Turns.Count)
+		if (_settingsService.CurrentSettings.MaxKehrenProSpiel > CurrentGame.Turns.Count)
 		{
 			CurrentGame.Turns.Add(turn);
-			SaveTurnsToLocalSettings();
 			OnMatchChanged?.Invoke();
 		}
 	}
 
+	/// <summary>
+	/// Es wird die letzte Kehre gelöscht. Wenn es keine Kehren mehr im aktuellen Spiel gibt, wird das aktuelle Spiel gelöscht, sofern es mehr als ein Spiel gibt.
+	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
+	/// </summary>
 	public void DeleteLastTurn()
 	{
 		if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
@@ -62,10 +68,14 @@ public class Match
 			CurrentGame.DeleteLastTurn();
 		}
 
-		SaveTurnsToLocalSettings();
 		OnMatchChanged?.Invoke();
 	}
 
+	/// <summary>
+	/// Es werden alle Kehren gelöscht, wenn force = true ist. Ansonsten wird nur die aktuelle Kehre gelöscht oder ein neues Spiel begonnen, wenn die maximale Anzahl an Kehren pro Spiel erreicht ist.
+	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
+	/// </summary>
+	/// <param name="force"></param>
 	public void Reset(bool force = false)
 	{
 		if (force)
@@ -73,16 +83,15 @@ public class Match
 			this.Begegnungen.Clear();
 			this._games.Clear();
 			this._games.Add(new Game(_settingsService.CurrentSettings, 1));
-			SaveTurnsToLocalSettings();
 			OnMatchChanged?.Invoke();
 			return;
 		}
 
 
-		if (_settings.Modus == Settings.MODUS.TURNIER ||
-			_settings.Modus == Settings.MODUS.BESTOF)
+		if (_settingsService.CurrentSettings.Modus == Settings.MODUS.TURNIER ||
+			_settingsService.CurrentSettings.Modus == Settings.MODUS.BESTOF)
 		{
-			if (CurrentGame.Turns.Count == _settings.MaxKehrenProSpiel)
+			if (CurrentGame.Turns.Count == _settingsService.CurrentSettings.MaxKehrenProSpiel)
 			{
 				_games.Add(new Game(_settingsService.CurrentSettings, Convert.ToByte(_games.Count + 1)));
 			}
@@ -91,26 +100,24 @@ public class Match
 		{
 			CurrentGame.Turns.Clear();
 		}
-
-		SaveTurnsToLocalSettings();
+		
 		OnMatchChanged?.Invoke();
 	}
 
-	private async void SaveTurnsToLocalSettings()
+	public async Task SaveTurnsToLocalSettingsAsync()
 	{
 		var allTurns = Games.SelectMany(g => g.Turns).OfType<Turn>().ToList();
-		await _settingsService.SaveTurns(allTurns);
+		await _settingsService.SaveTurnsAsync(allTurns);
 	}
 
 	private void LoadTurnsFromLocalSettings()
 	{
-		//todo: Aktuell das Problem, dass die Kehren beim hinzufügen die Liste ändern
 		var allTurns = _settingsService.CurrentSettings.Kehren;
-		//foreach (var turn in allTurns)
-		//{
-		//	AddTurn(turn);
-		//	Reset();
-		//}
+		foreach (var turn in allTurns)
+		{
+			AddTurn(turn);
+			Reset();
+		}
 	}
 
 	internal object? Serialize()

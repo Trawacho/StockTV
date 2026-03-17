@@ -56,9 +56,9 @@
 			await inputRef.FocusAsync();
 		}
 	}
-	private void HandleGlobalKeyDown(KeyboardEventArgs e)
+	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		Model.ProcessKey(e.Key);
+		await Model.ProcessKeyAsync(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}
 

@@ -14,16 +14,16 @@ public class TurnierViewModel(SettingsService settingsService, NavigationManager
 			if (Match.CurrentGame.GameNumber == 1 &&
 				Match.CurrentGame.Turns.Count == 0)
 			{
-				if (_currentSettings.SpielgruppeLetter == string.Empty)
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}";
+				if (_settingsService.CurrentSettings.SpielgruppeLetter == string.Empty)
+					return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.BahnNummer}";
 				else
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.SpielgruppeLetter}-{_currentSettings.BahnNummer}";
+					return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.SpielgruppeLetter}-{_settingsService.CurrentSettings.BahnNummer}";
 			}
 
-			if (_currentSettings.SpielgruppeLetter == string.Empty)
-				return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+			if (_settingsService.CurrentSettings.SpielgruppeLetter == string.Empty)
+				return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
 			else
-				return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.SpielgruppeLetter}-{_currentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
+				return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.SpielgruppeLetter}-{_settingsService.CurrentSettings.BahnNummer}   Spiel: {Match.CurrentGame.GameNumber}   Kehre: {Match.CurrentGame.Turns.Count}";
 
 		}
 	}
@@ -38,7 +38,7 @@ public class TurnierViewModel(SettingsService settingsService, NavigationManager
 		get
 		{
 				return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-										?.TeamNameLeft(_currentSettings.Richtung == Settings.RICHTUNG.LINKS)
+										?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
 										?? string.Empty;
 		}
 	}
@@ -48,7 +48,7 @@ public class TurnierViewModel(SettingsService settingsService, NavigationManager
 		get
 		{
 			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-									?.TeamNameLeft(_currentSettings.Richtung == Settings.RICHTUNG.RECHTS)
+									?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.RECHTS)
 									?? string.Empty;
 		}
 	}
