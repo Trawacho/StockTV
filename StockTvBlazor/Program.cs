@@ -1,5 +1,6 @@
 using StockTvBlazor.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,8 +10,7 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
-//builder.Services.AddSingleton<Settings>(sp =>
-//	sp.GetRequiredService<SettingsService>().CurrentSettings);
+builder.Services.AddHostedService<MdnsDiscoveryService>();
 
 var app = builder.Build();
 
