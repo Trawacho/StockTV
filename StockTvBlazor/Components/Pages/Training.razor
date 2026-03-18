@@ -32,16 +32,18 @@
 	private ElementReference inputRef;
 	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
 
-	public TrainingViewModel Model { get; set; } = default!;
+	public TrainingViewModel? Model { get; set; }
 
 	protected override void OnInitialized()
 	{
 		Model = new TrainingViewModel(_settingsService, _navigationManager);
 		Model.OnViewModelChanged += StateHasChanged;
 	}
+
 	public void Dispose()
 	{
-		Model.OnViewModelChanged -= StateHasChanged;
+		if (Model != null)
+			Model.OnViewModelChanged -= StateHasChanged;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,8 +53,12 @@
 			await inputRef.FocusAsync();
 		}
 	}
+
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
+		if(Model == null)
+			return;
+
 		await Model.ProcessKeyAsync(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}

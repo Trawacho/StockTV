@@ -37,7 +37,7 @@
 	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
 
 
-	public TurnierViewModel Model { get; set; } = default!;
+	public TurnierViewModel? Model { get; set; }
 
 	protected override void OnInitialized()
 	{
@@ -47,7 +47,8 @@
 	}
 	public void Dispose()
 	{
-		Model.OnViewModelChanged -= StateHasChanged;
+		if (Model != null)
+			Model.OnViewModelChanged -= StateHasChanged;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -59,6 +60,9 @@
 	}
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
+		if(Model == null)
+			return;	
+
 		await Model.ProcessKeyAsync(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}
