@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager) 
+public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager, NetMqPublisherService publisher) 
 {
 	protected readonly SettingsService _settingsService = settingsService;
 	private readonly NavigationManager _navigationManager = navigationManager;
-
+	private readonly NetMqPublisherService _publisher = publisher;
 	private int _inputValue;
 	private int _specialCounter;
 	private readonly Models.Match _match = new(settingsService);
@@ -153,6 +154,8 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 		OnViewModelChanged?.Invoke();
 
+		//_publisher.Publish("GetSettings", _settingsService.GetSettings());
+		_publisher.Publish("GetResult", _match.SerializeJson());
 		//todo: Send after each key press a network notification
 		//if (Settings.IsBroadcasting)
 		//{

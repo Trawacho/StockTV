@@ -1,5 +1,7 @@
 ﻿using StockTvBlazor.Components.Models;
+using System.ServiceModel.Channels;
 using System.Text.Json;
+using static StockTvBlazor.Components.Models.Settings;
 
 namespace StockTvBlazor.Components.Services
 {
@@ -230,5 +232,22 @@ namespace StockTvBlazor.Components.Services
 		}
 		#endregion
 
+		public byte[] GetSettings()
+		{
+			List<byte> data = new List<byte>
+			{
+				Convert.ToByte(CurrentSettings.BahnNummer),			//Bahnnummer
+                Convert.ToByte(CurrentSettings.Spielgruppe),		//SpielGruppe    
+                Convert.ToByte((int)CurrentSettings.Modus),			//Modus
+                Convert.ToByte(CurrentSettings.Richtung),			//Spielrichtung
+                Convert.ToByte(CurrentSettings.Theme),				//FarbModus (hell,dunkel)
+                Convert.ToByte(CurrentSettings.MaxPunkteProKehre),	//Anzahl max. Punkte pro Kehre
+                Convert.ToByte(CurrentSettings.MaxKehrenProSpiel),	//Anzahl der Kehren
+                0,													//Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
+                Convert.ToByte(CurrentSettings.MessageVersion),		//Version des Datenpakets. 
+                0
+			};
+			return data.ToArray();
+		}
 	}
 }

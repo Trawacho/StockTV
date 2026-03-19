@@ -75,7 +75,7 @@ public class Settings
 	/// <summary>
 	/// Hier wird festgelegt, welche Version der Nachrichtenschnittstelle verwendet wird.
 	/// </summary>
-	public int MessageVersion { get; set; } = 1;
+	public int MessageVersion => 1;
 	
 	public List<ITurn> Kehren { get; set; } = [];
 
@@ -147,5 +147,7 @@ public class Settings
 	};
 
 	#endregion
+	
+	
 }
 

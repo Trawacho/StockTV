@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels
 {
 
-	public class TrainingViewModel(SettingsService settingsSerivce, NavigationManager navigationManager) : BaseViewModel(settingsSerivce, navigationManager)
+	public class TrainingViewModel(SettingsService settingsSerivce, NavigationManager navigationManager, NetMqPublisherService publisherService) : BaseViewModel(settingsSerivce, navigationManager, publisherService)
 	{
 		public string HeaderText
 		{

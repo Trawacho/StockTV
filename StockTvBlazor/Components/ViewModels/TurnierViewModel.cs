@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Components.Models;
+using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class TurnierViewModel(SettingsService settingsService, NavigationManager navigationManager) : BaseViewModel(settingsService, navigationManager)
+public class TurnierViewModel(SettingsService settingsService, NavigationManager navigationManager, NetMqPublisherService publisherService) : BaseViewModel(settingsService, navigationManager, publisherService)
 {
 	public string HeaderText
 	{

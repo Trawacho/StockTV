@@ -4,6 +4,7 @@
 @rendermode InteractiveServer
 @inject StockTvBlazor.Components.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
+@inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
 @implements IDisposable
 
 <div class="main-grid training" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
@@ -36,7 +37,7 @@
 
 	protected override void OnInitialized()
 	{
-		Model = new TrainingViewModel(_settingsService, _navigationManager);
+		Model = new TrainingViewModel(_settingsService, _navigationManager, _publisherService);
 		Model.OnViewModelChanged += StateHasChanged;
 	}
 

@@ -12,6 +12,10 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 
+builder.Services.AddSingleton<NetMqPublisherService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqPublisherService>());
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

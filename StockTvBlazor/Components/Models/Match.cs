@@ -1,4 +1,7 @@
-﻿using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Components.Networking;
+using StockTvBlazor.Components.Services;
+using System.Text;
+using System.Text.Json;
 
 namespace StockTvBlazor.Components.Models;
 
@@ -120,16 +123,51 @@ public class Match
 		}
 	}
 
-	internal object? Serialize()
+	internal byte[] Serialize()
 	{
-		//todo: implement Serialization
-		return null;
+		/* 
+			*  the byte array starts with ten bytes, containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
+			*  starting with the 11th byte the values from the games are following, always two bytes per game.
+			*  the first byte is the sum of the left team, the second is the sum of the right team followed by the next game with also 2 bytes length
+			*  
+			*  e.g.
+			*  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+			*  01 02 09 03 15 05 03 00 00 00 09 03 03 15 05 03 
+			*  Court 1
+			*     Group 2
+			*        Modus 09
+			*           Direction 03
+			*  ...
+			*                                 Game1: 9:3
+			*                                      Game2: 3:15
+			*                                           Game3: 5:3
+			*  
+			*/
+
+
+		List<byte> values = new List<byte>();
+
+		values.AddRange(_settingsService.GetSettings());
+
+		//Add for each Game the sum of the turn-value for left and right
+		foreach (Game g in Games)
+		{
+			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
+			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
+		}
+
+		//Convert the list of values to an array
+		return values.ToArray();
 	}
 
-	internal object? SerializeJson()
+	internal byte[] SerializeJson()
 	{
-		//todo: implement Serialization
-		return null;
+		var values = new List<byte>();
+
+		values.AddRange(_settingsService.GetSettings());
+		string json = JsonSerializer.Serialize(Games);
+		values.AddRange(Encoding.UTF8.GetBytes(json));
+		return values.ToArray();
 	}
 }
 
