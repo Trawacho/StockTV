@@ -12,7 +12,7 @@
 	<div class="scoreboard-shell" style="@GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-left" data-autofit data-autofit-min="8">@ViewModel.LeftTeamName</div>
+			<div class="teamname teamname-left" data-autofit data-autofit-min="8" data-autofit-vertical="true">@ViewModel.LeftTeamName</div>
 		}
 
 		<div class="scoreboard-center">
@@ -33,7 +33,7 @@
 
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-right" data-autofit data-autofit-min="8">@ViewModel.RightTeamName</div>
+			<div class="teamname teamname-right" data-autofit data-autofit-min="8" data-autofit-vertical="true">@ViewModel.RightTeamName</div>
 		}
 	</div>
 

@@ -23,7 +23,7 @@
     text-transform: uppercase;
     color: var(--fg-color);
     font-weight: 650;
-    font-size: min(10vh, 6vw);
+    font-size:12px;
     line-height: 1;
 }
 

@@ -25,7 +25,7 @@
     text-transform: uppercase;
     color: var(--fg-color);
     font-weight: 650;
-    font-size: min(3vh, 3vw);
+    font-size: 12px;
     line-height: 1;
 }
 
