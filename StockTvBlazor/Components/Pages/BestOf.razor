@@ -53,9 +53,11 @@
 		if (!TeamNamesAvailable)
 			return "grid-template-columns: 100%;";
 
-		var mid = Math.Clamp(_settings.MidColumnWidth, 0, 10) * 10; // 6 => 60%
+		var mid = _settings.MidColumnWidth;
 		var side = (100 - mid) / 2.0;
-		return $"grid-template-columns: {side:0.####}% {mid}% {side:0.####}%;";
+		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
 
 	protected override void OnInitialized()

@@ -35,6 +35,9 @@ public class Match
 		}
 	}
 
+	public int LeftPointsOverAll => _games.Sum(g => g.LeftPointsSum);
+	public int RightPointsOverAll => _games.Sum(g => g.RightPointsSum);	
+
 	public int MatchPointsLeft => _games.Sum(g => g.GamePointsLeft);
 
 	public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
