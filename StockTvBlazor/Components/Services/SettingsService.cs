@@ -1,3 +1,4 @@
+using StockTvBlazor.Components.Extensions;
 using StockTvBlazor.Components.Models;
 using System.Text.Json;
 
@@ -36,22 +37,10 @@ namespace StockTvBlazor.Components.Services
 
 		public void ChangeModus(bool forward)
 		{
-			var values = Enum.GetValues<Settings.MODUS>();
-			int currentIndex = Array.IndexOf(values, CurrentSettings.Modus);
+			var newModus = forward
+				   ? CurrentSettings.Modus.Next()
+				   : CurrentSettings.Modus.Previous();
 
-
-			if (forward)
-			{
-				// Aufwärts: (Index + 1) Modulo Länge
-				currentIndex = (currentIndex + 1) % values.Length;
-			}
-			else
-			{
-				// Abwärts: (Index - 1 + Länge) Modulo Länge (verhindert negative Werte)
-				currentIndex = (currentIndex - 1 + values.Length) % values.Length;
-			}
-
-			var newModus = values[currentIndex];
 			if (newModus == Settings.MODUS.TRAINING)
 			{
 				CurrentSettings.MaxKehrenProSpiel = 30;
@@ -69,33 +58,17 @@ namespace StockTvBlazor.Components.Services
 
 		public void ChangeTheme(bool forward)
 		{
-			var values = Enum.GetValues<Settings.THEME>();
-			int currentIndex = Array.IndexOf(values, CurrentSettings.Theme);
-			if (forward)
-			{
-				currentIndex = (currentIndex + 1) % values.Length;
-			}
-			else
-			{
-				currentIndex = (currentIndex - 1 + values.Length) % values.Length;
-			}
-			CurrentSettings.Theme = values[currentIndex];
+			CurrentSettings.Theme = forward
+				? CurrentSettings.Theme.Next()
+				: CurrentSettings.Theme.Previous();
 			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeRichtung(bool forward)
 		{
-			var values = Enum.GetValues<Settings.RICHTUNG>();
-			int currentIndex = Array.IndexOf(values, CurrentSettings.Richtung);
-			if (forward)
-			{
-				currentIndex = (currentIndex + 1) % values.Length;
-			}
-			else
-			{
-				currentIndex = (currentIndex - 1 + values.Length) % values.Length;
-			}
-			CurrentSettings.Richtung = values[currentIndex];
+			CurrentSettings.Richtung = forward
+				? CurrentSettings.Richtung.Next()
+				: CurrentSettings.Richtung.Previous();
 			OnSettingsChanged?.Invoke();
 		}
 
@@ -264,6 +237,21 @@ namespace StockTvBlazor.Components.Services
 
 		public void SetSettings(byte[] settings)
 		{
+			if (settings == null || settings.Length < 10)
+			{
+				_logger.LogWarning("SetSettings: Ungültiges Byte-Array (Länge {Len})", settings?.Length ?? -1);
+				return;
+			}
+
+			if (!Enum.IsDefined(typeof(Settings.MODUS), (int)settings[2]) ||
+				!Enum.IsDefined(typeof(Settings.RICHTUNG), (int)settings[3]) ||
+				!Enum.IsDefined(typeof(Settings.THEME), (int)settings[4]))
+			{
+				_logger.LogWarning("SetSettings: Ungültige Enum-Werte im Paket");
+				return;
+			}
+
+
 			CurrentSettings.BahnNummer = settings[0];
 			CurrentSettings.Spielgruppe = settings[1];
 
@@ -273,7 +261,6 @@ namespace StockTvBlazor.Components.Services
 				OnModusChanged?.Invoke();
 			}
 
-			CurrentSettings.Modus = (Settings.MODUS)settings[2];
 			CurrentSettings.Richtung = (Settings.RICHTUNG)settings[3];
 			CurrentSettings.Theme = (Settings.THEME)settings[4];
 			CurrentSettings.MaxPunkteProKehre = settings[5];

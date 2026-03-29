@@ -34,26 +34,9 @@ public class TurnierViewModel(SettingsService settingsService, MatchService matc
 	public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 	public string RightPoints => base.Match.CurrentGame.RightPoints;
 
-	public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
-	public string LeftTeamName
-	{
-		get
-		{
-				return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-										?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
-										?? string.Empty;
-		}
-	}
-
-	public string RightTeamName
-	{
-		get
-		{
-			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
-									?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.RECHTS)
-									?? string.Empty;
-		}
-	}
+	public new bool TeamNamesAvailable => base.TeamNamesAvailable;
+	public new string LeftTeamName => base.LeftTeamName;
+	public new string RightTeamName=> base.RightTeamName;
 
 	public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
 

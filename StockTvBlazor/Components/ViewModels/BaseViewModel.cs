@@ -14,6 +14,7 @@ public abstract class BaseViewModel : IDisposable
 	private readonly NetMqPublisherService _publisher;// = publisher;
 	private int _inputValue;
 	private int _specialCounter;
+	private readonly Debounce _debounce = new();
 
 	public event Action? OnViewModelChanged;
 
@@ -55,6 +56,43 @@ public abstract class BaseViewModel : IDisposable
 
 	protected Models.Match Match => _matchService.CurrentMatch;
 	protected int InputValue => _inputValue;
+
+	public string ShellGridStyle
+	{
+		get
+		{
+				if (!TeamNamesAvailable)
+					return "grid-template-columns: 100%;";
+
+				var mid = _settingsService.CurrentSettings.MidColumnWidth;
+				var side = (100 - mid) / 2.0;
+				return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
+		}
+	}
+
+	public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
+
+	public string LeftTeamName
+	{
+		get
+		{
+			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+									?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
+									?? string.Empty;
+		}
+	}
+
+	public string RightTeamName
+	{
+		get
+		{
+			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+									?.TeamNameRight(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
+									?? string.Empty;
+		}
+	}
 
 
 	private async Task AddToGreenAsync()
@@ -154,7 +192,7 @@ public abstract class BaseViewModel : IDisposable
 		//Debouncing 
 		if (!(value == "-" && _inputValue == 0 && !_settingsService.CurrentSettings.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
 		{
-			if (!Debounce.IsDebounceOk(value))
+			if (!_debounce.IsDebounceOk(value))
 			{
 				return;
 			}
@@ -193,7 +231,7 @@ public abstract class BaseViewModel : IDisposable
 		OnViewModelChanged?.Invoke();
 
 		_publisher.Publish("GetResult", Match.SerializeJson());
-		
+
 	}
 
 	public void Dispose()

@@ -1,10 +1,10 @@
 ﻿namespace StockTvBlazor.Components.Models
 {
-	public static class Debounce
+	public class Debounce
 	{
-		private static string? _lastValue;
-		private static long _lastTick;
-		public static bool IsDebounceOk(string? val)
+		private string? _lastValue;
+		private long _lastTick;
+		public bool IsDebounceOk(string? val)
 		{
 			if (val == _lastValue
 				&& DateTime.Now.Ticks - _lastTick < 10000000)

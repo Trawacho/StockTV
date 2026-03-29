@@ -4,20 +4,20 @@
 	{
 		public static T Next<T>(this T src) where T : struct
 		{
-			if (!typeof(T).IsEnum) throw new ArgumentException(String.Format("Argument {0} is not an Enum", typeof(T).FullName));
+			if (!typeof(T).IsEnum) throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
 
-			T[] Arr = (T[])Enum.GetValues(src.GetType());
-			int j = Array.IndexOf<T>(Arr, src) + 1;
-			return (Arr.Length == j) ? Arr.Last() : Arr[j];
+			T[] arr = (T[])Enum.GetValues(src.GetType());
+			int j = (Array.IndexOf(arr, src) + 1) % arr.Length;
+			return arr[j];
 		}
 
 		public static T Previous<T>(this T src) where T : struct
 		{
-			if (!typeof(T).IsEnum) throw new ArgumentException(String.Format("Argument {0} is not an Enum", typeof(T).FullName));
+			if (!typeof(T).IsEnum) throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
 
-			T[] Arr = (T[])Enum.GetValues(src.GetType());
-			int j = Array.IndexOf<T>(Arr, src) - 1;
-			return (j < 0) ? Arr[0] : Arr[j];
+			T[] arr = (T[])Enum.GetValues(src.GetType());
+			int j = (Array.IndexOf(arr, src) - 1 + arr.Length) % arr.Length;
+			return arr[j];
 		}
 	}
 }
