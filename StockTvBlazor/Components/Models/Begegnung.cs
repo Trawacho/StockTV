@@ -2,15 +2,15 @@
 {
 	public interface IBegegnung
 	{
-		byte Spielnummer { get; set; }
+		int Spielnummer { get; set; }
 
 		string TeamNameLeft(bool colorSchemeRightToLeft);
 		string TeamNameRight(bool colorSchemeRightToLeft);
 	}
 
-	public class Begegnung(byte spielNummer, string TeamA, string TeamB) : IBegegnung
+	public class Begegnung(int spielNummer, string TeamA, string TeamB) : IBegegnung
 	{
-		public byte Spielnummer { get; set; } = spielNummer;
+		public int Spielnummer { get; set; } = spielNummer;
 		private readonly string _mannschaft_A = TeamA;
 		private readonly string _mannschaft_B = TeamB;
 
