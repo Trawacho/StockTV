@@ -1,5 +1,5 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
     overflow: hidden; /* Scrollbars ausblenden */
     height: 100%;
     margin: 0;

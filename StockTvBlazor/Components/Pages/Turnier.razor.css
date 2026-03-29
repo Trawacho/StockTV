@@ -24,19 +24,20 @@
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
-    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
     font-weight: 650;
-    font-size: min(10vh, 6vw);
+    font-size: min(3vh, 3vw);
     line-height: 1;
 }
 
 .teamname-left {
     writing-mode: vertical-rl;
     transform: rotate(180deg); /* 270° */
+    color: var(--fg-left);
 }
 
 .teamname-right {
     writing-mode: vertical-rl; /* 90° */
+    color: var(--fg-right);
 }
 
 /* Center: Training-Layout in der mittleren Spalte */
@@ -46,7 +47,6 @@
     grid-template-rows: 10% 80% 10%;
     height: 100%;
     width: 100%;
-    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
 }
 
 .training-row {

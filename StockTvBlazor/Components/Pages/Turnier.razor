@@ -8,13 +8,11 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<p>Aktuelles ViewModel: @ViewModel.GetType().Name</p>
-
 <div class="main-grid turnier" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 	<div class="scoreboard-shell" style="@GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-left">@ViewModel.LeftTeamName</div>
+			<div class="teamname teamname-left" data-autofit data-autofit-min="8">@ViewModel.LeftTeamName</div>
 		}
 
 		<div class="scoreboard-center">
@@ -35,7 +33,7 @@
 
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-right">@ViewModel.RightTeamName</div>
+			<div class="teamname teamname-right" data-autofit data-autofit-min="8">@ViewModel.RightTeamName</div>
 		}
 	</div>
 
@@ -54,9 +52,9 @@
 
         var mid = _settings.MidColumnWidth;
         var side = (100 - mid) / 2.0;
-        var returnValue = $"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
-        Console.WriteLine(returnValue);
-		return returnValue;
+        return  @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
 
 	protected override void OnInitialized()

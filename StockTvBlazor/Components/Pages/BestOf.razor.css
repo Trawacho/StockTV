@@ -22,7 +22,6 @@
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
-    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
     font-weight: 650;
     font-size: min(10vh, 6vw);
     line-height: 1;
@@ -31,10 +30,12 @@
 .teamname-left {
     writing-mode: vertical-rl;
     transform: rotate(180deg); /* 270° */
+    color: var(--fg-left);
 }
 
 .teamname-right {
     writing-mode: vertical-rl; /* 90° */
+    color: var(--fg-right);
 }
 
 /* Center: Training-Layout in der mittleren Spalte */
@@ -44,7 +45,6 @@
     grid-template-rows: 10% 80% 10%;
     height: 100%;
     width: 100%;
-    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
 }
 
 .training-row {
@@ -69,9 +69,25 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 45% 10% 45%;
+    grid-template-columns: 35% 10% 10% 10% 35%;
     align-items: stretch;
 }
+
+    .training-mid-grid .left-match-points {
+        justify-content: flex-end;
+        align-items: flex-end;
+        color: var(--fg-left);
+        font-weight: 100;
+        font-size: min(20vh, 18vw) !important;
+    }
+
+    .training-mid-grid .right-match-points {
+        justify-content: flex-start;
+        align-items: flex-end;
+        color: var(--fg-right);
+        font-weight: 100;
+        font-size: min(20vh, 18vw) !important;
+    }
 
 .training-bottom-grid {
     display: grid;
@@ -95,11 +111,10 @@
 }
 
 /* Fallback (ohne JS): wird durch AutoFit inline überschrieben */
-.training-mid-grid .training-cell { font-size: min(16vh, 12vw); }
-.training-bottom-grid .training-cell { font-size: min(8vh, 12vw); }
+.training-mid-grid .training-cell {
+    font-size: min(16vh, 12vw);
+}
 
-
-
-
-
-
+.training-bottom-grid .training-cell {
+    font-size: min(8vh, 12vw);
+}

@@ -21,8 +21,7 @@ namespace StockTvBlazor.Components.ViewModels
 						return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Bahn: {_settingsService.CurrentSettings.SpielgruppeLetter}-{_settingsService.CurrentSettings.BahnNummer}";
 				}
 
-				return $"0" +
-					$"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
+				return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
 			}
 		}
 		public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
@@ -30,6 +29,8 @@ namespace StockTvBlazor.Components.ViewModels
 		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
 		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 		public string RightPoints => base.Match.CurrentGame.RightPoints;
+		public int LeftMatchPoints => base.Match.MatchPointsLeft;
+		public int RightMatchPoints => base.Match.MatchPointsRight;
 
 		public string LeftTeamName
 		{
