@@ -1,4 +1,4 @@
-﻿@page "/training"
+@page "/training"
 @using StockTvBlazor.Components.Models
 @using System.Diagnostics
 @rendermode InteractiveServer
@@ -7,29 +7,26 @@
 @inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
 @inject StockTvBlazor.Components.Services.MatchService _matchService
 @inject StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel
+@inject IJSRuntime JS
 @implements IDisposable
 
 <div class="main-grid training" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
-	<div class="header-text">@ViewModel.HeaderText</div>
+	<div class="training-row training-top-row header-text">@ViewModel.HeaderText</div>
 
-	<div class="row-2 sub-grid">
-		<div class="left-point-sum">@ViewModel.LeftPointsSum</div>
-		<div class="seperator">:</div>
-		<div class="right-point-sum">@ViewModel.RightPointsSum</div>
+	<div class="training-row training-middle-row training-mid-grid">
+		<div class="training-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
+		<div class="training-cell seperator" data-autofit data-autofit-min="12">:</div>
+		<div class="training-cell right-point-sum" data-autofit data-autofit-min="12">@ViewModel.RightPointsSum</div>
 	</div>
 
-	<div class="row-3 sub-grid">
-		<div class="left-points">@ViewModel.LeftPoins</div>
-		<div class="input-value">@ViewModel.InputValue</div>
-		<div class="right-points">@ViewModel.RightPoints</div>
+	<div class="training-row training-bottom-row training-bottom-grid">
+		<div class="training-cell left-points" data-autofit data-autofit-min="10">@ViewModel.LeftPoins</div>
+		<div class="training-cell input-value" data-autofit data-autofit-min="10">@ViewModel.InputValue</div>
+		<div class="training-cell right-points" data-autofit data-autofit-min="10">@ViewModel.RightPoints</div>
 	</div>
 
 </div>
-
-<style>
-
-</style>
 
 @code {
 	private ElementReference inputRef;
@@ -59,6 +56,7 @@
 		if (firstRender)
 		{
 			await inputRef.FocusAsync();
+			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.training");
 		}
 	}
 
