@@ -1,28 +1,43 @@
-﻿using StockTvBlazor.Components.Models;
-using System.ServiceModel.Channels;
+using StockTvBlazor.Components.Models;
 using System.Text.Json;
-using static StockTvBlazor.Components.Models.Settings;
 
 namespace StockTvBlazor.Components.Services
 {
 	public class SettingsService
 	{
-		public SettingsService()
+		private Settings? _settings;
+		private readonly string _settingsFilePath = "stocktv.config.json";
+		private readonly ILogger _logger;
+
+		public event Action? OnSettingsChanged;
+		public event Action? OnModusChanged;
+
+		public SettingsService(ILogger<SettingsService> logger)
 		{
-			_settings = LoadSettings();
+			_logger = logger;
+			_logger.LogDebug("SettingsService created - Instanz: " + GetHashCode());
 		}
 
-		private readonly Settings _settings;
-		private readonly string _settingsFilePath = "stocktv.config.json";
+		public Settings CurrentSettings
+		{
+			get
+			{
+				if (_settings == null)
+					throw new NullReferenceException("SettingsService wurde nicht initialisiert");
 
-		public event Action? OnConfigurationChanged;
+				return _settings;
+			}
+		}
 
-		public Settings CurrentSettings => _settings;
+		public async Task InitializeAsync()
+		{
+			_settings = await LoadSettingsAsync();
+		}
 
 		public void ChangeModus(bool forward)
 		{
 			var values = Enum.GetValues<Settings.MODUS>();
-			int currentIndex = Array.IndexOf(values, _settings.Modus);
+			int currentIndex = Array.IndexOf(values, CurrentSettings.Modus);
 
 
 			if (forward)
@@ -39,23 +54,23 @@ namespace StockTvBlazor.Components.Services
 			var newModus = values[currentIndex];
 			if (newModus == Settings.MODUS.TRAINING)
 			{
-				_settings.MaxKehrenProSpiel = 30;
-				_settings.MaxPunkteProKehre = 15;
+				CurrentSettings.MaxKehrenProSpiel = 30;
+				CurrentSettings.MaxPunkteProKehre = 15;
 			}
 			else
 			{
-				_settings.MaxKehrenProSpiel = 6;
-				_settings.MaxPunkteProKehre = 9;
+				CurrentSettings.MaxKehrenProSpiel = 6;
+				CurrentSettings.MaxPunkteProKehre = 9;
 			}
 
-			_settings.Modus = newModus;
-			OnConfigurationChanged?.Invoke();
+			CurrentSettings.Modus = newModus;
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeTheme(bool forward)
 		{
 			var values = Enum.GetValues<Settings.THEME>();
-			int currentIndex = Array.IndexOf(values, _settings.Theme);
+			int currentIndex = Array.IndexOf(values, CurrentSettings.Theme);
 			if (forward)
 			{
 				currentIndex = (currentIndex + 1) % values.Length;
@@ -64,14 +79,14 @@ namespace StockTvBlazor.Components.Services
 			{
 				currentIndex = (currentIndex - 1 + values.Length) % values.Length;
 			}
-			_settings.Theme = values[currentIndex];
-			OnConfigurationChanged?.Invoke();
+			CurrentSettings.Theme = values[currentIndex];
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeRichtung(bool forward)
 		{
 			var values = Enum.GetValues<Settings.RICHTUNG>();
-			int currentIndex = Array.IndexOf(values, _settings.Richtung);
+			int currentIndex = Array.IndexOf(values, CurrentSettings.Richtung);
 			if (forward)
 			{
 				currentIndex = (currentIndex + 1) % values.Length;
@@ -80,106 +95,111 @@ namespace StockTvBlazor.Components.Services
 			{
 				currentIndex = (currentIndex - 1 + values.Length) % values.Length;
 			}
-			_settings.Richtung = values[currentIndex];
-			OnConfigurationChanged?.Invoke();
+			CurrentSettings.Richtung = values[currentIndex];
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeBlockLocalChanges()
 		{
-			_settings.BlockLocalChanges = !_settings.BlockLocalChanges;
-			OnConfigurationChanged?.Invoke();
+			CurrentSettings.BlockLocalChanges = !CurrentSettings.BlockLocalChanges;
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeSpielgruppe(bool forward)
 		{
 			if (forward)
 			{
-				if (_settings.Spielgruppe < 10)
+				if (CurrentSettings.Spielgruppe < 10)
 				{
-					_settings.Spielgruppe++;
+					CurrentSettings.Spielgruppe++;
 				}
 			}
 			else
 			{
-				if (_settings.Spielgruppe > 0)
+				if (CurrentSettings.Spielgruppe > 0)
 				{
-					_settings.Spielgruppe--;
+					CurrentSettings.Spielgruppe--;
 				}
 			}
 
-			OnConfigurationChanged?.Invoke();
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeBahnNummer(bool forward)
 		{
 			if (forward)
 			{
-				if (_settings.BahnNummer < 30) // Assuming 99 is the maximum value
-					_settings.BahnNummer++;
+				if (CurrentSettings.BahnNummer < 30) // Assuming 99 is the maximum value
+					CurrentSettings.BahnNummer++;
 			}
 			else
 			{
-				if (_settings.BahnNummer > 1) // Assuming 1 is the minimum value
-					_settings.BahnNummer--;
+				if (CurrentSettings.BahnNummer > 1) // Assuming 1 is the minimum value
+					CurrentSettings.BahnNummer--;
 			}
-			OnConfigurationChanged?.Invoke();
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeMaxMaxKehrenProSpiel(bool forward)
 		{
 			if (forward)
 			{
-				if (_settings.MaxKehrenProSpiel < 30) // Assuming 30 is the maximum value
-					_settings.MaxKehrenProSpiel++;
+				if (CurrentSettings.MaxKehrenProSpiel < 30) // Assuming 30 is the maximum value
+					CurrentSettings.MaxKehrenProSpiel++;
 			}
 			else
 			{
-				if (_settings.MaxKehrenProSpiel > 4) // Assuming 4 is the minimum value
-					_settings.MaxKehrenProSpiel--;
+				if (CurrentSettings.MaxKehrenProSpiel > 4) // Assuming 4 is the minimum value
+					CurrentSettings.MaxKehrenProSpiel--;
 			}
-			OnConfigurationChanged?.Invoke();
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeMaxPunkteProKehre(bool forward)
 		{
 			if (forward)
 			{
-				if (_settings.MaxPunkteProKehre < 15) // Assuming 15 is the maximum value
-					_settings.MaxPunkteProKehre++;
+				if (CurrentSettings.MaxPunkteProKehre < 15) // Assuming 15 is the maximum value
+					CurrentSettings.MaxPunkteProKehre++;
 			}
 			else
 			{
-				if (_settings.MaxPunkteProKehre > 0) // Assuming 0 is the minimum value
-					_settings.MaxPunkteProKehre--;
+				if (CurrentSettings.MaxPunkteProKehre > 0) // Assuming 0 is the minimum value
+					CurrentSettings.MaxPunkteProKehre--;
 			}
-			OnConfigurationChanged?.Invoke();
+			OnSettingsChanged?.Invoke();
 		}
 
 		public void ChangeNetworking()
 		{
 			//todo: implement network connection logic when enabling networking
-			_settings.Networking = !_settings.Networking;
-			OnConfigurationChanged?.Invoke();
+			CurrentSettings.Networking = !CurrentSettings.Networking;
+			OnSettingsChanged?.Invoke();
 		}
 
 		#region Load and Save
-		private Settings LoadSettings()
+
+		private async Task<Settings> LoadSettingsAsync()
 		{
 			if (File.Exists(_settingsFilePath))
 			{
 				try
 				{
-					var json = File.ReadAllText(_settingsFilePath);
-					return JsonSerializer.Deserialize<Settings>(json) ?? new();
+					var json = await File.ReadAllTextAsync(_settingsFilePath);
+					var settings = JsonSerializer.Deserialize<Settings>(json) ?? new();
+					return settings;
 				}
-				catch
+				catch (Exception ex)
 				{
-					/* Log error or fallback to default */
+					Console.WriteLine($"Fehler beim Laden der Config: {ex.Message}");
 					return new Settings();
 				}
 			}
-			return new Settings();
-
+			else
+			{
+				Console.WriteLine("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
+				return new Settings();
+			}
 		}
 
 		public async Task SaveSettingsAsync()
@@ -200,7 +220,7 @@ namespace StockTvBlazor.Components.Services
 				await File.WriteAllTextAsync(_settingsFilePath, json);
 
 				// 3. Event feuern (optional hier oder in der aufrufenden Methode)
-				OnConfigurationChanged?.Invoke();
+				OnSettingsChanged?.Invoke();
 			}
 			catch (Exception ex)
 			{
@@ -211,30 +231,22 @@ namespace StockTvBlazor.Components.Services
 
 		internal async Task SaveTurnsAsync(List<Turn> turns)
 		{
-			if (_settings.Modus == Settings.MODUS.TRAINING)
+			if (CurrentSettings.Modus == Settings.MODUS.TRAINING)
 			{
 				// Im Trainingsmodus werden die Kehren nicht gespeichert, da sie nur temporär sind
 				return;
 			}
-			_settings.Kehren.Clear();
-			_settings.Kehren.AddRange(turns);
+			CurrentSettings.Kehren.Clear();
+			CurrentSettings.Kehren.AddRange(turns);
 			await SaveSettingsAsync();
 		}
 
-		internal List<ITurn> LoadTurns()
-		{
-			// Im Trainingsmodus werden die Kehren nicht geladen, da sie nur temporär sind
-			if (_settings.Modus == Settings.MODUS.TRAINING)
-				return new List<ITurn>();
-
-			LoadSettings();
-			return _settings.Kehren;
-		}
 		#endregion
 
+		#region Get and Set Settings as Byte Array for Networking
 		public byte[] GetSettings()
 		{
-			List<byte> data = new List<byte>
+			var data = new List<byte>
 			{
 				Convert.ToByte(CurrentSettings.BahnNummer),			//Bahnnummer
                 Convert.ToByte(CurrentSettings.Spielgruppe),		//SpielGruppe    
@@ -247,7 +259,32 @@ namespace StockTvBlazor.Components.Services
                 Convert.ToByte(CurrentSettings.MessageVersion),		//Version des Datenpakets. 
                 0
 			};
-			return data.ToArray();
+			return [.. data];
 		}
+
+		public void SetSettings(byte[] settings)
+		{
+			CurrentSettings.BahnNummer = settings[0];
+			CurrentSettings.Spielgruppe = settings[1];
+
+			if (CurrentSettings.Modus != (Settings.MODUS)settings[2])
+			{
+				CurrentSettings.Modus = (Settings.MODUS)settings[2];
+				OnModusChanged?.Invoke();
+			}
+
+			CurrentSettings.Modus = (Settings.MODUS)settings[2];
+			CurrentSettings.Richtung = (Settings.RICHTUNG)settings[3];
+			CurrentSettings.Theme = (Settings.THEME)settings[4];
+			CurrentSettings.MaxPunkteProKehre = settings[5];
+			CurrentSettings.MaxKehrenProSpiel = settings[6];
+			_ = settings[7];    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
+			_ = settings[8];    //Version des Datenpakets. wird hier nicht verwendet
+			_ = settings[9];    //Reserved for future use
+
+			OnSettingsChanged?.Invoke();
+		}
+
+		#endregion
 	}
 }

@@ -1,9 +1,10 @@
 ﻿@page "/turnier"
-@using StockTvBlazor.Components.Models
 @rendermode InteractiveServer
 @inject StockTvBlazor.Components.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
+@inject StockTvBlazor.Components.Services.MatchService _matchService
+@inject StockTvBlazor.Components.ViewModels.TurnierViewModel ViewModel
 @implements IDisposable
 
 <div class="main-grid turnier" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
@@ -13,18 +14,18 @@
 
 	<!-- Mittlere Spalte mit 3 Zeilen -->
 	<div class="center-column">
-		<div class="header-text">@Model.HeaderText</div>
+		<div class="header-text">@ViewModel.HeaderText</div>
 
 		<div class="row-2 sub-grid">
-			<div class="left-point-sum">@Model.LeftPointsSum</div>
+			<div class="left-point-sum">@ViewModel.LeftPointsSum</div>
 			<div class="seperator">:</div>
-			<div class="right-point-sum">@Model.RightPointsSum</div>
+			<div class="right-point-sum">@ViewModel.RightPointsSum</div>
 		</div>
 
 		<div class="row-3 sub-grid">
-			<div class="left-points">@Model.LeftPoins</div>
-			<div class="input-value">@Model.InputValue</div>
-			<div class="right-points">@Model.RightPoints</div>
+			<div class="left-points">@ViewModel.LeftPoins</div>
+			<div class="input-value">@ViewModel.InputValue</div>
+			<div class="right-points">@ViewModel.RightPoints</div>
 		</div>
 	</div>
 
@@ -37,19 +38,23 @@
 	private ElementReference inputRef;
 	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
 
-
-	public TurnierViewModel? Model { get; set; }
-
 	protected override void OnInitialized()
 	{
-		Model = new TurnierViewModel(_settingsService, _navigationManager, _publisherService);
-		Model.OnViewModelChanged += StateHasChanged;
+		ViewModel.OnViewModelChanged += HandleUpdate;
 
 	}
 	public void Dispose()
 	{
-		if (Model != null)
-			Model.OnViewModelChanged -= StateHasChanged;
+		ViewModel.OnViewModelChanged -= HandleUpdate;
+		ViewModel.Dispose();
+	}
+
+	private async void HandleUpdate()
+	{
+		await InvokeAsync(() =>
+			{
+				StateHasChanged();
+			});
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -61,10 +66,10 @@
 	}
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		if(Model == null)
-			return;	
+		if (ViewModel == null)
+			return;
 
-		await Model.ProcessKeyAsync(e.Key);
+		await ViewModel.ProcessKeyAsync(e.Key);
 		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
 	}
 

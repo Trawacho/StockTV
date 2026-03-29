@@ -2,16 +2,9 @@
 
 namespace StockTvBlazor.Components.Models
 {
-	[JsonDerivedType(typeof(Turn), typeDiscriminator: "Kehre")]
-	public interface ITurn
+	public class Turn 
 	{
-		int PointsLeft { get; set; }
-		int PointsRight { get; set; }
-		int TurnNumber { get; set; }
-	}
-
-	public class Turn : ITurn
-	{
+		[JsonConstructor]
 		private Turn()
 		{
 

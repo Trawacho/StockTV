@@ -1,0 +1,29 @@
+﻿@inject StockTvBlazor.Components.Services.SettingsService _settingsService
+@implements IDisposable
+@rendermode InteractiveServer
+
+<style @key="_updateCounter">
+	:root {
+		--bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
+		--fg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
+		--fg-left: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeft));
+		--fg-right: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
+	}
+</style>
+
+@code {
+	private int _updateCounter;
+	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+
+	protected override void OnInitialized() => _settingsService.OnSettingsChanged += HandleUpdate;
+
+	private async void HandleUpdate()
+	{
+		_updateCounter++;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public void Dispose() => _settingsService.OnSettingsChanged -= HandleUpdate;
+}
+
+

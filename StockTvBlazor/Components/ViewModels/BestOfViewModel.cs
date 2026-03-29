@@ -5,7 +5,8 @@ using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels
 {
-	public class BestOfViewModel(SettingsService settingsService, NavigationManager navigationManager, NetMqPublisherService publisherService) : BaseViewModel(settingsService, navigationManager, publisherService)
+	public class BestOfViewModel(SettingsService settingsService, MatchService matchService, NavigationManager navigationManager, NetMqPublisherService publisherService) : 
+		BaseViewModel(settingsService, matchService, navigationManager, publisherService)
 	{
 		public string HeaderText
 		{

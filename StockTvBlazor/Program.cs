@@ -2,6 +2,7 @@ using StockTvBlazor.Components;
 using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
+using StockTvBlazor.Components.ViewModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,13 +11,32 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
+builder.Services.AddSingleton<MatchService>();
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 
 builder.Services.AddSingleton<NetMqPublisherService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqPublisherService>());
 
+builder.Services.AddSingleton<NetMqResponseService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqResponseService>());
+
+builder.Services.AddScoped<TurnierViewModel>();
+builder.Services.AddScoped<TrainingViewModel>();
+builder.Services.AddScoped<BestOfViewModel>();
+builder.Services.AddScoped<SettingsViewModel>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+
+	var settingsService = services.GetRequiredService<SettingsService>();
+	await settingsService.InitializeAsync();
+
+	var matchService = services.GetRequiredService<MatchService>();
+	matchService.InitializeMatch();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

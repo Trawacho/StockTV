@@ -5,19 +5,50 @@ using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager, NetMqPublisherService publisher) 
+public abstract class BaseViewModel : IDisposable
 {
-	protected readonly SettingsService _settingsService = settingsService;
-	private readonly NavigationManager _navigationManager = navigationManager;
-	private readonly NetMqPublisherService _publisher = publisher;
+	protected readonly SettingsService _settingsService;// = settingsService;
+	private readonly MatchService _matchService;// = matchService;
+	private readonly NavigationManager _navigationManager;// = navigationManager;
+	private readonly NetMqPublisherService _publisher;// = publisher;
 	private int _inputValue;
 	private int _specialCounter;
-	private readonly Models.Match _match = new(settingsService);
 
 	public event Action? OnViewModelChanged;
-	protected Models.Match Match => _match; 
+
+	public BaseViewModel(SettingsService settingsService, MatchService matchService, NavigationManager navigationManager, NetMqPublisherService publisher)
+	{
+		_settingsService = settingsService;
+		_matchService = matchService;
+		_navigationManager = navigationManager;
+		_publisher = publisher;
+		_settingsService.OnSettingsChanged += HandleSettingsChanged;
+		_settingsService.OnModusChanged += HandleModusChanged;
+	}
+
+	private void HandleSettingsChanged()
+	{
+		OnViewModelChanged?.Invoke();
+	}
+	private void HandleModusChanged()
+	{
+		switch (_settingsService.CurrentSettings.Modus)
+		{
+			case Settings.MODUS.BESTOF:
+				_navigationManager.NavigateTo("/bestof");
+				break;
+			case Settings.MODUS.TRAINING:
+				_navigationManager.NavigateTo("/training");
+				return;
+			case Settings.MODUS.TURNIER:
+				_navigationManager.NavigateTo("/turnier");
+				return;
+		}
+	}
+
+	protected Models.Match Match => _matchService.CurrentMatch;
 	protected int InputValue => _inputValue;
-	
+
 
 	private async Task AddToGreenAsync()
 	{
@@ -27,8 +58,8 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, true);
 
-		_match.AddTurn(turn);
-		await _match.SaveTurnsToLocalSettingsAsync();
+		Match.AddTurn(turn);
+		await Match.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 
@@ -38,17 +69,17 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 		if (_inputValue == -1)
 			return;
 
-		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, true);
+		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, false);
 
-		_match.AddTurn(turn);
-		await _match.SaveTurnsToLocalSettingsAsync();
+		Match.AddTurn(turn);
+		await Match.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 	}
 	private async Task ResetAsync(bool force = false)
 	{
-		_match.Reset(force);
-		await _match.SaveTurnsToLocalSettingsAsync();
+		Match.Reset(force);
+		await Match.SaveTurnsToLocalSettingsAsync();
 		_inputValue = -1;
 	}
 
@@ -60,8 +91,8 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 			return;
 		}
 
-		_match.DeleteLastTurn();
-		await _match.SaveTurnsToLocalSettingsAsync();
+		Match.DeleteLastTurn();
+		await Match.SaveTurnsToLocalSettingsAsync();
 	}
 
 	private protected void ShowSpecialPage()
@@ -124,29 +155,29 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 		switch (value)
 		{
-			case "Enter":				ShowSpecialPage();				break;
-			case "*":					await AddToGreenAsync();		break;
-			case "-":					await DeleteLastTurnAsync();	break;
-			case "/" or "Backspace":	await AddToRedAsync();			break;
-			case "+":					await ResetAsync();				break;
+			case "Enter": ShowSpecialPage(); break;
+			case "*": await AddToGreenAsync(); break;
+			case "-": await DeleteLastTurnAsync(); break;
+			case "/" or "Backspace": await AddToRedAsync(); break;
+			case "+": await ResetAsync(); break;
 
 			default:
 				int? input = value switch
 				{
-					"1" or "End" =>			1,
-					"2" or "ArrowDown" =>	2,
-					"3" or "PageDown" =>	3,
-					"4" or "ArrowLeft" =>	4,
-					"5" or "Clear" =>		5,
-					"6" or "ArrowRight" =>	6,
-					"7" or "Home" =>		7,
-					"8" or "ArrowUp" =>		8,
-					"9" or "PageUp" =>		9,
-					"0" or "Insert" =>		0,
+					"1" or "End" => 1,
+					"2" or "ArrowDown" => 2,
+					"3" or "PageDown" => 3,
+					"4" or "ArrowLeft" => 4,
+					"5" or "Clear" => 5,
+					"6" or "ArrowRight" => 6,
+					"7" or "Home" => 7,
+					"8" or "ArrowUp" => 8,
+					"9" or "PageUp" => 9,
+					"0" or "Insert" => 0,
 					_ => null
 				};
 
-				if (input.HasValue) 
+				if (input.HasValue)
 					AddInput(input.Value);
 
 				break;
@@ -154,15 +185,13 @@ public abstract class BaseViewModel(SettingsService settingsService, NavigationM
 
 		OnViewModelChanged?.Invoke();
 
-		//_publisher.Publish("GetSettings", _settingsService.GetSettings());
-		_publisher.Publish("GetResult", _match.SerializeJson());
-		//todo: Send after each key press a network notification
-		//if (Settings.IsBroadcasting)
-		//{
-		//	if (Settings.MessageVersion == 0)
-		//		BroadcastService.SendData(_match.Serialize());
-		//	else if (Settings.MessageVersion == 1)
-		//		BroadcastService.SendData(_match.SerializeJson());
-		//}
+		_publisher.Publish("GetResult", Match.SerializeJson());
+		
+	}
+
+	public void Dispose()
+	{
+		// Hier können Ressourcen freigegeben werden, z.B. Event-Handler abmelden
+		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
 	}
 }

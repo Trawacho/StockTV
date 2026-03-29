@@ -1,18 +1,29 @@
 ﻿namespace StockTvBlazor.Components.Models
 {
-	public class Game(Settings settings, int gameNumber)
+	public class Game
 	{
-		private readonly List<ITurn> _turns = [];
-		public List<ITurn> Turns
+		private readonly Settings _settings;
+		private readonly List<Turn> _turns = [];
+
+		public Game(Settings settings, int gameNumber)
+		{
+			_settings = settings;
+			GameNumber = gameNumber;
+		}
+		public Game(int gameNumber)
+		{
+			GameNumber = gameNumber;
+			_settings = new();
+		}
+		public int GameNumber { get; }
+		public List<Turn> Turns
 		{
 			get
 			{
 				return _turns;
 			}
 		}
-		internal int GameNumber { get; } = gameNumber;
-
-		private readonly Settings _settings = settings;
+		
 
 		internal int GamePointsLeft
 		{

@@ -1,5 +1,4 @@
-﻿using StockTvBlazor.Components.Networking;
-using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Components.Services;
 using System.Text;
 using System.Text.Json;
 
@@ -12,11 +11,13 @@ public class Match
 	public event Action? OnMatchChanged;
 
 	private readonly SettingsService _settingsService;
+	private readonly ILogger<MatchService> _logger;
 
-	public Match(SettingsService settingsService)
+	public Match(SettingsService settingsService, ILogger<MatchService> logger)
 	{
 		System.Diagnostics.Debug.WriteLine("new Match created");
 		_settingsService = settingsService;
+		_logger = logger;
 		_games.Add(new Game(_settingsService.CurrentSettings, 1));
 		LoadTurnsFromLocalSettings();
 	}
@@ -45,7 +46,7 @@ public class Match
 	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
 	/// </summary>
 	/// <param name="turn"></param>
-	public void AddTurn(ITurn turn)
+	public void AddTurn(Turn turn)
 	{
 		turn.TurnNumber = CurrentGame.Turns.Count + 1;
 
@@ -103,7 +104,7 @@ public class Match
 		{
 			CurrentGame.Turns.Clear();
 		}
-		
+
 		OnMatchChanged?.Invoke();
 	}
 
@@ -145,7 +146,7 @@ public class Match
 			*/
 
 
-		List<byte> values = new List<byte>();
+		var values = new List<byte>();
 
 		values.AddRange(_settingsService.GetSettings());
 
@@ -157,17 +158,25 @@ public class Match
 		}
 
 		//Convert the list of values to an array
-		return values.ToArray();
+		return [.. values];
 	}
 
 	internal byte[] SerializeJson()
 	{
 		var values = new List<byte>();
+		try
+		{
+			values.AddRange(_settingsService.GetSettings());
+			string json = JsonSerializer.Serialize(Games);
+			values.AddRange(Encoding.UTF8.GetBytes(json));
+		}
+		catch (JsonException ex)
+		{
+			_logger.LogError(ex, $"Fehler bei der JSON-Serialisierung");
+			// Hier könntest du auch eine benutzerfreundliche Fehlermeldung zurückgeben oder eine alternative Serialisierung versuchen
+		}
 
-		values.AddRange(_settingsService.GetSettings());
-		string json = JsonSerializer.Serialize(Games);
-		values.AddRange(Encoding.UTF8.GetBytes(json));
-		return values.ToArray();
+		return [.. values];
 	}
 }
 

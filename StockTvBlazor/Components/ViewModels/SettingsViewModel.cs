@@ -4,7 +4,7 @@ using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels
 {
-	public class SettingsViewModel(SettingsService settingsService, NavigationManager navigationManager)
+	public class SettingsViewModel(SettingsService settingsService, NavigationManager navigationManager): IDisposable
 	{
 		private readonly Settings _currentSettings = settingsService.CurrentSettings;
 		private readonly SettingsService _settingsService = settingsService;
@@ -24,7 +24,7 @@ namespace StockTvBlazor.Components.ViewModels
 
 		}
 
-		public void ProcessKey(string value)
+		public async Task ProcessKeyAsync(string value)
 		{
 			switch (value)
 			{
@@ -135,6 +135,10 @@ namespace StockTvBlazor.Components.ViewModels
 			}
 		}
 
+		public void Dispose()
+		{
+			// Dispose logic if needed
+		}
 
 		public bool IsThemeActive => _currentSetting == SettingsOptions.Theme;
 		public bool IsRichtungActive => _currentSetting == SettingsOptions.Richtung;

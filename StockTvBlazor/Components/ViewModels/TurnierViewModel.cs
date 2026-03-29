@@ -6,7 +6,8 @@ using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class TurnierViewModel(SettingsService settingsService, NavigationManager navigationManager, NetMqPublisherService publisherService) : BaseViewModel(settingsService, navigationManager, publisherService)
+public class TurnierViewModel(SettingsService settingsService, MatchService matchService, NavigationManager navigationManager, NetMqPublisherService publisherService) : 
+	BaseViewModel(settingsService, matchService, navigationManager, publisherService)
 {
 	public string HeaderText
 	{

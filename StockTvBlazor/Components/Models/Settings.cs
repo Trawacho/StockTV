@@ -77,7 +77,7 @@ public class Settings
 	/// </summary>
 	public int MessageVersion => 1;
 	
-	public List<ITurn> Kehren { get; set; } = [];
+	public List<Turn> Kehren { get; set; } = [];
 
 	[JsonIgnore]
 	public string SpielgruppeLetter => Spielgruppe switch
@@ -116,7 +116,7 @@ public class Settings
 	};
 
 	[JsonIgnore]
-	public Color ForegroundColorLeftt => (Richtung, Theme) switch
+	public Color ForegroundColorLeft => (Richtung, Theme) switch
 	{
 		(RICHTUNG.LINKS, THEME.HELL) => Color.Red,
 		(RICHTUNG.RECHTS, THEME.HELL) => Color.Green,
