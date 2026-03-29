@@ -39,7 +39,18 @@ public class Match
 
 	public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
 
-	public List<Begegnung> Begegnungen { get; set; } = [];
+	private readonly List<Begegnung> _begegnungen = [];
+	public IEnumerable<Begegnung> Begegnungen => _begegnungen.AsReadOnly();
+	public void ClearBegegnungen()
+	{
+		_begegnungen.Clear();
+		OnMatchChanged?.Invoke();
+	}
+	public void AddBegegnung(Begegnung begegnung)
+	{
+		_begegnungen.Add(begegnung);
+		OnMatchChanged?.Invoke();
+	}
 
 	/// <summary>
 	/// Es wird die übergeben Kehre zum aktuellen Spiel hinzugefügt, sofern die maximale Anzahl an Kehren pro Spiel nicht überschritten wird. Ansonsten wird ein neues Spiel begonnen und die Kehre diesem Spiel hinzugefügt.
@@ -84,7 +95,7 @@ public class Match
 	{
 		if (force)
 		{
-			this.Begegnungen.Clear();
+			this.ClearBegegnungen();
 			this._games.Clear();
 			this._games.Add(new Game(_settingsService.CurrentSettings, 1));
 			OnMatchChanged?.Invoke();

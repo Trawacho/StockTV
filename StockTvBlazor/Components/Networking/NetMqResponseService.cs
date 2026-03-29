@@ -52,6 +52,8 @@ public class NetMqResponseService : BackgroundService
 
 				// 4. Die Antwort als Multipart-Message zurücksenden
 				// Im REP-Muster muss IMMER eine Antwort (auch mehrteilig) folgen
+				if (responseMsg.IsEmpty)
+					responseMsg.Append("ACK");
 				e.Socket.SendMultipartMessage(responseMsg);
 			}
 			else
@@ -100,6 +102,12 @@ public class NetMqResponseService : BackgroundService
 				_logger.LogDebug("ResetResult topic received, resetting current match.");
 				_matchService.CurrentMatch.Reset(true);
 				response.Append("ResetResult");
+				break;
+
+			case "SetTeamNames":
+				_logger.LogDebug("SetTeamNames topic received, updating team names.");
+				_matchService.SetTeamNames(request[1].ToByteArray());
+				response.Append("ACK");
 				break;
 
 			default:

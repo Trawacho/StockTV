@@ -1,46 +1,68 @@
-﻿@page "/turnier"
+@page "/turnier"
 @rendermode InteractiveServer
 @inject StockTvBlazor.Components.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
 @inject StockTvBlazor.Components.Services.MatchService _matchService
 @inject StockTvBlazor.Components.ViewModels.TurnierViewModel ViewModel
+@inject IJSRuntime JS
 @implements IDisposable
 
+<p>Aktuelles ViewModel: @ViewModel.GetType().Name</p>
+
 <div class="main-grid turnier" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+	<div class="scoreboard-shell" style="@GetShellGridStyle()">
+		@if (TeamNamesAvailable)
+		{
+			<div class="teamname teamname-left">@ViewModel.LeftTeamName</div>
+		}
 
-	<!-- Linke Spalte -->
-	<div class="sidebar-left">Links</div>
+		<div class="scoreboard-center">
+			<div class="training-row training-top-row header-text">@ViewModel.HeaderText</div>
 
-	<!-- Mittlere Spalte mit 3 Zeilen -->
-	<div class="center-column">
-		<div class="header-text">@ViewModel.HeaderText</div>
+			<div class="training-row training-middle-row training-mid-grid">
+				<div class="training-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
+				<div class="training-cell seperator" data-autofit data-autofit-min="12">:</div>
+				<div class="training-cell right-point-sum" data-autofit data-autofit-min="12">@ViewModel.RightPointsSum</div>
+			</div>
 
-		<div class="row-2 sub-grid">
-			<div class="left-point-sum">@ViewModel.LeftPointsSum</div>
-			<div class="seperator">:</div>
-			<div class="right-point-sum">@ViewModel.RightPointsSum</div>
+			<div class="training-row training-bottom-row training-bottom-grid">
+				<div class="training-cell left-points" data-autofit data-autofit-min="10">@ViewModel.LeftPoins</div>
+				<div class="training-cell input-value" data-autofit data-autofit-min="10">@ViewModel.InputValue</div>
+				<div class="training-cell right-points" data-autofit data-autofit-min="10">@ViewModel.RightPoints</div>
+			</div>
 		</div>
 
-		<div class="row-3 sub-grid">
-			<div class="left-points">@ViewModel.LeftPoins</div>
-			<div class="input-value">@ViewModel.InputValue</div>
-			<div class="right-points">@ViewModel.RightPoints</div>
-		</div>
+		@if (TeamNamesAvailable)
+		{
+			<div class="teamname teamname-right">@ViewModel.RightTeamName</div>
+		}
 	</div>
-
-	<!-- Rechte Spalte -->
-	<div class="sidebar-right">Rechts</div>
 
 </div>
 
 @code {
-	private ElementReference inputRef;
-	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+    private ElementReference inputRef;
+    private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+
+    private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
+
+    private string GetShellGridStyle()
+    {
+        if (!TeamNamesAvailable)
+            return "grid-template-columns: 100%;";
+
+        var mid = _settings.MidColumnWidth;
+        var side = (100 - mid) / 2.0;
+        var returnValue = $"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
+        Console.WriteLine(returnValue);
+		return returnValue;
+	}
 
 	protected override void OnInitialized()
 	{
 		ViewModel.OnViewModelChanged += HandleUpdate;
+		
 
 	}
 	public void Dispose()
@@ -62,6 +84,7 @@
 		if (firstRender)
 		{
 			await inputRef.FocusAsync();
+			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.turnier");
 		}
 	}
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

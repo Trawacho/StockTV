@@ -31,8 +31,8 @@ public class Settings
 	public enum MODUS
 	{
 		TRAINING = 0,
-		TURNIER = 1,
-		BESTOF = 2,
+		BESTOF = 1,
+		TURNIER = 2,
 		ZIEL = 100
 	}
 
@@ -76,7 +76,12 @@ public class Settings
 	/// Hier wird festgelegt, welche Version der Nachrichtenschnittstelle verwendet wird.
 	/// </summary>
 	public int MessageVersion => 1;
-	
+
+	/// <summary>
+	// Breite der mittleren Spalte, Ein Wert von 6 bedeutet, dass 60% der Breite für die mittlere Spalte verwendet wird, die restlichen 40% werden gleichmäßig auf die linke und rechte Spalte verteilt. Dieser Wert hat nur Auswirkungen, wenn TeamNamen angezeigt werden. In diesem Fall wird die mittlere Spalte für die TeamNamen verwendet.
+	/// </summary>
+	public int MidColumnWidth { get; set; } = 6;
+
 	public List<Turn> Kehren { get; set; } = [];
 
 	[JsonIgnore]

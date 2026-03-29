@@ -25,7 +25,7 @@ namespace StockTvBlazor.Components.ViewModels
 					$"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
 			}
 		}
-
+		public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
 		public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
 		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
 		public string LeftPoins => base.Match.CurrentGame.LeftPoints;

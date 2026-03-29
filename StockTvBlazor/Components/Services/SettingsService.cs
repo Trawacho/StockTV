@@ -255,7 +255,7 @@ namespace StockTvBlazor.Components.Services
                 Convert.ToByte(CurrentSettings.Theme),				//FarbModus (hell,dunkel)
                 Convert.ToByte(CurrentSettings.MaxPunkteProKehre),	//Anzahl max. Punkte pro Kehre
                 Convert.ToByte(CurrentSettings.MaxKehrenProSpiel),	//Anzahl der Kehren
-                0,													//Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
+                Convert.ToByte(CurrentSettings.MidColumnWidth) ,    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
                 Convert.ToByte(CurrentSettings.MessageVersion),		//Version des Datenpakets. 
                 0
 			};
@@ -278,7 +278,7 @@ namespace StockTvBlazor.Components.Services
 			CurrentSettings.Theme = (Settings.THEME)settings[4];
 			CurrentSettings.MaxPunkteProKehre = settings[5];
 			CurrentSettings.MaxKehrenProSpiel = settings[6];
-			_ = settings[7];    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
+			CurrentSettings.MidColumnWidth = settings[7];    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
 			_ = settings[8];    //Version des Datenpakets. wird hier nicht verwendet
 			_ = settings[9];    //Reserved for future use
 

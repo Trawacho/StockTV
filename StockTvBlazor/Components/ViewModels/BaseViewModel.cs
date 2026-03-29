@@ -2,6 +2,7 @@
 using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace StockTvBlazor.Components.ViewModels;
 
@@ -24,6 +25,12 @@ public abstract class BaseViewModel : IDisposable
 		_publisher = publisher;
 		_settingsService.OnSettingsChanged += HandleSettingsChanged;
 		_settingsService.OnModusChanged += HandleModusChanged;
+		_matchService.CurrentMatch.OnMatchChanged += HandleMatchChanged;
+	}
+
+	private void HandleMatchChanged()
+	{
+		OnViewModelChanged?.Invoke();
 	}
 
 	private void HandleSettingsChanged()
@@ -193,5 +200,6 @@ public abstract class BaseViewModel : IDisposable
 	{
 		// Hier können Ressourcen freigegeben werden, z.B. Event-Handler abmelden
 		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
+		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
 }

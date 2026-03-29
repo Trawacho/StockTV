@@ -1,46 +1,101 @@
-﻿
 
-/* Haupt-Layout: 3 Spalten */
+
+/* Outer: 1 oder 3 Spalten (inline grid-template-columns in Razor) */
 .main-grid.turnier {
     background-color: var(--bg-color);
-    display: grid;
-    grid-template-columns: 3vw 1fr 3vw;
     position: fixed;
     inset: 0;
     height: 100vh;
     width: 100vw;
-    /* gap: 10px; */
 }
 
-.sidebar-left, .sidebar-right {
+.scoreboard-shell {
     display: grid;
-    place-items: center; /* Zentriert den Text exakt mittig */
-    height: 100vh; /* Füllt die volle Bildschirmhöhe */
-    width: 3vw; /* Füllt die volle Spaltenbreite */
-    overflow: hidden; /* Verhindert Überlaufen */
-    /* SCHRIFT-LOGIK */
-    /* Da die Spalte 3vw breit ist, nehmen wir fast 3vw als Schriftgröße */
-    font-size: 2.8vw;
-    font-weight: 900; /* Extra fett für maximale Füllung */
-    white-space: nowrap; /* Text darf NIEMALS umbrechen */
-    text-transform: uppercase; /* Großbuchstaben wirken oft "blockiger" und füllender */
-    line-height: 1; /* Kein zusätzlicher Zeilenabstand */
+    height: 100%;
+    width: 100%;
+    align-items: stretch;
 }
 
-/* Optik zur Verdeutlichung */
-/* Linke Sidebar: Text von unten nach oben (90° gegen den Uhrzeigersinn) */
-.sidebar-left {
-    grid-column: 1;
-    grid-row: 1 / span 3;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    /* Ergebnis: Text liest sich von unten nach oben */
+.teamname {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: var(--fg-color);
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
+    font-weight: 650;
+    font-size: min(10vh, 6vw);
+    line-height: 1;
 }
 
-/* Rechte Sidebar: Text von oben nach unten */
-.sidebar-right {
-    grid-column: 3;
-    grid-row: 1 / span 3;
+.teamname-left {
     writing-mode: vertical-rl;
-    /* Ergebnis: Text liest sich von oben nach unten */
+    transform: rotate(180deg); /* 270° */
 }
+
+.teamname-right {
+    writing-mode: vertical-rl; /* 90° */
+}
+
+/* Center: Training-Layout in der mittleren Spalte */
+.scoreboard-center {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 10% 80% 10%;
+    height: 100%;
+    width: 100%;
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter", Roboto, Arial, sans-serif;
+}
+
+.training-row {
+    width: 100%;
+    height: 100%;
+}
+
+.training-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    line-height: 1;
+    font-size: min(8vh, 10vw);
+}
+
+.training-mid-grid {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 45% 10% 45%;
+    align-items: stretch;
+}
+
+.training-bottom-grid {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 42.5% 15% 42.5%;
+    align-items: stretch;
+}
+
+.training-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 650;
+    line-height: 1;
+}
+
+/* Fallback (ohne JS): wird durch AutoFit inline überschrieben */
+.training-mid-grid .training-cell { font-size: min(16vh, 12vw); }
+.training-bottom-grid .training-cell { font-size: min(8vh, 12vw); }
