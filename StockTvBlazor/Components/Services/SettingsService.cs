@@ -8,7 +8,17 @@ namespace StockTvBlazor.Components.Services
 	public class SettingsService
 	{
 		private Settings? _settings;
-		private readonly string _settingsFilePath = "stocktv.config.json";
+        private readonly string _settingsFileName = "stocktv.config.json";
+        private string _settingsFilePath
+        {
+            get
+            {
+                string appDataPath = AppContext.BaseDirectory;
+                string settingsFolderPath = Path.Combine(appDataPath, "_config");
+                return Path.Combine(settingsFolderPath, _settingsFileName);
+            }
+        }
+        
 		private readonly ILogger _logger;
 
 		public event Action? OnSettingsChanged;

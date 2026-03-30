@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/build/">
     <File Path="build/buildproject.bat" />
+    <File Path="build/DisplayApp.bat" />
     <File Path="build/docker-compose.yml" />
     <File Path="build/dockerfile" />
     <File Path="build/OpenBrowser.bat" />
