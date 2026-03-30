@@ -26,8 +26,11 @@ public abstract class BaseViewModel : IDisposable
 		_matchService.CurrentMatch.OnMatchChanged += HandleMatchChanged;
 	}
 
+	private bool _disposed = false;
 	public void Dispose()
 	{
+		if (_disposed) return;
+		_disposed = true;
 		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
 		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
