@@ -8,10 +8,15 @@ namespace StockTvBlazor.Components.Models;
 public class Settings
 {
 
-	/// <summary>
-	/// Auflistung der möglichen Darstellungsmodes: Hell oder Dunkel
+    /// <summary>
+    /// Logging der Daten in eine Datei. 
 	/// </summary>
-	public enum THEME
+    public bool FileLoggingEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Auflistung der möglichen Darstellungsmodes: Hell oder Dunkel
+    /// </summary>
+    public enum THEME
 	{
 		HELL = 0,
 		DUNKEL = 1
@@ -151,8 +156,8 @@ public class Settings
 		_ => Color.Cyan
 	};
 
-	#endregion
-	
-	
+    #endregion
+
+
 }
 
