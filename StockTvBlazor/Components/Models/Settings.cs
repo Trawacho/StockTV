@@ -87,7 +87,8 @@ public class Settings
 	/// </summary>
 	public int MidColumnWidth { get; set; } = 6;
 
-	public List<Turn> Kehren { get; set; } = [];
+    [JsonIgnore]
+    public List<Turn> Kehren { get; set; } = [];
 
 	[JsonIgnore]
 	public string SpielgruppeLetter => Spielgruppe switch
