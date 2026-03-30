@@ -2,7 +2,6 @@
 using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace StockTvBlazor.Components.ViewModels;
 
@@ -27,6 +26,13 @@ public abstract class BaseViewModel : IDisposable
 		_settingsService.OnSettingsChanged += HandleSettingsChanged;
 		_settingsService.OnModusChanged += HandleModusChanged;
 		_matchService.CurrentMatch.OnMatchChanged += HandleMatchChanged;
+	}
+
+	public void Dispose()
+	{
+		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
+		_settingsService.OnModusChanged -= HandleModusChanged;
+		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
 
 	private void HandleMatchChanged()
@@ -57,10 +63,8 @@ public abstract class BaseViewModel : IDisposable
 	protected Models.Match Match => _matchService.CurrentMatch;
 	protected int InputValue => _inputValue;
 
-	public string ShellGridStyle
+	public string GetShellGridStyle()
 	{
-		get
-		{
 				if (!TeamNamesAvailable)
 					return "grid-template-columns: 100%;";
 
@@ -69,7 +73,6 @@ public abstract class BaseViewModel : IDisposable
 				return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
 										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
 										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
-		}
 	}
 
 	public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
@@ -232,12 +235,5 @@ public abstract class BaseViewModel : IDisposable
 
 		_publisher.Publish("GetResult", Match.SerializeJson());
 
-	}
-
-	public void Dispose()
-	{
-		// Hier können Ressourcen freigegeben werden, z.B. Event-Handler abmelden
-		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
-		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
 }
