@@ -77,11 +77,6 @@ namespace StockTvBlazor.Components.Services
             OnSettingsChanged?.Invoke();
         }
 
-        //public async Task InitializeAsync()
-        //{
-        //    _settings = await LoadSettingsAsync();
-        //}
-
         public void ChangeModus(bool forward)
         {
             var newModus = forward
