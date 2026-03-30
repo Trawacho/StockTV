@@ -2,6 +2,7 @@
 using NetMQ.Sockets;
 using StockTvBlazor.Components.Services;
 using System.Text;
+using System.Threading.Channels;
 
 namespace StockTvBlazor.Components.Networking;
 
@@ -13,6 +14,7 @@ public class NetMqResponseService : BackgroundService
 	private readonly SettingsService _settingsService;
 	private readonly MatchService _matchService;
 
+	private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();
 	public NetMqResponseService(ILogger<NetMqResponseService> logger, SettingsService settingsService, MatchService matchService)
 	{
 		_logger = logger;
@@ -94,20 +96,27 @@ public class NetMqResponseService : BackgroundService
 
 			case "SetSettings":
 				_logger.LogDebug("SetSettings topic received, updating settings.");
-				_settingsService.SetSettings(request[1].ToByteArray());
+				_actionChannel.Writer.TryWrite(() =>
+					_settingsService.SetSettings(request[1].ToByteArray()));
+				//_settingsService.SetSettings(request[1].ToByteArray());
 				response.Append("ACK");
 				break;
 
 			case "ResetResult":
 				_logger.LogDebug("ResetResult topic received, resetting current match.");
-				_matchService.CurrentMatch.Reset(true);
-				response.Append("ResetResult");
+				_actionChannel.Writer.TryWrite(() =>
+					_matchService.CurrentMatch.Reset(true));
+				//_matchService.CurrentMatch.Reset(true);
+				response.Append("ACK");
 				break;
 
 			case "SetTeamNames":
 				_logger.LogDebug("SetTeamNames topic received, updating team names.");
-				_matchService.SetTeamNames(request[1].ToByteArray());
+				_actionChannel.Writer.TryWrite(() =>
+					_matchService.SetTeamNames(request[1].ToByteArray()));
+				//_matchService.SetTeamNames(request[1].ToByteArray());
 				response.Append("ACK");
+
 				break;
 
 			default:
@@ -120,27 +129,37 @@ public class NetMqResponseService : BackgroundService
 		return response;
 	}
 
-	protected override Task ExecuteAsync(CancellationToken stoppingToken)
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
 		// Startet den Poller-Thread asynchron
 		_poller.RunAsync();
 
-		// Hält den BackgroundService am Leben, bis die App gestoppt wird
-		return Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ =>
+		await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
 		{
-			_poller.Stop();
-		}, stoppingToken);
+			try
+			{
+				action();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Fehler beim Ausführen einer Channel-Aktion");
+			}
+		}
+
+		//// Hält den BackgroundService am Leben, bis die App gestoppt wird
+		//return Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ =>
+		//{
+		//	_poller.Stop();
+		//}, stoppingToken);
 	}
 
 	public override void Dispose()
 	{
-		// Ressourcen sauber freigeben
+		_actionChannel.Writer.Complete();
 		if (_poller.IsRunning) _poller.Stop();
-
 		_poller.Dispose();
 		_repSocket.Close();
 		_repSocket.Dispose();
-
 		base.Dispose();
 	}
 }
