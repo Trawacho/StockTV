@@ -86,35 +86,9 @@
 			}
 		}
 
-		internal string LeftPoints
-		{
-			get
-			{
-				string temp = string.Empty;
-				foreach (var item in Turns.OrderBy(x => x.TurnNumber))
-				{
-					temp += String.IsNullOrEmpty(temp) ? "" : "-";
-					temp += $"{item.PointsLeft}";
-				}
+		internal string LeftPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsLeft));
 
-				return temp;
-			}
-		}
-
-		internal string RightPoints
-		{
-			get
-			{
-				string temp = string.Empty;
-				foreach (var item in Turns.OrderBy(x => x.TurnNumber))
-				{
-					temp += String.IsNullOrEmpty(temp) ? "" : "-";
-					temp += $"{item.PointsRight}";
-				}
-
-				return temp;
-			}
-		}
+		internal string RightPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsRight));
 
 		public void DeleteLastTurn()
 		{
