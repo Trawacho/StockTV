@@ -1,0 +1,68 @@
+﻿@page "/layouttest"
+
+
+<div class="containerX">
+    @if (isLeftPanelVisible)
+    {
+        <div class="left">Mia san a da</div>
+    }
+
+    <div class="content">
+        <div class="line line-1">HEADER: Bahn X</div>
+
+        <div class="line line-2">
+            <PunkteAnzeige Punkte1="@scoreA" Punkte2="scoreB" />
+        </div>
+
+        <div class="line line-3">
+            <PunkteEingabe Punkte1="@links"
+                           Punkte2="@rechts"
+                           WertText="@meinWert"
+                           OnWertChanged="HandleWertChanged" />
+        </div>
+
+        @if (isAdvertVisible)
+        {
+            <div class="line line-Advert">Werbung</div>
+        }
+    </div>
+
+    @if (isRightPanelVisible)
+    {
+        <div class="right">Ein Verein mit einem sehr sehr sehr langen Namen</div>
+    }
+</div>
+<p style="color:red">Test: @test</p>
+@code {
+
+    // Variablendeklaration zur Steuerung der Sichtbarkeit von Zeile 4
+    private bool isAdvertVisible = false;
+    private bool isLeftPanelVisible = true;
+    private bool isRightPanelVisible = true;
+    // Methode zum Umschalten der Sichtbarkeit von Zeile 4
+
+    int scoreA = 10;
+    int scoreB = 3;
+    string links = "2-0-1-3";
+    string rechts = "0-1-0-0";
+    int eingabeWert = 0;
+
+    string meinWert = "";
+ 
+    void HandleWertChanged(string wert)
+    {
+        meinWert = wert;
+    }
+
+    private void ToggleLine4()
+    {
+        isAdvertVisible = !isAdvertVisible;
+    }
+
+    string test = "läuft";
+
+    void OnKeyDownGlobal(KeyboardEventArgs e)
+    {
+        test = $"Global: {e.Key}";
+    }
+}

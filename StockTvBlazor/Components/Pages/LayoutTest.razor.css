@@ -1,0 +1,66 @@
+﻿html, body {
+    margin: 0;
+    height: 100%;
+}
+
+.containerX {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Seitenleisten */
+.left, .right {
+    width: 100px;
+    background: #ccc;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    writing-mode: vertical-rl;
+    font-size: 24px;
+    font-family: Arial, sans-serif;
+}
+
+/* optional: linke Seite drehen */
+.left {
+    transform: rotate(180deg);
+}
+
+/* Content-Bereich */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* verhindert Überlauf */
+}
+
+/* Zeilen */
+.line {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* feste / flexible Höhen */
+.line-1 {
+    flex: 0 0 80px;
+    background: lightblue;
+}
+
+.line-2 {
+    flex: 3;
+    background: lightgreen;
+}
+
+.line-3 {
+    flex: 1;
+    background: lightcoral;
+}
+
+.line-Advert {
+    flex: 2 0 60px;
+    background: orange;
+    color: white;
+    font-size: 40px;
+}

@@ -1,0 +1,33 @@
+﻿.punkte-anzeige {
+    font-size: 20rem;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+/* Punkte links */
+.punkte-links {
+    color: blueviolet;
+    flex: 0 0 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Trenner */
+.trenner {
+    flex: 0 0 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10cqw;
+}
+
+/* Punkte rechts */
+.punkte-rechts {
+    color: green;
+    flex: 0 0 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
