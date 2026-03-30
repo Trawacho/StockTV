@@ -140,13 +140,8 @@ public class Settings
     public Color ForegroundColor => Theme switch
     {
         THEME.HELL => Color.Black,
-        _ => Color.White
+        _ => Color.LightGray
     }; 
-	//public Color ForegroundColor => Theme switch
- //   {
- //       THEME.HELL => Color.Black,
- //       _ => Color.LightGray
- //   };
 
     [JsonIgnore]
 	public Color ForegroundZielSummeGesamt => Theme switch
