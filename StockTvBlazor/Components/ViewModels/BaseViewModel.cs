@@ -61,6 +61,17 @@ public abstract class BaseViewModel : IDisposable
 
 	protected Models.Match Match => _matchService.CurrentMatch;
 	
+	protected string HeaderTextBasis
+	{
+		get
+		{
+			var s = _settingsService.CurrentSettings;
+			var prefix = s.BlockLocalChanges ? "." : "";
+			return s.SpielgruppeLetter == string.Empty
+				? $"{prefix}Bahn: {s.BahnNummer}"
+				: $"{prefix}Bahn: {s.SpielgruppeLetter}-{s.BahnNummer}";
+		}
+	}
 
 	public string InputValue => _inputValue < 0 ? "" : _inputValue.ToString();
 
