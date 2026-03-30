@@ -164,13 +164,13 @@ namespace StockTvBlazor.Components.Services
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine($"Fehler beim Laden der Config: {ex.Message}");
+					_logger.LogError($"Fehler beim Laden der Config: {ex.Message}");
 					return new Settings();
 				}
 			}
 			else
 			{
-				Console.WriteLine("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
+				_logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
 				return new Settings();
 			}
 		}
@@ -191,14 +191,11 @@ namespace StockTvBlazor.Components.Services
 				var json = JsonSerializer.Serialize(_settings, options);
 
 				await File.WriteAllTextAsync(_settingsFilePath, json);
-
-				// 3. Event feuern (optional hier oder in der aufrufenden Methode)
-				OnSettingsChanged?.Invoke();
 			}
 			catch (Exception ex)
 			{
 				// Hier ggf. Logger injizieren und Fehler loggen
-				Console.WriteLine($"Fehler beim Speichern der Config: {ex.Message}");
+				_logger.LogError($"Fehler beim Speichern der Config: {ex.Message}");
 			}
 		}
 
