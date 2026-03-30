@@ -136,13 +136,18 @@ public class Settings
 	};
 
 	[JsonIgnore]
-	public Color ForegroundColor => Theme switch
-	{
-		THEME.HELL => Color.Black,
-		_ => Color.LightGray
-	};
+    public Color ForegroundColor => Theme switch
+    {
+        THEME.HELL => Color.Black,
+        _ => Color.White
+    }; 
+	//public Color ForegroundColor => Theme switch
+ //   {
+ //       THEME.HELL => Color.Black,
+ //       _ => Color.LightGray
+ //   };
 
-	[JsonIgnore]
+    [JsonIgnore]
 	public Color ForegroundZielSummeGesamt => Theme switch
 	{
 		THEME.HELL => Color.DarkMagenta,

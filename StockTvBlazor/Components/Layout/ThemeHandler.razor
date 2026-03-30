@@ -3,27 +3,39 @@
 @rendermode InteractiveServer
 
 <style @key="_updateCounter">
-	:root {
-		--bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-		--fg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-		--fg-left: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeft));
-		--fg-right: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
-	}
+    :root {
+        --bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
+        --fg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
+        --fg-left: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeft));
+        --fg-right: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
+    }
 </style>
 
 @code {
-	private int _updateCounter;
-	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+    private int _updateCounter;
+    private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
 
-	protected override void OnInitialized() => _settingsService.OnSettingsChanged += HandleUpdate;
+    protected override void OnInitialized() => _settingsService.OnSettingsChanged += HandleUpdate;
 
-	private async void HandleUpdate()
-	{
-		_updateCounter++;
-		await InvokeAsync(StateHasChanged);
-	}
+    private async void HandleUpdate()
+    {
+        _updateCounter++;
 
-	public void Dispose() => _settingsService.OnSettingsChanged -= HandleUpdate;
+        if (System.Diagnostics.Debugger.IsAttached)
+        {
+            Console.WriteLine($"-----------------------------------------");
+            Console.WriteLine($"bg-color: {_settings.BackgroundColor}");
+            Console.WriteLine($"fg-color: {_settings.ForegroundColor}");
+            Console.WriteLine($"fg-left: {_settings.ForegroundColorLeft}");
+            Console.WriteLine($"fg-right: {_settings.ForegroundColorRight}");
+        }
+
+
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _settingsService.OnSettingsChanged -= HandleUpdate;
 }
 
 
