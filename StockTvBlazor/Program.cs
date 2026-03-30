@@ -25,10 +25,10 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqPublisherServ
 builder.Services.AddSingleton<NetMqResponseService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqResponseService>());
 
-builder.Services.AddScoped<TurnierViewModel>();
-builder.Services.AddScoped<TrainingViewModel>();
-builder.Services.AddScoped<BestOfViewModel>();
-builder.Services.AddScoped<SettingsViewModel>();
+builder.Services.AddTransient<TurnierViewModel>();
+builder.Services.AddTransient<TrainingViewModel>();
+builder.Services.AddTransient<BestOfViewModel>();
+builder.Services.AddTransient<SettingsViewModel>();
 
 var app = builder.Build();
 
