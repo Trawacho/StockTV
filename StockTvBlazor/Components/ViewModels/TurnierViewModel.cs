@@ -2,7 +2,6 @@
 using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
-using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Components.ViewModels;
 
