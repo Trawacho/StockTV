@@ -83,9 +83,9 @@ public class Settings
 	public int MessageVersion => 1;
 
 	/// <summary>
-	// Breite der mittleren Spalte, Ein Wert von 6 bedeutet, dass 60% der Breite für die mittlere Spalte verwendet wird, die restlichen 40% werden gleichmäßig auf die linke und rechte Spalte verteilt. Dieser Wert hat nur Auswirkungen, wenn TeamNamen angezeigt werden. In diesem Fall wird die mittlere Spalte für die TeamNamen verwendet.
+	// Breite der mittleren Spalte, Ein Wert von 90 bedeutet, dass 90% der Breite für die mittlere Spalte verwendet wird, die restlichen 10% werden gleichmäßig auf die linke und rechte Spalte verteilt. Dieser Wert hat nur Auswirkungen, wenn TeamNamen angezeigt werden. In diesem Fall wird die mittlere Spalte für die TeamNamen verwendet.
 	/// </summary>
-	public int MidColumnWidth { get; set; } = 6;
+	public int MidColumnWidth { get; set; } = 90;
 
     [JsonIgnore]
     public List<Turn> Kehren { get; set; } = [];
