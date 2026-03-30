@@ -158,7 +158,7 @@ namespace StockTvBlazor.Components.Services
 			MODUS.BESTOF => "/bestof",
 			MODUS.TURNIER => "/turnier",
 			MODUS.ZIEL => "/ziel",
-			_ => "training"
+			_ => "/training"
 		};
 
 
