@@ -1,6 +1,7 @@
 using StockTvBlazor.Components.Extensions;
 using StockTvBlazor.Components.Models;
 using System.Text.Json;
+using static StockTvBlazor.Components.Models.Settings;
 
 namespace StockTvBlazor.Components.Services
 {
@@ -11,7 +12,7 @@ namespace StockTvBlazor.Components.Services
 		private readonly ILogger _logger;
 
 		public event Action? OnSettingsChanged;
-		public event Action? OnModusChanged;
+		public event Action<string>? OnNavigationRequested;
 
 		public SettingsService(ILogger<SettingsService> logger)
 		{
@@ -53,6 +54,7 @@ namespace StockTvBlazor.Components.Services
 			}
 
 			CurrentSettings.Modus = newModus;
+			OnNavigationRequested?.Invoke(GetModusUrl(newModus));
 			OnSettingsChanged?.Invoke();
 		}
 
@@ -149,6 +151,17 @@ namespace StockTvBlazor.Components.Services
 			CurrentSettings.Networking = !CurrentSettings.Networking;
 			OnSettingsChanged?.Invoke();
 		}
+
+		private static string GetModusUrl(MODUS modus) => modus switch
+		{
+			MODUS.TRAINING => "/training",
+			MODUS.BESTOF => "/bestof",
+			MODUS.TURNIER => "/turnier",
+			MODUS.ZIEL => "/ziel",
+			_ => "training"
+		};
+
+
 
 		#region Load and Save
 
@@ -255,7 +268,7 @@ namespace StockTvBlazor.Components.Services
 			if (CurrentSettings.Modus != (Settings.MODUS)settings[2])
 			{
 				CurrentSettings.Modus = (Settings.MODUS)settings[2];
-				OnModusChanged?.Invoke();
+				OnNavigationRequested?.Invoke(GetModusUrl(CurrentSettings.Modus));
 			}
 
 			CurrentSettings.Richtung = (Settings.RICHTUNG)settings[3];

@@ -9,29 +9,26 @@ public abstract class BaseViewModel : IDisposable
 {
 	protected readonly SettingsService _settingsService;
 	private readonly MatchService _matchService;
-	private readonly NavigationManager _navigationManager;
 	private readonly NetMqPublisherService _publisher;
 	private int _inputValue;
 	private int _specialCounter;
 	private readonly Debounce _debounce = new();
 
 	public event Action? OnViewModelChanged;
+	public event Action<string>? OnNavigationRequested;
 
-	public BaseViewModel(SettingsService settingsService, MatchService matchService, NavigationManager navigationManager, NetMqPublisherService publisher)
+	public BaseViewModel(SettingsService settingsService, MatchService matchService, NetMqPublisherService publisher)
 	{
 		_settingsService = settingsService;
 		_matchService = matchService;
-		_navigationManager = navigationManager;
 		_publisher = publisher;
 		_settingsService.OnSettingsChanged += HandleSettingsChanged;
-		_settingsService.OnModusChanged += HandleModusChanged;
 		_matchService.CurrentMatch.OnMatchChanged += HandleMatchChanged;
 	}
 
 	public void Dispose()
 	{
 		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
-		_settingsService.OnModusChanged -= HandleModusChanged;
 		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
 
@@ -43,24 +40,10 @@ public abstract class BaseViewModel : IDisposable
 	{
 		OnViewModelChanged?.Invoke();
 	}
-	private void HandleModusChanged()
-	{
-		switch (_settingsService.CurrentSettings.Modus)
-		{
-			case Settings.MODUS.BESTOF:
-				_navigationManager.NavigateTo("/bestof");
-				break;
-			case Settings.MODUS.TRAINING:
-				_navigationManager.NavigateTo("/training");
-				return;
-			case Settings.MODUS.TURNIER:
-				_navigationManager.NavigateTo("/turnier");
-				return;
-		}
-	}
+
 
 	protected Models.Match Match => _matchService.CurrentMatch;
-	
+
 	protected string HeaderTextBasis
 	{
 		get
@@ -85,12 +68,12 @@ public abstract class BaseViewModel : IDisposable
 
 	public string GetShellGridStyle()
 	{
-				if (!TeamNamesAvailable)
-					return "grid-template-columns: 100%;";
+		if (!TeamNamesAvailable)
+			return "grid-template-columns: 100%;";
 
-				var mid = _settingsService.CurrentSettings.MidColumnWidth;
-				var side = (100 - mid) / 2.0;
-				return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+		var mid = _settingsService.CurrentSettings.MidColumnWidth;
+		var side = (100 - mid) / 2.0;
+		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
 										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
 										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
@@ -170,7 +153,8 @@ public abstract class BaseViewModel : IDisposable
 
 		if (_inputValue == 0)
 		{
-			_navigationManager.NavigateTo("/settings");
+			//_navigationManager.NavigateTo("/settings");
+			OnNavigationRequested?.Invoke("/settings");
 
 		}
 		else if (_inputValue == 10)

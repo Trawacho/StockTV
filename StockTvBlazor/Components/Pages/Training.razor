@@ -35,12 +35,22 @@
 	protected override void OnInitialized()
 	{
 		ViewModel.OnViewModelChanged += HandleUpdate;
+		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+		ViewModel.OnNavigationRequested += HandleNavigationRequested;
 	}
 
 	public void Dispose()
 	{
 		ViewModel.OnViewModelChanged -= HandleUpdate;
+		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
+		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
+
 		ViewModel.Dispose();
+	}
+
+	private void HandleNavigationRequested(string url)
+	{
+		InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 
 	private async void HandleUpdate()
