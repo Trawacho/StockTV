@@ -73,13 +73,19 @@
     protected override void OnInitialized()
     {
         _settingsService.OnSettingsChanged += StateHasChanged;
+		_settingsService.OnNavigationRequested += HandleNavigationRequested;
     }
 
     public void Dispose()
     {
         _settingsService.OnSettingsChanged -= StateHasChanged;
+		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
         ViewModel.Dispose();
     }
+    private void HandleNavigationRequested(string url)
+    {
+        InvokeAsync(() => _navigationManager.NavigateTo(url));
+	}
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
