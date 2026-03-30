@@ -58,6 +58,5 @@ namespace StockTvBlazor.Components.ViewModels
 		
 		public int LeftMatchPoints => base.Match.MatchPointsLeft;
 		public int RightMatchPoints => base.Match.MatchPointsRight;
-		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
 	}
 }

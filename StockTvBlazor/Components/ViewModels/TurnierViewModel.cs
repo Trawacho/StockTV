@@ -33,5 +33,4 @@ public class TurnierViewModel(SettingsService settingsService, MatchService matc
 	public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
 	public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 	public string RightPoints => base.Match.CurrentGame.RightPoints;
-	public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
 }

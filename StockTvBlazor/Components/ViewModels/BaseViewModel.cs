@@ -7,10 +7,10 @@ namespace StockTvBlazor.Components.ViewModels;
 
 public abstract class BaseViewModel : IDisposable
 {
-	protected readonly SettingsService _settingsService;// = settingsService;
-	private readonly MatchService _matchService;// = matchService;
-	private readonly NavigationManager _navigationManager;// = navigationManager;
-	private readonly NetMqPublisherService _publisher;// = publisher;
+	protected readonly SettingsService _settingsService;
+	private readonly MatchService _matchService;
+	private readonly NavigationManager _navigationManager;
+	private readonly NetMqPublisherService _publisher;
 	private int _inputValue;
 	private int _specialCounter;
 	private readonly Debounce _debounce = new();
@@ -39,7 +39,6 @@ public abstract class BaseViewModel : IDisposable
 	{
 		OnViewModelChanged?.Invoke();
 	}
-
 	private void HandleSettingsChanged()
 	{
 		OnViewModelChanged?.Invoke();
@@ -61,7 +60,10 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 	protected Models.Match Match => _matchService.CurrentMatch;
-	protected int InputValue => _inputValue;
+	
+	//protected int InputValue => _inputValue;
+
+	public string InputValue => _inputValue < 0 ? "" : _inputValue.ToString();
 
 	public string GetShellGridStyle()
 	{
