@@ -67,11 +67,10 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.turnier");
+
 		if (firstRender)
 			await inputRef.FocusAsync();
-		
-			if (TeamNamesAvailable)
-			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.turnier");
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
