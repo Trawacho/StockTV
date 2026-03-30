@@ -28,71 +28,38 @@ namespace StockTvBlazor.Components.ViewModels
 		{
 			switch (value)
 			{
-				case "+":					ExitSettingsPage();			break;
-				case "8" or "ArrowUp":		GoToPreviousSettings();		break;
-				case "2" or "ArrowDown":	GotToNextSettings();		break;
-				case "4" or "ArrowLeft":	DecreaseCurrentSetting();	break;
-				case "6" or "ArrowRight":	IncreaseCurrentSetting();	break;
+				case "+":					ExitSettingsPage();						break;
+				case "8" or "ArrowUp":		GoToPreviousSettings();					break;
+				case "2" or "ArrowDown":	GotToNextSettings();					break;
+				case "4" or "ArrowLeft":	ChangeCurrentSetting(forward: false);	break;
+				case "6" or "ArrowRight":   ChangeCurrentSetting(forward: true);	break;
 			}
 		}
 
-		private void IncreaseCurrentSetting()
+		private void ChangeCurrentSetting(bool forward)
 		{
 			switch (_currentSetting)
 			{
 				case SettingsOptions.Theme:
-					_settingsService.ChangeTheme(forward: true);
+					_settingsService.ChangeTheme(forward);
 					break;
 				case SettingsOptions.Richtung:
-					_settingsService.ChangeRichtung(forward: true);
+					_settingsService.ChangeRichtung(forward);
 					break;
 				case SettingsOptions.Modus:
-					_settingsService.ChangeModus(forward: true);
+					_settingsService.ChangeModus(forward);
 					break;
 				case SettingsOptions.MaxPunkteProKehre:
-					_settingsService.ChangeMaxPunkteProKehre(forward: true);
+					_settingsService.ChangeMaxPunkteProKehre(forward);
 					break;
 				case SettingsOptions.MaxKehrenProSpiel:
-					_settingsService.ChangeMaxMaxKehrenProSpiel(forward: true);
+					_settingsService.ChangeMaxMaxKehrenProSpiel(forward);
 					break;
 				case SettingsOptions.BahnNummer:
-					_settingsService.ChangeBahnNummer(forward: true);
+					_settingsService.ChangeBahnNummer(forward);
 					break;
 				case SettingsOptions.Spielgruppe:
-					_settingsService.ChangeSpielgruppe(forward: true);
-					break;
-				case SettingsOptions.Networking:
-					_settingsService.ChangeNetworking();
-					break;
-				default:
-					break;
-			}
-		}
-
-		private void DecreaseCurrentSetting()
-		{
-			switch (_currentSetting)
-			{
-				case SettingsOptions.Theme:
-					_settingsService.ChangeTheme(forward: false);
-					break;
-				case SettingsOptions.Richtung:
-					_settingsService.ChangeRichtung(forward: false);
-					break;
-				case SettingsOptions.Modus:
-					_settingsService.ChangeModus(forward: false);
-					break;
-				case SettingsOptions.MaxPunkteProKehre:
-					_settingsService.ChangeMaxPunkteProKehre(forward: false);
-					break;
-				case SettingsOptions.MaxKehrenProSpiel:
-					_settingsService.ChangeMaxMaxKehrenProSpiel(forward: false);
-					break;
-				case SettingsOptions.BahnNummer:
-					_settingsService.ChangeBahnNummer(forward: false);
-					break;
-				case SettingsOptions.Spielgruppe:
-					_settingsService.ChangeSpielgruppe(forward: false);
+					_settingsService.ChangeSpielgruppe(forward);
 					break;
 				case SettingsOptions.Networking:
 					_settingsService.ChangeNetworking();
