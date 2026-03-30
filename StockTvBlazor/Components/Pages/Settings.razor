@@ -69,6 +69,7 @@
 @code {
     private ElementReference inputRef;
     private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+	private bool _disposed = false;
 
     protected override void OnInitialized()
     {
@@ -78,12 +79,15 @@
 
     public void Dispose()
     {
+		_disposed = true;
         _settingsService.OnSettingsChanged -= StateHasChanged;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
         ViewModel.Dispose();
     }
     private void HandleNavigationRequested(string url)
     {
+		if (_disposed) return;
+
         InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 

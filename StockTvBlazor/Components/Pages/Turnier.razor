@@ -42,7 +42,7 @@
 @code {
 	private ElementReference inputRef;
 	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
-
+	private bool _disposed = false;
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 
 	protected override void OnInitialized()
@@ -54,6 +54,7 @@
 	}
 	public void Dispose()
 	{
+		_disposed = true;
 		ViewModel.OnViewModelChanged -= HandleUpdate;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
 		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
@@ -63,12 +64,15 @@
 
 	private void HandleNavigationRequested(string url)
 	{
-		InvokeAsync(() => _navigationManager.NavigateTo(url));
+		if (_disposed) return;
 
+		InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 
 	private async void HandleUpdate()
 	{
+		if (_disposed) return;
+
 		await InvokeAsync(() =>
 			{
 				StateHasChanged();
