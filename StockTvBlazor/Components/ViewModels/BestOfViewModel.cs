@@ -40,6 +40,7 @@ namespace StockTvBlazor.Components.ViewModels
 				}
 			}
 		}
+
 		public string RightPoints
 		{
 			get
@@ -54,14 +55,9 @@ namespace StockTvBlazor.Components.ViewModels
 				}
 			}
 		}
+		
 		public int LeftMatchPoints => base.Match.MatchPointsLeft;
 		public int RightMatchPoints => base.Match.MatchPointsRight;
-
-		public new bool TeamNamesAvailable => base.TeamNamesAvailable;
-		public new string LeftTeamName => base.LeftTeamName;
-		public new string RightTeamName => base.RightTeamName;
-
 		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
-
 	}
 }
