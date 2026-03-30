@@ -61,9 +61,12 @@ public abstract class BaseViewModel : IDisposable
 
 	protected Models.Match Match => _matchService.CurrentMatch;
 	
-	//protected int InputValue => _inputValue;
 
 	public string InputValue => _inputValue < 0 ? "" : _inputValue.ToString();
+
+	public int LeftPointsSum => Match.CurrentGame.LeftPointsSum;
+
+	public int RightPointsSum => Match.CurrentGame.RightPointsSum;
 
 	public string GetShellGridStyle()
 	{

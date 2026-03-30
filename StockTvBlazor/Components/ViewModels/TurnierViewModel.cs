@@ -29,8 +29,7 @@ public class TurnierViewModel(SettingsService settingsService, MatchService matc
 		}
 	}
 
-	public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
-	public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
+
 	public string LeftPoins => base.Match.CurrentGame.LeftPoints;
 	public string RightPoints => base.Match.CurrentGame.RightPoints;
 }

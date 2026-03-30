@@ -24,8 +24,7 @@ namespace StockTvBlazor.Components.ViewModels
 				return $"{(_settingsService.CurrentSettings.BlockLocalChanges ? "." : "")}Spiel: {Match.CurrentGame.GameNumber}     Kehre: {Match.CurrentGame.Turns.Count}";
 			}
 		}
-		public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
-		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
+
 		public string LeftPoins
 		{
 			get
