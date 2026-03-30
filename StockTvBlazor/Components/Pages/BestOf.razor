@@ -48,17 +48,7 @@
 
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 
-	private string GetShellGridStyle()
-	{
-		if (!TeamNamesAvailable)
-			return "grid-template-columns: 100%;";
-
-		var mid = _settings.MidColumnWidth;
-		var side = (100 - mid) / 2.0;
-		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
-										  {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
-										  {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
-	}
+	private string GetShellGridStyle() => ViewModel.ShellGridStyle;
 
 	protected override void OnInitialized()
 	{
@@ -82,11 +72,13 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
-		{
 			await inputRef.FocusAsync();
+			
+		if (TeamNamesAvailable)
 			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.bestof");
-		}
+
 	}
+
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
 		await ViewModel.ProcessKeyAsync(e.Key);
