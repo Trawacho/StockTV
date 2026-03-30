@@ -28,8 +28,5 @@ public class TurnierViewModel(SettingsService settingsService, MatchService matc
 
 		}
 	}
-
-
-	public string LeftPoins => base.Match.CurrentGame.LeftPoints;
-	public string RightPoints => base.Match.CurrentGame.RightPoints;
+	
 }

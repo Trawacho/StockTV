@@ -24,8 +24,5 @@ namespace StockTvBlazor.Components.ViewModels
 				}
 			}
 		}
-
-		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
-		public string RightPoints => base.Match.CurrentGame.RightPoints;
 	}
 }

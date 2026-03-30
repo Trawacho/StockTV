@@ -25,37 +25,18 @@ namespace StockTvBlazor.Components.ViewModels
 			}
 		}
 
-		public string LeftPoins
-		{
-			get
-			{
-				if(base.Match.CurrentGame.Turns.Count == 0 && base.Match.CurrentGame.GameNumber > 1)
-				{
-					return base.Match.LeftPointsOverAll.ToString();
-				}
-				else
-				{
-					return base.Match.CurrentGame.LeftPoints;
-				}
-			}
-		}
+		public new string LeftPoints => 
+			(base.Match.CurrentGame.Turns.Count == 0 && base.Match.CurrentGame.GameNumber > 1) 
+				? base.Match.LeftPointsOverAll.ToString() 
+				: base.LeftPoints;
 
-		public string RightPoints
-		{
-			get
-			{
-				if (base.Match.CurrentGame.Turns.Count == 0 && base.Match.CurrentGame.GameNumber > 1)
-				{
-					return base.Match.RightPointsOverAll.ToString();
-				}
-				else
-				{
-					return base.Match.CurrentGame.RightPoints;
-				}
-			}
-		}
+		public new string RightPoints => 
+			(base.Match.CurrentGame.Turns.Count == 0 && base.Match.CurrentGame.GameNumber > 1) 
+				? base.Match.RightPointsOverAll.ToString() 
+				: base.RightPoints;
 		
 		public int LeftMatchPoints => base.Match.MatchPointsLeft;
+		
 		public int RightMatchPoints => base.Match.MatchPointsRight;
 	}
 }

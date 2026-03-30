@@ -68,6 +68,10 @@ public abstract class BaseViewModel : IDisposable
 
 	public int RightPointsSum => Match.CurrentGame.RightPointsSum;
 
+	public string LeftPoints => Match.CurrentGame.LeftPoints;
+
+	public string RightPoints => Match.CurrentGame.RightPoints;
+
 	public string GetShellGridStyle()
 	{
 				if (!TeamNamesAvailable)
