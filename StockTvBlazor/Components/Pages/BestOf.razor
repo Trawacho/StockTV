@@ -10,7 +10,7 @@
 @implements IDisposable
 
 <div class="main-grid default bestof" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
-	<div class="scoreboard-shell" style="@GetShellGridStyle()">
+	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
 			<div class="teamname teamname-left" data-autofit data-autofit-min="8" data-autofit-vertical="true">@ViewModel.LeftTeamName</div>
@@ -48,7 +48,6 @@
 
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 
-	private string GetShellGridStyle() => ViewModel.ShellGridStyle;
 
 	protected override void OnInitialized()
 	{
