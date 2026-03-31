@@ -6,7 +6,7 @@ using System.Threading.Channels;
 
 namespace StockTvBlazor.Components.Networking;
 
-public class NetMqResponseService : BackgroundService
+public class NetMqResponseService : BackgroundService, IDisposable
 {
 	private readonly ResponseSocket _repSocket;
 	private readonly NetMQPoller _poller;
@@ -24,8 +24,18 @@ public class NetMqResponseService : BackgroundService
 		// 1. Socket initialisieren
 		_repSocket = new ResponseSocket();
 
-		// 2. Port auf 4747 festlegen (entspricht deinem ctrSvc im mDNS)
-		_repSocket.Bind("tcp://*:4747");
+		// 2. Port auf 4747 festlegen (entspricht dem ctrSvc im mDNS)
+		try
+		{
+			_repSocket.Bind("tcp://*:4747");
+			_logger.LogInformation("NetMqResponseService successfully bound to port 4747");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to bind NetMqResponseService to port 4747. Is the port already in use?");
+			throw;
+		}
+
 		_repSocket.Options.Identity = Encoding.UTF8.GetBytes(Environment.MachineName + "-" + Guid.NewGuid().ToString());
 
 		// 3. Event-Handler für eingehende Nachrichten registrieren
@@ -66,6 +76,7 @@ public class NetMqResponseService : BackgroundService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Fehler bei der NetMQ-Multipart-Verarbeitung auf Port 4747");
+			try { e.Socket.SendFrame("ERROR"); } catch { }
 		}
 	}
 
@@ -96,25 +107,22 @@ public class NetMqResponseService : BackgroundService
 
 			case "SetSettings":
 				_logger.LogDebug("SetSettings topic received, updating settings.");
-				_actionChannel.Writer.TryWrite(() =>
-					_settingsService.SetSettings(request[1].ToByteArray()));
-				//_settingsService.SetSettings(request[1].ToByteArray());
+				if (!_actionChannel.Writer.TryWrite(() => _settingsService.SetSettings(request[1].ToByteArray())))
+					_logger.LogWarning("Failed to write SetSettings action to channel.");
 				response.Append("ACK");
 				break;
 
 			case "ResetResult":
 				_logger.LogDebug("ResetResult topic received, resetting current match.");
-				_actionChannel.Writer.TryWrite(() =>
-					_matchService.CurrentMatch.Reset(true));
-				//_matchService.CurrentMatch.Reset(true);
+				if (!_actionChannel.Writer.TryWrite(() => _matchService.CurrentMatch.Reset(true)))
+					_logger.LogWarning("Failed to write ResetResult action to channel.");
 				response.Append("ACK");
 				break;
 
 			case "SetTeamNames":
 				_logger.LogDebug("SetTeamNames topic received, updating team names.");
-				_actionChannel.Writer.TryWrite(() =>
-					_matchService.SetTeamNames(request[1].ToByteArray()));
-				//_matchService.SetTeamNames(request[1].ToByteArray());
+				if(!_actionChannel.Writer.TryWrite(() => _matchService.SetTeamNames(request[1].ToByteArray())))
+					_logger.LogWarning("Failed to write SetTeamNames action to channel.");
 				response.Append("ACK");
 
 				break;
@@ -131,7 +139,7 @@ public class NetMqResponseService : BackgroundService
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		// Startet den Poller-Thread asynchron
+		_logger.LogInformation("ExecuteAsync gestartet");
 		_poller.RunAsync();
 
 		await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
@@ -146,15 +154,15 @@ public class NetMqResponseService : BackgroundService
 			}
 		}
 
-		//// Hält den BackgroundService am Leben, bis die App gestoppt wird
-		//return Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ =>
-		//{
-		//	_poller.Stop();
-		//}, stoppingToken);
+		if(_poller.IsRunning)
+			_poller.Stop();
+
+		_logger.LogInformation("ExecuteAsync beendet");
 	}
 
 	public override void Dispose()
 	{
+		_logger.LogInformation("dispose");
 		_actionChannel.Writer.Complete();
 		if (_poller.IsRunning) _poller.Stop();
 		_poller.Dispose();
