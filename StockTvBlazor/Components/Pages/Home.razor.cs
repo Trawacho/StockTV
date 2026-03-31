@@ -22,35 +22,35 @@ namespace BlazorAppTests.Components.Pages
         protected override void OnInitialized()
         {
 
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                // Debug-Modus: Countdown auf 3 Sekunden setzen
-                countdown = 3;
-            }
-            int total = countdown;
-
-            timer = new Timer(async _ =>
-            {
-                if (countdown > 0)
-                {
-                    countdown--;
-                    progress = (int)((1 - (double)countdown / total) * 100);
-                    await InvokeAsync(StateHasChanged);
-                }
-                else
-                {
-                    timer.Dispose();
-                    //NavManager.NavigateTo("/layouttest1");
-                    NavigateToPage();
-                }
-            }, null, 1000, 1000);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                await Task.Delay(10);
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    // Debug-Modus: Countdown auf 3 Sekunden setzen
+                    countdown = 3;
+                }
+
+                int total = countdown;
+
+                // Timer asynchron starten
+                timer = new Timer(async _ =>
+                {
+                    if (countdown > 0)
+                    {
+                        countdown--;
+                        progress = (int)((1 - (double)countdown / total) * 100);
+                        await InvokeAsync(StateHasChanged);
+                    }
+                    else
+                    {
+                        timer.Dispose();
+                        NavigateToPage();
+                    }
+                }, null, 1000, 1000);
             }
         }
 
