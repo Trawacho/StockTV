@@ -8,89 +8,131 @@ using System.Threading.Channels;
 
 namespace StockTvBlazor.Components.Networking;
 
-public class NetMqPublisherService : BackgroundService
+public class NetMqPublisherService : BackgroundService, IDisposable
 {
-	private readonly XPublisherSocket _pubSocket; // XPublisher für Subscription-Check
+	private readonly XPublisherSocket _pubSocket; 
 	private readonly NetMQPoller _poller;
 	private readonly NetMQTimer _aliveTimer;
 	private readonly Channel<(string Topic, object Payload)> _messageChannel;
 	private readonly string _serializedAliveInfo;
+	private readonly ILogger<NetMqPublisherService> _logger;
 
-	public NetMqPublisherService()
+	public NetMqPublisherService(ILogger<NetMqPublisherService> logger)
 	{
-		_pubSocket = new XPublisherSocket();
-		_pubSocket.Bind("tcp://*:4748"); // Dein alter Port
-		_pubSocket.Options.SendHighWatermark = 100;
+		_logger = logger;
+		try
+		{
+			_pubSocket = new XPublisherSocket();
+			_pubSocket.Bind("tcp://*:4748"); // Dein alter Port
+			_pubSocket.Options.SendHighWatermark = 100;
+			_logger.LogInformation("NetMqPublisherService initialized and bound to port 4748");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to initialize NetMqPublisherService");
+			throw;
+		}
 
-		// Alive-Timer (alle 5 Sekunden wie im alten Projekt)
 		_serializedAliveInfo = JsonSerializer.Serialize(AliveInfo.Create());
+		_logger.LogDebug("AliveInfo: {AliveInfo}", _serializedAliveInfo);
+
 		_aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
-		_aliveTimer.Elapsed += (s, e) => {
-			Publish("Alive", _serializedAliveInfo);
-		};
+		_aliveTimer.Elapsed += (s, e) => Publish("Alive", _serializedAliveInfo);
+
 
 		// Poller für Timer und Subscription-Erkennung
 		_poller = [_pubSocket, _aliveTimer];
 		_messageChannel = Channel.CreateUnbounded<(string, object)>();
 
-		// Subscription-Logik (optional aus dem letzten Schritt)
 		_pubSocket.ReceiveReady += OnReceiveReady;
 	}
+
 	private void OnReceiveReady(object? sender, NetMQSocketEventArgs e)
 	{
 		var msg = e.Socket.ReceiveFrameBytes();
-		// Hier könntest du auf Abos reagieren
-		_pubSocket.SendMoreFrame(msg).SendFrame(msg);
+		
+		if (msg.Length > 0)
+		{
+			bool isSubscribe = msg[0] == 1;
+			var topic = System.Text.Encoding.UTF8.GetString(msg, 1, msg.Length - 1);
+			_logger.LogDebug("Client {Action} Topic: '{Topic}'",
+				isSubscribe ? "abonniert" : "kündigt", topic);
+		}
+
+		//_pubSocket.SendMoreFrame(msg).SendFrame(msg);  <== StockApp kann mit der Message nicht umgehen
 	}
 
-	// DIESE FUNKTION rufst du von anderen Klassen auf
 	public void Publish(string topic, string payload)
 	{
-		_messageChannel.Writer.TryWrite((topic, payload));
+		bool written = _messageChannel.Writer.TryWrite((topic, payload));
+		if (!written)
+			_logger.LogWarning("Publish fehlgeschalgen. Topic: {Topic}", topic);
 	}
 
-	// Version 2: Für Binär-Daten (Byte-Arrays)
 	public void Publish(string topic, byte[] data)
 	{
-		_messageChannel.Writer.TryWrite((topic, data));
+		bool written = _messageChannel.Writer.TryWrite((topic, data));
+		if(!written)
+			_logger.LogWarning("Publish fehlgeschlagen.Topic: {Topic}", topic);
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		// Wir lesen kontinuierlich aus dem Channel und senden über NetMQ
-		await foreach (var (topic, payload) in _messageChannel.Reader.ReadAllAsync(stoppingToken))
+		_logger.LogInformation("ExecuteAsync gestartet");
+		_poller.RunAsync();
+
+		try
 		{
-			_pubSocket.SendMoreFrame(topic);
-			// Prüfen, ob es Text oder Bytes sind und passend senden
-			if (payload is string text)
+			await foreach (var (topic, payload) in _messageChannel.Reader.ReadAllAsync(stoppingToken))
 			{
-				_pubSocket.SendFrame(text);
-			}
-			else if (payload is byte[] bytes)
-			{
-				_pubSocket.SendFrame(bytes);
+				try
+				{
+					_pubSocket.SendMoreFrame(topic);
+					if (payload is string text)
+						_pubSocket.SendFrame(text);
+					else if (payload is byte[] bytes)
+						_pubSocket.SendFrame(bytes);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Fehler beim Senden. Topic: {Topic}", topic);
+				}
 			}
 		}
+		catch (OperationCanceledException)
+		{
+			_logger.LogInformation("Publisher wurde durch CancellationToken gestoppt");
+		}
+
+		_poller.Stop();
+		_logger.LogInformation("ExecuteAsync beendet");
 	}
 
 	public override void Dispose()
 	{
+		_logger.LogInformation("dispose");
+		Channel_complete();
 		_pubSocket.ReceiveReady -= OnReceiveReady;
 		_pubSocket.Close();
 		_pubSocket.Dispose();
 		NetMQConfig.Cleanup();
 		base.Dispose();
 	}
+
+	private void Channel_complete()
+	{
+		try { _messageChannel.Writer.Complete(); } catch { }
+	}
 }
 
 
 public class AliveInfo
 {
-	public string IpAddress { get; set; } = "127.0.0.1";
-	public string HostName { get; set; } = Environment.MachineName;
-	public string AppVersion { get; set; } = "1.0.0";
+	public string? IpAddress { get; private set; } 
+	public string? HostName { get; private set; } 
+	public string? AppVersion { get; private set; } 
 
-	public static AliveInfo Create() 
+	public static AliveInfo Create()
 	{
 		return new AliveInfo
 		{
@@ -98,7 +140,7 @@ public class AliveInfo
 										 .GetName()
 										 .Version?
 										 .ToString() ?? "0.0.0.0",
-
+			HostName =  Environment.MachineName,
 			IpAddress = GetLocalServerIp() ?? "127.0.0.1"
 		};
 	}
