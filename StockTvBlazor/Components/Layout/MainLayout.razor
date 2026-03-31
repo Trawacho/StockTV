@@ -1,21 +1,10 @@
-﻿@inherits LayoutComponentBase
-
-<ThemeHandler />
-
-<div class="page">
-	<main>
-		<article>
-			@Body
-		</article>
-	</main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
-	An unhandled error has occurred.
-	<a href="." class="reload">Reload</a>
-	<span class="dismiss">🗙</span>
-</div>
+﻿@page "/"
+@inject NavigationManager Nav
 
 @code {
-	
+    protected override void OnInitialized()
+    {
+        // Direkt beim Initialisieren auf /layouttest1 weiterleiten
+        Nav.NavigateTo("/layouttest1", replace: true);
+    }
 }

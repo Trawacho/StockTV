@@ -3,16 +3,15 @@
 <div class="punkte-eingabe">
     <span class="punkte-links">@Punkte1</span>
 
-@*     <input type="text"
+    @*     <input type="text"
            class="punkte-input"
            @bind="WertText"
            @bind:event="oninput"
            @onkeydown="OnKeyDown"
            inputmode="decimal" /> *@
 
-    <input type="text"
-           @onkeydown="OnKeyDown"
-           class="form-control" />
+    <input @ref="inputRef" class="punkte-input" @onkeydown="HandleKeyDown" />
+
 
     <span class="punkte-rechts">@Punkte2</span>
 </div>
@@ -24,6 +23,12 @@
     [Parameter] public string WertText { get; set; }
 
     [Parameter] public EventCallback<string> OnWertChanged { get; set; }
+    private ElementReference inputRef;
+
+    public async Task SetFocusAsync()
+    {
+        await inputRef.FocusAsync();
+    }
 
     async Task OnInputChanged(ChangeEventArgs e)
     {
@@ -31,7 +36,16 @@
         await OnWertChanged.InvokeAsync(WertText);
     }
 
-    void OnKeyDown(KeyboardEventArgs e)
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        await OnKeyDown.InvokeAsync(e);
+    }
+
+
+    void OnKeyDownSAVE(KeyboardEventArgs e)
     {
         var erlaubteTasten = new[]
         {

@@ -7,7 +7,7 @@
         <div class="left">Mia san a da</div>
     }
 
-    <div class="content">
+    <div class="content" @onkeydown="HandleGlobalKeyDown">
         <div class="line line-1">HEADER: Bahn X</div>
 
         <div class="line line-2">
@@ -15,10 +15,12 @@
         </div>
 
         <div class="line line-3">
-            <PunkteEingabe Punkte1="@links"
+            <PunkteEingabe @ref="punkteEingabeRef"
+                           Punkte1="@links"
                            Punkte2="@rechts"
                            WertText="@meinWert"
-                           OnWertChanged="HandleWertChanged" />
+                           OnWertChanged="HandleWertChanged"
+                           OnKeyDown="HandleGlobalKeyDown" />
         </div>
 
         @if (isAdvertVisible)
@@ -34,6 +36,7 @@
 </div>
 <p style="color:red">Test: @test</p>
 @code {
+    private PunkteEingabe? punkteEingabeRef;
 
     // Variablendeklaration zur Steuerung der Sichtbarkeit von Zeile 4
     private bool isAdvertVisible = false;
@@ -49,6 +52,14 @@
 
     string meinWert = "";
  
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && punkteEingabeRef != null)
+        {
+            await punkteEingabeRef.SetFocusAsync();
+        }
+    }
+
     void HandleWertChanged(string wert)
     {
         meinWert = wert;
@@ -64,5 +75,10 @@
     void OnKeyDownGlobal(KeyboardEventArgs e)
     {
         test = $"Global: {e.Key}";
+    }
+
+    private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
+    {
+        // await ViewModel.ProcessKeyAsync(e.Key);
     }
 }
