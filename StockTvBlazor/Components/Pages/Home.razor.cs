@@ -89,7 +89,7 @@ namespace BlazorAppTests.Components.Pages
 
 
             //Hack: Für Tests hier die entsprechende Seite hart codieren, damit die Navigation funktioniert, ohne dass die SettingsService-Logik berücksichtigt werden muss.
-            pageName = "layouttest1";
+            //pageName = "layouttest";
 
             if (!string.IsNullOrEmpty(pageName))
             {

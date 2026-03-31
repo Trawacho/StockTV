@@ -1,5 +1,7 @@
 ﻿@page "/layouttest"
-
+@rendermode InteractiveServer
+@using BlazorAppTests.Components.Pages
+@inherits LayoutTestBase
 
 <div class="containerX">
     @if (isLeftPanelVisible)
@@ -11,7 +13,7 @@
         <div class="line line-1">HEADER: Bahn X</div>
 
         <div class="line line-2">
-            <PunkteAnzeige Punkte1="@scoreA" Punkte2="scoreB" />
+            <PunkteAnzeige Punkte1="@scoreA" Punkte2="@scoreB" />
         </div>
 
         <div class="line line-3">
@@ -34,51 +36,5 @@
         <div class="right">Ein Verein mit einem sehr sehr sehr langen Namen</div>
     }
 </div>
+
 <p style="color:red">Test: @test</p>
-@code {
-    private PunkteEingabe? punkteEingabeRef;
-
-    // Variablendeklaration zur Steuerung der Sichtbarkeit von Zeile 4
-    private bool isAdvertVisible = false;
-    private bool isLeftPanelVisible = true;
-    private bool isRightPanelVisible = true;
-    // Methode zum Umschalten der Sichtbarkeit von Zeile 4
-
-    int scoreA = 10;
-    int scoreB = 3;
-    string links = "2-0-1-3";
-    string rechts = "0-1-0-0";
-    int eingabeWert = 0;
-
-    string meinWert = "";
- 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && punkteEingabeRef != null)
-        {
-            await punkteEingabeRef.SetFocusAsync();
-        }
-    }
-
-    void HandleWertChanged(string wert)
-    {
-        meinWert = wert;
-    }
-
-    private void ToggleLine4()
-    {
-        isAdvertVisible = !isAdvertVisible;
-    }
-
-    string test = "läuft";
-
-    void OnKeyDownGlobal(KeyboardEventArgs e)
-    {
-        test = $"Global: {e.Key}";
-    }
-
-    private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
-    {
-        // await ViewModel.ProcessKeyAsync(e.Key);
-    }
-}
