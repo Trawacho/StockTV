@@ -25,10 +25,10 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqPublisherServ
 builder.Services.AddSingleton<NetMqResponseService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqResponseService>());
 
-builder.Services.AddScoped<TurnierViewModel>();
-builder.Services.AddScoped<TrainingViewModel>();
-builder.Services.AddScoped<BestOfViewModel>();
-builder.Services.AddScoped<SettingsViewModel>();
+builder.Services.AddTransient<TurnierViewModel>();
+builder.Services.AddTransient<TrainingViewModel>();
+builder.Services.AddTransient<BestOfViewModel>();
+builder.Services.AddTransient<SettingsViewModel>();
 
 var app = builder.Build();
 
@@ -54,6 +54,32 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
+
+
+
+// Server-side decision: redirect root ('/') to the configured start page from Settings.
+app.MapGet("/", (context) =>
+{
+    var _settings = context.RequestServices.GetRequiredService<SettingsService>().CurrentSettings;
+    switch (_settings.Modus)
+    {
+        case Settings.MODUS.TRAINING:
+            context.Response.Redirect("/training");
+            break;
+        case Settings.MODUS.TURNIER:
+            context.Response.Redirect("/turnier");
+            break;
+        case Settings.MODUS.BESTOF:
+            context.Response.Redirect("/bestof");
+            break;
+        default:
+            context.Response.Redirect("/settings");
+            break;
+    }
+    return System.Threading.Tasks.Task.CompletedTask;
+});
+
+app.MapStaticAssets();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
