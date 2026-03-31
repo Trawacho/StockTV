@@ -1,12 +1,7 @@
-﻿@page "/"
-@inject NavigationManager NavManager
-<PageTitle>Home</PageTitle>
+﻿@page "/lifecycle-demo"
 
-<h1>Hello, world!</h1>
+<h1>Lifecycle Demo</h1>
 
-Welcome to your new app.
-
-<p></p>
 <ul>
     @foreach (var log in logs)
     {
@@ -14,30 +9,21 @@ Welcome to your new app.
     }
 </ul>
 
+<button @onclick="TriggerRender">Re-Render auslösen</button>
 
 @code {
     private List<string> logs = new();
 
-    // protected override void OnInitialized()
-    // {
-    //     logs.Add("OnInitialized");
-  
-    //     NavManager.NavigateTo("/lifecycle-demo");
-  
-    // }
-
-
-
+    protected override void OnInitialized()
+    {
+        logs.Add("OnInitialized");
+    }
 
     protected override async Task OnInitializedAsync()
     {
         logs.Add("OnInitializedAsync (Start)");
         await Task.Delay(500);
         logs.Add("OnInitializedAsync (Ende)");
-
-        await Task.Yield(); // lässt Render durchlaufen
-        NavManager.NavigateTo("/lifecycle-demo");
-
     }
 
     protected override void OnParametersSet()
@@ -71,5 +57,4 @@ Welcome to your new app.
     {
         logs.Add("Dispose");
     }
-}
 }
