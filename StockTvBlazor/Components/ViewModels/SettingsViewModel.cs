@@ -21,7 +21,6 @@ public class SettingsViewModel(SettingsService settingsService, NavigationManage
 		MaxKehrenProSpiel = 5,
 		Spielgruppe = 6,
 		Networking = 7,
-
 	}
 
 	public async Task ProcessKeyAsync(string value)
@@ -98,6 +97,9 @@ public class SettingsViewModel(SettingsService settingsService, NavigationManage
 				return;
 			case Settings.MODUS.TURNIER:
 				_navigationManager.NavigateTo("/turnier");
+				return;
+			case Settings.MODUS.ZIEL:
+				_navigationManager.NavigateTo("/ziel");
 				return;
 		}
 	}

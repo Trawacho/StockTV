@@ -82,7 +82,10 @@ namespace BlazorAppTests.Components.Pages
                 case Settings.MODUS.BESTOF:
                     pageName = ("/bestof");
                     break;
-                default:
+				case Settings.MODUS.ZIEL:
+					pageName = ("/ziel");
+					break;
+				default:
                     pageName = ("/settings");
                     break;
             }

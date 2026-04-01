@@ -5,6 +5,8 @@ services:
     container_name: stocktv
     ports:
       - "8080:8080"
+      - "4747:4747"
+      - "4848:4848"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080

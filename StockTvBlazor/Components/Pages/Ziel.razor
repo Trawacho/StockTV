@@ -1,0 +1,82 @@
+﻿@page "/ziel"
+@rendermode InteractiveServer
+@inject StockTvBlazor.Components.Services.SettingsService _settingsService
+@inject NavigationManager _navigationManager
+@inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
+@inject StockTvBlazor.Components.Services.ZielService _zielService
+@inject StockTvBlazor.Components.ViewModels.ZielViewModel ViewModel
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="main-grid ziel" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+	
+	@if (ViewModel.IsSpielernameAvailable)
+	{
+		<div class="ziel-spielername" data-autofit data-autofit-min="8">@ViewModel.SpielerName</div>
+	}
+
+	<div class="scoreboard-center">
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.GesamtText</div>
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.AnzahlVersuche</div>
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.InputValue</div>
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.LastValue</div>
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.GesamtPunkteText</div>
+		<div class="ziel-row ziel-top-row header-text">@ViewModel.SummeDerVersuche</div>
+	</div>
+		
+
+</div>
+
+@code {
+	private ElementReference inputRef;
+	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+	private bool _disposed = false;
+
+	protected override void OnInitialized()
+	{
+		ViewModel.OnViewModelChanged += HandleUpdate;
+		ViewModel.OnNavigationRequested += HandleNavigationRequested;
+		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+
+	}
+	public void Dispose()
+	{
+		_disposed = true;
+		ViewModel.OnViewModelChanged -= HandleUpdate;
+		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
+		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
+
+		ViewModel.Dispose();
+	}
+
+	private void HandleNavigationRequested(string url)
+	{
+		if (_disposed) return;
+
+		InvokeAsync(() => _navigationManager.NavigateTo(url));
+	}
+
+	private async void HandleUpdate()
+	{
+		if (_disposed) return;
+
+		await InvokeAsync(() =>
+			{
+				StateHasChanged();
+			});
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.turnier");
+
+		if (firstRender)
+			await inputRef.FocusAsync();
+	}
+
+	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
+	{
+		await ViewModel.ProcessKeyAsync(e.Key);
+	}
+
+}

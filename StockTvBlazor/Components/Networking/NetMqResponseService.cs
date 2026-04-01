@@ -13,13 +13,14 @@ public class NetMqResponseService : BackgroundService, IDisposable
 	private readonly ILogger<NetMqResponseService> _logger;
 	private readonly SettingsService _settingsService;
 	private readonly MatchService _matchService;
-
+	private readonly ZielService _zielService;
 	private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();
-	public NetMqResponseService(ILogger<NetMqResponseService> logger, SettingsService settingsService, MatchService matchService)
+	public NetMqResponseService(ILogger<NetMqResponseService> logger, SettingsService settingsService, MatchService matchService, ZielService zielService)
 	{
 		_logger = logger;
 		_settingsService = settingsService;
 		_matchService = matchService;
+		_zielService = zielService;
 
 		// 1. Socket initialisieren
 		_repSocket = new ResponseSocket();
@@ -94,9 +95,27 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 
 			case "GetResult":
-				_logger.LogDebug("GetResult topic received, sending current match result.");
+				_logger.LogDebug("GetResult topic received, sending current match or ziel result.");
 				response.Append("GetResult");
-				response.Append(_matchService.CurrentMatch.SerializeJson());
+				if (_settingsService.CurrentSettings.Modus == Models.Settings.MODUS.ZIEL)
+					response.Append(_zielService.CurrentZielBewerb.SerializeJson());
+				else
+					response.Append(_matchService.CurrentMatch.SerializeJson());
+
+				break;
+
+			case "ResetResult":
+				_logger.LogDebug("ResetResult topic received, resetting current match or ziel.");
+				if (!_actionChannel.Writer.TryWrite(() =>
+				{
+					if (_settingsService.CurrentSettings.Modus == Models.Settings.MODUS.ZIEL)
+						_zielService.CurrentZielBewerb.Reset();
+					else
+						_matchService.CurrentMatch.Reset(true);
+				}
+				))
+					_logger.LogWarning("Failed to write ResetResult action to channel.");
+				response.Append("ACK");
 				break;
 
 			case "GetSettings":
@@ -112,23 +131,22 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				response.Append("ACK");
 				break;
 
-			case "ResetResult":
-				_logger.LogDebug("ResetResult topic received, resetting current match.");
-				if (!_actionChannel.Writer.TryWrite(() => _matchService.CurrentMatch.Reset(true)))
-					_logger.LogWarning("Failed to write ResetResult action to channel.");
+			case "SetTeamNames":
+				_logger.LogDebug("SetTeamNames topic received, updating team names.");
+				if (!_actionChannel.Writer.TryWrite(() => _matchService.SetTeamNames(request[1].ToByteArray())))
+					_logger.LogWarning("Failed to write SetTeamNames action to channel.");
 				response.Append("ACK");
 				break;
 
-			case "SetTeamNames":
-				_logger.LogDebug("SetTeamNames topic received, updating team names.");
-				if(!_actionChannel.Writer.TryWrite(() => _matchService.SetTeamNames(request[1].ToByteArray())))
-					_logger.LogWarning("Failed to write SetTeamNames action to channel.");
+			case "SetTeilnehmer":
+				_logger.LogDebug("SetTeilnehmer topic received, update SpielerName.");
+				if (!_actionChannel.Writer.TryWrite(() => _zielService.SetTeilnehmer(request[1].ToByteArray())))
+					_logger.LogWarning("Failed to write SetTeilnehmer action to channel.");
 				response.Append("ACK");
-
 				break;
 
 			default:
-				_logger.LogWarning($"Unbekanntes Topic empfangen: {topic}");
+				_logger.LogWarning("Unbekanntes Topic empfangen: {0}", topic);
 				response.Append("unknown topic received");
 				break;
 		}
@@ -154,7 +172,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 			}
 		}
 
-		if(_poller.IsRunning)
+		if (_poller.IsRunning)
 			_poller.Stop();
 
 		_logger.LogInformation("ExecuteAsync beendet");

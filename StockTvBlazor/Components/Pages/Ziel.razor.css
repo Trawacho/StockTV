@@ -1,0 +1,47 @@
+﻿/* Haupt-Layout für Ziel: 3 Zeilen */
+.main-grid.ziel {
+    background-color: var(--bg-color);
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 15% 65% 20%;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+}
+
+.ziel-top-grid{
+    grid-template-columns: 50% 50%;
+}
+
+.ziel-top-row{
+    width: 100%;
+    height: 100%;
+}
+
+.ziel-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important; /* überschreibt header-text padding */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    line-height: 1;
+    font-size: min(8vh, 10vw);
+}
+
+.ziel-spielername {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: var(--fg-color);
+    font-weight: 650;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--fg-color);
+}

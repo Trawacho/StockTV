@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
-using System.Text.Json;
+﻿using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace StockTvBlazor.Components.Models;
@@ -8,15 +6,15 @@ namespace StockTvBlazor.Components.Models;
 public class Settings
 {
 
-    /// <summary>
-    /// Logging der Daten in eine Datei. 
+	/// <summary>
+	/// Logging der Daten in eine Datei. 
 	/// </summary>
-    public bool FileLoggingEnabled { get; set; } = true;
+	public bool FileLoggingEnabled { get; set; } = true;
 
-    /// <summary>
-    /// Auflistung der möglichen Darstellungsmodes: Hell oder Dunkel
-    /// </summary>
-    public enum THEME
+	/// <summary>
+	/// Auflistung der möglichen Darstellungsmodes: Hell oder Dunkel
+	/// </summary>
+	public enum THEME
 	{
 		HELL = 0,
 		DUNKEL = 1
@@ -48,35 +46,44 @@ public class Settings
 	/// <summary>
 	/// Richtung: Links oder Rechts. Legt fest, welche Seite die "linke" und welche die "rechte" Seite ist. Das hat Auswirkungen auf die Farbdarstellung der Punkte.
 	/// </summary>
+	
 	public RICHTUNG Richtung { get; set; } = RICHTUNG.LINKS;
 	/// <summary>
 	/// Modus: Trainingsmodus, Turniermodus, BestOf-Modus oder Zielmodus. Je nach Modus werden die Punkte und die Darstellung unterschiedlich gehandhabt.
 	/// </summary>
+	
 	public MODUS Modus { get; set; } = MODUS.TRAINING;
 	/// <summary>
 	/// Jede Bahn hat eine Nummer. 
 	/// </summary>
+	
 	public int BahnNummer { get; set; } = 1;
+	
 	/// <summary>
 	/// Spielgruppe: Jeder Bahn gehört zu einer Spiegruppe. Defaultmäßig ist die Spielgrupe 0
 	/// </summary>
 	public int Spielgruppe { get; set; } = 0;
+	
 	/// <summary>
 	/// Maximalwert der Punkte pro Kehre.
 	/// </summary>
 	public int MaxPunkteProKehre { get; set; } = 10;
+	
 	/// <summary>
 	/// Wieviel Kehren pro Spiel, damit mit der GELBEN Taste in das nächste Spiel gewechselt werden kann. Hat im Trainingsmodues keine Auswirkung
 	/// </summary>
 	public int MaxKehrenProSpiel { get; set; } = 6;
+	
 	/// <summary>
 	/// Ob die Anwendung die Daten per Netzwerk empfangen und sennden kann/soll.
 	/// </summary>
 	public bool Networking { get; set; } = false;
+	
 	/// <summary>
 	/// Wenn True, ist dann schnelle löschen mit 0 im inputValue nicht möglich. Auch kann man nicht in die ConfigPage wechseln
 	/// </summary>
 	public bool BlockLocalChanges { get; set; } = false;
+	
 	/// <summary>
 	/// Hier wird festgelegt, welche Version der Nachrichtenschnittstelle verwendet wird.
 	/// </summary>
@@ -89,8 +96,8 @@ public class Settings
 	/// </summary>
 	public int MidColumnWidth { get; set; } = 90;
 
-    [JsonIgnore]
-    public List<Turn> Kehren { get; set; } = [];
+	[JsonIgnore]
+	public List<Turn> Kehren { get; set; } = [];
 
 	[JsonIgnore]
 	public string SpielgruppeLetter => Spielgruppe switch
@@ -139,13 +146,13 @@ public class Settings
 	};
 
 	[JsonIgnore]
-    public Color ForegroundColor => Theme switch
-    {
-        THEME.HELL => Color.Black,
-        _ => Color.LightGray
-    }; 
+	public Color ForegroundColor => Theme switch
+	{
+		THEME.HELL => Color.Black,
+		_ => Color.LightGray
+	};
 
-    [JsonIgnore]
+	[JsonIgnore]
 	public Color ForegroundZielSummeGesamt => Theme switch
 	{
 		THEME.HELL => Color.DarkMagenta,
@@ -159,7 +166,7 @@ public class Settings
 		_ => Color.Cyan
 	};
 
-    #endregion
+	#endregion
 
 
 }

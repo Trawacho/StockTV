@@ -8,8 +8,8 @@ namespace StockTvBlazor.Components.ViewModels
 	public class TrainingViewModel(SettingsService settingsSerivce, MatchService matchService, NetMqPublisherService publisherService) :
 		BaseViewModel(settingsSerivce, matchService, publisherService)
 	{
-		public string HeaderText => Match.CurrentGame.Turns.Count == 0
+		public string HeaderText => CurrentMatch.CurrentGame.Turns.Count == 0
 			? base.HeaderTextBasis
-			: $"{HeaderTextBasis}     Kehre: {Match.CurrentGame.Turns.Count}";
+			: $"{HeaderTextBasis}     Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
 	}
 }

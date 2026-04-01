@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Components.Models;
+﻿using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 
@@ -45,7 +44,7 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 
-	protected Models.Match Match => _matchService.CurrentMatch;
+	protected Models.Match CurrentMatch => _matchService.CurrentMatch;
 
 	protected string HeaderTextBasis
 	{
@@ -61,13 +60,13 @@ public abstract class BaseViewModel : IDisposable
 
 	public string InputValue => _inputValue < 0 ? "" : _inputValue.ToString();
 
-	public int LeftPointsSum => Match.CurrentGame.LeftPointsSum;
+	public int LeftPointsSum => CurrentMatch.CurrentGame.LeftPointsSum;
 
-	public int RightPointsSum => Match.CurrentGame.RightPointsSum;
+	public int RightPointsSum => CurrentMatch.CurrentGame.RightPointsSum;
 
-	public string LeftPoints => Match.CurrentGame.LeftPoints;
+	public string LeftPoints => CurrentMatch.CurrentGame.LeftPoints;
 
-	public string RightPoints => Match.CurrentGame.RightPoints;
+	public string RightPoints => CurrentMatch.CurrentGame.RightPoints;
 
 	public string GetShellGridStyle()
 	{
@@ -87,7 +86,7 @@ public abstract class BaseViewModel : IDisposable
 	{
 		get
 		{
-			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+			return CurrentMatch.Begegnungen.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
 									?.TeamNameLeft(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
 									?? string.Empty;
 		}
@@ -97,7 +96,7 @@ public abstract class BaseViewModel : IDisposable
 	{
 		get
 		{
-			return Match.Begegnungen.FirstOrDefault(b => b.Spielnummer == Match.CurrentGame.GameNumber)
+			return CurrentMatch.Begegnungen.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
 									?.TeamNameRight(_settingsService.CurrentSettings.Richtung == Settings.RICHTUNG.LINKS)
 									?? string.Empty;
 		}
@@ -112,8 +111,8 @@ public abstract class BaseViewModel : IDisposable
 
 		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, true);
 
-		Match.AddTurn(turn);
-		await Match.SaveTurnsToLocalSettingsAsync();
+		CurrentMatch.AddTurn(turn);
+		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 
@@ -125,15 +124,15 @@ public abstract class BaseViewModel : IDisposable
 
 		var turn = Turn.Create(_inputValue, _settingsService.CurrentSettings.Richtung, false);
 
-		Match.AddTurn(turn);
-		await Match.SaveTurnsToLocalSettingsAsync();
+		CurrentMatch.AddTurn(turn);
+		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 	}
 	private async Task ResetAsync(bool force = false)
 	{
-		Match.Reset(force);
-		await Match.SaveTurnsToLocalSettingsAsync();
+		CurrentMatch.Reset(force);
+		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 		_inputValue = -1;
 	}
 
@@ -145,8 +144,8 @@ public abstract class BaseViewModel : IDisposable
 			return;
 		}
 
-		Match.DeleteLastTurn();
-		await Match.SaveTurnsToLocalSettingsAsync();
+		CurrentMatch.DeleteLastTurn();
+		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 	}
 
 	private protected void ShowSpecialPage()
@@ -240,7 +239,7 @@ public abstract class BaseViewModel : IDisposable
 
 		OnViewModelChanged?.Invoke();
 
-		_publisher.Publish("GetResult", Match.SerializeJson());
+		_publisher.Publish("GetResult", CurrentMatch.SerializeJson());
 
 	}
 }

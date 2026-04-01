@@ -17,6 +17,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddSingleton<MatchService>();
+builder.Services.AddSingleton<ZielService>();
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 
 builder.Services.AddSingleton<NetMqPublisherService>();
@@ -29,6 +30,7 @@ builder.Services.AddTransient<TurnierViewModel>();
 builder.Services.AddTransient<TrainingViewModel>();
 builder.Services.AddTransient<BestOfViewModel>();
 builder.Services.AddTransient<SettingsViewModel>();
+builder.Services.AddTransient<ZielViewModel>();
 
 var app = builder.Build();
 
@@ -41,6 +43,9 @@ using (var scope = app.Services.CreateScope())
 
 	var matchService = services.GetRequiredService<MatchService>();
 	matchService.InitializeMatch();
+
+	var zielService = services.GetRequiredService<ZielService>();
+	zielService.InitializeZiel();
 }
 
 // Configure the HTTP request pipeline.
