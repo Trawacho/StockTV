@@ -2,14 +2,26 @@ version: "3.9"
 
 services:
   stocktv:
-    container_name: stocktv
+    container_name: stocktvbahn1
     ports:
       - "8080:8080"
       - "4747:4747"
-      - "4848:4848"
+      - "4748:4748"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+
+      #Test-NetConnection 192.168.0.32 -Port 4748 auf den Clients, um die Erreichbarkeit zu testen
+      # Aktuell testweise die feste IP deines PCs im Netzwerk
+      - PUBLIC_HOST=192.168.0.32
+
+      # Alternative: Hostname des PCs im Netzwerk
+      # - PUBLIC_HOST=DESKTOP-ABC123
+      # Hinweis: Hostname muss auf allen Clients aufloesbar sein
+
+    volumes:
+      - ./_config:/app/_config
+      - ./_logs:/app/_logs
     restart: unless-stopped
     build:
       context: ..
