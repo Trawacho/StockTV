@@ -1,9 +1,8 @@
 ﻿/* Haupt-Layout: 3 Spalten (Icon | Value | Label) */
-.main-grid.settings {
+.settings-main-grid {
     display: grid;
-    grid-template-columns: 4rem 1fr 40%;
-    grid-template-rows: auto 1fr; /* header + content */
-
+    /*grid-template-columns: 20% 40% 40%;*/
+    /*grid-template-rows: 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;*/ /* header + content */
     position: fixed;
     inset: 0;
     height: 100vh;
@@ -18,8 +17,8 @@
 .settings-list {
     grid-column: 1 / span 3;
     display: grid;
-    grid-template-columns: 4rem 1fr 40%;
-    grid-auto-rows: minmax(3rem, auto);
+    grid-template-columns: 10% 40% 50%;
+    grid-auto-rows: minmax(2rem, auto);
     row-gap: 0.5rem;
     align-items: center;
 }
@@ -40,18 +39,18 @@
 /* Wert */
 .value {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: flex-start;
     padding-left: 1rem;
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: 600;
 }
 
 /* Label */
 .label {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     padding-left: 1rem;
-    font-size: 1.25rem;
+    font-size: 2rem;
 }

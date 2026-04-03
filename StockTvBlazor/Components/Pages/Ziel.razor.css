@@ -1,47 +1,131 @@
-﻿/* Haupt-Layout für Ziel: 3 Zeilen */
-.main-grid.ziel {
+﻿/* ============================================================
+   Haupt-Grid: mit oder ohne Spielername-Zeile
+   Mit Spielername:  [spielername] [block]
+   Ohne Spielername: [block]
+   ============================================================ */
+
+.ziel-main-grid {
     background-color: var(--bg-color);
+    color: var(--fg-color);
     display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 15% 65% 20%;
+    grid-template-rows: 10% 90%; /* Spielername (auto) + Block (Rest) */
     position: fixed;
     inset: 0;
     height: 100vh;
     width: 100vw;
 }
 
-.ziel-top-grid{
-    grid-template-columns: 50% 50%;
-}
+    /* Wenn kein Spielername vorhanden: Block füllt alles */
+    .ziel-main-grid:not(:has(.ziel-spielername)) {
+        grid-template-rows: 1fr;
+    }
 
-.ziel-top-row{
-    width: 100%;
-    height: 100%;
-}
-
-.ziel-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important; /* überschreibt header-text padding */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 700;
-    line-height: 1;
-    font-size: min(8vh, 10vw);
-}
+/* ============================================================
+   Spielername — Zeile 0
+   ============================================================ */
 
 .ziel-spielername {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
     font-weight: 650;
-    font-size: 12px;
+    font-size: 12px; /* Fallback — AutoFit übernimmt */
     line-height: 1;
+    padding: 4px 0;
+}
+
+/* ============================================================
+   Block — enthält die drei Zeilen
+   ============================================================ */
+
+.ziel-block {
+    display: grid;
+    grid-template-rows: 20% 60% 20%;
+    height: 100%;
+    width: 100%;
+}
+
+/* ============================================================
+   Gemeinsame Zeilen-Basis
+   ============================================================ */
+
+.ziel-row {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    align-items: stretch;
+    overflow: visible;
+}
+
+/* ============================================================
+   Zeile 1 — Versuche (70%) | GesamtPunkte (30%)
+   ============================================================ */
+
+.ziel-row-top {
+    grid-template-columns: 70% 30%;
+}
+
+.ziel-cell.ziel-versuche {
     color: var(--fg-color);
+    justify-content: flex-start;
+    padding-left: 5%; /* ← etwas Abstand vom Rand */
+}
+
+.ziel-cell.ziel-gesamt {
+    color: var( --fg-color);
+    justify-content: flex-start;
+}
+
+/* ============================================================
+   Zeile 2 — drei Spalten (35% | 35% | 30%)
+   ============================================================ */
+
+.ziel-row-mid {
+    grid-template-columns: 35% 35% 30%;
+}
+
+/* Farben über die globalen CSS-Vars — identisch zu Training/Turnier */
+.ziel-col-a {
+    color: var(--fg-left);
+}
+
+.ziel-col-b {
+    color: var(--fg-right);
+}
+
+.ziel-col-c {
+    color: var(--fg-color-ziel-gesamt);
+}
+
+/* ============================================================
+   Zeile 3 — eine Spalte, volle Breite
+   ============================================================ */
+
+.ziel-row-bottom {
+    grid-template-columns: 1fr;
+}
+
+.ziel-summe {
+    color: var(--fg-color-ziel-einzel);
+}
+
+/* ============================================================
+   Gemeinsame Zellen-Basis
+   ============================================================ */
+
+.ziel-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    font-weight: 500;
+    line-height: 1;
+    font-size: 12px; /* Fallback — AutoFit übernimmt */
 }

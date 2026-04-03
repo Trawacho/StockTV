@@ -1,7 +1,4 @@
-
-
-/* Outer: 1 oder 3 Spalten (inline grid-template-columns in Razor) */
-.main-grid.turnier {
+.turnier-main-grid {
     background-color: var(--bg-color);
     position: fixed;
     inset: 0;
@@ -9,65 +6,7 @@
     width: 100vw;
 }
 
-.scoreboard-shell {
-    display: grid;
-    height: 100%;
-    width: 100%;
-    align-items: stretch;
-}
-
-.teamname {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    white-space: nowrap;
-    text-transform: uppercase;
-    color: var(--fg-color);
-    font-weight: 650;
-    font-size: 12px;
-    line-height: 1;
-}
-
-.teamname-left {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg); /* 270° */
-    color: var(--fg-left);
-}
-
-.teamname-right {
-    writing-mode: vertical-rl; /* 90° */
-    color: var(--fg-right);
-}
-
-/* Center: Training-Layout in der mittleren Spalte */
-.scoreboard-center {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 10% 80% 10%;
-    height: 100%;
-    width: 100%;
-}
-
-.training-row {
-    width: 100%;
-    height: 100%;
-}
-
-.training-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 700;
-    line-height: 1;
-    font-size: min(8vh, 10vw);
-}
-
-.training-mid-grid {
+.turnier-mid-grid {
     display: grid;
     height: 100%;
     width: 100%;
@@ -75,27 +14,6 @@
     align-items: stretch;
 }
 
-.training-bottom-grid {
-    display: grid;
-    height: 100%;
-    width: 100%;
-    grid-template-columns: 42.5% 15% 42.5%;
-    align-items: stretch;
-}
-
-.training-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-weight: 650;
-    line-height: 1;
-}
-
 /* Fallback (ohne JS): wird durch AutoFit inline überschrieben */
-.training-mid-grid .training-cell { font-size: min(16vh, 12vw); }
-.training-bottom-grid .training-cell { font-size: min(8vh, 12vw); }
+/*.turnier-mid-grid .training-cell { font-size: min(16vh, 12vw); }
+.score-bottom-grid .training-cell { font-size: min(8vh, 12vw); }*/

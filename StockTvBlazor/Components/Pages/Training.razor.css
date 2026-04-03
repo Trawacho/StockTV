@@ -1,4 +1,3 @@
-
 .training-main-grid {
     background-color: var(--bg-color);
     display: grid;
@@ -10,62 +9,15 @@
     width: 100vw;
 }
 
-/* 3 Zeilen: Header (10%) / Werte (80%) / Footer (10%) */
-.training-row {
-    width: 100%;
-    height: 100%;
-}
-
-.training-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important; /* überschreibt header-text padding */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 700;
-    line-height: 1;
-    font-size: min(8vh, 10vw);
-}
-
-/* Mittlere Zeile: 3 Spalten (45% / 10% / 45%) */
-.training-middle-row,
 .training-mid-grid {
     display: grid;
-}
-
-.training-mid-grid {
     height: 100%;
     width: 100%;
     grid-template-columns: 45% 10% 45%;
     align-items: stretch;
 }
 
-/* Untere Zeile: 3 Spalten (42.5% / 15% / 42.5%) */
-.training-bottom-grid {
-    display: grid;
-    height: 100%;
-    width: 100%;
-    grid-template-columns: 42.5% 15% 42.5%;
-    align-items: stretch;
-}
-
-/* Zellen: maximale Füllung innerhalb ihrer Zelle */
-.training-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-weight: 650;
-    line-height: 1;
-}
-
 /* Fallback (ohne JS): ok, wird durch AutoFit inline überschrieben */
-.training-mid-grid .training-cell { font-size: min(16vh, 12vw); }
-.training-bottom-grid .training-cell { font-size: min(8vh, 12vw); }
+/*.training-mid-grid .score-cell { font-size: min(16vh, 12vw); }
+.score-bottom-grid .score-cell { font-size: min(8vh, 12vw); }*/
 
