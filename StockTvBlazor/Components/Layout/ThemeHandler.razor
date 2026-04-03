@@ -4,10 +4,10 @@
 
 <style @key="_updateCounter">
     :root {
-        --bg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-        --fg-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-        --fg-left: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeft));
-        --fg-right: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
+        --bg-color: @_settings.BackgroundColor;
+        --fg-color: @_settings.ForegroundColor;
+        --fg-left: @_settings.ForegroundColorLeft;
+        --fg-right: @_settings.ForegroundColorRight;
     }
 </style>
 
