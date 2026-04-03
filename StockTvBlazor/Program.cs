@@ -1,5 +1,4 @@
 using StockTvBlazor.Components;
-using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 using StockTvBlazor.Components.ViewModels;
@@ -56,7 +55,8 @@ if (!app.Environment.IsDevelopment())
 	app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+
+app.UseHttpsRedirection(); 
 
 app.UseAntiforgery();
 
@@ -84,8 +84,7 @@ app.UseAntiforgery();
 //    return System.Threading.Tasks.Task.CompletedTask;
 //});
 
-app.MapStaticAssets();
-
+//app.MapStaticAssets();   <== doppelter Eintrag
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
