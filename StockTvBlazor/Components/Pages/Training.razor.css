@@ -1,6 +1,5 @@
 
-/* Haupt-Layout für Training: 3 Zeilen */
-.main-grid.training {
+.training-main-grid {
     background-color: var(--bg-color);
     display: grid;
     grid-template-columns: 1fr;

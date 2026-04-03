@@ -10,7 +10,7 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<div class="main-grid training" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+<div class="training-main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
 	<div class="training-row training-top-row header-text">@ViewModel.HeaderText</div>
 
@@ -69,7 +69,7 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".main-grid.training");
+		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".training-main-grid");
 
 		if (firstRender)
 			await inputRef.FocusAsync();
