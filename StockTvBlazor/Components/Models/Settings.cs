@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace StockTvBlazor.Components.Models;
 
@@ -119,51 +118,51 @@ public class Settings
 	#region Color Properties
 
 	[JsonIgnore]
-	public Color BackgroundColor => Theme switch
+	public string BackgroundColor => Theme switch
 	{
-		THEME.HELL => Color.White,
-		_ => Color.Black
+		THEME.HELL => "#ffffff",
+				 _ => "#000000"
 	};
 
 	[JsonIgnore]
-	public Color ForegroundColorRight => (Richtung, Theme) switch
+	public string ForegroundColorRight => (Richtung, Theme) switch
 	{
-		(RICHTUNG.LINKS, THEME.HELL) => Color.Green,
-		(RICHTUNG.RECHTS, THEME.HELL) => Color.Red,
-		(RICHTUNG.LINKS, THEME.DUNKEL) => Color.YellowGreen,
-		(RICHTUNG.RECHTS, THEME.DUNKEL) => Color.Red,
-		_ => Color.Red
+		(RICHTUNG.LINKS, THEME.HELL)    => "#008000",  // Green
+		(RICHTUNG.RECHTS, THEME.HELL)   => "#ff0000",  // Red
+		(RICHTUNG.LINKS, THEME.DUNKEL)  => "#9acd32",  // YellowGreen
+		(RICHTUNG.RECHTS, THEME.DUNKEL) => "#ff0000",  // Red
+		_								=> "#ff0000"
 	};
 
 	[JsonIgnore]
-	public Color ForegroundColorLeft => (Richtung, Theme) switch
+	public string ForegroundColorLeft => (Richtung, Theme) switch
 	{
-		(RICHTUNG.LINKS, THEME.HELL) => Color.Red,
-		(RICHTUNG.RECHTS, THEME.HELL) => Color.Green,
-		(RICHTUNG.LINKS, THEME.DUNKEL) => Color.Red,
-		(RICHTUNG.RECHTS, THEME.DUNKEL) => Color.YellowGreen,
-		_ => Color.Green
+		(RICHTUNG.LINKS, THEME.HELL)	=> "#ff0000",
+		(RICHTUNG.RECHTS, THEME.HELL)	=> "#008000",
+		(RICHTUNG.LINKS, THEME.DUNKEL)	=> "#ff0000",
+		(RICHTUNG.RECHTS, THEME.DUNKEL) => "#9acd32",
+		_								=> "#008000"
 	};
 
 	[JsonIgnore]
-	public Color ForegroundColor => Theme switch
+	public string ForegroundColor => Theme switch
 	{
-		THEME.HELL => Color.Black,
-		_ => Color.LightGray
+		THEME.HELL	=> "#000000",
+		_			=> "#d3d3d3"  // LightGray
 	};
 
 	[JsonIgnore]
-	public Color ForegroundZielSummeGesamt => Theme switch
+	public string ForegroundZielSummeGesamt => Theme switch
 	{
-		THEME.HELL => Color.DarkMagenta,
-		_ => Color.Magenta
+		THEME.HELL	=> "#8b008b",  // DarkMagenta
+		_			=> "#ff00ff"   // Magenta
 	};
 
 	[JsonIgnore]
-	public Color ForegroundZielSummeEinzel => Theme switch
+	public string ForegroundZielSummeEinzel => Theme switch
 	{
-		THEME.HELL => Color.DarkCyan,
-		_ => Color.Cyan
+		THEME.HELL	=> "#008b8b",  // DarkCyan
+		_			=> "#00ffff"   // Cyan
 	};
 
 	#endregion
