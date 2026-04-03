@@ -11,7 +11,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
 
-      #Test-NetConnection {IPADRESSE} -Port 4748 auf den Clients, um die Erreichbarkeit zu testen
+      # Test-NetConnection {IPADRESSE} -Port 4748 auf den Clients, um die Erreichbarkeit zu  testen
       # Aktuell testweise die feste IP deines PCs im Netzwerk
       - PUBLIC_HOST={IPADRESSE}
 
