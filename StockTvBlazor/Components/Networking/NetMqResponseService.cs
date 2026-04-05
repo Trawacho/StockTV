@@ -160,16 +160,23 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		_logger.LogInformation("ExecuteAsync gestartet");
 		_poller.RunAsync();
 
-		await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
+		try
 		{
-			try
+			await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
 			{
-				action();
+				try
+				{
+					action();
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Fehler beim Ausführen einer Channel-Aktion");
+				}
 			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Fehler beim Ausführen einer Channel-Aktion");
-			}
+		}
+		catch (OperationCanceledException)
+		{
+			_logger.LogInformation("NetMqResponseService durch CancellationToken gestoppt");
 		}
 
 		if (_poller.IsRunning)
@@ -178,14 +185,22 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		_logger.LogInformation("ExecuteAsync beendet");
 	}
 
+	private bool _disposed = false;
 	public override void Dispose()
 	{
-		_logger.LogInformation("dispose");
-		_actionChannel.Writer.Complete();
+		if(_disposed) return;
+		_disposed = true;
+
+		_logger.LogInformation("NetMqResponseService dispose gestartet");
 		if (_poller.IsRunning) _poller.Stop();
+
+		try { _actionChannel.Writer.TryComplete(); } catch { }
+
 		_poller.Dispose();
 		_repSocket.Close();
 		_repSocket.Dispose();
+		_logger.LogInformation("NetMqResponseService dispose beendet");
+
 		base.Dispose();
 	}
 }
