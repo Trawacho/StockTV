@@ -318,6 +318,14 @@ namespace StockTvBlazor.Components.Services
 			_ = settings[9];    //Reserved for future use
 
 			OnSettingsChanged?.Invoke();
+
+			_ = Task.Run(async () =>
+			{
+				try { await SaveSettingsAsync(); }catch (Exception ex)
+				{
+					_logger.LogError($"Fehler beim Speichern der Config nach SetSettings: {ex.Message}");
+				}
+			});
 		}
 
 		#endregion
