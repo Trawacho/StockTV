@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace StockTvBlazor.Components.Services;
+﻿namespace StockTvBlazor.Components.Services;
 
 public static class FileLoggerExtensions
 {

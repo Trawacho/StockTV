@@ -1,5 +1,4 @@
-﻿using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Networking;
+﻿using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
