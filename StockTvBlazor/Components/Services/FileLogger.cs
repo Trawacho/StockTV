@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 
 namespace StockTvBlazor.Components.Services;
 
@@ -16,9 +15,12 @@ public class FileLogger : ILogger
         _provider = provider;
     }
 
-    public IDisposable BeginScope<TState>(TState state) => default!;
+	public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+	{
+	     return default!;
+	}
 
-    public bool IsEnabled(LogLevel logLevel) => true;
+	public bool IsEnabled(LogLevel logLevel) => true;
 
     public void Log<TState>(
         LogLevel logLevel,
