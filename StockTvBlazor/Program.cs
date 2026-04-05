@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.DataProtection;
+using NetMQ;
 using StockTvBlazor.Components;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
@@ -17,6 +19,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
+
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 
 builder.Services.AddSingleton<NetMqPublisherService>();
@@ -66,3 +69,5 @@ app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
 
 app.Run();
+
+NetMQConfig.Cleanup();
