@@ -1,104 +1,91 @@
 ﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Components.Models;
 using StockTvBlazor.Components.Services;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace BlazorAppTests.Components.Pages
+namespace StockTvBlazor.Components.Pages;
+
+public class HomeBase : ComponentBase, IDisposable
 {
-    public class HomeBase : ComponentBase, IDisposable
-    {
-        [Inject] protected NavigationManager NavManager { get; set; }
-        [Inject] protected SettingsService _settingsService { get; set; } // <-- Service injiziert
-        protected string mySetting;
+	[Inject] protected NavigationManager? NavManager { get; set; }
+	[Inject] protected SettingsService? SettingsService { get; set; } // <-- Service injiziert
 
 
-        protected int countdown = 10;
-        protected int progress = 0;
+	protected int countdown = 10;
+	protected int progress = 0;
 
-        private Timer timer;
-        private bool disposed = false;
+	private Timer? _timer;
+	private bool _disposed = false;
 
-        protected override void OnInitialized()
-        {
+	protected override void OnInitialized()
+	{
 
-        }
+	}
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    // Debug-Modus: Countdown auf 3 Sekunden setzen
-                    countdown = 3;
-                }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			if (System.Diagnostics.Debugger.IsAttached)
+			{
+				// Debug-Modus: Countdown auf 3 Sekunden setzen
+				countdown = 3;
+			}
 
-                int total = countdown;
+			int total = countdown;
 
-                // Timer asynchron starten
-                timer = new Timer(async _ =>
-                {
-                    if (countdown > 0)
-                    {
-                        countdown--;
-                        progress = (int)((1 - (double)countdown / total) * 100);
-                        await InvokeAsync(StateHasChanged);
-                    }
-                    else
-                    {
-                        timer.Dispose();
-                        NavigateToPage();
-                    }
-                }, null, 1000, 1000);
-            }
-        }
-
-
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                timer?.Dispose();
-                disposed = true;
-            }
-        }
+			// Timer asynchron starten
+			_timer = new Timer(async _ =>
+			{
+				if (countdown > 0)
+				{
+					countdown--;
+					progress = (int)((1 - (double)countdown / total) * 100);
+					await InvokeAsync(StateHasChanged);
+				}
+				else
+				{
+					_timer?.Dispose();
+					NavigateToPage();
+				}
+			}, null, 1000, 1000);
+		}
+	}
 
 
-        private void NavigateToPage()
-        {
-            var settings = _settingsService.CurrentSettings;
-            string pageName = string.Empty;
+	public void Dispose()
+	{
+		if (!_disposed)
+		{
+			_timer?.Dispose();
+			_disposed = true;
+		}
+	}
 
 
-            switch (settings.Modus)
-            {
-                case Settings.MODUS.TRAINING:
-                    pageName = ("/training");
-                    break;
-                case Settings.MODUS.TURNIER:
-                    pageName = ("/turnier");
-                    break;
-                case Settings.MODUS.BESTOF:
-                    pageName = ("/bestof");
-                    break;
-				case Settings.MODUS.ZIEL:
-					pageName = ("/ziel");
-					break;
-				default:
-                    pageName = ("/settings");
-                    break;
-            }
+	private void NavigateToPage()
+	{
+		if(SettingsService == null || NavManager == null)
+		{
+			return;
+		}
+
+		var settings = SettingsService.CurrentSettings;
+		string _pageName = settings.Modus switch
+		{
+			Models.Settings.MODUS.TRAINING => ("/training"),
+			Models.Settings.MODUS.TURNIER => ("/turnier"),
+			Models.Settings.MODUS.BESTOF => ("/bestof"),
+			Models.Settings.MODUS.ZIEL => ("/ziel"),
+			_ => ("/settings"),
+		};
 
 
-            //Hack: Für Tests hier die entsprechende Seite hart codieren, damit die Navigation funktioniert, ohne dass die SettingsService-Logik berücksichtigt werden muss.
-            //pageName = "layouttest";
+		//Hack: Für Tests hier die entsprechende Seite hart codieren, damit die Navigation funktioniert, ohne dass die SettingsService-Logik berücksichtigt werden muss.
+		//pageName = "layouttest";
 
-            if (!string.IsNullOrEmpty(pageName))
-            {
-                NavManager.NavigateTo(pageName);
-            }   
+		if (!string.IsNullOrEmpty(_pageName))
+		{
+			NavManager.NavigateTo(_pageName);
+		}
 
-        }
-    }
+	}
 }
