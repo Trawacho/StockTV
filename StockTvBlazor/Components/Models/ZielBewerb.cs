@@ -1,7 +1,6 @@
 ﻿using StockTvBlazor.Components.Services;
 using System.Text;
 using System.Text.Json;
-using System.Transactions;
 
 namespace StockTvBlazor.Components.Models;
 
@@ -110,15 +109,15 @@ public class ZielBewerb(SettingsService settingsService)
 		{
 			_massenVorne.Add(value);
 		}
-		else if (_schiessen.Count < MaxKehrenProSpiel && IsSchussValue(value))
+		else if (_massenVorne.Count >= MaxKehrenProSpiel && _schiessen.Count < MaxKehrenProSpiel && IsSchussValue(value))
 		{
 			_schiessen.Add(value);
 		}
-		else if (_massenSeite.Count < MaxKehrenProSpiel && IsMassValue(value))
+		else if (_schiessen.Count >= MaxKehrenProSpiel && _massenSeite.Count < MaxKehrenProSpiel && IsMassValue(value))
 		{
 			_massenSeite.Add(value);
 		}
-		else if (_kombinieren.Count < MaxKehrenProSpiel && IsMassValue(value))
+		else if (_massenSeite.Count >= MaxKehrenProSpiel && _kombinieren.Count < MaxKehrenProSpiel && IsMassValue(value))
 		{
 			_kombinieren.Add(value);
 		}
