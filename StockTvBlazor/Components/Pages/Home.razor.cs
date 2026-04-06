@@ -69,14 +69,7 @@ public class HomeBase : ComponentBase, IDisposable
 		}
 
 		var settings = SettingsService.CurrentSettings;
-		string _pageName = settings.Modus switch
-		{
-			Models.Settings.MODUS.TRAINING => ("/training"),
-			Models.Settings.MODUS.TURNIER => ("/turnier"),
-			Models.Settings.MODUS.BESTOF => ("/bestof"),
-			Models.Settings.MODUS.ZIEL => ("/ziel"),
-			_ => ("/settings"),
-		};
+		string _pageName = SettingsService.GetModusUrl(settings.Modus);
 
 
 		//Hack: Für Tests hier die entsprechende Seite hart codieren, damit die Navigation funktioniert, ohne dass die SettingsService-Logik berücksichtigt werden muss.
