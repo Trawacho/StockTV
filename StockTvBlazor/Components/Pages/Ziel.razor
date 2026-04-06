@@ -32,6 +32,14 @@
 
 		@* Zeile 2 — drei Spalten (35/35/30) mit verschiedenen Farben *@
 		<div class="ziel-row ziel-row-mid">
+
+			@if (ViewModel.InvalidInput)
+			{
+				<div class="ziel-overlay show" data-autofit data-autofit-min="10">
+					ungültig
+				</div>
+			}
+
 			<div class="ziel-cell ziel-col-a" data-autofit data-autofit-min="10">
 				@ViewModel.LastValue
 			</div>

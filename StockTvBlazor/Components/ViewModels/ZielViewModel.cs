@@ -72,6 +72,21 @@ public class ZielViewModel : IDisposable
 			: string.Empty
 		: string.Empty;
 
+	private bool _invalidInput;
+	public bool InvalidInput
+	{
+		get => _invalidInput;
+		set
+		{
+			if (_invalidInput != value)
+			{
+				_invalidInput = value;
+				OnViewModelChanged?.Invoke();
+			}
+		}
+	}
+
+
 	public void Dispose()
 	{
 		if (_disposed) return;
@@ -166,7 +181,15 @@ public class ZielViewModel : IDisposable
 	private async Task AddToZielBewerb()
 	{
 		if (_inputValue < 0) return;
-		_currentBewerb.AddVersuch(_inputValue); // todo: Wenn false, dann sollte eine Anzeige im Bildschirm kommen, dass der Versuch wegen falscher Eingabe nicht hinzugefügt werden konnte
+		if (!_currentBewerb.AddVersuch(_inputValue))
+		{
+			_inputValue = -1;
+
+			InvalidInput = true;
+			await Task.Delay(1500);
+			InvalidInput = false;
+			return;
+		}
 		_inputValue = -1;
 	}
 

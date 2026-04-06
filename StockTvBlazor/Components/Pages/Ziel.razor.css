@@ -31,7 +31,7 @@
     overflow: visible;
     white-space: nowrap;
     text-transform: uppercase;
-    color: var(--fg-color);
+    color: var(--fg-color-ziel-gesamt);
     font-weight: 650;
     font-size: 12px; /* Fallback — AutoFit übernimmt */
     line-height: 1;
@@ -129,3 +129,28 @@
     line-height: 1;
     font-size: 12px; /* Fallback — AutoFit übernimmt */
 }
+
+/* ========================================================================
+   Diagonaler Overlay-Text über in der mittleren Zeile bei falscher Eingabe
+   ======================================================================== */
+
+.ziel-overlay {
+    position: absolute;
+    top: 50%;
+    left: 30%; 
+    width: 40%;
+    transform: translateY(-50%) rotate(-12deg);
+    text-align: center;
+    font-size: 4vw;
+    font-weight: 500;
+    color: rgb(255, 0, 0);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+    .ziel-overlay.show {
+        opacity: 1;
+    }
