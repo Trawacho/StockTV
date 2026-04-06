@@ -16,6 +16,7 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());	
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
 

@@ -86,7 +86,7 @@ public class SettingsViewModel(SettingsService settingsService, NavigationManage
 
 	private void ExitSettingsPage()
 	{
-		_ = _settingsService.SaveSettingsAsync();
+		_settingsService.RequestSaveSettings();
 		switch (_currentSettings.Modus)
 			{
 			case Settings.MODUS.BESTOF:
@@ -108,6 +108,7 @@ public class SettingsViewModel(SettingsService settingsService, NavigationManage
 	{
 		// Dispose logic if needed
 	}
+	
 
 	public bool IsThemeActive => _currentSetting == SettingsOptions.Theme;
 	public bool IsRichtungActive => _currentSetting == SettingsOptions.Richtung;
