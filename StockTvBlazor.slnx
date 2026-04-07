@@ -5,6 +5,7 @@
     <File Path="build/docker-compose.yml" />
     <File Path="build/dockerfile" />
     <File Path="build/OpenBrowser.bat" />
+    <File Path="build/remotebuild_std.ps1" />
   </Folder>
   <Project Path="BlazorAppTests/BlazorAppTests.csproj" Id="2131d11a-ff3e-4704-a3f9-6e7303f683a1" />
   <Project Path="StockTvBlazor/StockTvBlazor.csproj" />

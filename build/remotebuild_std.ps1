@@ -1,63 +1,113 @@
-# Stoppe Skript bei Fehlern
+# ============================================
+#  Build + Deployment Script for StockTV
+# ============================================
+
 $ErrorActionPreference = "Stop"
 
 # ================================
-# Einstellungen
+# Settings
 # ================================
 $RemoteUser = "daniel"
 $RemoteHost = "csl"
 $RemoteDir  = "~/composer"
 $ImageName  = "stocktv"
 
-Write-Host "Ermittle neuestes lokales Image..."
+Write-Host "=========================================="
+Write-Host "   BUILD + DEPLOY: StockTV"
+Write-Host "==========================================`n"
 
-# 1. Alle Tags holen
-$tags = docker images $ImageName --format "{{.Tag}}"
+# ================================
+# Buildx init
+# ================================
+Write-Host "Initialize Docker Buildx..."
 
-if (-not $tags) {
-    Write-Host "Kein Image mit dem Namen '$ImageName' gefunden!" -ForegroundColor Red
-    exit 1
+$builderExists = docker buildx ls | Select-String "devbuilder"
+
+if (-not $builderExists) {
+    Write-Host "Create new Buildx builder 'devbuilder'..."
+    docker buildx create --name devbuilder --use | Out-Null
+} else {
+    Write-Host "Buildx builder 'devbuilder' already exists - using it..."
+    docker buildx use devbuilder | Out-Null
 }
 
-# 2. Höchsten Tag bestimmen (Version-Sortierung)
-$LatestTag = $tags | Sort-Object { $_ } -Descending | Select-Object -First 1
-
-Write-Host "Gefundenes neuestes Image: ${ImageName}:${LatestTag}"
-
-# TAR-Dateiname
-$TarFile = "${ImageName}_${LatestTag}.tar"
+docker buildx inspect --bootstrap | Out-Null
 
 # ================================
-# Image exportieren
+# Version tag
 # ================================
-Write-Host "Exportiere Image nach $TarFile..."
-docker save -o $TarFile "${ImageName}:${LatestTag}"
+$VERSION_TAG = "StockTV_v" + (Get-Date -Format "yyyy.MM.dd.HHmm")
+Write-Host "Using tag: $VERSION_TAG"
 
 # ================================
-# TAR auf Server kopieren
+# Build image
 # ================================
-Write-Host "Kopiere TAR auf den Server..."
-scp $TarFile "${RemoteUser}@${RemoteHost}:${RemoteDir}/"
+Write-Host "`nBuilding Docker image..."
+
+docker buildx build `
+    --platform linux/amd64 `
+    -f build/Dockerfile `
+    -t "${ImageName}:${VERSION_TAG}" `
+    --load `
+    .
+
+Write-Host "Build done: ${ImageName}:${VERSION_TAG}"
 
 # ================================
-# Image auf Server laden
+# Export image
 # ================================
-Write-Host "Lade Image auf dem Server..."
-ssh "${RemoteUser}@${RemoteHost}" "docker load -i ${RemoteDir}/${TarFile}"
+$TarFile = "${ImageName}_${VERSION_TAG}.tar"
+Write-Host "`nExporting image to $TarFile..."
+
+docker save -o $TarFile "${ImageName}:${VERSION_TAG}"
 
 # ================================
-# docker-compose neu starten
+# Build SSH/SCP strings
 # ================================
-Write-Host "Starte docker-compose neu..."
-ssh "${RemoteUser}@${RemoteHost}" "cd ${RemoteDir} && STOCKTV_TAG=${LatestTag} docker compose up -d --force-recreate stocktvBahn1 stocktvBahn2 stocktvBahn3 stocktvBahn4"
+$remoteUserHost = "$RemoteUser@$RemoteHost"
+$remotePath = "${remoteUserHost}:${RemoteDir}/"
+
 
 # ================================
-# Cleanup
+# Copy TAR to server
 # ================================
-Write-Host "Entferne TAR-Datei lokal..."
+Write-Host "Copying TAR to server..."
+
+scp $TarFile $remotePath
+
+# ================================
+# Remote commands
+# ================================
+$remoteCommand = "docker load -i $RemoteDir/$TarFile; cd $RemoteDir; STOCKTV_TAG=$VERSION_TAG docker compose up -d --force-recreate stocktvBahn1 stocktvBahn2 stocktvBahn3 stocktvBahn4; rm -f $RemoteDir/$TarFile"
+
+# ================================
+# Execute remote
+# ================================
+Write-Host "Running deployment on server..."
+
+ssh $remoteUserHost $remoteCommand
+
+# ================================
+# Cleanup local
+# ================================
+Write-Host "Removing local TAR file..."
 Remove-Item $TarFile -Force
 
-Write-Host "Entferne TAR-Datei auf dem Server..."
-ssh "${RemoteUser}@${RemoteHost}" "rm -f ${RemoteDir}/${TarFile}"
+# ================================
+# Start local container with new image
+# ================================
+Write-Host "Starting local container with new image..."
 
-Write-Host "Deployment abgeschlossen!" -ForegroundColor Green
+# Set environment variable for docker compose
+$env:STOCKTV_IMAGE = "${ImageName}:${VERSION_TAG}"
+
+# Change to the directory where THIS script is located
+Set-Location -Path $PSScriptRoot
+
+# Start local containers
+docker compose up -d --build
+
+
+Write-Host "`n=========================================="
+Write-Host "Deployment completed successfully!"
+Write-Host "=========================================="
