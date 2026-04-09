@@ -5,14 +5,19 @@
     display: flex;
 }
 
-.punkte-links,
-.punkte-rechts {
+.punkte-links {
     display: flex;
     justify-content: center;
     align-items: center;
     flex: 0 0 40%;
 }
 
+.punkte-rechts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 40%;
+}
 .trenner {
     flex: 0 0 20%;
     display: flex;

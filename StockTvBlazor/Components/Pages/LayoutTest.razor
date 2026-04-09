@@ -3,14 +3,16 @@
 @using BlazorAppTests.Components.Pages
 @inherits LayoutTestBase
 
-<div class="containerX">
+<div class="containerX"  @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="inputRef">
     @if (isLeftPanelVisible)
     {
-        <div class="left">Mia san a da</div>
+        <div class="teamname-left">Mia san a da</div>
     }
 
-    <div class="content" @onkeydown="HandleGlobalKeyDown">
-        <div class="line line-1">HEADER: Bahn X</div>
+    <div class="content">
+        <div class="line line-1">
+            <span class="header-text">HEADER: Bahn X</span>
+        </div>
 
         <div class="line line-2">
             <PunkteAnzeige Punkte1="@scoreA" Punkte2="@scoreB" />
@@ -33,8 +35,6 @@
 
     @if (isRightPanelVisible)
     {
-        <div class="right">Ein Verein mit einem sehr sehr sehr langen Namen</div>
+        <div class="teamname-right">Ein Verein mit einem sehr sehr sehr langen Namen</div>
     }
 </div>
-
-<p style="color:red">Test: @test</p>

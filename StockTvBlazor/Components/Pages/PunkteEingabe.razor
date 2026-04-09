@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Web
 
 <div class="punkte-eingabe">
-    <span class="punkte-links">@Punkte1</span>
+    <span class="punkte-links left-points">@Punkte1</span>
 
     @*     <input type="text"
            class="punkte-input"
@@ -10,10 +10,10 @@
            @onkeydown="OnKeyDown"
            inputmode="decimal" /> *@
 
-    <input @ref="inputRef" class="punkte-input" @onkeydown="HandleKeyDown" />
+    @* <input @ref="inputRef" class="punkte-input input-value" @onkeydown="HandleKeyDown" /> *@
+    <div class="score-cell input-value" data-autofit data-autofit-min="10">0</div>
 
-
-    <span class="punkte-rechts">@Punkte2</span>
+    <span class="punkte-rechts right-points">@Punkte2</span>
 </div>
 
 @code {

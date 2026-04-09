@@ -4,6 +4,7 @@
 }
 
 .containerX {
+    background-color: var(--bg-color);
     display: flex;
     width: 100vw;
     height: 100vh;
@@ -11,7 +12,7 @@
 }
 
 /* Seitenleisten */
-.left, .right {
+.teamname-left, .teamname-right {
     width: 12vmin; /* skaliert automatisch */
     background: #ccc;
     flex-shrink: 0;
@@ -24,8 +25,13 @@
 }
 
 /* linke Seite drehen */
-.left {
+.teamname-left {
     transform: rotate(180deg);
+    color: var(--fg-left);
+}
+
+.teamname-right {
+    color: var(--fg-right);
 }
 
 /* Content-Bereich */
@@ -46,22 +52,18 @@
 /* dynamische Höhen */
 .line-1 {
     flex: 0 0 12vmin;
-    background: lightblue;
 }
 
 .line-2 {
     flex: 3;
-    background: lightgreen;
 }
 
 .line-3 {
     flex: 1;
-    background: lightcoral;
 }
 
 .line-Advert {
     flex: 2 0 10vmin;
-    background: orange;
     color: white;
     font-size: 6vmin;
 }

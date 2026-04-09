@@ -44,12 +44,18 @@
     text-align: center;
 }
 
-/* Gemeinsame Textfarben */
-:root .header-text {
-    color: var(--fg-color);
+.header-text {
+    color: var(--fg-color, red); /* fallback */
     padding: 5px;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 5vmin;
+    white-space: nowrap; /* verhindert Zeilenumbruch */
+    min-width: 0; /* verhindert Flex-Überlauf */
 }
+
 
 :root .left-point-sum {
     color: var(--fg-left);
@@ -85,8 +91,8 @@
     padding: 5px;
 }
 /* Mittlere Spalte: Unterteilung in 3 Zeilen */
-	.center-column {
-		display: grid;
-		grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
-		height: 100vh;
-	}
+.center-column {
+	display: grid;
+	grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
+	height: 100vh;
+}

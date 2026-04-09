@@ -1,12 +1,18 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using StockTvBlazor.Components.Pages;
+using StockTvBlazor.Components.Services;
 using System.Threading.Tasks;
 
 namespace BlazorAppTests.Components.Pages
 {
     public class LayoutTestBase : ComponentBase
     {
+
+        [Inject] protected NavigationManager? NavManager { get; set; }
+        [Inject] protected SettingsService? SettingsService { get; set; }
+
+        [Inject] protected StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel { get; set; }
         protected PunkteEingabe? punkteEingabeRef;
 
         // Sichtbarkeit der Panels und Werbung
@@ -23,6 +29,7 @@ namespace BlazorAppTests.Components.Pages
         protected int eingabeWert = 0;
 
         protected string test = "läuft";
+        protected ElementReference inputRef;
 
         // Lifecycle: Setzt Fokus auf PunkteEingabe
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,8 +58,7 @@ namespace BlazorAppTests.Components.Pages
 
         protected async Task HandleGlobalKeyDown(KeyboardEventArgs e)
         {
-            // Hier kann die Logik für globale Tasten-Ereignisse implementiert werden
-            // z.B.: await ViewModel.ProcessKeyAsync(e.Key);
+            await ViewModel.ProcessKeyAsync(e.Key);
         }
     }
 }
