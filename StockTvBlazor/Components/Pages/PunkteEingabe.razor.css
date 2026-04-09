@@ -3,7 +3,10 @@
     width: 100%;
     height: 100%;
     display: flex;
+    white-space: nowrap; /* verhindert Zeilenumbruch */
+    min-width: 0; /* verhindert Überlauf durch Flexbox */
 }
+
 
 /* Punkte links */
 .punkte-links {
