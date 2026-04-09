@@ -12,26 +12,9 @@
 </div>
 
 <div class="grid">
-    <div class="card">
-        <h3>Zuschauer & Vereine</h3>
-        <p>Alle Spielstände auf einen Blick – auf jeder Bahn und in Echtzeit.</p>
-    </div>
-
-    <div class="card">
-        <h3>Mehr Spannung</h3>
-        <p>Spieler sehen alle Begegnungen und behalten den Überblick im Turnier.</p>
-    </div>
-
-    <div class="card">
-        <h3>Einfache Bedienung</h3>
-        <p>Intuitiv für jedes Alter – sogar mit 82 problemlos nutzbar.</p>
-    </div>
-
-    <div class="card">
-        <h3>Spielmodi</h3>
-        <p>Training, Turnier, Best-Of und Zielschießen – individuell angepasst.</p>
-    </div>
+    <DynamicComponent Type="CardComponents[currentCardIndex]" />
 </div>
+
 
 <div class="cta">
     <p>Weiterleitung in <strong>@countdown Sekunden</strong>...</p>
