@@ -15,10 +15,10 @@ namespace BlazorAppTests.Components.Pages
         protected bool isRightPanelVisible = true;
 
         // Beispielwerte für Punkte und Eingaben
-        protected int scoreA = 10;
-        protected int scoreB = 3;
-        protected string links = "2-0-1-3";
-        protected string rechts = "0-1-0-0";
+        protected int scoreA = 11;
+        protected int scoreB = 2;
+        protected string links = "2-0-4-3-2-0";
+        protected string rechts = "0-1-0-0-0-1";
         protected string meinWert = "";
         protected int eingabeWert = 0;
 

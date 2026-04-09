@@ -7,22 +7,23 @@
     display: flex;
     width: 100vw;
     height: 100vh;
+    overflow: hidden;
 }
 
 /* Seitenleisten */
 .left, .right {
-    width: 100px;
+    width: 12vmin; /* skaliert automatisch */
     background: #ccc;
     flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     writing-mode: vertical-rl;
-    font-size: 24px;
+    font-size: 4vmin;
     font-family: Arial, sans-serif;
 }
 
-/* optional: linke Seite drehen */
+/* linke Seite drehen */
 .left {
     transform: rotate(180deg);
 }
@@ -32,7 +33,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* verhindert Überlauf */
+    min-width: 0;
 }
 
 /* Zeilen */
@@ -42,9 +43,9 @@
     align-items: center;
 }
 
-/* feste / flexible Höhen */
+/* dynamische Höhen */
 .line-1 {
-    flex: 0 0 80px;
+    flex: 0 0 12vmin;
     background: lightblue;
 }
 
@@ -59,8 +60,8 @@
 }
 
 .line-Advert {
-    flex: 2 0 60px;
+    flex: 2 0 10vmin;
     background: orange;
     color: white;
-    font-size: 40px;
+    font-size: 6vmin;
 }

@@ -1,33 +1,22 @@
 ﻿.punkte-anzeige {
-    font-size: 20rem;
+    font-size: 30vmin; /* große Zahlen */
     width: 100%;
     height: 100%;
     display: flex;
 }
 
-/* Punkte links */
-.punkte-links {
-    color: blueviolet;
-    flex: 0 0 40%;
+.punkte-links,
+.punkte-rechts {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex: 0 0 40%;
 }
 
-/* Trenner */
 .trenner {
     flex: 0 0 20%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 10cqw;
-}
-
-/* Punkte rechts */
-.punkte-rechts {
-    color: green;
-    flex: 0 0 40%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 18vmin; /* etwas kleiner als die Zahlen */
 }
