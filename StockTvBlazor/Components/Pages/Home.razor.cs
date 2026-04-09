@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.Pages;
@@ -7,6 +8,7 @@ public class HomeBase : ComponentBase, IDisposable
 {
     [Inject] protected NavigationManager? NavManager { get; set; }
     [Inject] protected SettingsService? SettingsService { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
 
     protected int countdown = 10;
     protected int progress = 0;
@@ -30,7 +32,7 @@ public class HomeBase : ComponentBase, IDisposable
     {
         if (firstRender)
         {
-            //if (System.Diagnostics.Debugger.IsAttached) { countdown = 3; }
+            if (System.Diagnostics.Debugger.IsAttached) { countdown = 3; }
 
             StartCountdown();
             StartCardRotation();
@@ -52,7 +54,8 @@ public class HomeBase : ComponentBase, IDisposable
             else
             {
                 _timer?.Dispose();
-                NavigateToPage();
+                await NavigateToPage();
+                //await NavigateToPageTest();
             }
 
         }, null, 1000, 1000);
@@ -72,7 +75,7 @@ public class HomeBase : ComponentBase, IDisposable
         }, null, 2000, 2000);
     }
 
-    private void NavigateToPage()
+    private async Task NavigateToPage()
     {
         if (SettingsService == null || NavManager == null)
             return;
@@ -80,9 +83,44 @@ public class HomeBase : ComponentBase, IDisposable
         var settings = SettingsService.CurrentSettings;
         string pageName = SettingsService.GetModusUrl(settings.Modus);
 
+        pageName = "LayoutTest"; // Testweise immer zur LayoutTest-Seite navigieren"
+
         if (!string.IsNullOrEmpty(pageName))
             NavManager.NavigateTo(pageName);
     }
+
+    private async Task NavigateToPageTest()
+    {
+
+        if (SettingsService == null || NavManager == null)
+            return;
+
+        var settings = SettingsService.CurrentSettings;
+        string pageName = SettingsService.GetModusUrl(settings.Modus);
+
+        // 1️⃣ Bestimme die Zielseiten basierend auf dem Modus
+        string[] pagesToOpen = new[] { pageName };
+
+        // 2️⃣ Optional: Für Testzwecke mehrere Tabs öffnen
+        pagesToOpen = new[] { "LayoutTest", "training", "bestof" };
+
+        // 3️⃣ Wenn nur eine Seite → normal navigieren
+        if (pagesToOpen.Length == 1)
+        {
+            NavManager.NavigateTo(pagesToOpen[0]);
+        }
+        // 4️⃣ Wenn mehrere Seiten → JS-Interop nutzen
+        else if (pagesToOpen.Length > 1)
+        {
+            foreach (var page in pagesToOpen)
+            {
+                await JSRuntime.InvokeVoidAsync("open", page, "_blank");
+            }
+
+        }
+    }
+
+
 
     public void Dispose()
     {

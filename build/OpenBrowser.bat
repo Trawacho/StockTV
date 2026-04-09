@@ -3,7 +3,8 @@ REM Pfad zu Chrome anpassen, je nachdem, wo es installiert ist
 set CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 REM URL, die geladen werden soll
-set URL=http://localhost:8080
+rem set URL=http://localhost:8080
+set URL=https://localhost:7169/
 
 REM Kiosk starten (Fullscreen, ohne Menü)
 %CHROME_PATH% --kiosk %URL% --no-first-run --disable-extensions --disable-infobars
