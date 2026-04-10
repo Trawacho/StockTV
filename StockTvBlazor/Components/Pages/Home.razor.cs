@@ -54,8 +54,8 @@ public class HomeBase : ComponentBase, IDisposable
             else
             {
                 _timer?.Dispose();
-                await NavigateToPage();
-                //await NavigateToPageTest();
+                //await NavigateToPage();
+                await NavigateToPageTest();
             }
 
         }, null, 1000, 1000);
@@ -83,7 +83,7 @@ public class HomeBase : ComponentBase, IDisposable
         var settings = SettingsService.CurrentSettings;
         string pageName = SettingsService.GetModusUrl(settings.Modus);
 
-        pageName = "LayoutTest"; // Testweise immer zur LayoutTest-Seite navigieren"
+       // pageName = "LayoutTest"; // Testweise immer zur LayoutTest-Seite navigieren"
 
         if (!string.IsNullOrEmpty(pageName))
             NavManager.NavigateTo(pageName);
