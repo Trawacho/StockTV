@@ -4,22 +4,20 @@ using StockTvBlazor.Components.Services;
 
 namespace StockTvBlazor.Components.Pages;
 
-public class HomeBase : ComponentBase, IDisposable
+public class HomeBase : ComponentBase, IAsyncDisposable
 {
     [Inject] protected NavigationManager? NavManager { get; set; }
     [Inject] protected SettingsService? SettingsService { get; set; }
-    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] protected IJSRuntime JSRuntime { get; set; } = default!;
 
     protected int countdown = 10;
     protected int progress = 0;
-
-    private Timer? _timer;
-    private Timer? _cardTimer;
-    private bool _disposed = false;
-
     protected int currentCardIndex = 0;
 
-    // Liste deiner Card-Komponenten
+    private CancellationTokenSource _cts = new();
+    private Task? _countdownTask;
+    private Task? _cardTask;
+
     protected List<Type> CardComponents = new()
     {
         typeof(HomeCards.CardDisplay1),
@@ -28,107 +26,139 @@ public class HomeBase : ComponentBase, IDisposable
         typeof(HomeCards.CardDisplay4)
     };
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            if (System.Diagnostics.Debugger.IsAttached) { countdown = 3; }
+            if (System.Diagnostics.Debugger.IsAttached)
+                countdown = 3;
 
-            StartCountdown();
-            StartCardRotation();
+            _countdownTask = RunCountdownAsync(_cts.Token);
+            _cardTask = RunCardRotationAsync(_cts.Token);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task RunCountdownAsync(CancellationToken token)
+    {
+        try
+        {
+            int total = countdown;
+
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                if (countdown > 0)
+                {
+                    countdown--;
+                    progress = (int)((1 - (double)countdown / total) * 100);
+
+                    await InvokeAsync(StateHasChanged);
+                }
+                else
+                {
+                    await NavigateToPageTest();
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // normal beim Dispose
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"COUNTDOWN ERROR: {ex}");
         }
     }
 
-    private void StartCountdown()
+    private async Task RunCardRotationAsync(CancellationToken token)
     {
-        int total = countdown;
-
-        _timer = new Timer(async _ =>
+        try
         {
-            if (countdown > 0)
+            if (CardComponents.Count == 0)
+                return;
+
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+
+            while (await timer.WaitForNextTickAsync(token))
             {
-                countdown--;
-                progress = (int)((1 - (double)countdown / total) * 100);
+                currentCardIndex++;
+
+                if (currentCardIndex >= CardComponents.Count)
+                    currentCardIndex = 0;
+
                 await InvokeAsync(StateHasChanged);
             }
-            else
-            {
-                _timer?.Dispose();
-                //await NavigateToPage();
-                await NavigateToPageTest();
-            }
-
-        }, null, 1000, 1000);
-    }
-
-    private void StartCardRotation()
-    {
-        _cardTimer = new Timer(async _ =>
+        }
+        catch (OperationCanceledException)
         {
-            currentCardIndex++;
-
-            if (currentCardIndex >= CardComponents.Count)
-                currentCardIndex = 0; // Loop
-
-            await InvokeAsync(StateHasChanged);
-
-        }, null, 2000, 2000);
-    }
-
-    private async Task NavigateToPage()
-    {
-        if (SettingsService == null || NavManager == null)
-            return;
-
-        var settings = SettingsService.CurrentSettings;
-        string pageName = SettingsService.GetModusUrl(settings.Modus);
-
-       // pageName = "LayoutTest"; // Testweise immer zur LayoutTest-Seite navigieren"
-
-        if (!string.IsNullOrEmpty(pageName))
-            NavManager.NavigateTo(pageName);
+            // normal beim Dispose
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CARD ROTATION ERROR: {ex}");
+        }
     }
 
     private async Task NavigateToPageTest()
     {
-
-        if (SettingsService == null || NavManager == null)
-            return;
-
-        var settings = SettingsService.CurrentSettings;
-        string pageName = SettingsService.GetModusUrl(settings.Modus);
-
-        // 1️⃣ Bestimme die Zielseiten basierend auf dem Modus
-        string[] pagesToOpen = new[] { pageName };
-
-        // 2️⃣ Optional: Für Testzwecke mehrere Tabs öffnen
-        pagesToOpen = new[] { "LayoutTest", "training", "bestof" };
-
-        // 3️⃣ Wenn nur eine Seite → normal navigieren
-        if (pagesToOpen.Length == 1)
+        try
         {
-            NavManager.NavigateTo(pagesToOpen[0]);
-        }
-        // 4️⃣ Wenn mehrere Seiten → JS-Interop nutzen
-        else if (pagesToOpen.Length > 1)
-        {
-            foreach (var page in pagesToOpen)
+            if (SettingsService == null || NavManager == null)
+                return;
+
+            var settings = SettingsService.CurrentSettings;
+            string pageName = SettingsService.GetModusUrl(settings.Modus);
+
+            string[] pagesToOpen = new[] { "LayoutTest", "training", "bestof" };
+
+            if (pagesToOpen.Length == 1)
             {
-                await JSRuntime.InvokeVoidAsync("open", page, "_blank");
+                await InvokeAsync(() => NavManager.NavigateTo(pagesToOpen[0]));
             }
-
+            else
+            {
+                foreach (var page in pagesToOpen)
+                {
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("open", page, "_blank");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"JS ERROR: {ex}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"NAVIGATION ERROR: {ex}");
         }
     }
 
-
-
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        try
+        {
+            _cts.Cancel();
 
-        _timer?.Dispose();
-        _cardTimer?.Dispose();
+            if (_countdownTask != null)
+                await _countdownTask;
 
-        _disposed = true;
+            if (_cardTask != null)
+                await _cardTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DISPOSE ERROR: {ex}");
+        }
+        finally
+        {
+            _cts.Dispose();
+        }
     }
 }

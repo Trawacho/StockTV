@@ -1,22 +1,49 @@
-using NetMQ;
+﻿using NetMQ;
 using StockTvBlazor.Components;
 using StockTvBlazor.Components.Networking;
 using StockTvBlazor.Components.Services;
 using StockTvBlazor.Components.ViewModels;
 
+
+//GLOBAL EXCEPTION HANDLER
+void LogError(string title, object ex)
+{
+    var oldColor = Console.ForegroundColor;
+
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine("=================================");
+    Console.WriteLine(title);
+    Console.WriteLine(ex);
+    Console.WriteLine("=================================");
+
+    Console.ForegroundColor = oldColor;
+}
+
+AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+{
+    LogError("UNHANDLED EXCEPTION", e.ExceptionObject);
+};
+
+TaskScheduler.UnobservedTaskException += (sender, e) =>
+{
+    LogError("TASK ERROR", e.Exception);
+    e.SetObserved();
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.AddFileLogger();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-	.AddInteractiveServerComponents();
+    .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());	
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
 
@@ -38,35 +65,40 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-	var services = scope.ServiceProvider;
+    var services = scope.ServiceProvider;
 
-	var settingsService = services.GetRequiredService<SettingsService>();
-	await settingsService.InitializeAsync();
+    var settingsService = services.GetRequiredService<SettingsService>();
+    await settingsService.InitializeAsync();
 
-	var matchService = services.GetRequiredService<MatchService>();
-	matchService.InitializeMatch();
+    var matchService = services.GetRequiredService<MatchService>();
+    matchService.InitializeMatch();
 
-	var zielService = services.GetRequiredService<ZielService>();
-	zielService.InitializeZiel();
+    var zielService = services.GetRequiredService<ZielService>();
+    zielService.InitializeZiel();
 }
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// WICHTIG: Development richtig behandeln!
+if (app.Environment.IsDevelopment())
 {
-	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-	app.UseHsts();
+    app.UseDeveloperExceptionPage();
 }
+else
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseHsts();
+}
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-app.UseHttpsRedirection(); 
+app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.UseStaticFiles();		// <== scheinbar notwendig wegen scoped css im DockerContainer
+app.UseStaticFiles();
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
-	.AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode();
 
 app.Run();
 
