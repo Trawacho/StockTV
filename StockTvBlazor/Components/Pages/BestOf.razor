@@ -1,5 +1,4 @@
 @page "/bestof"
-@using StockTvBlazor.Models
 @using StockTvBlazor.Networking
 @rendermode InteractiveServer
 @inject StockTvBlazor.Services.SettingsService _settingsService
@@ -45,7 +44,7 @@
 
 @code {
 	private ElementReference inputRef;
-	private StockTvBlazor.Models.Settings _settings => _settingsService.CurrentSettings;
+	private StockTvBlazor.Settings.Settings _settings => _settingsService.CurrentSettings;
 	private bool _disposed = false;	
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 

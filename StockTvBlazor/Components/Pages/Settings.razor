@@ -3,15 +3,21 @@
 @using System.Diagnostics
 @using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveServer
+
 @inject StockTvBlazor.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @inject StockTvBlazor.Components.ViewModels.SettingsViewModel ViewModel
 @implements IDisposable
 
-<div class="settings-main-grid" @onkeydown="HandleGlobalKeyDown" @onkeydown:stopPropagation  tabindex="0" style="outline:none;" @ref="inputRef">
+<div class="settings-main-grid"
+     @onkeydown="HandleGlobalKeyDown"
+     @onkeydown:stopPropagation
+     tabindex="0"
+     style="outline:none;"
+     @ref="inputRef">
 
     <div class="settings-list">
-        <!-- Each row: icon | value | label -->
+
         <div class="setting-row">
             <div class="icon">@(ViewModel.IsThemeActive ? "▶" : "")</div>
             <div class="value">@ViewModel.ThemeValue</div>
@@ -30,7 +36,7 @@
             <div class="label">Modus</div>
         </div>
 
-         <div class="setting-row">
+        <div class="setting-row">
             <div class="icon">@(ViewModel.IsBahnNummerActive ? "▶" : "")</div>
             <div class="value">@ViewModel.BahnNummerValue</div>
             <div class="label">Bahnnr.</div>
@@ -59,48 +65,53 @@
             <div class="value">@ViewModel.NetworkingValue</div>
             <div class="label">Netzwerk</div>
         </div>
+
     </div>
-
 </div>
-
 
 @code {
     private ElementReference inputRef;
-    private StockTvBlazor.Models.Settings _settings => _settingsService.CurrentSettings;
-	private bool _disposed = false;
+    private bool _disposed;
 
     protected override void OnInitialized()
     {
-        _settingsService.OnSettingsChanged += StateHasChanged;
-		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+        _settingsService.OnSettingsChanged += HandleChanged;
+        _settingsService.OnNavigationRequested += HandleNavigationRequested;
+        // ViewModel.OnViewModelChanged += HandleChanged;
+    }
+
+    private void HandleChanged()
+    {
+        if (_disposed) return;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleNavigationRequested(string url)
+    {
+        if (_disposed) return;
+        InvokeAsync(() => _navigationManager.NavigateTo(url));
     }
 
     public void Dispose()
     {
-		_disposed = true;
-        _settingsService.OnSettingsChanged -= StateHasChanged;
-		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
+        _disposed = true;
+
+        _settingsService.OnSettingsChanged -= HandleChanged;
+        _settingsService.OnNavigationRequested -= HandleNavigationRequested;
+        // ViewModel.OnViewModelChanged -= HandleChanged;
+
         ViewModel.Dispose();
     }
-    private void HandleNavigationRequested(string url)
-    {
-		if (_disposed) return;
-
-        InvokeAsync(() => _navigationManager.NavigateTo(url));
-	}
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-        {
             await inputRef.FocusAsync();
-        }
     }
+
     public async Task HandleGlobalKeyDown(KeyboardEventArgs e)
     {
         await ViewModel.ProcessKeyAsync(e.Key);
-        StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
+        StateHasChanged();
     }
-
-
 }

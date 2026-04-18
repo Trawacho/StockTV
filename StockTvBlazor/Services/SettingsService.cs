@@ -1,344 +1,349 @@
-using StockTvBlazor.Extensions;
 using StockTvBlazor.Models;
+using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
-using static StockTvBlazor.Models.Settings;
+using StockTvBlazor.Extensions;
 
 namespace StockTvBlazor.Services;
 
 public class SettingsService : BackgroundService
 {
-	private Settings _settings = null!;
-	private readonly string _settingsFileName = "stocktv.config.json";
-	private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
-	private readonly ILogger _logger;
-	private readonly FileLoggerProvider _fileLoggerProvider;
-	public event Action? OnSettingsChanged;
-	public event Action<string>? OnNavigationRequested;
+    private Settings.Settings _settings = null!;
+    private readonly string _settingsFileName = "stocktv.config.json";
+    private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
+    private readonly ILogger _logger;
+    private readonly FileLoggerProvider _fileLoggerProvider;
 
-	private string _settingsFilePath
-	{
-		get
-		{
-			string appDataPath = AppContext.BaseDirectory;
-			string settingsFolderPath = Path.Combine(appDataPath, "_config");
-			return Path.Combine(settingsFolderPath, _settingsFileName);
-		}
-	}
+    public event Action? OnSettingsChanged;
+    public event Action<string>? OnNavigationRequested;
 
-	
+    private string _settingsFilePath
+    {
+        get
+        {
+            string appDataPath = AppContext.BaseDirectory;
+            string settingsFolderPath = Path.Combine(appDataPath, "_config");
+            return Path.Combine(settingsFolderPath, _settingsFileName);
+        }
+    }
 
-	public SettingsService(
-		ILogger<SettingsService> logger,
-		FileLoggerProvider fileLoggerProvider)
-	{
-		_logger = logger;
-		_fileLoggerProvider = fileLoggerProvider;
-	}
+    public SettingsService(
+        ILogger<SettingsService> logger,
+        FileLoggerProvider fileLoggerProvider)
+    {
+        _logger = logger;
+        _fileLoggerProvider = fileLoggerProvider;
+    }
 
-	public async Task InitializeAsync()
-	{
-		_settings = await LoadSettingsAsync();
+    #region Init
 
-		// FileLoggerProvider sofort korrekt setzen
-		_fileLoggerProvider.Enabled = _settings.FileLoggingEnabled;
+    public async Task InitializeAsync()
+    {
+        _settings = await LoadSettingsAsync();
 
-		_logger.LogInformation("FileLogging initial: {State}",
-			_settings.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
-	}
+        _fileLoggerProvider.Enabled = _settings.General.FileLoggingEnabled;
 
-	public Settings CurrentSettings
-	{
-		get
-		{
-			if (_settings == null)
-				throw new InvalidOperationException("SettingsService wurde nicht initialisiert.");
+        _logger.LogInformation("FileLogging initial: {State}",
+            _settings.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+    }
 
-			return _settings;
-		}
-		private set
-		{
-			_settings = value;
-			OnSettingsChanged?.Invoke();
-		}
-	}
+    public Settings.Settings CurrentSettings
+    {
+        get
+        {
+            if (_settings == null)
+                throw new InvalidOperationException("SettingsService wurde nicht initialisiert.");
 
-	public void ToggleFileLogging()
-	{
-		var settings = CurrentSettings;
+            return _settings;
+        }
+    }
 
-		settings.FileLoggingEnabled = !settings.FileLoggingEnabled;
-		_fileLoggerProvider.Enabled = settings.FileLoggingEnabled;
+    private void NotifyChanged()
+    {
+        OnSettingsChanged?.Invoke();
+    }
 
-		_logger.LogInformation("FileLogging wurde {State}",
-			settings.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+    #endregion
 
-		OnSettingsChanged?.Invoke();
-	}
+    #region Change Methods
 
-	public void ChangeModus(bool forward)
-	{
-		var newModus = forward
-			   ? CurrentSettings.Modus.Next()
-			   : CurrentSettings.Modus.Previous();
+    public void ToggleFileLogging()
+    {
+        var s = CurrentSettings;
 
-		if (newModus == Settings.MODUS.TRAINING)
-		{
-			CurrentSettings.MaxKehrenProSpiel = 30;
-			CurrentSettings.MaxPunkteProKehre = 15;
-		}
-		else
-		{
-			CurrentSettings.MaxKehrenProSpiel = 6;
-			CurrentSettings.MaxPunkteProKehre = 10;
-		}
+        s.General.FileLoggingEnabled = !s.General.FileLoggingEnabled;
+        _fileLoggerProvider.Enabled = s.General.FileLoggingEnabled;
 
-		CurrentSettings.Modus = newModus;
-		OnSettingsChanged?.Invoke();
-	}
+        _logger.LogInformation("FileLogging wurde {State}",
+            s.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
 
-	public void ChangeTheme(bool forward)
-	{
-		CurrentSettings.Theme = forward
-			? CurrentSettings.Theme.Next()
-			: CurrentSettings.Theme.Previous();
-		OnSettingsChanged?.Invoke();
-	}
+        NotifyChanged();
+    }
 
-	public void ChangeRichtung(bool forward)
-	{
-		CurrentSettings.Richtung = forward
-			? CurrentSettings.Richtung.Next()
-			: CurrentSettings.Richtung.Previous();
-		OnSettingsChanged?.Invoke();
-	}
+    public void ChangeModus(bool forward)
+    {
+        var s = CurrentSettings;
 
-	public void ChangeBlockLocalChanges()
-	{
-		CurrentSettings.BlockLocalChanges = !CurrentSettings.BlockLocalChanges;
-		OnSettingsChanged?.Invoke();
-	}
+        var newModus = forward
+            ? s.Game.CurrentModus.Next()
+            : s.Game.CurrentModus.Previous();
 
-	public void ChangeSpielgruppe(bool forward)
-	{
-		if (forward)
-		{
-			if (CurrentSettings.Spielgruppe < 10)
-			{
-				CurrentSettings.Spielgruppe++;
-			}
-		}
-		else
-		{
-			if (CurrentSettings.Spielgruppe > 0)
-			{
-				CurrentSettings.Spielgruppe--;
-			}
-		}
+        if (newModus == GameSettings.Modus.Training)
+        {
+            s.Game.MaxKehrenProSpiel = 30;
+            s.Game.MaxPunkteProKehre = 15;
+        }
+        else
+        {
+            s.Game.MaxKehrenProSpiel = 6;
+            s.Game.MaxPunkteProKehre = 10;
+        }
 
-		OnSettingsChanged?.Invoke();
-	}
+        s.Game.CurrentModus = newModus;
 
-	public void ChangeBahnNummer(bool forward)
-	{
-		if (forward)
-		{
-			if (CurrentSettings.BahnNummer < 30) // Assuming 99 is the maximum value
-				CurrentSettings.BahnNummer++;
-		}
-		else
-		{
-			if (CurrentSettings.BahnNummer > 1) // Assuming 1 is the minimum value
-				CurrentSettings.BahnNummer--;
-		}
-		OnSettingsChanged?.Invoke();
-	}
+        NotifyChanged();
+    }
 
-	public void ChangeMaxMaxKehrenProSpiel(bool forward)
-	{
-		if (forward)
-		{
-			if (CurrentSettings.MaxKehrenProSpiel < 30) // Assuming 30 is the maximum value
-				CurrentSettings.MaxKehrenProSpiel++;
-		}
-		else
-		{
-			if (CurrentSettings.MaxKehrenProSpiel > 4) // Assuming 4 is the minimum value
-				CurrentSettings.MaxKehrenProSpiel--;
-		}
-		OnSettingsChanged?.Invoke();
-	}
+    public void ChangeTheme(bool forward)
+    {
+        var s = CurrentSettings;
 
-	public void ChangeMaxPunkteProKehre(bool forward)
-	{
-		if (forward)
-		{
-			if (CurrentSettings.MaxPunkteProKehre < 15) // Assuming 15 is the maximum value
-				CurrentSettings.MaxPunkteProKehre++;
-		}
-		else
-		{
-			if (CurrentSettings.MaxPunkteProKehre > 0) // Assuming 0 is the minimum value
-				CurrentSettings.MaxPunkteProKehre--;
-		}
-		OnSettingsChanged?.Invoke();
-	}
+        s.UI.CurrentTheme = forward
+            ? s.UI.CurrentTheme.Next()
+            : s.UI.CurrentTheme.Previous();
 
-	public void ChangeNetworking()
-	{
-		//todo: implement network connection logic when enabling networking
-		CurrentSettings.Networking = !CurrentSettings.Networking;
-		OnSettingsChanged?.Invoke();
-	}
+        NotifyChanged();
+    }
 
-	internal static string GetModusUrl(MODUS modus) => modus switch
-	{
-		MODUS.TRAINING => "/training",
-		MODUS.BESTOF => "/bestof",
-		MODUS.TURNIER => "/turnier",
-		MODUS.ZIEL => "/ziel",
-		_ => "/settings"
-	};
+    public void ChangeRichtung(bool forward)
+    {
+        var s = CurrentSettings;
 
+        s.UI.CurrentRichtung = forward
+            ? s.UI.CurrentRichtung.Next()
+            : s.UI.CurrentRichtung.Previous();
 
-	#region Load and Save
+        NotifyChanged();
+    }
 
-	private async Task<Settings> LoadSettingsAsync()
-	{
-		if (File.Exists(_settingsFilePath))
-		{
-			try
-			{
-				var json = await File.ReadAllTextAsync(_settingsFilePath);
-				var settings = JsonSerializer.Deserialize<Settings>(json) ?? new();
-				return settings;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"Fehler beim Laden der Config: {ex.Message}");
-				return new Settings();
-			}
-		}
-		else
-		{
-			_logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
-			return new Settings();
-		}
-	}
+    public void ChangeBlockLocalChanges()
+    {
+        CurrentSettings.General.BlockLocalChanges =
+            !CurrentSettings.General.BlockLocalChanges;
 
-	internal async Task SaveTurnsAsync(List<Turn> turns)
-	{
-		if (CurrentSettings.Modus == Settings.MODUS.TRAINING)
-		{
-			// Im Trainingsmodus werden die Kehren nicht gespeichert, da sie nur temporär sind
-			return;
-		}
-		CurrentSettings.Kehren.Clear();
-		CurrentSettings.Kehren.AddRange(turns);
-		RequestSaveSettings();
-	}
+        NotifyChanged();
+    }
 
-	#endregion
+    public void ChangeSpielgruppe(bool forward)
+    {
+        var s = CurrentSettings.General;
 
-	#region Get and Set Settings as Byte Array for Networking
-	public byte[] GetSettings()
-	{
-		var data = new List<byte>
-		{
-			Convert.ToByte(CurrentSettings.BahnNummer),			//Bahnnummer
-                Convert.ToByte(CurrentSettings.Spielgruppe),		//SpielGruppe    
-                Convert.ToByte((int)CurrentSettings.Modus),			//Modus
-                Convert.ToByte(CurrentSettings.Richtung),			//Spielrichtung
-                Convert.ToByte(CurrentSettings.Theme),				//FarbModus (hell,dunkel)
-                Convert.ToByte(CurrentSettings.MaxPunkteProKehre),	//Anzahl max. Punkte pro Kehre
-                Convert.ToByte(CurrentSettings.MaxKehrenProSpiel),	//Anzahl der Kehren
-                Convert.ToByte(CurrentSettings.MidColumnWidth) ,    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
-                Convert.ToByte(CurrentSettings.MessageVersion),		//Version des Datenpakets. 
-                0
-		};
-		return [.. data];
-	}
+        if (forward && s.Spielgruppe < 10)
+            s.Spielgruppe++;
+        else if (!forward && s.Spielgruppe > 0)
+            s.Spielgruppe--;
 
-	public void SetSettings(byte[] settings)
-	{
-		if (settings == null || settings.Length < 10)
-		{
-			_logger.LogWarning("SetSettings: Ungültiges Byte-Array (Länge {Len})", settings?.Length ?? -1);
-			return;
-		}
+        NotifyChanged();
+    }
 
-		if (!Enum.IsDefined(typeof(Settings.MODUS), (int)settings[2]) ||
-			!Enum.IsDefined(typeof(Settings.RICHTUNG), (int)settings[3]) ||
-			!Enum.IsDefined(typeof(Settings.THEME), (int)settings[4]))
-		{
-			_logger.LogWarning("SetSettings: Ungültige Enum-Werte im Paket");
-			return;
-		}
+    public void ChangeBahnNummer(bool forward)
+    {
+        var s = CurrentSettings.General;
 
+        if (forward && s.BahnNummer < 30)
+            s.BahnNummer++;
+        else if (!forward && s.BahnNummer > 1)
+            s.BahnNummer--;
 
-		CurrentSettings.BahnNummer = settings[0];
-		CurrentSettings.Spielgruppe = settings[1];
+        NotifyChanged();
+    }
 
-		if (CurrentSettings.Modus != (Settings.MODUS)settings[2])
-		{
-			CurrentSettings.Modus = (Settings.MODUS)settings[2];
-			OnNavigationRequested?.Invoke(GetModusUrl(CurrentSettings.Modus));
-		}
+    public void ChangeMaxKehrenProSpiel(bool forward)
+    {
+        var s = CurrentSettings.Game;
 
-		CurrentSettings.Richtung = (Settings.RICHTUNG)settings[3];
-		CurrentSettings.Theme = (Settings.THEME)settings[4];
-		CurrentSettings.MaxPunkteProKehre = settings[5];
-		CurrentSettings.MaxKehrenProSpiel = settings[6];
-		CurrentSettings.MidColumnWidth = settings[7];    //Breite der mittleren Spalte (nur bei der Anzeige von TeamNamen relevant)
-		_ = settings[8];    //Version des Datenpakets. wird hier nicht verwendet
-		_ = settings[9];    //Reserved for future use
+        if (forward && s.MaxKehrenProSpiel < 30)
+            s.MaxKehrenProSpiel++;
+        else if (!forward && s.MaxKehrenProSpiel > 4)
+            s.MaxKehrenProSpiel--;
 
-		OnSettingsChanged?.Invoke();
+        NotifyChanged();
+    }
 
-		RequestSaveSettings();
-	}
+    public void ChangeMaxPunkteProKehre(bool forward)
+    {
+        var s = CurrentSettings.Game;
 
-	#endregion
+        if (forward && s.MaxPunkteProKehre < 15)
+            s.MaxPunkteProKehre++;
+        else if (!forward && s.MaxPunkteProKehre > 0)
+            s.MaxPunkteProKehre--;
 
-	public void RequestSaveSettings()
-	{
-		_saveSettingsQueue.Writer.TryWrite(true);
-	}
+        NotifyChanged();
+    }
 
-	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-	{
-		_logger.LogInformation("SettingsService gestartet, warte auf Speichereinstellungen-Anforderungen...");
-		await foreach (var _ in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
-		{
-			try
-			{
-				await SaveSettingsInternalAsync();
-				_logger.LogDebug("Settings in Datei gespeichert");
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError("Fehler beim Schreiben der Settings: {Msg}", ex.Message);
-			}
-		}
-	}
+    public void ChangeNetworking()
+    {
+        CurrentSettings.Network.Enabled =
+            !CurrentSettings.Network.Enabled;
 
-	private async Task SaveSettingsInternalAsync()
-	{
-		// 1. Sicherstellen, dass der Ordner existiert
-		var directory = Path.GetDirectoryName(_settingsFilePath);
-		if (!string.IsNullOrEmpty(directory))
-			Directory.CreateDirectory(directory);
+        NotifyChanged();
+    }
 
-		// 2. Asynchron serialisieren und schreiben
-		var options = new JsonSerializerOptions { WriteIndented = true };
-		var json = JsonSerializer.Serialize(_settings, options);
+    #endregion
 
-		await File.WriteAllTextAsync(_settingsFilePath, json);
-	}
+    #region Navigation
 
-	public override void Dispose()
-	{
-		_saveSettingsQueue.Writer.TryComplete();
-		base.Dispose();
-	}
+    internal static string GetModusUrl(GameSettings.Modus modus) => modus switch
+    {
+        GameSettings.Modus.Training => "/training",
+        GameSettings.Modus.BestOf => "/bestof",
+        GameSettings.Modus.Turnier => "/turnier",
+        GameSettings.Modus.Ziel => "/ziel",
+        _ => "/settings"
+    };
+
+    #endregion
+
+    #region Load / Save
+
+    private async Task<Settings.Settings> LoadSettingsAsync()
+    {
+        if (!File.Exists(_settingsFilePath))
+        {
+            _logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
+            return new Settings.Settings();
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(_settingsFilePath);
+            return JsonSerializer.Deserialize<Settings.Settings>(json) ?? new Settings.Settings();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Fehler beim Laden der Config: {Msg}", ex.Message);
+            return new Settings.Settings();
+        }
+    }
+
+    private async Task SaveSettingsInternalAsync()
+    {
+        var directory = Path.GetDirectoryName(_settingsFilePath);
+
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        var json = JsonSerializer.Serialize(_settings, options);
+
+        await File.WriteAllTextAsync(_settingsFilePath, json);
+    }
+
+    public void RequestSaveSettings()
+    {
+        _saveSettingsQueue.Writer.TryWrite(true);
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await foreach (var _ in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
+        {
+            try
+            {
+                await SaveSettingsInternalAsync();
+                _logger.LogDebug("Settings gespeichert");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Fehler beim Speichern: {Msg}", ex.Message);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Turns
+
+    public async Task SaveTurnsAsync(List<Turn> turns)
+    {
+        var s = CurrentSettings;
+
+        if (s.Game.CurrentModus == GameSettings.Modus.Training)
+            return;
+
+        s.Game.Kehren.Clear();
+        s.Game.Kehren.AddRange(turns);
+
+        RequestSaveSettings();
+    }
+
+    #endregion
+
+    #region Networking (Byte Array)
+
+    public byte[] GetSettings()
+    {
+        var s = CurrentSettings;
+
+        return
+        [
+            (byte)s.General.BahnNummer,
+            (byte)s.General.Spielgruppe,
+            (byte)s.Game.CurrentModus,
+            (byte)s.UI.CurrentRichtung,
+            (byte)s.UI.CurrentTheme,
+            (byte)s.Game.MaxPunkteProKehre,
+            (byte)s.Game.MaxKehrenProSpiel,
+            (byte)s.UI.MidColumnWidth,
+            (byte)s.General.MessageVersion,
+            0
+        ];
+    }
+
+    public void SetSettings(byte[] settings)
+    {
+        if (settings == null || settings.Length < 10)
+        {
+            _logger.LogWarning("Ungültiges Settings-Array");
+            return;
+        }
+
+        var s = CurrentSettings;
+
+        if (!Enum.IsDefined(typeof(GameSettings.Modus), (int)settings[2]) ||
+            !Enum.IsDefined(typeof(UiSettings.Richtung), (int)settings[3]) ||
+            !Enum.IsDefined(typeof(UiSettings.Theme), (int)settings[4]))
+        {
+            _logger.LogWarning("Ungültige Enum-Werte im Netzwerkpaket");
+            return;
+        }
+
+        s.General.BahnNummer = settings[0];
+        s.General.Spielgruppe = settings[1];
+
+        var newModus = (GameSettings.Modus)settings[2];
+        if (s.Game.CurrentModus != newModus)
+        {
+            s.Game.CurrentModus = newModus;
+            OnNavigationRequested?.Invoke(GetModusUrl(newModus));
+        }
+
+        s.UI.CurrentRichtung = (UiSettings.Richtung)settings[3];
+        s.UI.CurrentTheme = (UiSettings.Theme)settings[4];
+        s.Game.MaxPunkteProKehre = settings[5];
+        s.Game.MaxKehrenProSpiel = settings[6];
+        s.UI.MidColumnWidth = settings[7];
+
+        NotifyChanged();
+        RequestSaveSettings();
+    }
+
+    #endregion
+
+    public override void Dispose()
+    {
+        _saveSettingsQueue.Writer.TryComplete();
+        base.Dispose();
+    }
 }

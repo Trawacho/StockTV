@@ -14,7 +14,7 @@ namespace StockTvBlazor.Models
 		public int PointsRight { get; set; } = 0;
 		public int PointsLeft { get; set; } = 0;
 
-		public static Turn Create(int value, Settings.RICHTUNG richtung, bool isGreen)
+		public static Turn Create(int value, Settings.UiSettings.Richtung richtung, bool isGreen)
 		{
 			// Logik: 
 			// Wenn Richtung LINKS: Green ist Rechts (PointsRight), Red ist Links (PointsLeft).
@@ -23,11 +23,11 @@ namespace StockTvBlazor.Models
 			bool assignedToRight;
 			if (isGreen)
 			{
-				assignedToRight = (richtung == Settings.RICHTUNG.LINKS);
+				assignedToRight = (richtung == Settings.UiSettings.Richtung.Links);
 			}
 			else // Red
 			{
-				assignedToRight = (richtung == Settings.RICHTUNG.RECHTS);
+				assignedToRight = (richtung == Settings.UiSettings.Richtung.Rechts);
 			}
 
 			return new Turn

@@ -2,10 +2,10 @@
 {
 	public class Game
 	{
-		private readonly Settings _settings;
+		private readonly Settings.Settings _settings;
 		private readonly List<Turn> _turns = [];
 
-		public Game(Settings settings, int gameNumber)
+		public Game(Settings.Settings settings, int gameNumber)
 		{
 			_settings = settings;
 			GameNumber = gameNumber;
@@ -29,7 +29,7 @@
 		{
 			get
 			{
-				if (Turns.Count < _settings.MaxKehrenProSpiel)
+				if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
 					return 0;
 
 				if (LeftPointsSum > RightPointsSum)
@@ -51,7 +51,7 @@
 		{
 			get
 			{
-				if (Turns.Count < _settings.MaxKehrenProSpiel)
+				if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
 					return 0;
 
 				if (RightPointsSum > LeftPointsSum)

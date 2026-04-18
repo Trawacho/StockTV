@@ -66,7 +66,6 @@ public class HomeBase : ComponentBase, IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
-            // normal beim Dispose
         }
         catch (Exception ex)
         {
@@ -95,7 +94,6 @@ public class HomeBase : ComponentBase, IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
-            // normal beim Dispose
         }
         catch (Exception ex)
         {
@@ -111,7 +109,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
                 return;
 
             var settings = SettingsService.CurrentSettings;
-            string pageName = SettingsService.GetModusUrl(settings.Modus);
+            string pageName = SettingsService.GetModusUrl(settings.Game.CurrentModus);
 
             string[] pagesToOpen = new[] { "LayoutTest", "training", "bestof" };
 

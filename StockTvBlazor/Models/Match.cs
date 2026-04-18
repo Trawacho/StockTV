@@ -1,4 +1,5 @@
 ﻿using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 using System.Text;
 using System.Text.Json;
 
@@ -6,191 +7,179 @@ namespace StockTvBlazor.Models;
 
 public class Match
 {
-	private readonly List<Game> _games = [];
+    private readonly List<Game> _games = [];
 
-	public event Action? OnMatchChanged;
+    public event Action? OnMatchChanged;
 
-	private readonly SettingsService _settingsService;
-	private readonly ILogger<MatchService> _logger;
+    private readonly SettingsService _settingsService;
+    private readonly ILogger<MatchService> _logger;
 
-	public Match(SettingsService settingsService, ILogger<MatchService> logger)
-	{
-		System.Diagnostics.Debug.WriteLine("new Match created");
-		_settingsService = settingsService;
-		_logger = logger;
-		_games.Add(new Game(_settingsService.CurrentSettings, 1));
-		LoadTurnsFromLocalSettings();
-	}
+    public Match(SettingsService settingsService, ILogger<MatchService> logger)
+    {
+        _settingsService = settingsService;
+        _logger = logger;
 
-	public IEnumerable<Game> Games => _games;
+        _games.Add(new Game(_settingsService.CurrentSettings, 1));
+        LoadTurnsFromLocalSettings();
+    }
 
-	public Game CurrentGame
-	{
-		get
-		{
-			if (_games.Count == 0)
-				_games.Add(new Game(_settingsService.CurrentSettings, 1));
+    public IEnumerable<Game> Games => _games;
 
-			return _games.Last();
-		}
-	}
+    public Game CurrentGame
+    {
+        get
+        {
+            if (_games.Count == 0)
+                _games.Add(new Game(_settingsService.CurrentSettings, 1));
 
-	public int LeftPointsOverAll => _games.Sum(g => g.LeftPointsSum);
-	public int RightPointsOverAll => _games.Sum(g => g.RightPointsSum);	
+            return _games.Last();
+        }
+    }
 
-	public int MatchPointsLeft => _games.Sum(g => g.GamePointsLeft);
+    #region Match Stats
 
-	public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
+    public int LeftPointsOverAll => _games.Sum(g => g.LeftPointsSum);
+    public int RightPointsOverAll => _games.Sum(g => g.RightPointsSum);
 
-	private readonly List<Begegnung> _begegnungen = [];
-	public IEnumerable<Begegnung> Begegnungen => _begegnungen.AsReadOnly();
-	public void ClearBegegnungen()
-	{
-		_begegnungen.Clear();
-		OnMatchChanged?.Invoke();
-	}
-	public void AddBegegnung(Begegnung begegnung)
-	{
-		_begegnungen.Add(begegnung);
-		OnMatchChanged?.Invoke();
-	}
+    public int MatchPointsLeft => _games.Sum(g => g.GamePointsLeft);
+    public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
 
-	/// <summary>
-	/// Es wird die übergeben Kehre zum aktuellen Spiel hinzugefügt, sofern die maximale Anzahl an Kehren pro Spiel nicht überschritten wird. Ansonsten wird ein neues Spiel begonnen und die Kehre diesem Spiel hinzugefügt.
-	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
-	/// </summary>
-	/// <param name="turn"></param>
-	public void AddTurn(Turn turn)
-	{
-		turn.TurnNumber = CurrentGame.Turns.Count + 1;
+    #endregion
 
-		if (_settingsService.CurrentSettings.MaxKehrenProSpiel > CurrentGame.Turns.Count)
-		{
-			CurrentGame.Turns.Add(turn);
-			OnMatchChanged?.Invoke();
-		}
-	}
+    #region Begegnungen
 
-	/// <summary>
-	/// Es wird die letzte Kehre gelöscht. Wenn es keine Kehren mehr im aktuellen Spiel gibt, wird das aktuelle Spiel gelöscht, sofern es mehr als ein Spiel gibt.
-	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
-	/// </summary>
-	public void DeleteLastTurn()
-	{
-		if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
-		{
-			_games.RemoveAt(_games.Count - 1);
-		}
-		else
-		{
-			CurrentGame.DeleteLastTurn();
-		}
+    private readonly List<Begegnung> _begegnungen = [];
+    public IEnumerable<Begegnung> Begegnungen => _begegnungen.AsReadOnly();
 
-		OnMatchChanged?.Invoke();
-	}
+    public void ClearBegegnungen()
+    {
+        _begegnungen.Clear();
+        OnMatchChanged?.Invoke();
+    }
 
-	/// <summary>
-	/// Es werden alle Kehren gelöscht, wenn force = true ist. Ansonsten wird nur die aktuelle Kehre gelöscht oder ein neues Spiel begonnen, wenn die maximale Anzahl an Kehren pro Spiel erreicht ist.
-	/// Es sollte anschließend SaveTurnsToLocalSettingsAsync aufgerufen werden, um die Änderungen zu speichern.
-	/// </summary>
-	/// <param name="force"></param>
-	public void Reset(bool force = false)
-	{
-		if (force)
-		{
-			this.ClearBegegnungen();
-			this._games.Clear();
-			this._games.Add(new Game(_settingsService.CurrentSettings, 1));
-			OnMatchChanged?.Invoke();
-			return;
-		}
+    public void AddBegegnung(Begegnung begegnung)
+    {
+        _begegnungen.Add(begegnung);
+        OnMatchChanged?.Invoke();
+    }
 
+    #endregion
 
-		if (_settingsService.CurrentSettings.Modus == Settings.MODUS.TURNIER ||
-			_settingsService.CurrentSettings.Modus == Settings.MODUS.BESTOF)
-		{
-			if (CurrentGame.Turns.Count == _settingsService.CurrentSettings.MaxKehrenProSpiel)
-			{
-				_games.Add(new Game(_settingsService.CurrentSettings, Convert.ToByte(_games.Count + 1)));
-			}
-		}
-		else
-		{
-			CurrentGame.Turns.Clear();
-		}
+    #region Turns
 
-		OnMatchChanged?.Invoke();
-	}
+    public void AddTurn(Turn turn)
+    {
+        var s = _settingsService.CurrentSettings;
 
-	public async Task SaveTurnsToLocalSettingsAsync()
-	{
-		var allTurns = Games.SelectMany(g => g.Turns).OfType<Turn>().ToList();
-		await _settingsService.SaveTurnsAsync(allTurns);
-	}
+        turn.TurnNumber = CurrentGame.Turns.Count + 1;
 
-	private void LoadTurnsFromLocalSettings()
-	{
-		var allTurns = _settingsService.CurrentSettings.Kehren;
-		foreach (var turn in allTurns)
-		{
-			AddTurn(turn);
-			Reset();
-		}
-	}
+        if (s.Game.MaxKehrenProSpiel > CurrentGame.Turns.Count)
+        {
+            CurrentGame.Turns.Add(turn);
+            OnMatchChanged?.Invoke();
+        }
+    }
 
-	internal byte[] Serialize()
-	{
-		/* 
-			*  the byte array starts with ten bytes, containing the settings, starting with courtnumber, groupnumber, modus, direction,.....
-			*  starting with the 11th byte the values from the games are following, always two bytes per game.
-			*  the first byte is the sum of the left team, the second is the sum of the right team followed by the next game with also 2 bytes length
-			*  
-			*  e.g.
-			*  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
-			*  01 02 09 03 15 05 03 00 00 00 09 03 03 15 05 03 
-			*  Court 1
-			*     Group 2
-			*        Modus 09
-			*           Direction 03
-			*  ...
-			*                                 Game1: 9:3
-			*                                      Game2: 3:15
-			*                                           Game3: 5:3
-			*  
-			*/
+    public void DeleteLastTurn()
+    {
+        if (_games.Count > 1 && CurrentGame.Turns.Count == 0)
+        {
+            _games.RemoveAt(_games.Count - 1);
+        }
+        else
+        {
+            CurrentGame.DeleteLastTurn();
+        }
 
+        OnMatchChanged?.Invoke();
+    }
 
-		var values = new List<byte>();
+    public void Reset(bool force = false)
+    {
+        var s = _settingsService.CurrentSettings;
 
-		values.AddRange(_settingsService.GetSettings());
+        if (force)
+        {
+            ClearBegegnungen();
+            _games.Clear();
+            _games.Add(new Game(s, 1));
 
-		//Add for each Game the sum of the turn-value for left and right
-		foreach (Game g in Games)
-		{
-			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
-			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
-		}
+            OnMatchChanged?.Invoke();
+            return;
+        }
 
-		//Convert the list of values to an array
-		return [.. values];
-	}
+        if (s.Game.CurrentModus == GameSettings.Modus.Turnier ||
+            s.Game.CurrentModus == GameSettings.Modus.BestOf)
+        {
+            if (CurrentGame.Turns.Count == s.Game.MaxKehrenProSpiel)
+            {
+                _games.Add(new Game(s, Convert.ToByte(_games.Count + 1)));
+            }
+        }
+        else
+        {
+            CurrentGame.Turns.Clear();
+        }
 
-	internal byte[] SerializeJson()
-	{
-		var values = new List<byte>();
-		try
-		{
-			values.AddRange(_settingsService.GetSettings());
-			string json = JsonSerializer.Serialize(Games);
-			values.AddRange(Encoding.UTF8.GetBytes(json));
-		}
-		catch (JsonException ex)
-		{
-			_logger.LogError(ex, $"Fehler bei der JSON-Serialisierung");
-			// Hier könntest du auch eine benutzerfreundliche Fehlermeldung zurückgeben oder eine alternative Serialisierung versuchen
-		}
+        OnMatchChanged?.Invoke();
+    }
 
-		return [.. values];
-	}
+    public async Task SaveTurnsToLocalSettingsAsync()
+    {
+        var allTurns = Games.SelectMany(g => g.Turns).ToList();
+        await _settingsService.SaveTurnsAsync(allTurns);
+    }
+
+    private void LoadTurnsFromLocalSettings()
+    {
+        var s = _settingsService.CurrentSettings;
+
+        var allTurns = s.Game.Kehren;
+
+        foreach (var turn in allTurns)
+        {
+            AddTurn(turn);
+            Reset();
+        }
+    }
+
+    #endregion
+
+    #region Serialization
+
+    internal byte[] Serialize()
+    {
+        var values = new List<byte>();
+
+        values.AddRange(_settingsService.GetSettings());
+
+        foreach (Game g in Games)
+        {
+            values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
+            values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
+        }
+
+        return [.. values];
+    }
+
+    internal byte[] SerializeJson()
+    {
+        var values = new List<byte>();
+
+        try
+        {
+            values.AddRange(_settingsService.GetSettings());
+
+            string json = JsonSerializer.Serialize(Games);
+            values.AddRange(Encoding.UTF8.GetBytes(json));
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Fehler bei der JSON-Serialisierung");
+        }
+
+        return [.. values];
+    }
+
+    #endregion
 }
-
