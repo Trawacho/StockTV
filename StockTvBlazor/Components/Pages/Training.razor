@@ -1,11 +1,12 @@
 @page "/training"
-@using StockTvBlazor.Components.Models
 @using System.Diagnostics
+@using StockTvBlazor.Models
+@using StockTvBlazor.Networking
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Services.SettingsService _settingsService
+@inject StockTvBlazor.Services.SettingsService _settingsService
 @inject NavigationManager _navigationManager
-@inject StockTvBlazor.Components.Networking.NetMqPublisherService _publisherService
-@inject StockTvBlazor.Components.Services.MatchService _matchService
+@inject NetMqPublisherService _publisherService
+@inject StockTvBlazor.Services.MatchService _matchService
 @inject StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel
 @inject IJSRuntime JS
 @implements IDisposable
@@ -30,7 +31,7 @@
 
 @code {
 	private ElementReference inputRef;
-	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+	private StockTvBlazor.Models.Settings _settings => _settingsService.CurrentSettings;
 	private bool _disposed = false;
 
 	protected override void OnInitialized()

@@ -16,14 +16,14 @@
         </div>
 
         <div class="line line-2">
-            <PunkteAnzeige Punkte1="@ViewModel.LeftPointsSum" Punkte2="@ViewModel.RightPointsSum" />
+            <PunkteAnzeige LeftPointsSum="@ViewModel.LeftPointsSum" RightPointsSum="@ViewModel.RightPointsSum" />
         </div>
 
         <div class="line line-3">
             <PunkteEingabe 
-                           Punkte1="@ViewModel.LeftPoints"
-                           Punkte2="@ViewModel.RightPoints"
-                           WertText="@ViewModel.InputValue"
+                           LeftPoints="@ViewModel.LeftPoints"
+                           RightPoints="@ViewModel.RightPoints"
+                           InputValue="@ViewModel.InputValue"
                            OnKeyDown="HandleGlobalKeyDown" />
         </div>
 

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Components\Services\LoggingServices.cs" />
+    <Compile Remove="Services\LoggingServices.cs" />
   </ItemGroup>
 
   <ItemGroup>

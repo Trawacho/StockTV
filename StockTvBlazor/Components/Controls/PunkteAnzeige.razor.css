@@ -6,7 +6,7 @@
 }
 
 /* Punkte links */
-.punkte-links {
+.leftpoint-sum {
     color: blueviolet;
     flex: 0 0 40%;
     display: flex;
@@ -24,7 +24,7 @@
 }
 
 /* Punkte rechts */
-.punkte-rechts {
+.rightpoint-sum {
     color: green;
     flex: 0 0 40%;
     display: flex;

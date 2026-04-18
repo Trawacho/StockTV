@@ -18,28 +18,28 @@
             </td>
         </tr>
         <tr>
-            <td class="punkte-links">@Punkte1</td>
+            <td class="punkte-links">@LeftPoints</td>
 
             <td class="punkte-mitte">
                 <input id="punkteInput"
                        @ref="inputRef"
                        class="punkte-input"
-                       @bind="WertText"
+                       @bind="InputValue"
                        @onkeydown="HandleKeyDown"
                        @onkeydown:preventDefault="!IstErlaubteTaste" />
             </td>
 
-            <td class="punkte-rechts">@Punkte2</td>
+            <td class="punkte-rechts">@RightPoints</td>
         </tr>
     </table>
 
 </div>
 
 @code {
-    [Parameter] public string Punkte1 { get; set; }
-    [Parameter] public string Punkte2 { get; set; }
+    [Parameter] public string LeftPoints { get; set; }
+    [Parameter] public string RightPoints { get; set; }
 
-    [Parameter] public string WertText { get; set; } = "0";// string.Empty;
+    [Parameter] public string InputValue { get; set; } = "0";// string.Empty;
 
     [Parameter] public EventCallback<string> OnWertChanged { get; set; }
     private ElementReference inputRef;
@@ -68,8 +68,8 @@
 
     async Task OnInputChanged(ChangeEventArgs e)
     {
-        WertText = e.Value?.ToString() ?? "0";
-        await OnWertChanged.InvokeAsync(WertText);
+        InputValue = e.Value?.ToString() ?? "0";
+        await OnWertChanged.InvokeAsync(InputValue);
     }
 
     [Parameter]
@@ -90,7 +90,7 @@
         else
         {
             // Ungültige Taste → Wert zurücksetzen
-            WertText = "0";// string.Empty;
+            InputValue = "0";// string.Empty;
             // Blazor informieren, dass sich der State geändert hat
             StateHasChanged();
 

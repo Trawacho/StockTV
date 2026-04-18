@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Components.Pages;
 

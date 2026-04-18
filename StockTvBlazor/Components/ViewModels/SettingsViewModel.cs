@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Services;
+using StockTvBlazor.Models;
 
 namespace StockTvBlazor.Components.ViewModels;
 

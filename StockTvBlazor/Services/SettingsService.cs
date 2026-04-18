@@ -1,10 +1,10 @@
-using StockTvBlazor.Components.Extensions;
-using StockTvBlazor.Components.Models;
+using StockTvBlazor.Extensions;
+using StockTvBlazor.Models;
 using System.Text.Json;
 using System.Threading.Channels;
-using static StockTvBlazor.Components.Models.Settings;
+using static StockTvBlazor.Models.Settings;
 
-namespace StockTvBlazor.Components.Services;
+namespace StockTvBlazor.Services;
 
 public class SettingsService : BackgroundService
 {

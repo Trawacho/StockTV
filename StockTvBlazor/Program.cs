@@ -1,8 +1,8 @@
 ﻿using NetMQ;
 using StockTvBlazor.Components;
-using StockTvBlazor.Components.Networking;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Services;
 using StockTvBlazor.Components.ViewModels;
+using StockTvBlazor.Networking;
 
 
 //GLOBAL EXCEPTION HANDLER

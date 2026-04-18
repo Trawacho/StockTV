@@ -16,11 +16,11 @@
             </td>
         </tr>
         <tr>
-            <td class="punkte-links">@PunkteLinks</td>
+            <td class="punkte-links">@LeftPoints</td>
 
-            <td class="punkte-mitte">@PunkteInputValue</td>
+            <td class="punkte-mitte">@InputValue</td>
 
-            <td class="punkte-rechts">@PunkteRechts</td>
+            <td class="punkte-rechts">@RightPoints</td>
         </tr>
     </table>
 
@@ -29,15 +29,15 @@
 @code {
     // Linker Wert
     [Parameter]
-    public string PunkteLinks { get; set; } = "0";
+    public string LeftPoints { get; set; } = "0";
 
     // Mittlerer Input-Wert
     [Parameter]
-    public string PunkteInputValue { get; set; } = "";
+    public string InputValue { get; set; } = "";
 
     // Rechter Wert
     [Parameter]
-    public string PunkteRechts { get; set; } = "0";
+    public string RightPoints { get; set; } = "0";
 
     // Hilfetext
     [Parameter]

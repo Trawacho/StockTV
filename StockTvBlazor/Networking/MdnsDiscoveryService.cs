@@ -1,7 +1,7 @@
 ﻿using Makaretu.Dns;
 using System.Reflection;
 
-namespace StockTvBlazor.Components.Networking;
+namespace StockTvBlazor.Networking;
 
 public class MdnsDiscoveryService : BackgroundService
 {

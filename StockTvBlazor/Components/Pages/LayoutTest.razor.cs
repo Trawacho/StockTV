@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using StockTvBlazor.Components.Pages;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Services;
 using System.Threading.Tasks;
 
 namespace BlazorAppTests.Components.Pages

@@ -1,4 +1,5 @@
-﻿@inject StockTvBlazor.Components.Services.SettingsService _settingsService
+﻿@using StockTvBlazor.Models
+@inject StockTvBlazor.Services.SettingsService _settingsService
 @implements IDisposable
 @rendermode InteractiveServer
 
@@ -15,7 +16,7 @@
 
 @code {
     private int _updateCounter;
-    private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
+    private Settings _settings => _settingsService.CurrentSettings;
 
     protected override void OnInitialized() => _settingsService.OnSettingsChanged += HandleUpdate;
 

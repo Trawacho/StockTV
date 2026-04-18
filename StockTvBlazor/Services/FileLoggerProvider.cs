@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Threading.Channels;
 
-namespace StockTvBlazor.Components.Services;
+namespace StockTvBlazor.Services;
 
 public class FileLoggerProvider : ILoggerProvider
 {

@@ -1,6 +1,6 @@
-﻿using StockTvBlazor.Components.Models;
+﻿using StockTvBlazor.Models;
 
-namespace StockTvBlazor.Components.Services;
+namespace StockTvBlazor.Services;
 
 public class ZielService(SettingsService settingsService, ILogger<MatchService> logger)
 {
@@ -14,7 +14,7 @@ public class ZielService(SettingsService settingsService, ILogger<MatchService> 
 		_logger.LogInformation("ZielService wurde initialisiert.");
 	}
 
-	public Models.ZielBewerb CurrentZielBewerb => _currentZielBewerb
+	public ZielBewerb CurrentZielBewerb => _currentZielBewerb
 			?? throw new InvalidOperationException("ZielBewerb wurde nicht initialisiert. Prüfe Program.cs!");
 
 	public void SetTeilnehmer(byte[] name)

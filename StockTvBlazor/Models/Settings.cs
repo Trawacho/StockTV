@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace StockTvBlazor.Components.Models;
+namespace StockTvBlazor.Models;
 
 public class Settings
 {

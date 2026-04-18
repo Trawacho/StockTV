@@ -1,4 +1,4 @@
-﻿namespace StockTvBlazor.Components.Models
+﻿namespace StockTvBlazor.Models
 {
 	public interface IBegegnung
 	{

@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Channels;
 
-namespace StockTvBlazor.Components.Networking;
+namespace StockTvBlazor.Networking;
 
 public class NetMqPublisherService : BackgroundService, IDisposable
 {

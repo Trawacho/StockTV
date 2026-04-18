@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace StockTvBlazor.Components.Services;
+namespace StockTvBlazor.Services;
 
 public class FileLogger : ILogger
 {

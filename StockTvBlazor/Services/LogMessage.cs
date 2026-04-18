@@ -1,4 +1,4 @@
-﻿namespace StockTvBlazor.Components.Services
+﻿namespace StockTvBlazor.Services
 {
     public record LogMessage(
       DateTime Timestamp,

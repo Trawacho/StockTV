@@ -1,8 +1,8 @@
-﻿using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Services;
 using System.Text;
 using System.Text.Json;
 
-namespace StockTvBlazor.Components.Models;
+namespace StockTvBlazor.Models;
 
 public class ZielBewerb(SettingsService settingsService)
 {

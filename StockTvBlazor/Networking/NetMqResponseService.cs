@@ -1,10 +1,11 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Services;
+using StockTvBlazor.Models;
 using System.Text;
 using System.Threading.Channels;
 
-namespace StockTvBlazor.Components.Networking;
+namespace StockTvBlazor.Networking;
 
 public class NetMqResponseService : BackgroundService, IDisposable
 {
@@ -97,7 +98,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 			case "GetResult":
 				_logger.LogDebug("GetResult topic received, sending current match or ziel result.");
 				response.Append("GetResult");
-				if (_settingsService.CurrentSettings.Modus == Models.Settings.MODUS.ZIEL)
+				if (_settingsService.CurrentSettings.Modus == Settings.MODUS.ZIEL)
 					response.Append(_zielService.CurrentZielBewerb.SerializeJson());
 				else
 					response.Append(_matchService.CurrentMatch.SerializeJson());
@@ -108,7 +109,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				_logger.LogDebug("ResetResult topic received, resetting current match or ziel.");
 				if (!_actionChannel.Writer.TryWrite(() =>
 				{
-					if (_settingsService.CurrentSettings.Modus == Models.Settings.MODUS.ZIEL)
+					if (_settingsService.CurrentSettings.Modus == Settings.MODUS.ZIEL)
 						_zielService.CurrentZielBewerb.Reset();
 					else
 						_matchService.CurrentMatch.Reset(true);

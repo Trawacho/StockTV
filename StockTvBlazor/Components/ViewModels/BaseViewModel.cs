@@ -1,6 +1,6 @@
-﻿using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Networking;
-using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Services;
+using StockTvBlazor.Models;
+using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Components.ViewModels;
 
@@ -44,7 +44,7 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 
-	protected Models.Match CurrentMatch => _matchService.CurrentMatch;
+	protected Match CurrentMatch => _matchService.CurrentMatch;
 
 	protected string HeaderTextBasis
 	{

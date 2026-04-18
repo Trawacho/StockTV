@@ -1,4 +1,4 @@
-﻿namespace StockTvBlazor.Components.Extensions
+﻿namespace StockTvBlazor.Extensions
 {
 	public static class StructExtension
 	{
