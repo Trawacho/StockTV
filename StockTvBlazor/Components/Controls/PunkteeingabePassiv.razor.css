@@ -1,0 +1,70 @@
+﻿
+.punkte-eingabe {
+    height: 100%;
+}
+
+/* Tabelle */
+.punkte-table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* wichtig für Breitenkontrolle */
+    font-size: 2rem;
+}
+
+    /* Zeilensteuerung */
+    .punkte-table tr:first-child {
+        height: 1%; /* Hilfetext automatisch */
+    }
+
+    .punkte-table tr:last-child {
+        height: 100%; /* Input-Zeile nimmt Rest */
+    }
+
+/* Spaltenbreiten */
+.punkte-links, .punkte-rechts {
+    width: 40%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.punkte-links {
+    color: blueviolet;
+}
+
+.punkte-rechts {
+    color: green;
+}
+
+.punkte-mitte {
+    width: auto; /* Nimmt automatisch Rest */
+    text-align: center;
+    vertical-align: middle;
+    height: 100%;
+    min-width: 10%;
+}
+
+/* Hilfetext */
+.hilfe-cell {
+    text-align: center;
+    padding-bottom: 5px;
+}
+
+.hilfe-text {
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* Input */
+.punkte-input {
+    width: 90%;
+    height: 100%;
+    box-sizing: border-box;
+    font-size: 8rem;
+    text-align: center;
+    border: 2px solid #888;
+    border-radius: 5px;
+    background: #f0f0f0;
+    color: black;
+    caret-color: transparent;
+}

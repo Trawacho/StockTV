@@ -1,0 +1,47 @@
+﻿<div class="punkte-eingabe">
+
+    <table class="punkte-table">
+        <colgroup>
+            <col style="width:40%">
+            <col style="width:auto">  <!-- Mittlere Spalte nimmt Rest -->
+            <col style="width:40%">
+        </colgroup>
+
+
+        <tr>
+            <td colspan="3" class="hilfe-cell">
+                <small class="hilfe-text">
+                    @HilfeText
+                </small>
+            </td>
+        </tr>
+        <tr>
+            <td class="punkte-links">@PunkteLinks</td>
+
+            <td class="punkte-mitte">@PunkteInputValue</td>
+
+            <td class="punkte-rechts">@PunkteRechts</td>
+        </tr>
+    </table>
+
+</div>
+
+@code {
+    // Linker Wert
+    [Parameter]
+    public string PunkteLinks { get; set; } = "0";
+
+    // Mittlerer Input-Wert
+    [Parameter]
+    public string PunkteInputValue { get; set; } = "";
+
+    // Rechter Wert
+    [Parameter]
+    public string PunkteRechts { get; set; } = "0";
+
+    // Hilfetext
+    [Parameter]
+    public string HilfeText { get; set; } = "Zahl eingeben und / oder * drücken";
+
+
+}

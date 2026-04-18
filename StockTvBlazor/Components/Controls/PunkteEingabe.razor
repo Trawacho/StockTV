@@ -1,0 +1,101 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+
+<div class="punkte-eingabe">
+
+    <table class="punkte-table">
+        <colgroup>
+            <col style="width:40%">
+            <col style="width:auto">  <!-- Mittlere Spalte nimmt Rest -->
+            <col style="width:40%">
+        </colgroup>
+
+
+        <tr>
+            <td colspan="3" class="hilfe-cell">
+                <small class="hilfe-text">
+                    Zahl eingeben und / oder * drücken
+                </small>
+            </td>
+        </tr>
+        <tr>
+            <td class="punkte-links">@Punkte1</td>
+
+            <td class="punkte-mitte">
+                <input id="punkteInput"
+                       @ref="inputRef"
+                       class="punkte-input"
+                       @bind="WertText"
+                       @onkeydown="HandleKeyDown"
+                       @onkeydown:preventDefault="!IstErlaubteTaste" />
+            </td>
+
+            <td class="punkte-rechts">@Punkte2</td>
+        </tr>
+    </table>
+
+</div>
+
+@code {
+    [Parameter] public string Punkte1 { get; set; }
+    [Parameter] public string Punkte2 { get; set; }
+
+    [Parameter] public string WertText { get; set; } = "0";// string.Empty;
+
+    [Parameter] public EventCallback<string> OnWertChanged { get; set; }
+    private ElementReference inputRef;
+    private bool IstErlaubteTaste = true;
+
+    // Klasse oder Komponente
+    private static readonly string[] ErlaubteTasten = new[]
+    {
+        "0","1","2","3","4","5","6","7","8","9",
+        "Numpad0","Numpad1","Numpad2","Numpad3","Numpad4",
+        "Numpad5","Numpad6","Numpad7","Numpad8","Numpad9",
+
+        "Add", "Subtract", "Decimal",
+        "+", "-", ".", ",",
+
+        "Backspace","Delete","Tab",
+        "ArrowLeft","ArrowRight","ArrowUp","ArrowDown",
+        "Home","End"
+    };
+
+
+    public async Task SetFocusAsync()
+    {
+        await inputRef.FocusAsync();
+    }
+
+    async Task OnInputChanged(ChangeEventArgs e)
+    {
+        WertText = e.Value?.ToString() ?? "0";
+        await OnWertChanged.InvokeAsync(WertText);
+    }
+
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    private async Task HandleKeyDownX(KeyboardEventArgs e)
+    {
+        await OnKeyDown.InvokeAsync(e);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (System.Diagnostics.Debugger.IsAttached) { Console.WriteLine($"Key pressed: {e.Key}"); }
+        // Prüfen, ob die Taste erlaubt ist
+        IstErlaubteTaste = ErlaubteTasten.Contains(e.Key);
+
+        if (IstErlaubteTaste) { await OnKeyDown.InvokeAsync(e); }
+        else
+        {
+            // Ungültige Taste → Wert zurücksetzen
+            WertText = "0";// string.Empty;
+            // Blazor informieren, dass sich der State geändert hat
+            StateHasChanged();
+
+        }
+    }
+
+
+}
