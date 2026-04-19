@@ -1,10 +1,9 @@
 ﻿@page "/ziel"
-@using StockTvBlazor.Networking
+@using StockTvBlazor.Services
 @rendermode InteractiveServer
-@inject StockTvBlazor.Services.SettingsService _settingsService
+@inject SettingsService _settingsService
+@inject ZielService _zielService
 @inject NavigationManager _navigationManager
-@inject NetMqPublisherService _publisherService
-@inject StockTvBlazor.Services.ZielService _zielService
 @inject StockTvBlazor.Components.ViewModels.ZielViewModel ViewModel
 @inject IJSRuntime JS
 @implements IDisposable
@@ -71,16 +70,19 @@
 	protected override void OnInitialized()
 	{
 		ViewModel.OnViewModelChanged += HandleUpdate;
-		ViewModel.OnNavigationRequested += HandleNavigationRequested;
 		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+		_zielService.OnNavigationRequested += HandleNavigationRequested;
+		_zielService.OnGlobalRefresh += HandleUpdate;
 
 	}
 	public void Dispose()
 	{
+		if (_disposed) return;
 		_disposed = true;
 		ViewModel.OnViewModelChanged -= HandleUpdate;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
-		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
+		_zielService.OnNavigationRequested -= HandleNavigationRequested;
+		_zielService.OnGlobalRefresh -= HandleUpdate;
 
 		ViewModel.Dispose();
 	}
@@ -92,11 +94,11 @@
 		InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 
-	private async void HandleUpdate()
+	private void HandleUpdate()
 	{
 		if (_disposed) return;
 
-		await InvokeAsync(() =>
+		InvokeAsync(() =>
 			{
 				StateHasChanged();
 			});
@@ -112,7 +114,7 @@
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		await ViewModel.ProcessKeyAsync(e.Key);
+		await _zielService.ProcessKeyAsync(e.Key);
 	}
 
 }

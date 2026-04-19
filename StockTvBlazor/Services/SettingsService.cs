@@ -1,14 +1,29 @@
+using StockTvBlazor.Extensions;
 using StockTvBlazor.Models;
 using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
-using StockTvBlazor.Extensions;
 
 namespace StockTvBlazor.Services;
 
 public class SettingsService : BackgroundService
 {
-    private Settings.Settings _settings = null!;
+	public enum SettingsOptions
+	{
+		Theme,
+		Richtung,
+		Modus,
+		BahnNummer,
+		MaxPunkteProKehre,
+		MaxKehrenProSpiel,
+		Spielgruppe,
+		Networking
+	}
+
+	internal SettingsOptions CurrentSettingToChange = SettingsOptions.Theme;
+
+	private Settings.Settings _settings = null!;
+    
     private readonly string _settingsFileName = "stocktv.config.json";
     private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
     private readonly ILogger _logger;
@@ -35,9 +50,15 @@ public class SettingsService : BackgroundService
         _fileLoggerProvider = fileLoggerProvider;
     }
 
-    #region Init
+	public override void Dispose()
+	{
+		_saveSettingsQueue.Writer.TryComplete();
+		base.Dispose();
+	}
 
-    public async Task InitializeAsync()
+	#region Init
+
+	public async Task InitializeAsync()
     {
         _settings = await LoadSettingsAsync();
 
@@ -100,8 +121,6 @@ public class SettingsService : BackgroundService
         }
 
         s.Game.CurrentModus = newModus;
-
-        NotifyChanged();
     }
 
     public void ChangeTheme(bool forward)
@@ -111,8 +130,6 @@ public class SettingsService : BackgroundService
         s.UI.CurrentTheme = forward
             ? s.UI.CurrentTheme.Next()
             : s.UI.CurrentTheme.Previous();
-
-        NotifyChanged();
     }
 
     public void ChangeRichtung(bool forward)
@@ -122,16 +139,12 @@ public class SettingsService : BackgroundService
         s.UI.CurrentRichtung = forward
             ? s.UI.CurrentRichtung.Next()
             : s.UI.CurrentRichtung.Previous();
-
-        NotifyChanged();
     }
 
     public void ChangeBlockLocalChanges()
     {
         CurrentSettings.General.BlockLocalChanges =
             !CurrentSettings.General.BlockLocalChanges;
-
-        NotifyChanged();
     }
 
     public void ChangeSpielgruppe(bool forward)
@@ -142,8 +155,6 @@ public class SettingsService : BackgroundService
             s.Spielgruppe++;
         else if (!forward && s.Spielgruppe > 0)
             s.Spielgruppe--;
-
-        NotifyChanged();
     }
 
     public void ChangeBahnNummer(bool forward)
@@ -154,8 +165,6 @@ public class SettingsService : BackgroundService
             s.BahnNummer++;
         else if (!forward && s.BahnNummer > 1)
             s.BahnNummer--;
-
-        NotifyChanged();
     }
 
     public void ChangeMaxKehrenProSpiel(bool forward)
@@ -166,8 +175,6 @@ public class SettingsService : BackgroundService
             s.MaxKehrenProSpiel++;
         else if (!forward && s.MaxKehrenProSpiel > 4)
             s.MaxKehrenProSpiel--;
-
-        NotifyChanged();
     }
 
     public void ChangeMaxPunkteProKehre(bool forward)
@@ -178,16 +185,12 @@ public class SettingsService : BackgroundService
             s.MaxPunkteProKehre++;
         else if (!forward && s.MaxPunkteProKehre > 0)
             s.MaxPunkteProKehre--;
-
-        NotifyChanged();
     }
 
     public void ChangeNetworking()
     {
         CurrentSettings.Network.Enabled =
             !CurrentSettings.Network.Enabled;
-
-        NotifyChanged();
     }
 
     #endregion
@@ -341,9 +344,100 @@ public class SettingsService : BackgroundService
 
     #endregion
 
-    public override void Dispose()
-    {
-        _saveSettingsQueue.Writer.TryComplete();
-        base.Dispose();
-    }
+	#region Input Handling
+
+	public async Task ProcessKeyAsync(string value)
+	{
+		switch (value)
+		{
+			case "+":
+				ExitSettingsPage();
+				break;
+
+			case "8" or "ArrowUp":
+				GoToPreviousSettings();
+				break;
+
+			case "2" or "ArrowDown":
+				GoToNextSettings();
+				break;
+
+			case "4" or "ArrowLeft":
+				ChangeCurrentSetting(false);
+				break;
+
+			case "6" or "ArrowRight":
+				ChangeCurrentSetting(true);
+				break;
+		}
+
+        NotifyChanged();
+	}
+
+	private void ChangeCurrentSetting(bool forward)
+	{
+		switch (CurrentSettingToChange)
+		{
+			case SettingsOptions.Theme:
+				ChangeTheme(forward);
+				break;
+
+			case SettingsOptions.Richtung:
+				ChangeRichtung(forward);
+				break;
+
+			case SettingsOptions.Modus:
+				ChangeModus(forward);
+				break;
+
+			case SettingsOptions.MaxPunkteProKehre:
+				ChangeMaxPunkteProKehre(forward);
+				break;
+
+			case SettingsOptions.MaxKehrenProSpiel:
+				ChangeMaxKehrenProSpiel(forward);
+				break;
+
+			case SettingsOptions.BahnNummer:
+				ChangeBahnNummer(forward);
+				break;
+
+			case SettingsOptions.Spielgruppe:
+				ChangeSpielgruppe(forward);
+				break;
+
+			case SettingsOptions.Networking:
+				ChangeNetworking();
+				break;
+		}
+        NotifyChanged ();
+	}
+
+	#endregion
+
+	#region Navigation
+
+	private void GoToNextSettings()
+	{
+		if (CurrentSettingToChange < Enum.GetValues<SettingsOptions>().Max())
+			CurrentSettingToChange++;
+	}
+
+	private void GoToPreviousSettings()
+	{
+		if (CurrentSettingToChange > Enum.GetValues<SettingsOptions>().Min())
+			CurrentSettingToChange--;
+	}
+
+	private void ExitSettingsPage()
+	{
+		RequestSaveSettings();
+
+		var modus = CurrentSettings.Game.CurrentModus;
+
+		var url = GetModusUrl(modus);
+        OnNavigationRequested?.Invoke(url);
+	}
+
+	#endregion
 }

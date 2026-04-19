@@ -4,8 +4,8 @@ using StockTvBlazor.Networking;
 namespace StockTvBlazor.Components.ViewModels;
 
 
-public class TrainingViewModel(SettingsService settingsSerivce, MatchService matchService, NetMqPublisherService publisherService) :
-	BaseViewModel(settingsSerivce, matchService, publisherService)
+public class TrainingViewModel(SettingsService settingsSerivce, MatchService matchService) :
+	BaseViewModel(settingsSerivce, matchService)
 {
 	public string HeaderText => CurrentMatch.CurrentGame.Turns.Count == 0
 		? base.HeaderTextBasis

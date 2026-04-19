@@ -77,7 +77,6 @@
     {
         _settingsService.OnSettingsChanged += HandleChanged;
         _settingsService.OnNavigationRequested += HandleNavigationRequested;
-        // ViewModel.OnViewModelChanged += HandleChanged;
     }
 
     private void HandleChanged()
@@ -98,7 +97,6 @@
 
         _settingsService.OnSettingsChanged -= HandleChanged;
         _settingsService.OnNavigationRequested -= HandleNavigationRequested;
-        // ViewModel.OnViewModelChanged -= HandleChanged;
 
         ViewModel.Dispose();
     }
@@ -111,7 +109,7 @@
 
     public async Task HandleGlobalKeyDown(KeyboardEventArgs e)
     {
-        await ViewModel.ProcessKeyAsync(e.Key);
+        await _settingsService.ProcessKeyAsync(e.Key);
         StateHasChanged();
     }
 }

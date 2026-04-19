@@ -1,133 +1,23 @@
-﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Services;
+﻿using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class SettingsViewModel(SettingsService settingsService, NavigationManager navigationManager) : IDisposable
+public class SettingsViewModel(SettingsService settingsService) : IDisposable
 {
     private readonly Settings.Settings _currentSettings = settingsService.CurrentSettings;
     private readonly SettingsService _settingsService = settingsService;
-    private readonly NavigationManager _navigationManager = navigationManager;
-
-    private SettingsOptions _currentSetting = SettingsOptions.Theme;
-
-    public enum SettingsOptions
-    {
-        Theme,
-        Richtung,
-        Modus,
-        BahnNummer,
-        MaxPunkteProKehre,
-        MaxKehrenProSpiel,
-        Spielgruppe,
-        Networking
-    }
-
-    #region Input Handling
-
-    public async Task ProcessKeyAsync(string value)
-    {
-        switch (value)
-        {
-            case "+":
-                ExitSettingsPage();
-                break;
-
-            case "8" or "ArrowUp":
-                GoToPreviousSettings();
-                break;
-
-            case "2" or "ArrowDown":
-                GoToNextSettings();
-                break;
-
-            case "4" or "ArrowLeft":
-                ChangeCurrentSetting(false);
-                break;
-
-            case "6" or "ArrowRight":
-                ChangeCurrentSetting(true);
-                break;
-        }
-    }
-
-    private void ChangeCurrentSetting(bool forward)
-    {
-        switch (_currentSetting)
-        {
-            case SettingsOptions.Theme:
-                _settingsService.ChangeTheme(forward);
-                break;
-
-            case SettingsOptions.Richtung:
-                _settingsService.ChangeRichtung(forward);
-                break;
-
-            case SettingsOptions.Modus:
-                _settingsService.ChangeModus(forward);
-                break;
-
-            case SettingsOptions.MaxPunkteProKehre:
-                _settingsService.ChangeMaxPunkteProKehre(forward);
-                break;
-
-            case SettingsOptions.MaxKehrenProSpiel:
-                _settingsService.ChangeMaxKehrenProSpiel(forward);
-                break;
-
-            case SettingsOptions.BahnNummer:
-                _settingsService.ChangeBahnNummer(forward);
-                break;
-
-            case SettingsOptions.Spielgruppe:
-                _settingsService.ChangeSpielgruppe(forward);
-                break;
-
-            case SettingsOptions.Networking:
-                _settingsService.ChangeNetworking();
-                break;
-        }
-    }
-
-    #endregion
-
-    #region Navigation
-
-    private void GoToNextSettings()
-    {
-        if (_currentSetting < Enum.GetValues<SettingsOptions>().Max())
-            _currentSetting++;
-    }
-
-    private void GoToPreviousSettings()
-    {
-        if (_currentSetting > Enum.GetValues<SettingsOptions>().Min())
-            _currentSetting--;
-    }
-
-    private void ExitSettingsPage()
-    {
-        _settingsService.RequestSaveSettings();
-
-        var modus = _currentSettings.Game.CurrentModus;
-
-        // 👉 BESSER: zentrale Methode nutzen
-        var url = SettingsService.GetModusUrl(modus);
-        _navigationManager.NavigateTo(url);
-    }
-
-    #endregion
+   
 
     #region Active Flags (UI)
 
-    public bool IsThemeActive => _currentSetting == SettingsOptions.Theme;
-    public bool IsRichtungActive => _currentSetting == SettingsOptions.Richtung;
-    public bool IsModusActive => _currentSetting == SettingsOptions.Modus;
-    public bool IsMaxPunkteProKehreActive => _currentSetting == SettingsOptions.MaxPunkteProKehre;
-    public bool IsMaxKehrenProSpielActive => _currentSetting == SettingsOptions.MaxKehrenProSpiel;
-    public bool IsBahnNummerActive => _currentSetting == SettingsOptions.BahnNummer;
-    public bool IsNetworkingActive => _currentSetting == SettingsOptions.Networking;
-    public bool IsSpielgruppeActive => _currentSetting == SettingsOptions.Spielgruppe;
+    public bool IsThemeActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Theme;
+    public bool IsRichtungActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Richtung;
+    public bool IsModusActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Modus;
+    public bool IsMaxPunkteProKehreActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.MaxPunkteProKehre;
+    public bool IsMaxKehrenProSpielActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.MaxKehrenProSpiel;
+    public bool IsBahnNummerActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.BahnNummer;
+    public bool IsNetworkingActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Networking;
+    public bool IsSpielgruppeActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Spielgruppe;
 
     #endregion
 

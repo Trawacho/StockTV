@@ -3,8 +3,8 @@ using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class BestOfViewModel(SettingsService settingsService, MatchService matchService, NetMqPublisherService publisherService) :
-	BaseViewModel(settingsService, matchService, publisherService)
+public class BestOfViewModel(SettingsService settingsService, MatchService matchService) :
+	BaseViewModel(settingsService, matchService)
 {
 	public string HeaderText => (CurrentMatch.CurrentGame.GameNumber == 1 && CurrentMatch.CurrentGame.Turns.Count == 0)
 		? HeaderTextBasis

@@ -2,11 +2,12 @@
 @using System.Diagnostics
 @using StockTvBlazor.Models
 @using StockTvBlazor.Networking
+@using StockTvBlazor.Services
 @rendermode InteractiveServer
-@inject StockTvBlazor.Services.SettingsService _settingsService
+@inject SettingsService _settingsService
 @inject NavigationManager _navigationManager
 @inject NetMqPublisherService _publisherService
-@inject StockTvBlazor.Services.MatchService _matchService
+@inject MatchService _matchService
 @inject StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel
 @inject IJSRuntime JS
 @implements IDisposable
@@ -38,7 +39,8 @@
 	{
 		ViewModel.OnViewModelChanged += HandleUpdate;
 		_settingsService.OnNavigationRequested += HandleNavigationRequested;
-		ViewModel.OnNavigationRequested += HandleNavigationRequested;
+		_matchService.OnNavigationRequested += HandleNavigationRequested;
+		_matchService.OnGlobalRefresh += HandleUpdate;
 	}
 
 	public void Dispose()
@@ -46,7 +48,8 @@
 		_disposed = true;
 		ViewModel.OnViewModelChanged -= HandleUpdate;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
-		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
+		_matchService.OnNavigationRequested -= HandleNavigationRequested;
+		_matchService.OnGlobalRefresh -= HandleUpdate;
 
 		ViewModel.Dispose();
 	}
@@ -78,6 +81,6 @@
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		await ViewModel.ProcessKeyAsync(e.Key);
+		await _matchService.ProcessKeyAsync(e.Key);
 	}
 }

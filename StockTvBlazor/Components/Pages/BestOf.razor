@@ -52,8 +52,9 @@
 	protected override void OnInitialized()
 	{
 		ViewModel.OnViewModelChanged += HandleUpdate;
-		ViewModel.OnNavigationRequested += HandleNavigationRequested;
+		_matchService.OnNavigationRequested += HandleNavigationRequested;
 		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+		_matchService.OnGlobalRefresh += HandleUpdate;
 	}
 
 	public void Dispose()
@@ -61,7 +62,8 @@
 		_disposed = true;
 		ViewModel.OnViewModelChanged -= HandleUpdate;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
-		ViewModel.OnNavigationRequested -= HandleNavigationRequested;
+		_matchService.OnNavigationRequested -= HandleNavigationRequested;
+		_matchService.OnGlobalRefresh -= HandleUpdate;
 
 		ViewModel.Dispose();
 	}
@@ -94,7 +96,7 @@
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
-		await ViewModel.ProcessKeyAsync(e.Key);
+		await _matchService.ProcessKeyAsync(e.Key);
 	}
 
 

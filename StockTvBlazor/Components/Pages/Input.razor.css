@@ -1,0 +1,160 @@
+﻿.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .main-container {
+        flex-direction: row;
+    }
+}
+
+.content-panel {
+    flex: 1;
+    position: relative;
+    background: #eee;
+}
+
+    .content-panel iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+.interaction-blocker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background: transparent;
+}
+
+.keypad-panel {
+    flex: 0 0 350px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: #222;
+    z-index: 10;
+}
+
+.display {
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    font-size: 1.8rem;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 2px solid #444;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.key {
+    padding: 20px 5px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    background: #444; /* Standard für Zahlen */
+    color: white;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    outline: none;
+    transition: background-color 0.1s ease, transform 0.05s;
+}
+
+    /* Der Trick: Im Fokus-Zustand, aber NICHT aktiv (gedrückt), 
+       erzwingen wir die Originalfarben */
+    .key:focus:not(:active) {
+        /* Zahlen zurück auf Standard-Grau */
+        background-color: #444;
+    }
+
+/* Farbtasten explizit zurücksetzen bei Fokus */
+.btn-red:focus:not(:active) {
+    background-color: #d32f2f !important;
+}
+
+.btn-green:focus:not(:active) {
+    background-color: #388e3c !important;
+}
+
+.btn-blue:focus:not(:active) {
+    background-color: #1976d2 !important;
+}
+
+.btn-yellow:focus:not(:active) {
+    background-color: #ffd600 !important;
+}
+
+.btn-yellow {
+    background-color: #ffd600;
+    color: black;
+}
+
+.btn-red {
+    background-color: #d32f2f;
+    color: white;
+}
+
+.btn-blue {
+    background-color: #1976d2;
+    color: white;
+}
+
+.btn-green {
+    background-color: #388e3c;
+    color: white;
+}
+
+
+/* Effekt während des Drückens */
+.key:active {
+    transform: scale(0.92);
+    filter: brightness(1.5);
+}
+
+
+
+.numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Erzwingt 3 Spalten */
+    gap: 8px;
+}
+
+.zero-btn {
+    grid-column: span 3; /* Lässt die 0 über die ganze Breite gehen */
+}
+
+.color-row-double {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Rot und Grün nebeneinander */
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.color-row-single {
+    margin-top: 8px;
+}
+
+    .color-row-single .key {
+        width: 100%; /* Blau und Gelb volle Breite */
+    }
+
+.component-wrapper {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
