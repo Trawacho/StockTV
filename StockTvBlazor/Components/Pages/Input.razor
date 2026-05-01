@@ -16,42 +16,51 @@
 
     @* Zweiter Container: Das Keypad *@
     @* z-index und position:relative stellen sicher, dass dieser Bereich "oben" liegt *@
-    <div class="keypad-panel" style="position: relative; z-index: 100;">
-        <div class="display">@_lastAction</div>
-        
+    <div class="keypad-panel">
+        <div class="display">
+            @SpielModus
+        </div>
+
         <div class="numbers-grid">
             <button type="button" @onclick='() => HandleInput("7")' class="key">7</button>
             <button type="button" @onclick='() => HandleInput("8")' class="key">8</button>
             <button type="button" @onclick='() => HandleInput("9")' class="key">9</button>
-            
+
             <button type="button" @onclick='() => HandleInput("4")' class="key">4</button>
             <button type="button" @onclick='() => HandleInput("5")' class="key">5</button>
             <button type="button" @onclick='() => HandleInput("6")' class="key">6</button>
-            
+
             <button type="button" @onclick='() => HandleInput("1")' class="key">1</button>
             <button type="button" @onclick='() => HandleInput("2")' class="key">2</button>
             <button type="button" @onclick='() => HandleInput("3")' class="key">3</button>
-            
+
             <button type="button" @onclick='() => HandleInput("0")' class="key">0</button>
         </div>
-         <div class="color-section">
+
+        <div class="color-section">
             <div class="color-row-double">
                 @if (_spielRichtung == StockTvBlazor.Settings.UiSettings.Richtung.Links)
                 {
                     <button type="button" @onclick='() => HandleInput("/")' class="key btn-red">R</button>
-                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button>            
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button>
                 }
                 else
                 {
-                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button> 
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button>
                     <button type="button" @onclick='() => HandleInput("/")' class="key btn-red">R</button>
                 }
             </div>
+
             <div class="color-row-single">
-                <button type="button" @onclick='() => HandleInput("-")' class="key btn-blue">Löschen</button>
+                <button type="button" @onclick='() => HandleInput("-")' class="key btn-blue">
+                    Löschen
+                </button>
             </div>
+
             <div class="color-row-single">
-                <button type="button" @onclick='() => HandleInput("+")' class="key btn-yellow">Bestätigen</button>
+                <button type="button" @onclick='() => HandleInput("+")' class="key btn-yellow">
+                    Bestätigen
+                </button>
             </div>
         </div>
     </div>

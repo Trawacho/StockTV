@@ -27,6 +27,8 @@ public class InputBase : ComponentBase, IDisposable
 		SetInteralUrl();
 	}
 
+	public string SpielModus => SettingsService.CurrentSettings.Game.CurrentModus.ToString();
+
 	public void Dispose()
 	{
 		if (_disposed) return;

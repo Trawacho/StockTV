@@ -1,21 +1,37 @@
-﻿.main-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+﻿/* ===================================================
+   GLOBAL RESET
+=================================================== */
+html, body {
+    margin: 0;
+    padding: 0;
     width: 100%;
+    height: 100%;
+    overflow: hidden; /* KEINE Scrollbars */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* ===================================================
+   MAIN LAYOUT
+=================================================== */
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100dvh;
     overflow: hidden;
 }
 
-@media (min-width: 768px) {
-    .main-container {
-        flex-direction: row;
-    }
-}
-
+/* ===================================================
+   CONTENT / IFRAME
+=================================================== */
 .content-panel {
-    flex: 1;
+    flex: 1 1 auto;
     position: relative;
     background: #eee;
+    min-width: 0;
+    min-height: 0;
 }
 
     .content-panel iframe {
@@ -26,63 +42,174 @@
 
 .interaction-blocker {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     z-index: 5;
     background: transparent;
 }
 
+/* ===================================================
+   KEYPAD PANEL – GRID BASIERT
+=================================================== */
 .keypad-panel {
-    flex: 0 0 350px;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
+    display: grid;
+    /* 1 Zeile Display + 7 Button-Reihen (ALLE gleich hoch) */
+    grid-template-rows: auto repeat(7, 1fr);
+    gap: clamp(6px, 1vh, 12px);
+    padding: clamp(6px, 1.5vh, 16px);
     background: #222;
-    z-index: 10;
+    min-height: 0;
+    min-width: 0;
 }
 
+/* ===================================================
+   ORIENTATION: LANDSCAPE
+   Keypad RECHTS – max. 30 %
+=================================================== */
+@media (orientation: landscape) {
+    .main-container {
+        flex-direction: row;
+        background: #222e;
+    }
+
+    .content-panel {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .keypad-panel {
+        flex: 0 0 30%;
+        max-width: 30%;
+        min-width: 260px; /* Touch-sicher */
+        height: clamp(420px, 80vh, 700px);
+        max-height: 80vh;
+        align-self: flex-start;
+    }
+}
+
+/* ===================================================
+   ORIENTATION: PORTRAIT
+   Keypad UNTEN – 50 %
+   + Mindesthöhe zum Schutz des Grids
+=================================================== */
+@media (orientation: portrait) {
+    .main-container {
+        flex-direction: column;
+    }
+
+    /* Keypad hat Priorität */
+    .keypad-panel {
+        flex: 0 0 auto;
+        height: clamp(420px, 60vh, 70vh);
+        min-height: 420px;
+        max-height: 70vh;
+    }
+
+
+    /* iframe bekommt den restlichen Platz */
+    .content-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+}
+
+
+/* ===================================================
+   DISPLAY
+=================================================== */
 .display {
     background: #000;
     color: #0f0;
     font-family: 'Courier New', monospace;
-    font-size: 1.8rem;
-    padding: 15px;
-    margin-bottom: 20px;
-    text-align: center;
+    font-size: clamp(1rem, 2.5vh, 1.6rem);
     border: 2px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(6px, 1.2vh, 12px);
+    height: 100%;
 }
 
-.grid {
+/* ===================================================
+   NUMBERS GRID (4 Reihen)
+=================================================== */
+.numbers-grid {
+    grid-row: 2 / span 4;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    grid-template-rows: repeat(4, 1fr);
+    gap: clamp(6px, 1vh, 10px);
 }
 
+/* ===================================================
+   COLOR / ACTION SECTION (3 Reihen)
+=================================================== */
+.color-section {
+    grid-row: 6 / span 3;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: clamp(6px, 1vh, 10px);
+}
+
+.color-row-double {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(6px, 1vh, 10px);
+}
+
+.color-row-single {
+    display: block;
+}
+
+/* ===================================================
+   BUTTONS – ALLE EXAKT GLEICHE HÖHE
+=================================================== */
 .key {
-    padding: 20px 5px;
-    font-size: 1.3rem;
+    width: 100%;
+    height: 100%;
+    padding: 0; /* entscheidend für gleiche Höhen */
+    font-size: clamp(0.85rem, 2vh, 1.3rem);
     font-weight: bold;
     border: none;
     border-radius: 4px;
-    background: #444; /* Standard für Zahlen */
-    color: white;
     cursor: pointer;
-    touch-action: manipulation;
+    background: #444;
+    color: white;
     user-select: none;
     outline: none;
-    transition: background-color 0.1s ease, transform 0.05s;
+    touch-action: manipulation;
+    transition: transform 0.05s ease, filter 0.05s ease;
 }
 
-    /* Der Trick: Im Fokus-Zustand, aber NICHT aktiv (gedrückt), 
-       erzwingen wir die Originalfarben */
+    .key:active {
+        transform: scale(0.92);
+        filter: brightness(1.4);
+    }
+
     .key:focus:not(:active) {
-        /* Zahlen zurück auf Standard-Grau */
         background-color: #444;
     }
 
-/* Farbtasten explizit zurücksetzen bei Fokus */
+/* ===================================================
+   FARBTASTEN
+=================================================== */
+.btn-red {
+    background-color: #d32f2f;
+}
+
+.btn-green {
+    background-color: #388e3c;
+}
+
+.btn-blue {
+    background-color: #1976d2;
+}
+
+.btn-yellow {
+    background-color: #ffd600;
+    color: black;
+}
+
+/* Fokus-Fix */
 .btn-red:focus:not(:active) {
     background-color: #d32f2f !important;
 }
@@ -97,64 +224,4 @@
 
 .btn-yellow:focus:not(:active) {
     background-color: #ffd600 !important;
-}
-
-.btn-yellow {
-    background-color: #ffd600;
-    color: black;
-}
-
-.btn-red {
-    background-color: #d32f2f;
-    color: white;
-}
-
-.btn-blue {
-    background-color: #1976d2;
-    color: white;
-}
-
-.btn-green {
-    background-color: #388e3c;
-    color: white;
-}
-
-
-/* Effekt während des Drückens */
-.key:active {
-    transform: scale(0.92);
-    filter: brightness(1.5);
-}
-
-
-
-.numbers-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Erzwingt 3 Spalten */
-    gap: 8px;
-}
-
-.zero-btn {
-    grid-column: span 3; /* Lässt die 0 über die ganze Breite gehen */
-}
-
-.color-row-double {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Rot und Grün nebeneinander */
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.color-row-single {
-    margin-top: 8px;
-}
-
-    .color-row-single .key {
-        width: 100%; /* Blau und Gelb volle Breite */
-    }
-
-.component-wrapper {
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
 }
