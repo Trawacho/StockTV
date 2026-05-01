@@ -12,6 +12,9 @@ $RemoteHost = "csl"
 $RemoteDir  = "~/composer"
 $ImageName  = "stocktv"
 
+# Get the root directory of the project (parent of build directory)
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+
 Write-Host "=========================================="
 Write-Host "   BUILD + DEPLOY: StockTV"
 Write-Host "==========================================`n"
@@ -44,14 +47,21 @@ Write-Host "Using tag: $VERSION_TAG"
 # ================================
 Write-Host "`nBuilding Docker image..."
 
-docker buildx build `
-    --platform linux/amd64 `
-    -f build/Dockerfile `
-    -t "${ImageName}:${VERSION_TAG}" `
-    --load `
-    .
+# Change to project root for docker build
+Push-Location $ProjectRoot
 
-Write-Host "Build done: ${ImageName}:${VERSION_TAG}"
+try {
+    docker buildx build `
+        --platform linux/amd64 `
+        -f ./build/Dockerfile `
+        -t "${ImageName}:${VERSION_TAG}" `
+        --load `
+        .
+
+    Write-Host "Build done: ${ImageName}:${VERSION_TAG}"
+} finally {
+    Pop-Location
+}
 
 # ================================
 # Export image
