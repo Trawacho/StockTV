@@ -22,19 +22,43 @@
         </div>
 
         <div class="numbers-grid">
-            <button type="button" @onclick='() => HandleInput("7")' class="key">7</button>
-            <button type="button" @onclick='() => HandleInput("8")' class="key">8</button>
-            <button type="button" @onclick='() => HandleInput("9")' class="key">9</button>
+            @if(SettingsService.SettingsPageActive)
+            {
+                <button type="button" @onclick='() => HandleInput("7")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("8")' class="key">up</button>
+                <button type="button" @onclick='() => HandleInput("9")' class="key"></button>
 
-            <button type="button" @onclick='() => HandleInput("4")' class="key">4</button>
-            <button type="button" @onclick='() => HandleInput("5")' class="key">5</button>
-            <button type="button" @onclick='() => HandleInput("6")' class="key">6</button>
+                <button type="button" @onclick='() => HandleInput("4")' class="key">prev</button>
+                <button type="button" @onclick='() => HandleInput("5")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("6")' class="key">next</button>
 
-            <button type="button" @onclick='() => HandleInput("1")' class="key">1</button>
-            <button type="button" @onclick='() => HandleInput("2")' class="key">2</button>
-            <button type="button" @onclick='() => HandleInput("3")' class="key">3</button>
+                <button type="button" @onclick='() => HandleInput("1")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("2")' class="key">down</button>
+                <button type="button" @onclick='() => HandleInput("3")' class="key"></button>
 
-            <button type="button" @onclick='() => HandleInput("0")' class="key">0</button>
+                <button type="button" @onclick='() => HandleInput("0")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+            } 
+            else 
+            {
+                <button type="button" @onclick='() => HandleInput("7")' class="key">7</button>
+                <button type="button" @onclick='() => HandleInput("8")' class="key">8</button>
+                <button type="button" @onclick='() => HandleInput("9")' class="key">9</button>
+
+                <button type="button" @onclick='() => HandleInput("4")' class="key">4</button>
+                <button type="button" @onclick='() => HandleInput("5")' class="key">5</button>
+                <button type="button" @onclick='() => HandleInput("6")' class="key">6</button>
+
+                <button type="button" @onclick='() => HandleInput("1")' class="key">1</button>
+                <button type="button" @onclick='() => HandleInput("2")' class="key">2</button>
+                <button type="button" @onclick='() => HandleInput("3")' class="key">3</button>
+
+                <button type="button" @onclick='() => HandleInput("0")' class="key">0</button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("Enter")' class="key"></button>
+            }
+           
         </div>
 
         <div class="color-section">

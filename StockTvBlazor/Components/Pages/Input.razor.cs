@@ -61,6 +61,9 @@ public class InputBase : ComponentBase, IDisposable
 
 	private void SetInteralUrl()
 	{
+		if(SettingsService.SettingsPageActive)
+			return;
+
 		var modus = SettingsService.CurrentSettings.Game.CurrentModus;
 		_internalUrl = SettingsService.GetModusUrl(modus);
 	}
@@ -75,10 +78,14 @@ public class InputBase : ComponentBase, IDisposable
 	internal async Task HandleInput(string input)
 	{
 		_lastAction = input;
-		if (SettingsService.CurrentSettings.Game.CurrentModus == StockTvBlazor.Settings.GameSettings.Modus.Ziel )
-			await ZielService.ProcessKeyAsync(input);
-		else
-			await MatchService.ProcessKeyAsync(input);
+		if(SettingsService.SettingsPageActive)
+			await SettingsService.ProcessKeyAsync(input);
+		else{
+			if (SettingsService.CurrentSettings.Game.CurrentModus == StockTvBlazor.Settings.GameSettings.Modus.Ziel )
+				await ZielService.ProcessKeyAsync(input);
+			else
+				await MatchService.ProcessKeyAsync(input);
+		}
 	}
 
 }

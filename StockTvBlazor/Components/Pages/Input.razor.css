@@ -20,6 +20,7 @@ html, body {
     display: flex;
     width: 100%;
     height: 100dvh;
+    height: 100vh;
     overflow: hidden;
 }
 
@@ -99,9 +100,8 @@ html, body {
     /* Keypad hat Priorität */
     .keypad-panel {
         flex: 0 0 auto;
-        height: clamp(420px, 60vh, 70vh);
-        min-height: 420px;
-        max-height: 70vh;
+        height: clamp(320px, 55vh, 65vh);
+        max-height: 65vh;
     }
 
 
@@ -127,6 +127,10 @@ html, body {
     justify-content: center;
     padding: clamp(6px, 1.2vh, 12px);
     height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 /* ===================================================
@@ -175,6 +179,9 @@ html, body {
     background: #444;
     color: white;
     user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     outline: none;
     touch-action: manipulation;
     transition: transform 0.05s ease, filter 0.05s ease;

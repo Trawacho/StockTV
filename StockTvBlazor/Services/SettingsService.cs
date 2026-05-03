@@ -29,6 +29,8 @@ public class SettingsService : BackgroundService
     private readonly ILogger _logger;
     private readonly FileLoggerProvider _fileLoggerProvider;
 
+    public bool SettingsPageActive = false;
+
     public event Action? OnSettingsChanged;
     public event Action<string>? OnNavigationRequested;
 
@@ -434,6 +436,7 @@ public class SettingsService : BackgroundService
 		RequestSaveSettings();
 
 		var modus = CurrentSettings.Game.CurrentModus;
+        SettingsPageActive = false;
 
 		var url = GetModusUrl(modus);
         OnNavigationRequested?.Invoke(url);
