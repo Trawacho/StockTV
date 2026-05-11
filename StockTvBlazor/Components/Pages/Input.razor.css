@@ -199,12 +199,16 @@ html, body {
 /* ===================================================
    FARBTASTEN
 =================================================== */
-.btn-red {
-    background-color: #d32f2f;
+.btn-links {
+    background-color: var(--fg-left, #d32f2f);
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-.btn-green {
-    background-color: #388e3c;
+.btn-rechts {
+    background-color: var(--fg-right, #388e3c);
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .btn-blue {
@@ -217,12 +221,12 @@ html, body {
 }
 
 /* Fokus-Fix */
-.btn-red:focus:not(:active) {
-    background-color: #d32f2f !important;
+.btn-links:focus:not(:active) {
+    background-color: var(--fg-left, #d32f2f) !important;
 }
 
-.btn-green:focus:not(:active) {
-    background-color: #388e3c !important;
+.btn-rechts:focus:not(:active) {
+    background-color: var(--fg-right, #388e3c) !important;
 }
 
 .btn-blue:focus:not(:active) {

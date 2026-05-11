@@ -65,13 +65,13 @@
             <div class="color-row-double">
                 @if (_spielRichtung == StockTvBlazor.Settings.UiSettings.Richtung.Links)
                 {
-                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-red">R</button>
-                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button>
+                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-links">R</button>
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-rechts">G</button>
                 }
                 else
                 {
-                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-green">G</button>
-                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-red">R</button>
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-links">G</button>
+                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-rechts">R</button>
                 }
             </div>
 
