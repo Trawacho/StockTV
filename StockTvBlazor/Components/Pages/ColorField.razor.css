@@ -1,0 +1,44 @@
+.color-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.color-field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.color-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-input-row input[type="color"] {
+    width: 36px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+}
+
+.color-input-row input[type="text"] {
+    width: 90px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid #bbb;
+    flex-shrink: 0;
+}

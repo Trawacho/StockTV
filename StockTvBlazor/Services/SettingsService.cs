@@ -281,6 +281,37 @@ public class SettingsService : BackgroundService
 
     #endregion
 
+    #region Custom Themes
+
+    public void AddOrUpdateCustomTheme(CustomTheme theme)
+    {
+        var ui = CurrentSettings.UI;
+        var idx = ui.CustomThemes.FindIndex(t => t.Id == theme.Id);
+        if (idx >= 0)
+            ui.CustomThemes[idx] = theme;
+        else
+            ui.CustomThemes.Add(theme);
+
+        RequestSaveSettings();
+        NotifyChanged();
+    }
+
+    public void DeleteCustomTheme(Guid id)
+    {
+        CurrentSettings.UI.RemoveCustomTheme(id);
+        RequestSaveSettings();
+        NotifyChanged();
+    }
+
+    public void ActivateTheme(Guid id)
+    {
+        CurrentSettings.UI.ActivateTheme(id);
+        RequestSaveSettings();
+        NotifyChanged();
+    }
+
+    #endregion
+
     #region Turns
 
     public async Task SaveTurnsAsync(List<Turn> turns)

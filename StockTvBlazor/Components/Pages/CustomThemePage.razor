@@ -1,7 +1,6 @@
-﻿@page "/themes"
+@page "/themes"
 @using StockTvBlazor.Settings
-@inject UiSettings UiSettings
-@inject IThemeRepository ThemeRepository
+@inject StockTvBlazor.Services.SettingsService SettingsService
 @rendermode InteractiveServer
 
 <PageTitle>Themes verwalten</PageTitle>
@@ -14,13 +13,13 @@
         </div>
 
         <div class="theme-list">
-            @foreach (var theme in UiSettings.AllThemes)
+            @foreach (var theme in SettingsService.CurrentSettings.UI.AllThemes)
             {
-                var isActive = UiSettings.ActiveTheme.Id == theme.Id;
-                var previewColor = theme.GetColors(UiSettings.CurrentRichtung).BackgroundColor;
+                var isActive = SettingsService.CurrentSettings.UI.ActiveTheme.Id == theme.Id;
+                var previewColor = theme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung).BackgroundColor;
 
                 <div class="theme-item @(isActive ? "active" : "")"
-                     @onclick="() => ActivateTheme(theme.Id)">
+                     @onclick="() => SelectTheme(theme)">
                     <span class="theme-dot" style="background:@previewColor; border:1px solid #888;"></span>
                     <span class="theme-name">@theme.Name</span>
 
@@ -30,14 +29,9 @@
                     }
                     else
                     {
-                        <div class="theme-actions">
-                            <button class="btn-icon" title="Bearbeiten"
-                                    @onclick:stopPropagation="true"
-                                    @onclick="() => EditTheme((CustomTheme)theme)">✏️</button>
-                            <button class="btn-icon btn-delete" title="Löschen"
-                                    @onclick:stopPropagation="true"
-                                    @onclick="() => DeleteTheme(theme.Id)">🗑</button>
-                        </div>
+                        <button class="btn-icon btn-delete" title="Löschen"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => DeleteTheme(theme.Id)">🗑</button>
                     }
                 </div>
             }
@@ -57,7 +51,6 @@
                     <input type="text" @bind="_editingTheme.Name" placeholder="Theme-Name" />
                 </div>
 
-                <!-- Single color grid (no tabs) -->
                 <div class="color-grid">
                     <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
                     <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
@@ -78,6 +71,52 @@
                 </div>
             </div>
         }
+        else if (_previewColors is not null)
+        {
+            <div class="editor-header">
+                <h3>@_previewName <span class="badge">Standard</span></h3>
+            </div>
+
+            <div class="editor-body">
+                <div class="color-grid readonly">
+                    <div class="color-field-readonly">
+                        <span class="field-label">Hintergrund</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.BackgroundColor;"></span>
+                        <span class="hex-value">@_previewColors.BackgroundColor</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Vordergrund</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundColor;"></span>
+                        <span class="hex-value">@_previewColors.ForegroundColor</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Links-Farbe</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundLeft;"></span>
+                        <span class="hex-value">@_previewColors.ForegroundLeft</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Rechts-Farbe</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundRight;"></span>
+                        <span class="hex-value">@_previewColors.ForegroundRight</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">ZielSumme Ges.</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeGesamt;"></span>
+                        <span class="hex-value">@_previewColors.ZielSummeGesamt</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">ZielSumme Einz.</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeEinzel;"></span>
+                        <span class="hex-value">@_previewColors.ZielSummeEinzel</span>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <h4>Vorschau</h4>
+                    <ThemePreview Colors="_previewColors" />
+                </div>
+            </div>
+        }
         else
         {
             <div class="editor-empty">
@@ -93,20 +132,34 @@
 }
 
 @code {
-    private StockTvBlazor.Settings.CustomTheme? _editingTheme;
+    private CustomTheme? _editingTheme;
     private bool _isNew;
     private string _errorMessage = "";
 
-    protected override async Task OnInitializedAsync()
-    {
-        UiSettings.CustomThemes = await ThemeRepository.LoadAllAsync();
-    }
+    private ColorSettings? _previewColors;
+    private string _previewName = "";
 
-    private void ActivateTheme(Guid id) => UiSettings.ActivateTheme(id);
+    private void SelectTheme(ITheme theme)
+    {
+        SettingsService.ActivateTheme(theme.Id);
+
+        if (theme.IsBuiltIn)
+        {
+            _editingTheme = null;
+            _previewColors = theme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung);
+            _previewName = theme.Name;
+        }
+        else
+        {
+            _previewColors = null;
+            EditTheme((CustomTheme)theme);
+        }
+    }
 
     private void CreateNewTheme()
     {
         _isNew = true;
+        _previewColors = null;
         var defaultColors = ColorSettingsFactory.FromTheme(UiSettings.Theme.Hell, UiSettings.Richtung.Links);
         _editingTheme = new CustomTheme
         {
@@ -126,7 +179,7 @@
         };
     }
 
-    private async Task SaveTheme()
+    private void SaveTheme()
     {
         if (_editingTheme is null) return;
 
@@ -136,13 +189,7 @@
             return;
         }
 
-        await ThemeRepository.AddOrUpdateAsync(_editingTheme);
-
-        var idx = UiSettings.CustomThemes.FindIndex(t => t.Id == _editingTheme.Id);
-        if (idx >= 0)
-            UiSettings.CustomThemes[idx] = _editingTheme;
-        else
-            UiSettings.CustomThemes.Add(_editingTheme);
+        SettingsService.AddOrUpdateCustomTheme(_editingTheme);
 
         _editingTheme = null;
         _isNew = false;
@@ -155,10 +202,9 @@
         _errorMessage = "";
     }
 
-    private async Task DeleteTheme(Guid id)
+    private void DeleteTheme(Guid id)
     {
-        await ThemeRepository.DeleteAsync(id);
-        UiSettings.RemoveCustomTheme(id);
+        SettingsService.DeleteCustomTheme(id);
 
         if (_editingTheme?.Id == id)
             _editingTheme = null;
@@ -244,8 +290,6 @@
         color: #555;
     }
 
-    .theme-actions { display: flex; gap: 0.2rem; }
-
     .btn-icon {
         background: none;
         border: none;
@@ -260,7 +304,8 @@
 
     .theme-editor { flex: 1; padding: 1.5rem; overflow-y: auto; }
 
-    .editor-header h3 { margin: 0 0 1.2rem; font-size: 1.2rem; }
+    .editor-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem; }
+    .editor-header h3 { margin: 0; font-size: 1.2rem; }
 
     .editor-empty {
         display: flex;
@@ -294,6 +339,31 @@
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
+    }
+
+    .color-field-readonly {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .field-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .color-swatch-lg {
+        width: 100%;
+        height: 32px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    .hex-value {
+        font-size: 0.8rem;
+        font-family: monospace;
+        color: #666;
     }
 
     .preview-section h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }

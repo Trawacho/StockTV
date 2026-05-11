@@ -44,7 +44,6 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
-builder.Services.AddScoped<UiSettings>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
@@ -64,8 +63,6 @@ builder.Services.AddTransient<SettingsViewModel>();
 builder.Services.AddTransient<ZielViewModel>();
 
 
-// Theme-Repository (Singleton = eine Instanz, File-Lock intern)
-builder.Services.AddSingleton<IThemeRepository, JsonThemeRepository>();
 
 
 var app = builder.Build();
