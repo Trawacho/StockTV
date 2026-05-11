@@ -1,8 +1,9 @@
 ﻿using NetMQ;
 using StockTvBlazor.Components;
-using StockTvBlazor.Services;
 using StockTvBlazor.Components.ViewModels;
 using StockTvBlazor.Networking;
+using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
 
 //GLOBAL EXCEPTION HANDLER
@@ -43,6 +44,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
+builder.Services.AddScoped<UiSettings>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
@@ -61,6 +63,11 @@ builder.Services.AddTransient<BestOfViewModel>();
 builder.Services.AddTransient<SettingsViewModel>();
 builder.Services.AddTransient<ZielViewModel>();
 
+
+// Theme-Repository (Singleton = eine Instanz, File-Lock intern)
+builder.Services.AddSingleton<IThemeRepository, JsonThemeRepository>();
+
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -75,6 +82,7 @@ using (var scope = app.Services.CreateScope())
 
     var zielService = services.GetRequiredService<ZielService>();
     zielService.InitializeZiel();
+	
 }
 
 // WICHTIG: Development richtig behandeln!

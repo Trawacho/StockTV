@@ -23,9 +23,10 @@ public class SettingsViewModel(SettingsService settingsService) : IDisposable
 
     #region Display Values
 
-    public string ThemeValue => _currentSettings.UI.CurrentTheme.ToString();
+    //public string ThemeValue => _currentSettings.UI.CurrentTheme.ToString();
+    public string ThemeValue => _currentSettings.UI.ActiveTheme.Name;   
 
-    public string RichtungValue => _currentSettings.UI.CurrentRichtung.ToString();
+	public string RichtungValue => _currentSettings.UI.CurrentRichtung.ToString();
 
     public string ModusValue => _currentSettings.Game.CurrentModus.ToString();
 

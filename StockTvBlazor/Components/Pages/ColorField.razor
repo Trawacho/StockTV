@@ -1,0 +1,89 @@
+﻿@* Wiederverwendbare Komponente: Label + Color-Picker + Hex-Input *@
+
+<div class="color-field">
+    <label>@Label</label>
+    <div class="color-input-row">
+        <input type="color"
+               value="@Value"
+               @oninput="OnColorInput" />
+        <input type="text"
+               value="@Value"
+               maxlength="7"
+               @oninput="OnTextInput"
+               placeholder="#000000" />
+        <span class="color-swatch" style="background:@Value;"></span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string Value { get; set; } = "#000000";
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private async Task OnColorInput(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? "#000000";
+        await ValueChanged.InvokeAsync(val);
+    }
+
+    private async Task OnTextInput(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? "";
+
+        // Nur aktualisieren wenn gültiger Hex-Wert
+        if (System.Text.RegularExpressions.Regex.IsMatch(val, @"^#[0-9a-fA-F]{6}$"))
+            await ValueChanged.InvokeAsync(val);
+    }
+}
+
+<style>
+    .color-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+        .color-field label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #444;
+        }
+
+    .color-input-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .color-input-row input[type="color"] {
+            width: 36px;
+            height: 32px;
+            padding: 2px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-input-row input[type="text"] {
+            width: 90px;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+
+    .color-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid #bbb;
+        flex-shrink: 0;
+    }
+</style>

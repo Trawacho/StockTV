@@ -129,10 +129,23 @@ public class SettingsService : BackgroundService
     {
         var s = CurrentSettings;
 
-        s.UI.CurrentTheme = forward
-            ? s.UI.CurrentTheme.Next()
-            : s.UI.CurrentTheme.Previous();
-    }
+        //s.UI.CurrentTheme = forward
+        //    ? s.UI.CurrentTheme.Next()
+        //    : s.UI.CurrentTheme.Previous();
+
+		var themes = s.UI.AllThemes;
+		var currentIndex = themes.ToList().FindIndex(t => t.Id == s.UI.ActiveThemeId);
+
+		// Falls nichts aktiv, bei 0 starten
+		if (currentIndex < 0) currentIndex = 0;
+
+		var nextIndex = forward
+			? (currentIndex + 1) % themes.Count
+			: (currentIndex - 1 + themes.Count) % themes.Count;
+
+		s.UI.ActivateTheme(themes[nextIndex].Id);
+
+	}
 
     public void ChangeRichtung(bool forward)
     {
@@ -214,7 +227,7 @@ public class SettingsService : BackgroundService
 
     private async Task<Settings.Settings> LoadSettingsAsync()
     {
-        if (!File.Exists(_settingsFilePath))
+		if (!File.Exists(_settingsFilePath))
         {
             _logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
             return new Settings.Settings();
@@ -297,7 +310,7 @@ public class SettingsService : BackgroundService
             (byte)s.General.Spielgruppe,
             (byte)s.Game.CurrentModus,
             (byte)s.UI.CurrentRichtung,
-            (byte)s.UI.CurrentTheme,
+            0,//(byte)s.UI.CurrentTheme,
             (byte)s.Game.MaxPunkteProKehre,
             (byte)s.Game.MaxKehrenProSpiel,
             (byte)s.UI.MidColumnWidth,
@@ -335,7 +348,7 @@ public class SettingsService : BackgroundService
         }
 
         s.UI.CurrentRichtung = (UiSettings.Richtung)settings[3];
-        s.UI.CurrentTheme = (UiSettings.Theme)settings[4];
+        //s.UI.CurrentTheme = (UiSettings.Theme)settings[4];
         s.Game.MaxPunkteProKehre = settings[5];
         s.Game.MaxKehrenProSpiel = settings[6];
         s.UI.MidColumnWidth = settings[7];

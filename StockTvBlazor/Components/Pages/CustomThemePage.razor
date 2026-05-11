@@ -1,0 +1,338 @@
+﻿@page "/themes"
+@using StockTvBlazor.Settings
+@inject UiSettings UiSettings
+@inject IThemeRepository ThemeRepository
+@rendermode InteractiveServer
+
+<PageTitle>Themes verwalten</PageTitle>
+
+<div class="theme-page">
+    <div class="theme-sidebar">
+        <div class="sidebar-header">
+            <h2>Themes</h2>
+            <button class="btn-new" @onclick="CreateNewTheme">+ Neu</button>
+        </div>
+
+        <div class="theme-list">
+            @foreach (var theme in UiSettings.AllThemes)
+            {
+                var isActive = UiSettings.ActiveTheme.Id == theme.Id;
+                var previewColor = theme.GetColors(UiSettings.CurrentRichtung).BackgroundColor;
+
+                <div class="theme-item @(isActive ? "active" : "")"
+                     @onclick="() => ActivateTheme(theme.Id)">
+                    <span class="theme-dot" style="background:@previewColor; border:1px solid #888;"></span>
+                    <span class="theme-name">@theme.Name</span>
+
+                    @if (theme.IsBuiltIn)
+                    {
+                        <span class="badge">Standard</span>
+                    }
+                    else
+                    {
+                        <div class="theme-actions">
+                            <button class="btn-icon" title="Bearbeiten"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => EditTheme((CustomTheme)theme)">✏️</button>
+                            <button class="btn-icon btn-delete" title="Löschen"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => DeleteTheme(theme.Id)">🗑</button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="theme-editor">
+        @if (_editingTheme is not null)
+        {
+            <div class="editor-header">
+                <h3>@(_isNew ? "Neues Theme" : "Theme bearbeiten")</h3>
+            </div>
+
+            <div class="editor-body">
+                <div class="field">
+                    <label>Name</label>
+                    <input type="text" @bind="_editingTheme.Name" placeholder="Theme-Name" />
+                </div>
+
+                <!-- Single color grid (no tabs) -->
+                <div class="color-grid">
+                    <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
+                    <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
+                    <ColorField Label="Links-Farbe"     @bind-Value="_editingTheme.Colors.ForegroundLeft" />
+                    <ColorField Label="Rechts-Farbe"    @bind-Value="_editingTheme.Colors.ForegroundRight" />
+                    <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" />
+                    <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" />
+                </div>
+
+                <div class="preview-section">
+                    <h4>Vorschau</h4>
+                    <ThemePreview Colors="_editingTheme.Colors" />
+                </div>
+
+                <div class="editor-footer">
+                    <button class="btn-cancel" @onclick="CancelEdit">Abbrechen</button>
+                    <button class="btn-save" @onclick="SaveTheme">Speichern</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="editor-empty">
+                <p>Wähle ein Theme aus oder erstelle ein neues.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="toast-error">@_errorMessage</div>
+}
+
+@code {
+    private StockTvBlazor.Settings.CustomTheme? _editingTheme;
+    private bool _isNew;
+    private string _errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        UiSettings.CustomThemes = await ThemeRepository.LoadAllAsync();
+    }
+
+    private void ActivateTheme(Guid id) => UiSettings.ActivateTheme(id);
+
+    private void CreateNewTheme()
+    {
+        _isNew = true;
+        var defaultColors = ColorSettingsFactory.FromTheme(UiSettings.Theme.Hell, UiSettings.Richtung.Links);
+        _editingTheme = new CustomTheme
+        {
+            Name = "Mein Theme",
+            Colors = CopyColors(defaultColors)
+        };
+    }
+
+    private void EditTheme(CustomTheme theme)
+    {
+        _isNew = false;
+        _editingTheme = new CustomTheme
+        {
+            Id = theme.Id,
+            Name = theme.Name,
+            Colors = CopyColors(theme.Colors)
+        };
+    }
+
+    private async Task SaveTheme()
+    {
+        if (_editingTheme is null) return;
+
+        if (string.IsNullOrWhiteSpace(_editingTheme.Name))
+        {
+            _errorMessage = "Bitte einen Namen angeben.";
+            return;
+        }
+
+        await ThemeRepository.AddOrUpdateAsync(_editingTheme);
+
+        var idx = UiSettings.CustomThemes.FindIndex(t => t.Id == _editingTheme.Id);
+        if (idx >= 0)
+            UiSettings.CustomThemes[idx] = _editingTheme;
+        else
+            UiSettings.CustomThemes.Add(_editingTheme);
+
+        _editingTheme = null;
+        _isNew = false;
+        _errorMessage = "";
+    }
+
+    private void CancelEdit()
+    {
+        _editingTheme = null;
+        _errorMessage = "";
+    }
+
+    private async Task DeleteTheme(Guid id)
+    {
+        await ThemeRepository.DeleteAsync(id);
+        UiSettings.RemoveCustomTheme(id);
+
+        if (_editingTheme?.Id == id)
+            _editingTheme = null;
+    }
+
+    private static ColorSettings CopyColors(ColorSettings s) => new()
+    {
+        BackgroundColor = s.BackgroundColor,
+        ForegroundColor = s.ForegroundColor,
+        ForegroundLeft  = s.ForegroundLeft,
+        ForegroundRight = s.ForegroundRight,
+        ZielSummeGesamt = s.ZielSummeGesamt,
+        ZielSummeEinzel = s.ZielSummeEinzel
+    };
+}
+
+<style>
+    .theme-page {
+        display: flex;
+        height: 100%;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .theme-sidebar {
+        width: 260px;
+        min-width: 200px;
+        border-right: 1px solid #ddd;
+        display: flex;
+        flex-direction: column;
+        background: #f9f9f9;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .sidebar-header h2 { margin: 0; font-size: 1.1rem; }
+
+    .btn-new {
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.3rem 0.7rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    .btn-new:hover { background: #0052a3; }
+
+    .theme-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
+
+    .theme-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: background 0.15s;
+    }
+
+    .theme-item:hover { background: #efefef; }
+
+    .theme-item.active {
+        border-left-color: #0066cc;
+        background: #e6f0ff;
+        font-weight: 600;
+    }
+
+    .theme-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+    .theme-name { flex: 1; }
+
+    .badge {
+        font-size: 0.7rem;
+        background: #ddd;
+        border-radius: 3px;
+        padding: 1px 5px;
+        color: #555;
+    }
+
+    .theme-actions { display: flex; gap: 0.2rem; }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    .btn-icon:hover { background: #ddd; }
+    .btn-delete:hover { background: #fdd; }
+
+    .theme-editor { flex: 1; padding: 1.5rem; overflow-y: auto; }
+
+    .editor-header h3 { margin: 0 0 1.2rem; font-size: 1.2rem; }
+
+    .editor-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #888;
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    .field label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        color: #444;
+    }
+
+    .field input[type="text"] {
+        width: 100%;
+        max-width: 320px;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .preview-section h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }
+
+    .editor-footer { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
+
+    .btn-save {
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem 1.2rem;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .btn-save:hover { background: #0052a3; }
+
+    .btn-cancel {
+        background: #eee;
+        color: #333;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem 1.2rem;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .btn-cancel:hover { background: #ddd; }
+
+    .toast-error {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        background: #c00;
+        color: white;
+        padding: 0.7rem 1.2rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        z-index: 9999;
+    }
+</style>
