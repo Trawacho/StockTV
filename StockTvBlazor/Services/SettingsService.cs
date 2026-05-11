@@ -129,10 +129,6 @@ public class SettingsService : BackgroundService
     {
         var s = CurrentSettings;
 
-        //s.UI.CurrentTheme = forward
-        //    ? s.UI.CurrentTheme.Next()
-        //    : s.UI.CurrentTheme.Previous();
-
 		var themes = s.UI.AllThemes;
 		var currentIndex = themes.ToList().FindIndex(t => t.Id == s.UI.ActiveThemeId);
 
