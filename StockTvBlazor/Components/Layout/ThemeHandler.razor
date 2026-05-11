@@ -1,6 +1,3 @@
-﻿@using StockTvBlazor.Settings
-@inject StockTvBlazor.Services.SettingsService _settingsService
-@implements IDisposable
 @rendermode InteractiveServer
 
 <style @key="_updateCounter">
@@ -13,34 +10,3 @@
         --fg-color-ziel-einzel: @_settings.UI.Colors.ZielSummeEinzel;
     }
 </style>
-
-@code {
-    private int _updateCounter;
-    private Settings _settings => _settingsService.CurrentSettings;
-
-    protected override void OnInitialized()
-        => _settingsService.OnSettingsChanged += HandleUpdate;
-
-    private async void HandleUpdate()
-    {
-        _updateCounter++;
-
-        var c = _settings.UI.Colors;
-
-        if (System.Diagnostics.Debugger.IsAttached)
-        {
-            Console.WriteLine($"-----------------------------------------");
-            Console.WriteLine($"bg-color: {c.BackgroundColor}");
-            Console.WriteLine($"fg-color: {c.ForegroundColor}");
-            Console.WriteLine($"fg-left: {c.ForegroundLeft}");
-            Console.WriteLine($"fg-right: {c.ForegroundRight}");
-            Console.WriteLine($"fg-color-ziel-gesamt: {c.ZielSummeGesamt}");
-            Console.WriteLine($"fg-color-ziel-einzel: {c.ZielSummeEinzel}");
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-        => _settingsService.OnSettingsChanged -= HandleUpdate;
-}

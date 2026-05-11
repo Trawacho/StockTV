@@ -1,26 +1,15 @@
-﻿@page "/ziel"
-@using StockTvBlazor.Services
+@page "/ziel"
 @rendermode InteractiveServer
-@inject SettingsService _settingsService
-@inject ZielService _zielService
-@inject NavigationManager _navigationManager
-@inject StockTvBlazor.Components.ViewModels.ZielViewModel ViewModel
-@inject IJSRuntime JS
-@implements IDisposable
-
 
 <div class="ziel-main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
-	@* Zeile 0 — Spielername (nur wenn vorhanden) *@
 	@if (ViewModel.IsSpielernameAvailable)
 	{
 		<div class="ziel-spielername" data-autofit data-autofit-min="8">@ViewModel.SpielerName</div>
 	}
 
-	@* Block — wird je nach Spielername 1x oder 4x wiederholt (eine Reihe pro Disziplin-Gruppe) *@
 	<div class="ziel-block">
 
-		@* Zeile 1 — Versuche (70%) | Wert aus VM (30%) *@
 		<div class="ziel-row ziel-row-top">
 			<div class="ziel-cell ziel-versuche" data-autofit data-autofit-min="10">
 				@ViewModel.AnzahlVersuche
@@ -30,7 +19,6 @@
 			</div>
 		</div>
 
-		@* Zeile 2 — drei Spalten (35/35/30) mit verschiedenen Farben *@
 		<div class="ziel-row ziel-row-mid">
 
 			@if (ViewModel.InvalidInput)
@@ -43,7 +31,7 @@
 			<div class="ziel-cell ziel-col-a" data-autofit data-autofit-min="10">
 				@ViewModel.LastValue
 			</div>
-			
+
 			<div class="ziel-cell ziel-col-b input-value" data-autofit data-autofit-min="10">
 				@ViewModel.InputValue
 			</div>
@@ -52,7 +40,6 @@
 			</div>
 		</div>
 
-		@* Zeile 3 — eine Spalte, volle Breite *@
 		<div class="ziel-row ziel-row-bottom">
 			<div class="ziel-cell ziel-summe" data-autofit data-autofit-min="8">
 				@ViewModel.SummeDerVersuche
@@ -61,60 +48,3 @@
 
 	</div>
 </div>
-
-@code {
-	private ElementReference inputRef;
-	private StockTvBlazor.Settings.Settings _settings => _settingsService.CurrentSettings;
-	private bool _disposed = false;
-
-	protected override void OnInitialized()
-	{
-		ViewModel.OnViewModelChanged += HandleUpdate;
-		_settingsService.OnNavigationRequested += HandleNavigationRequested;
-		_zielService.OnNavigationRequested += HandleNavigationRequested;
-		_zielService.OnGlobalRefresh += HandleUpdate;
-
-	}
-	public void Dispose()
-	{
-		if (_disposed) return;
-		_disposed = true;
-		ViewModel.OnViewModelChanged -= HandleUpdate;
-		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
-		_zielService.OnNavigationRequested -= HandleNavigationRequested;
-		_zielService.OnGlobalRefresh -= HandleUpdate;
-
-		ViewModel.Dispose();
-	}
-
-	private void HandleNavigationRequested(string url)
-	{
-		if (_disposed) return;
-
-		InvokeAsync(() => _navigationManager.NavigateTo(url));
-	}
-
-	private void HandleUpdate()
-	{
-		if (_disposed) return;
-
-		InvokeAsync(() =>
-			{
-				StateHasChanged();
-			});
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".ziel-main-grid");
-
-		if (firstRender)
-			await inputRef.FocusAsync();
-	}
-
-	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
-	{
-		await _zielService.ProcessKeyAsync(e.Key);
-	}
-
-}

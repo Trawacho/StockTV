@@ -1,16 +1,5 @@
 @page "/training"
-@using System.Diagnostics
-@using StockTvBlazor.Models
-@using StockTvBlazor.Networking
-@using StockTvBlazor.Services
 @rendermode InteractiveServer
-@inject SettingsService _settingsService
-@inject NavigationManager _navigationManager
-@inject NetMqPublisherService _publisherService
-@inject MatchService _matchService
-@inject StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel
-@inject IJSRuntime JS
-@implements IDisposable
 
 <div class="training-main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
@@ -29,58 +18,3 @@
 	</div>
 
 </div>
-
-@code {
-	private ElementReference inputRef;
-	private StockTvBlazor.Settings.Settings _settings => _settingsService.CurrentSettings;
-	private bool _disposed = false;
-
-	protected override void OnInitialized()
-	{
-		ViewModel.OnViewModelChanged += HandleUpdate;
-		_settingsService.OnNavigationRequested += HandleNavigationRequested;
-		_matchService.OnNavigationRequested += HandleNavigationRequested;
-		_matchService.OnGlobalRefresh += HandleUpdate;
-	}
-
-	public void Dispose()
-	{
-		_disposed = true;
-		ViewModel.OnViewModelChanged -= HandleUpdate;
-		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
-		_matchService.OnNavigationRequested -= HandleNavigationRequested;
-		_matchService.OnGlobalRefresh -= HandleUpdate;
-
-		ViewModel.Dispose();
-	}
-
-	private void HandleNavigationRequested(string url)
-	{
-		if (_disposed) return;
-
-		InvokeAsync(() => _navigationManager.NavigateTo(url));
-	}
-
-	private async void HandleUpdate()
-	{
-		if (_disposed) return;
-
-		await InvokeAsync(() =>
-			{
-				StateHasChanged();
-			});
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".training-main-grid");
-
-		if (firstRender)
-			await inputRef.FocusAsync();
-	}
-
-	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
-	{
-		await _matchService.ProcessKeyAsync(e.Key);
-	}
-}

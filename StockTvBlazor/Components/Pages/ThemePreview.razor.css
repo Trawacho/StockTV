@@ -1,0 +1,42 @@
+.tp-grid {
+    display: grid;
+    grid-template-rows: 15% 65% 20%;
+    width: 100%;
+    height: 200px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.tp-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 4px;
+}
+
+.tp-mid {
+    display: grid;
+    grid-template-columns: 45% 10% 45%;
+    height: 100%;
+}
+
+.tp-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    height: 100%;
+}
+
+.tp-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: clamp(0.9rem, 3vw, 2rem);
+}
+
+.tp-mid .tp-cell {
+    font-size: clamp(1.5rem, 5vw, 4rem);
+}

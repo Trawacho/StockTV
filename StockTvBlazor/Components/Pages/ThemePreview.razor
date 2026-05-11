@@ -1,30 +1,21 @@
-﻿@using StockTvBlazor.Settings
-@* Vorschau-Box für ein ColorSettings-Objekt *@
+@using StockTvBlazor.Settings
 
-<div class="preview-box"
-     style="background:@Colors.BackgroundColor; color:@Colors.ForegroundColor;">
-    <span style="color:@Colors.ForegroundLeft;">▲ 123,45</span>
-    <span style="color:@Colors.ForegroundColor; margin:0 1rem;">AAPL</span>
-    <span style="color:@Colors.ForegroundRight;">▼ 98,76</span>
-    <br />
-    <span style="color:@Colors.ZielSummeGesamt; font-size:0.85em;">Ziel Ges: 5.000 €</span>
-    &nbsp;
-    <span style="color:@Colors.ZielSummeEinzel; font-size:0.85em;">Ziel Einz: 500 €</span>
+<div class="tp-grid" style="background:@Colors.BackgroundColor;">
+
+    <div class="tp-header" style="color:@Colors.ForegroundColor;">
+        Training
+    </div>
+
+    <div class="tp-mid">
+        <div class="tp-cell" style="color:@Colors.ForegroundLeft;">47</div>
+        <div class="tp-cell" style="color:@Colors.ForegroundColor;">:</div>
+        <div class="tp-cell" style="color:@Colors.ForegroundRight;">38</div>
+    </div>
+
+    <div class="tp-bottom">
+        <div class="tp-cell" style="color:@Colors.ForegroundLeft;">12</div>
+        <div class="tp-cell" style="color:@Colors.ForegroundColor;">5</div>
+        <div class="tp-cell" style="color:@Colors.ForegroundRight;">8</div>
+    </div>
+
 </div>
-
-@code {
-    [Parameter, EditorRequired]
-    public ColorSettings Colors { get; set; } = new();
-}
-
-<style>
-    .preview-box {
-        padding: 1rem 1.5rem;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 1.1rem;
-        font-family: monospace;
-        max-width: 480px;
-        line-height: 2;
-    }
-</style>

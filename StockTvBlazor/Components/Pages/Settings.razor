@@ -1,13 +1,5 @@
-﻿@page "/settings"
-@using StockTvBlazor.Models
-@using System.Diagnostics
-@using Microsoft.AspNetCore.Components.Web
+@page "/settings"
 @rendermode InteractiveServer
-
-@inject StockTvBlazor.Services.SettingsService _settingsService
-@inject NavigationManager _navigationManager
-@inject StockTvBlazor.Components.ViewModels.SettingsViewModel ViewModel
-@implements IDisposable
 
 <div class="settings-main-grid"
      @onkeydown="HandleGlobalKeyDown"
@@ -68,48 +60,3 @@
 
     </div>
 </div>
-
-@code {
-    private ElementReference inputRef;
-    private bool _disposed;
-
-    protected override void OnInitialized()
-    {
-        _settingsService.OnSettingsChanged += HandleChanged;
-        _settingsService.OnNavigationRequested += HandleNavigationRequested;
-    }
-
-    private void HandleChanged()
-    {
-        if (_disposed) return;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleNavigationRequested(string url)
-    {
-        if (_disposed) return;
-        InvokeAsync(() => _navigationManager.NavigateTo(url));
-    }
-
-    public void Dispose()
-    {
-        _disposed = true;
-
-        _settingsService.OnSettingsChanged -= HandleChanged;
-        _settingsService.OnNavigationRequested -= HandleNavigationRequested;
-
-        ViewModel.Dispose();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            await inputRef.FocusAsync();
-    }
-
-    public async Task HandleGlobalKeyDown(KeyboardEventArgs e)
-    {
-        await _settingsService.ProcessKeyAsync(e.Key);
-        StateHasChanged();
-    }
-}
