@@ -86,7 +86,6 @@ public partial class CustomThemePage : IDisposable
 		SettingsService.AddOrUpdateCustomTheme(_editingTheme);
 		SettingsService.ActivateTheme(savedId);
 
-		_editingTheme = null;
 		_isNew = false;
 		_errorMessage = "";
 	}
