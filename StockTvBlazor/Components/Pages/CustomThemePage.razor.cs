@@ -4,7 +4,7 @@ using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.Pages;
 
-public partial class CustomThemePage
+public partial class CustomThemePage : IDisposable
 {
 	[Inject] private SettingsService SettingsService { get; set; } = default!;
 
@@ -13,6 +13,24 @@ public partial class CustomThemePage
 	private string _errorMessage = "";
 	private ColorSettings? _previewColors;
 	private string _previewName = "";
+	private bool _disposed;
+
+	protected override void OnInitialized()
+	{
+		SettingsService.OnSettingsChanged += HandleSettingsChanged;
+	}
+
+	public void Dispose()
+	{
+		_disposed = true;
+		SettingsService.OnSettingsChanged -= HandleSettingsChanged;
+	}
+
+	private void HandleSettingsChanged()
+	{
+		if (_disposed) return;
+		InvokeAsync(StateHasChanged);
+	}
 
 	private void SelectTheme(ITheme theme)
 	{
@@ -64,7 +82,10 @@ public partial class CustomThemePage
 			return;
 		}
 
+		var savedId = _editingTheme.Id;
 		SettingsService.AddOrUpdateCustomTheme(_editingTheme);
+		SettingsService.ActivateTheme(savedId);
+
 		_editingTheme = null;
 		_isNew = false;
 		_errorMessage = "";
