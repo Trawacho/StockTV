@@ -33,7 +33,7 @@
 .scoreboard-center {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 10% 80% 10%;
+    grid-template-rows: 15% 65% 20%;
     height: 100%;
     width: 100%;
 }
