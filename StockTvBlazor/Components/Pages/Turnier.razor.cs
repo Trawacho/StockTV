@@ -14,12 +14,16 @@ public partial class Turnier : IDisposable
 	[Inject] private TurnierViewModel ViewModel { get; set; } = default!;
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 
+	[SupplyParameterFromQuery(Name = "demo")]
+	private bool IsDemo { get; set; }
+
 	private ElementReference inputRef;
 	private bool _disposed = false;
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 
 	protected override void OnInitialized()
 	{
+		if (IsDemo) ViewModel.EnableDemoMode();
 		ViewModel.OnViewModelChanged += HandleUpdate;
 		_matchService.OnGlobalRefresh += HandleUpdate;
 		_matchService.OnNavigationRequested += HandleNavigationRequested;

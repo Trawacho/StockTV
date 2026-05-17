@@ -14,11 +14,15 @@ public partial class Ziel : IDisposable
 	[Inject] private ZielViewModel ViewModel { get; set; } = default!;
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 
+	[SupplyParameterFromQuery(Name = "demo")]
+	private bool IsDemo { get; set; }
+
 	private ElementReference inputRef;
 	private bool _disposed = false;
 
 	protected override void OnInitialized()
 	{
+		if (IsDemo) ViewModel.EnableDemoMode();
 		ViewModel.OnViewModelChanged += HandleUpdate;
 		_settingsService.OnNavigationRequested += HandleNavigationRequested;
 		_zielService.OnNavigationRequested += HandleNavigationRequested;

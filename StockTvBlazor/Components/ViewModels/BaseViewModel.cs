@@ -1,5 +1,4 @@
 ﻿using StockTvBlazor.Models;
-using StockTvBlazor.Networking;
 using StockTvBlazor.Services;
 using StockTvBlazor.Settings;
 
@@ -22,6 +21,9 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 	private bool _disposed;
+	protected bool _isDemoMode;
+
+	public void EnableDemoMode() => _isDemoMode = true;
 
 	public void Dispose()
 	{
@@ -57,13 +59,13 @@ public abstract class BaseViewModel : IDisposable
 
 	#region Points
 
-	public string InputValue => _matchService.Inputvalue < 0 ? "" : _matchService.Inputvalue.ToString();
+	public string InputValue => _isDemoMode ? DemoData.InputValue : (_matchService.Inputvalue < 0 ? "" : _matchService.Inputvalue.ToString());
 
-	public int LeftPointsSum => CurrentMatch.CurrentGame.LeftPointsSum;
-	public int RightPointsSum => CurrentMatch.CurrentGame.RightPointsSum;
+	public int LeftPointsSum => _isDemoMode ? DemoData.LeftPointsSum : CurrentMatch.CurrentGame.LeftPointsSum;
+	public int RightPointsSum => _isDemoMode ? DemoData.RightPointsSum : CurrentMatch.CurrentGame.RightPointsSum;
 
-	public string LeftPoints => CurrentMatch.CurrentGame.LeftPoints;
-	public string RightPoints => CurrentMatch.CurrentGame.RightPoints;
+	public string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
+	public string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
 
 	#endregion
 
@@ -83,12 +85,14 @@ public abstract class BaseViewModel : IDisposable
                                           {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
 
-	public bool TeamNamesAvailable => !string.IsNullOrEmpty(LeftTeamName);
+	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
 
 	public string LeftTeamName
 	{
 		get
 		{
+			if (_isDemoMode) return DemoData.LeftTeamName;
+
 			var s = _settingsService.CurrentSettings;
 
 			return CurrentMatch.Begegnungen
@@ -102,6 +106,8 @@ public abstract class BaseViewModel : IDisposable
 	{
 		get
 		{
+			if (_isDemoMode) return DemoData.RightTeamName;
+
 			var s = _settingsService.CurrentSettings;
 
 			return CurrentMatch.Begegnungen
