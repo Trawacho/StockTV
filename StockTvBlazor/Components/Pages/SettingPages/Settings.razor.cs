@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using StockTvBlazor.Components.ViewModels;
 using StockTvBlazor.Services;
 
-namespace StockTvBlazor.Components.Pages;
+namespace StockTvBlazor.Components.Pages.SettingPages;
 
 public partial class Settings : IDisposable
 {

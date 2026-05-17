@@ -1,21 +1,47 @@
-# StockTV2 — CLAUDE.md
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Projektübersicht
 
-**StockTV2** ist eine Blazor Server-Applikation, die als **Punkteanzeige und Eingabeterminal** für den Stocksport dient. Pro Spielbahn läuft eine Instanz der App. Die Anzeige wird auf einem TV dargestellt, die Eingabe erfolgt primär über ein angeschlossenes Numpad oder alternativ über die `/input`-Seite auf einem Tablet.
+**StockTV2** ist eine Blazor Server-Applikation als **Punkteanzeige und Eingabeterminal** für den Stocksport. Pro Spielbahn läuft eine Instanz der App. Die Anzeige wird auf einem TV dargestellt, die Eingabe primär über Numpad oder alternativ über `/input` auf einem Tablet.
 
-Ein zentrales Verwaltungsprogramm (externes Tool) verbindet sich über NetMQ, setzt Teamdaten, und empfängt Ergebnisse.
+Ein zentrales Verwaltungsprogramm verbindet sich über NetMQ, setzt Teamdaten und empfängt Ergebnisse.
+
+---
+
+## Build & Entwicklung
+
+```powershell
+# Lokaler .NET-Build (Fehlerprüfung)
+dotnet build StockTvBlazor/StockTvBlazor.csproj
+
+# App lokal starten
+dotnet run --project StockTvBlazor/StockTvBlazor.csproj
+
+# Tests
+dotnet test BlazorAppTests/BlazorAppTests.csproj
+```
+
+```bat
+# Docker-Image bauen (linux/amd64)
+build\buildproject.bat
+```
+
+```powershell
+# Remote-Deployment auf Server 'csl' (4 Container: stocktvBahn1–4)
+build\remotebuild_std.ps1
+```
 
 ---
 
 ## Tech-Stack
 
 - **Framework**: ASP.NET Core 10, Blazor Server (Interactive Server Components)
-- **Laufzeit**: .NET 10
 - **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS)
-- **UI**: Bootstrap, Auto-Fit-Text via JS (`stockTvAutoFit.observe`)
-- **Deployment**: Docker (multi-stage), docker-compose
-- **Ziel-Plattform**: Linux/amd64
+- **UI**: Bootstrap, responsive Text via `wwwroot/js/autofitText.js` (`stockTvAutoFit.observe`)
+- **Deployment**: Docker (multi-stage), Base Image `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`, Ziel-Plattform Linux/amd64
+- **Volumes**: `./_config:/app/_config`, `./_logs:/app/_logs`
 
 ---
 
@@ -23,32 +49,34 @@ Ein zentrales Verwaltungsprogramm (externes Tool) verbindet sich über NetMQ, se
 
 ```
 StockTV2/
-├── StockTvBlazor/          # Haupt-App (Blazor Server)
+├── StockTvBlazor/
 │   ├── Components/
-│   │   ├── Pages/          # Razor-Pages (Training, Turnier, BestOf, Ziel, Input, Settings)
-│   │   ├── Controls/       # Wiederverwendbare Komponenten (PunkteEingabe, PunkteAnzeige)
-│   │   ├── ViewModels/     # ViewModels pro Modus (erben von BaseViewModel)
-│   │   └── Layout/
-│   ├── Models/             # Game, Match, Turn, Begegnung, ZielBewerb, Debounce
-│   ├── Networking/         # NetMqPublisherService, NetMqResponseService, MdnsDiscoveryService
-│   ├── Services/           # MatchService, ZielService, SettingsService, FileLogger
-│   └── Settings/           # Settings, GameSettings, UiSettings, GeneralSettings, NetworkSettings, Themes
-├── BlazorAppTests/         # Test-Projekt (wird für automatisierte Tests ausgebaut)
-└── build/                  # Dockerfile, docker-compose.yml, Build-Skripte
+│   │   ├── Pages/
+│   │   │   ├── SettingPages/   # Settings, CustomThemePage, ThemePreview, ColorField
+│   │   │   ├── HomeCards/      # CardDisplay1–4 (rotieren auf der Home-Seite)
+│   │   │   └── ...             # Training, Turnier, BestOf, Ziel, Input, Home
+│   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv
+│   │   ├── ViewModels/         # ViewModels pro Modus (erben von BaseViewModel)
+│   │   └── Layout/             # MainLayout, ThemeHandler
+│   ├── Models/                 # Game, Match, Turn, Begegnung, ZielBewerb, Debounce
+│   ├── Networking/             # NetMqPublisherService, NetMqResponseService, MdnsDiscoveryService
+│   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
+│   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
+│   └── wwwroot/js/autofitText.js
+├── BlazorAppTests/
+└── build/                      # Dockerfile, docker-compose.yml, Build-Skripte
 ```
-
-**Ignorieren:** `ScoreBoard.razor` ist ein früher Prototyp und wird entfernt.
 
 ---
 
 ## Spielmodi (`GameSettings.Modus`)
 
-| Modus        | Wert | MaxKehren | MaxPunkte | Beschreibung |
-|-------------|------|-----------|-----------|--------------|
-| Training    | 0    | 30        | 15        | Freies Spiel, keine Spielzählung |
-| BestOf      | 1    | 6         | 10        | Mehrere Spiele pro Match |
-| Turnier     | 2    | 6         | 10        | Wie BestOf, mit Teamnamen (extern gesetzt) |
-| Ziel        | 100  | konfigurierbar | konfigurierbar | Zielbewerb mit 4 fixen Disziplinen |
+| Modus    | Wert | MaxKehren | MaxPunkte | Beschreibung |
+|---------|------|-----------|-----------|--------------|
+| Training | 0   | 30        | 15        | Freies Spiel, keine Spielzählung |
+| BestOf   | 1   | 6         | 10        | Mehrere Spiele pro Match |
+| Turnier  | 2   | 6         | 10        | Wie BestOf, mit Teamnamen (extern gesetzt) |
+| Ziel     | 100 | konfig.   | konfig.   | Zielbewerb mit 4 fixen Disziplinen |
 
 ### Ziel-Modus (4 fixe Disziplinen, Reihenfolge fix)
 1. **MassenVorne** — gültige Werte: 0, 2, 4, 6, 8, 10
@@ -56,167 +84,139 @@ StockTV2/
 3. **MassenSeite** — gültige Werte: 0, 2, 4, 6, 8, 10
 4. **Kombinieren** — gültige Werte: 0, 2, 4, 6, 8, 10
 
-Pro Disziplin werden `MaxKehrenProSpiel` Versuche eingegeben. Ungültige Werte werden abgelehnt (1,5 Sekunden Fehlermeldung).
-
----
-
-## Datenspeicherung
-
-- **Config-Datei**: `_config/stocktv.config.json` (relativ zum App-Verzeichnis)
-- **Logs**: `_logs/` (relativ zum App-Verzeichnis)
-- Speicherung läuft über einen asynchronen `Channel`-Queue im `SettingsService` (kein direktes Schreiben)
-- Im **Training-Modus** werden Kehren **nicht** persistiert
-
----
-
-## Netzwerk & Ports
-
-| Port | Protokoll       | Zweck |
-|------|----------------|-------|
-| 8080 | HTTP           | Blazor Web UI |
-| 4747 | NetMQ REP/REQ  | Kommandos vom zentralen System |
-| 4748 | NetMQ PUB/SUB  | Ergebnis-Broadcasts (bei jeder Eingabe + alle 5 Sek. Alive) |
-
-### NetMQ-Topics (Port 4747, Request/Response)
-- `Hello` → `Welcome`
-- `GetResult` → Settings-Bytes + JSON-Spielstand
-- `ResetResult` → Spiel zurücksetzen
-- `GetSettings` → Settings-Byte-Array
-- `SetSettings` → Settings übernehmen (triggert Navigation)
-- `SetTeamNames` → Teamdaten setzen (`"Spielnr:TeamA:TeamB;..."`)
-- `SetTeilnehmer` → Spielername für Ziel-Modus
-
-### mDNS
-- Service-Typ: `_stockTV._tcp.`
-- TXT-Records: `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`
-- Env-Variable `PUBLIC_HOST` überschreibt die automatisch ermittelte IP/Hostname im Alive-Paket
-
----
-
-## Eingabe-Logik
-
-### Tasten-Mapping (Numpad & Keyboard)
-| Taste(n)                              | Aktion |
-|---------------------------------------|--------|
-| `0`–`9`, numpad                       | Zahl eingeben |
-| `*`                                   | Punkte Grün zuweisen (Enter) |
-| `/`, `Backspace`                      | Punkte Rot zuweisen (Enter) |
-| `+`                                   | Kehre bestätigen / Reset |
-| `-`                                   | Letzte Kehre löschen |
-| `Enter` (5×, wenn Eingabe = 0)        | Einstellungsseite öffnen |
-
-### Richtung (`UiSettings.Richtung`)
-- `Links`: Grün-Taste → rechte Seite (PointsRight), Rot-Taste → linke Seite (PointsLeft)
-- `Rechts`: Grün-Taste → linke Seite (PointsLeft), Rot-Taste → rechte Seite (PointsRight)
-
-### Debounce
-Schnelles Mehrfach-Drücken wird via `Debounce`-Klasse gefiltert (Ausnahme: `-` bei Eingabe = 0 für Mehrfachlöschung).
-
-### BlockLocalChanges
-Wenn `GeneralSettings.BlockLocalChanges = true`, werden lokale Tastatureingaben ignoriert. Steuerung nur noch über Netzwerk möglich.
+Pro Disziplin werden `MaxKehrenProSpiel` Versuche eingegeben. Ungültige Werte werden 1,5 Sekunden angezeigt.
 
 ---
 
 ## UI-Seiten & Navigation
 
-| URL         | Beschreibung |
-|-------------|-------------|
-| `/`         | Home (Begrüßungsseite, leitet nach ~10 Sek. zum aktiven Modus) |
+| URL       | Beschreibung |
+|-----------|-------------|
+| `/`       | Home (Countdown ~10 Sek., dann → aktiver Modus) |
 | `/training` | Anzeige Training-Modus |
 | `/turnier`  | Anzeige Turnier-Modus |
 | `/bestof`   | Anzeige BestOf-Modus |
 | `/ziel`     | Anzeige Ziel-Modus |
-| `/input`    | Keypad-Seite (Tablet-Eingabe, zeigt Anzeige-Seite als iframe) |
+| `/input`    | Keypad-Seite (Tablet), zeigt aktiven Modus als iframe |
 | `/settings` | Einstellungsseite (nur über Geheimtaste erreichbar) |
+| `/themes`   | Theme-Verwaltung (Custom Themes erstellen/bearbeiten) |
 
-**Home-Seite im Debug-Modus**: Öffnet mehrere Tabs (Training, BestOf, LayoutTest) gleichzeitig für schnellen Überblick verschiedener Ansichten.
+**Home im Debug-Modus**: Öffnet automatisch mehrere Tabs (LayoutTest, training, turnier, bestof, input, settings, themes).
 
 ---
 
 ## Services & Architektur
 
-### Singletons (app-weite Zustände)
-- `SettingsService` — Einstellungen laden/speichern, Settings-Seite, Navigation
-- `MatchService` — aktuelles Spiel (Match, Game, Turn), Eingabe-Verarbeitung
+### Singletons
+- `SettingsService` — Einstellungen laden/speichern (via asynchronen `Channel`-Queue, nie direkt schreiben), Navigation
+- `MatchService` — aktuelles Spiel, Eingabe-Verarbeitung
 - `ZielService` — Zielbewerb-Logik
-- `NetMqPublisherService` — PUB-Socket (Port 4748)
-- `NetMqResponseService` — REP-Socket (Port 4747)
+- `NetMqPublisherService` — PUB-Socket Port 4748
+- `NetMqResponseService` — REP-Socket Port 4747
 
 ### Transient ViewModels
-- `TurnierViewModel`, `TrainingViewModel`, `BestOfViewModel`, `ZielViewModel`
-- Erben von `BaseViewModel`, abonnieren `OnMatchChanged` und `OnSettingsChanged`
-- Werden pro Blazor-Komponenteninstanz erzeugt und müssen in `Dispose()` abgemeldet werden
+`TurnierViewModel`, `TrainingViewModel`, `BestOfViewModel`, `ZielViewModel` erben von `BaseViewModel`, abonnieren Events und müssen in `Dispose()` abgemeldet werden.
 
 ### Events-Muster
-Services kommunizieren über `Action`-Events:
-- `OnSettingsChanged` — Settings geändert
-- `OnMatchChanged` / `OnZielBewerbChanged` — Spielstand geändert
-- `OnGlobalRefresh` — UI soll neu rendern
-- `OnNavigationRequested` — Navigation zu einer URL
-
----
-
-## Themes & Farben
-
-- Built-in Themes: `Hell` (ID `00000000-...-0001`), `Dunkel` (ID `00000000-...-0002`)
-- Custom Themes möglich (per `JsonThemeRepository` persistiert)
-- Aktives Theme wird per GUID in `UiSettings.ActiveThemeId` gespeichert
-- `ColorSettings` werden aus dem aktiven Theme + aktueller Richtung berechnet
-
----
-
-## Build & Deployment
-
-### Lokaler Dev-Build
-```bat
-build\buildproject.bat
 ```
-Baut ein `linux/amd64`-Image lokal mit docker buildx.
-
-### Remote-Deployment (PowerShell)
-```powershell
-build\remotebuild_std.ps1
+OnSettingsChanged       — Settings geändert
+OnMatchChanged          — Spielstand geändert
+OnZielBewerbChanged     — Zielbewerb geändert
+OnGlobalRefresh         — UI neu rendern
+OnNavigationRequested   — Navigation zu URL
 ```
-Baut Image → exportiert als `.tar` → SCP zu `daniel@csl:~/composer/` → lädt und startet per SSH → räumt auf.
 
-**Remoter Server:** `csl` (Linux), deployt 4 Container: `stocktvBahn1`–`stocktvBahn4`.
-
-### Docker-Konfiguration
-- Base Image: `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`
-- Ports freigegeben: 8080, 4747, 4748
-- Volumes: `./_config:/app/_config`, `./_logs:/app/_logs`
-- `PUBLIC_HOST` Env-Variable für korrekte IP in Alive-Nachrichten setzen
+### NetMQ-Callbacks
+Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChannel` delegieren, nicht direkt aufrufen.
 
 ---
 
-## Wichtige Konventionen
+## Netzwerk & Ports
 
-- **Keine Kommentare** für offensichtlichen Code — nur bei nicht-offensichtlichem Verhalten
-- Settings-Änderungen immer über `SettingsService` Methoden, nie direkt auf `CurrentSettings` (außer lesend)
-- NetMQ-Callbacks laufen auf dem Poller-Thread → State-Änderungen immer über `_actionChannel` delegieren, nicht direkt aufrufen
-- Blazor-Komponenten: Event-Handler in `Dispose()` immer abmelden
-- `SaveTurnsAsync` / `RequestSaveSettings` immer nach State-Änderungen aufrufen, die persistiert werden sollen
+| Port | Protokoll      | Zweck |
+|------|---------------|-------|
+| 8080 | HTTP          | Blazor Web UI |
+| 4747 | NetMQ REP/REQ | Kommandos vom zentralen System |
+| 4748 | NetMQ PUB/SUB | Ergebnis-Broadcasts (bei jeder Eingabe + alle 5 Sek. Alive) |
 
-### Blazor Komponenten-Dateistruktur (Standard)
+**NetMQ-Topics (4747):** `Hello`, `GetResult`, `ResetResult`, `GetSettings`, `SetSettings`, `SetTeamNames` (`"Spielnr:TeamA:TeamB;..."`), `SetTeilnehmer`
 
-Jede Blazor-Komponente wird auf **drei Dateien** aufgeteilt:
+**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`. `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
+
+---
+
+## Eingabe-Logik
+
+| Taste(n)                        | Aktion |
+|---------------------------------|--------|
+| `0`–`9`, numpad                 | Zahl eingeben |
+| `*`                             | Punkte Grün zuweisen |
+| `/`, `Backspace`                | Punkte Rot zuweisen |
+| `+`                             | Kehre bestätigen / Reset |
+| `-`                             | Letzte Kehre löschen |
+| `Enter` (5× bei Eingabe = 0)    | Einstellungsseite öffnen |
+
+**Richtung:** `Links` → Grün = rechte Seite; `Rechts` → Grün = linke Seite.
+**Debounce:** Schnelles Mehrfach-Drücken wird gefiltert (Ausnahme: `-` bei Eingabe = 0).
+**BlockLocalChanges:** Wenn `true`, werden lokale Tastatureingaben ignoriert.
+
+---
+
+## Themes & CSS-Variablen
+
+`ThemeHandler` (in `Layout/`) injiziert ein `<style @key="_updateCounter">` mit CSS-Variablen in den DOM, die sich bei jedem `OnSettingsChanged` aktualisieren:
+
+```css
+--bg-color, --fg-color, --fg-left, --fg-right,
+--fg-color-ziel-gesamt, --fg-color-ziel-einzel
+```
+
+- Built-in Themes: `Hell` (ID `…0001`), `Dunkel` (ID `…0002`)
+- Custom Themes via `JsonThemeRepository` persistiert, aktives Theme per GUID in `UiSettings.ActiveThemeId`
+- `ColorSettings` = aktives Theme + aktuelle Richtung
+
+---
+
+## Responsives Text-Sizing (autofitText.js)
+
+`stockTvAutoFit.observe(containerSelector)` wird in `OnAfterRenderAsync` auf **jedes** Render aufgerufen (nicht nur `firstRender`). Das JS registriert `ResizeObserver` + `MutationObserver` per Element (WeakMap, kein Doppel-Register) und berechnet per Binary Search die maximale Schriftgröße via `scrollWidth`/`scrollHeight <= clientWidth`/`clientHeight`.
+
+HTML-Attribute zur Steuerung:
+- `data-autofit` — aktiviert AutoFit auf dem Element
+- `data-autofit-min="10"` — minimale Schriftgröße in px
+- `data-autofit-max="300"` — überschreibt die berechnete Obergrenze
+- `data-autofit-vertical="true"` — für `writing-mode: vertical-*` Elemente
+
+---
+
+## Datenspeicherung
+
+- **Config**: `_config/stocktv.config.json` (relativ zum App-Verzeichnis)
+- **Logs**: `_logs/`
+- Speicherung über `Channel`-Queue im `SettingsService` — nie direkt auf `CurrentSettings` schreiben
+- Im Training-Modus werden Kehren **nicht** persistiert
+- `SaveTurnsAsync` / `RequestSaveSettings` nach State-Änderungen aufrufen
+
+---
+
+## Blazor Komponenten-Dateistruktur
+
+Jede Komponente wird auf **drei Dateien** aufgeteilt:
 
 | Datei | Inhalt |
 |---|---|
-| `Komponente.razor` | Nur das HTML-Template (`@page`, `@using`, Markup) |
-| `Komponente.razor.cs` | C# Code-behind als `partial class` (`[Parameter]`, Event-Handler, Logik) |
-| `Komponente.razor.css` | Scoped CSS (Blazor-isoliert, flache Selektoren) |
+| `Komponente.razor` | HTML-Template (`@page`, `@using`, Markup) — kein `@code`, kein `<style>` |
+| `Komponente.razor.cs` | C# Code-behind als `partial class` |
+| `Komponente.razor.css` | Scoped CSS, flache Selektoren |
 
+Namespace entspricht dem Ordner-Pfad:
 ```csharp
-// Komponente.razor.cs
-namespace StockTvBlazor.Components.Pages; // oder .Controls / .Layout
-
-public partial class MeineKomponente
-{
-    [Parameter] public string Wert { get; set; } = "";
-}
+namespace StockTvBlazor.Components.Pages;            // Pages/
+namespace StockTvBlazor.Components.Pages.SettingPages; // Pages/SettingPages/
+namespace StockTvBlazor.Components.Controls;         // Controls/
+namespace StockTvBlazor.Components.Layout;           // Layout/
 ```
 
-- Kein `@code`-Block in `.razor`-Dateien
-- Kein `<style>`-Block in `.razor`-Dateien
-- CSS-Selektoren in `.razor.css` immer flach schreiben (keine Einrückung VS-Stil)
+**Ausnahme:** `Home.razor.cs` verwendet `HomeBase : ComponentBase` (Vererbung statt partial), weil die Home-Seite keinen `@rendermode` hat und eine eigene Basisklasse nutzt.
+
+Event-Handler in `Dispose()` immer abmelden.

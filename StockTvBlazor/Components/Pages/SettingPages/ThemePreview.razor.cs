@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
 
-namespace StockTvBlazor.Components.Pages;
+namespace StockTvBlazor.Components.Pages.SettingPages;
 
 public partial class ThemePreview : IDisposable
 {

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
 using StockTvBlazor.Settings;
 
-namespace StockTvBlazor.Components.Pages;
+namespace StockTvBlazor.Components.Pages.SettingPages;
 
 public partial class CustomThemePage : IDisposable
 {

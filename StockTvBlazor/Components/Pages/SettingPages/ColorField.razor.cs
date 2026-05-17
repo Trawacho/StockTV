@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using System.Text.RegularExpressions;
 
-namespace StockTvBlazor.Components.Pages;
+namespace StockTvBlazor.Components.Pages.SettingPages;
 
 public partial class ColorField
 {
