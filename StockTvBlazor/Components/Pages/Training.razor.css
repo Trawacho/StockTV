@@ -1,8 +1,5 @@
 .training-main-grid {
     background-color: var(--bg-color);
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 15% 65% 20%;
     position: fixed;
     inset: 0;
     height: 100vh;
