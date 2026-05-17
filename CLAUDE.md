@@ -18,9 +18,6 @@ dotnet build StockTvBlazor/StockTvBlazor.csproj
 
 # App lokal starten
 dotnet run --project StockTvBlazor/StockTvBlazor.csproj
-
-# Tests
-dotnet test BlazorAppTests/BlazorAppTests.csproj
 ```
 
 ```bat
@@ -63,7 +60,7 @@ StockTV2/
 │   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
 │   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
 │   └── wwwroot/js/autofitText.js
-├── BlazorAppTests/
+├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 └── build/                      # Dockerfile, docker-compose.yml, Build-Skripte
 ```
 
