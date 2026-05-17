@@ -76,7 +76,7 @@
 }
 
 .ziel-cell.ziel-gesamt {
-    color: var( --fg-color);
+    color: var(--fg-color);
     justify-content: flex-start;
 }
 
