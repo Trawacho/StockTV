@@ -67,6 +67,71 @@ Das zentrale Verwaltungsprogramm findet den Pi automatisch per mDNS – keine zu
 
 ---
 
+## Browser automatisch starten (Kiosk-Modus)
+
+Damit der Pi beim Start die Punkteanzeige automatisch im Vollbild öffnet, wird Chromium im Kiosk-Modus als Autostart eingerichtet.
+
+> Voraussetzung: **Raspberry Pi OS mit Desktop** (nicht Lite).  
+> Der StockTV-Dienst startet automatisch über systemd — der Browser wartet auf ihn.
+
+### 1. Automatische Anmeldung aktivieren
+
+```bash
+sudo raspi-config
+```
+→ *System Options* → *Boot / Auto Login* → **Desktop Autologin**
+
+### 2. Wrapper-Script erstellen
+
+Das Script wartet bis StockTV bereit ist, dann öffnet es Chromium:
+
+```bash
+mkdir -p ~/bin
+cat > ~/bin/stocktv-kiosk.sh << 'EOF'
+#!/bin/bash
+# Bildschirm nicht abschalten
+xset s off
+xset -dpms
+xset s noblank
+
+# Warten bis StockTV erreichbar ist
+until curl -s http://localhost:8080 > /dev/null 2>&1; do
+    sleep 1
+done
+
+# Chromium im Kiosk-Modus starten
+chromium-browser \
+    --kiosk \
+    --noerrdialogs \
+    --disable-infobars \
+    --disable-session-crashed-bubble \
+    http://localhost:8080
+EOF
+chmod +x ~/bin/stocktv-kiosk.sh
+```
+
+### 3. Autostart einrichten
+
+```bash
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/stocktv-kiosk.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=StockTV Kiosk
+Exec=/home/pi/bin/stocktv-kiosk.sh
+EOF
+```
+
+> Falls der Benutzername nicht `pi` ist, den Pfad `/home/pi/bin/...` entsprechend anpassen.
+
+Nach einem Neustart öffnet sich Chromium automatisch mit der Punkteanzeige:
+
+```bash
+sudo reboot
+```
+
+---
+
 ## Update auf neue Version
 
 Derselbe Befehl wie bei der Installation – das Script erkennt automatisch ob es ein Update ist:
