@@ -10,6 +10,7 @@ namespace BlazorAppTests.Components.Pages
     {
         [Inject] protected NavigationManager? NavManager { get; set; }
         [Inject] protected SettingsService? SettingsService { get; set; }
+        [Inject] protected MatchService MatchService { get; set; } = default!;
         [Inject] protected StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel { get; set; } = default!;
 
         protected bool isAdvertVisible = false;
@@ -35,7 +36,7 @@ namespace BlazorAppTests.Components.Pages
 
         protected async Task HandleGlobalKeyDown(KeyboardEventArgs e)
         {
-            await ViewModel.ProcessKeyAsync(e.Key);
+            await MatchService.ProcessKeyAsync(e.Key);
         }
     }
 }
