@@ -11,6 +11,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 	[Inject] protected SettingsService? SettingsService { get; set; }
 	[Inject] protected IJSRuntime JSRuntime { get; set; } = default!;
 	[Inject] protected MatchService? MatchService { get; set; }
+	[Inject] private ILogger<HomeBase> Logger { get; set; } = default!;
 
 	protected int countdown = 10;
 	protected int progress = 0;
@@ -71,7 +72,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"COUNTDOWN ERROR: {ex}");
+			Logger.LogError(ex, "Countdown error");
 		}
 	}
 
@@ -99,7 +100,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"CARD ROTATION ERROR: {ex}");
+			Logger.LogError(ex, "Card rotation error");
 		}
 	}
 
@@ -135,14 +136,14 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine($"JS ERROR: {ex}");
+						Logger.LogError(ex, "JS open window error for page '{Page}'", page);
 					}
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"NAVIGATION ERROR: {ex}");
+			Logger.LogError(ex, "Navigation error");
 		}
 	}
 
@@ -160,7 +161,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"DISPOSE ERROR: {ex}");
+			Logger.LogError(ex, "Dispose error");
 		}
 		finally
 		{

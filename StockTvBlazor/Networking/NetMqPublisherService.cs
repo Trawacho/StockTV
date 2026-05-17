@@ -125,7 +125,14 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		_disposed = true;
 
 		_logger.LogInformation("NetMqPublisherService Dispose gestartet");
-		try { _messageChannel.Writer.TryComplete(); } catch { }
+		try 
+		{ 
+			_messageChannel.Writer.TryComplete(); 
+		} 
+		catch (Exception ex) 
+		{
+			 _logger.LogWarning(ex, "Channel TryComplete failed during dispose"); 
+		}
 		_pubSocket.ReceiveReady -= OnReceiveReady;
 		_pubSocket.Close();
 		_pubSocket.Dispose();

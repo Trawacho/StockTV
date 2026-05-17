@@ -77,7 +77,14 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "NetMQ processing error");
-			try { e.Socket.SendFrame("ERROR"); } catch { }
+			try 
+			{
+				e.Socket.SendFrame("ERROR");
+			} 
+			catch (Exception sendEx) 
+			{ 
+				_logger.LogWarning(sendEx, "Failed to send ERROR frame to client"); 
+			}
 		}
 	}
 
@@ -85,6 +92,8 @@ public class NetMqResponseService : BackgroundService, IDisposable
 	{
 		var response = new NetMQMessage();
 		var topic = request[0].ConvertToString();
+
+		_logger.LogDebug("NetMQ command received: {Topic}", topic);
 
 		switch (topic)
 		{
@@ -102,6 +111,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 
 			case "ResetResult":
+				_logger.LogInformation("ResetResult requested");
 				_ = _actionChannel.Writer.TryWrite(() =>
 				{
 					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
@@ -119,6 +129,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 
 			case "SetSettings":
+				_logger.LogInformation("SetSettings requested");
 				_ = _actionChannel.Writer.TryWrite(() =>
 					_settingsService.SetSettings(request[1].ToByteArray()));
 
@@ -126,6 +137,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 
 			case "SetTeamNames":
+				_logger.LogInformation("SetTeamNames requested");
 				_ = _actionChannel.Writer.TryWrite(() =>
 					_matchService.SetTeamNames(request[1].ToByteArray()));
 
@@ -133,6 +145,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 
 			case "SetTeilnehmer":
+				_logger.LogInformation("SetTeilnehmer requested");
 				_ = _actionChannel.Writer.TryWrite(() =>
 					_zielService.SetTeilnehmer(request[1].ToByteArray()));
 
@@ -170,6 +183,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		}
 		catch (OperationCanceledException)
 		{
+			_logger.LogInformation("NetMQ action channel stopped by cancellation");
 		}
 
 		if (_poller.IsRunning)

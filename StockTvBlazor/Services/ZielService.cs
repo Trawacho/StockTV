@@ -3,11 +3,11 @@ using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Services;
 
-public class ZielService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService)
+public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService)
 {
 	private readonly SettingsService _settingsService = settingsService;
 
-	private readonly ILogger<MatchService> _logger = logger;
+	private readonly ILogger<ZielService> _logger = logger;
 
 	private readonly NetMqPublisherService _publisherService = publisherService;
 
