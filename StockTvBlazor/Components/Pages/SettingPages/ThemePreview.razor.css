@@ -16,7 +16,7 @@
 .tp-wrapper {
     position: relative;
     width: 65%;
-    height: 400px;
+    aspect-ratio: 16 / 9;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid #444;
