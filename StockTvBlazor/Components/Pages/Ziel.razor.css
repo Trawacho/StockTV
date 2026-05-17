@@ -5,14 +5,9 @@
    ============================================================ */
 
 .ziel-main-grid {
-    background-color: var(--bg-color);
     color: var(--fg-color);
     display: grid;
     grid-template-rows: 10% 90%; /* Spielername (auto) + Block (Rest) */
-    position: fixed;
-    inset: 0;
-    height: 100vh;
-    width: 100vw;
 }
 
     /* Wenn kein Spielername vorhanden: Block füllt alles */

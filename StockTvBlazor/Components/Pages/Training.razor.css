@@ -1,11 +1,3 @@
-.training-main-grid {
-    background-color: var(--bg-color);
-    position: fixed;
-    inset: 0;
-    height: 100vh;
-    width: 100vw;
-}
-
 .training-mid-grid {
     display: grid;
     height: 100%;
