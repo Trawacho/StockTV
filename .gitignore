@@ -367,3 +367,6 @@ stocktv.config.json
 
 # VS Code Ordner
 .vscode/
+
+# Claude Ordner
+.claude/
