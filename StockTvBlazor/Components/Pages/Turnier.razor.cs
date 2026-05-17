@@ -54,9 +54,15 @@ public partial class Turnier : IDisposable
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".page-fullscreen");
-		if (firstRender)
-			await inputRef.FocusAsync();
+		if (_disposed) return;
+		try
+		{
+			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".page-fullscreen");
+			if (firstRender && !IsDemo)
+				await inputRef.FocusAsync();
+		}
+		catch (JSDisconnectedException) { }
+		catch (ObjectDisposedException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
