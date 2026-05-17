@@ -4,46 +4,6 @@
     overflow: hidden;
 }
 
-/* Hell */
-.theme-light {
-    background-color: #ffffff;
-    color: #000000;
-}
-
-/* Dunkel */
-.theme-dark {
-    background-color: #000000;
-    color: #ffffff;
-}
-
-/* Basis-Grid für alle Seiten */
-.main-grid-base {
-    background-color: var(--bg-color);
-    display: grid;
-    position: fixed;
-    inset: 0;
-    height: 100vh;
-    width: 100vw;
-}
-
-/* Layout-Varianten */
-.main-grid.default {
-    grid-template-columns: 3vw 1fr 3vw;
-}
-
-.main-grid.training {
-    grid-template-rows: auto 1fr auto;
-}
-
-/* Gemeinsame Sub-Grids */
-:root .sub-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 5px;
-    align-items: center;
-    text-align: center;
-}
-
 .header-text {
     color: var(--fg-color, red); /* fallback */
     padding: 5px;
@@ -81,18 +41,3 @@
     color: var(--fg-color);
 }
 
-/* Gemeinsame untere Zeile */
-:root .row-3 {
-    align-self: end;
-    padding-bottom: 5px;
-}
-
-:root .sub-grid div {
-    padding: 5px;
-}
-/* Mittlere Spalte: Unterteilung in 3 Zeilen */
-.center-column {
-	display: grid;
-	grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
-	height: 100vh;
-}
