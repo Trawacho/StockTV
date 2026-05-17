@@ -16,21 +16,28 @@ public class ZielBewerb
 	}
 
 	public int MassenVorneSumme => _massenVorne.Sum();
+
 	public int SchiessenSumme => _schiessen.Sum();
+
 	public int MassenSeiteSumme => _massenSeite.Sum();
+
 	public int KombinierenSumme => _kombinieren.Sum();
 
 	public int GesamtSumme =>
 		MassenVorneSumme + SchiessenSumme + MassenSeiteSumme + KombinierenSumme;
 
 	private readonly List<int> _massenVorne = [];
+
 	private readonly List<int> _schiessen = [];
+
 	private readonly List<int> _massenSeite = [];
+
 	private readonly List<int> _kombinieren = [];
 
 	private string? _spielerName;
 
 	public int MaxKehrenProSpiel => _settingsService.CurrentSettings.Game.MaxKehrenProSpiel;
+
 	public int MaxVersucheGesamt => MaxKehrenProSpiel * 4;
 
 	public bool IsMassValue(int value)
@@ -147,6 +154,7 @@ public class ZielBewerb
 	private class SpielModus
 	{
 		public int Name { get; set; }
+		
 		public List<int> Versuche { get; set; } = [];
 	}
 }

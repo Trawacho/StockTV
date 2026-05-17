@@ -18,7 +18,9 @@ public partial class Turnier : IDisposable
 	private bool IsDemo { get; set; }
 
 	private ElementReference inputRef;
+
 	private bool _disposed = false;
+	
 	private bool TeamNamesAvailable => ViewModel.TeamNamesAvailable;
 
 	protected override void OnInitialized()

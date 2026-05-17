@@ -1,11 +1,9 @@
-﻿namespace StockTvBlazor.Services
-{
-	public record LogMessage(
-	  DateTime Timestamp,
-	  LogLevel Level,
-	  string Category,
-	  string Message,
-	  Exception? Exception
-  );
+﻿namespace StockTvBlazor.Services;
 
-}
+public record LogMessage(
+	DateTime Timestamp,
+	LogLevel Level,
+	string Category,
+	string Message,
+	Exception? Exception
+);

@@ -25,13 +25,17 @@ public class SettingsService : BackgroundService
 	private Settings.Settings _settings = null!;
 
 	private readonly string _settingsFileName = "stocktv.config.json";
+
 	private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
+
 	private readonly ILogger _logger;
+
 	private readonly FileLoggerProvider _fileLoggerProvider;
 
 	public bool SettingsPageActive = false;
 
 	public event Action? OnSettingsChanged;
+
 	public event Action<string>? OnNavigationRequested;
 
 	private string _settingsFilePath
@@ -58,8 +62,6 @@ public class SettingsService : BackgroundService
 		base.Dispose();
 	}
 
-	#region Init
-
 	public async Task InitializeAsync()
 	{
 		_settings = await LoadSettingsAsync();
@@ -85,8 +87,6 @@ public class SettingsService : BackgroundService
 	{
 		OnSettingsChanged?.Invoke();
 	}
-
-	#endregion
 
 	#region Change Methods
 

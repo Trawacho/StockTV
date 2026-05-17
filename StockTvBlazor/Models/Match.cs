@@ -12,6 +12,7 @@ public class Match
 	public event Action? OnMatchChanged;
 
 	private readonly SettingsService _settingsService;
+
 	private readonly ILogger<MatchService> _logger;
 
 	public Match(SettingsService settingsService, ILogger<MatchService> logger)
@@ -39,9 +40,11 @@ public class Match
 	#region Match Stats
 
 	public int LeftPointsOverAll => _games.Sum(g => g.LeftPointsSum);
+
 	public int RightPointsOverAll => _games.Sum(g => g.RightPointsSum);
 
 	public int MatchPointsLeft => _games.Sum(g => g.GamePointsLeft);
+
 	public int MatchPointsRight => _games.Sum(g => g.GamePointsRight);
 
 	#endregion
@@ -49,6 +52,7 @@ public class Match
 	#region Begegnungen
 
 	private readonly List<Begegnung> _begegnungen = [];
+
 	public IEnumerable<Begegnung> Begegnungen => _begegnungen.AsReadOnly();
 
 	public void ClearBegegnungen()

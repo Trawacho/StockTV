@@ -5,6 +5,7 @@ namespace StockTvBlazor.Components.ViewModels;
 public class SettingsViewModel(SettingsService settingsService) : IDisposable
 {
 	private readonly Settings.Settings _currentSettings = settingsService.CurrentSettings;
+	
 	private readonly SettingsService _settingsService = settingsService;
 
 

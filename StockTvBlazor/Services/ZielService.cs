@@ -6,9 +6,13 @@ namespace StockTvBlazor.Services;
 public class ZielService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService)
 {
 	private readonly SettingsService _settingsService = settingsService;
+
 	private readonly ILogger<MatchService> _logger = logger;
+
 	private readonly NetMqPublisherService _publisherService = publisherService;
+
 	private ZielBewerb? _currentZielBewerb;
+
 
 	public void InitializeZiel()
 	{
@@ -28,11 +32,15 @@ public class ZielService(SettingsService settingsService, ILogger<MatchService> 
 
 
 	private int _inputValue;
+
 	public int InputValue => _inputValue;
+
 	public int _specialCounter;
+
 	private readonly Debounce _debounce = new();
 
 	public event Action? OnGlobalRefresh;
+	
 	public event Action<string>? OnNavigationRequested;
 
 	public void RequestGlobalRefresh() => OnGlobalRefresh?.Invoke();

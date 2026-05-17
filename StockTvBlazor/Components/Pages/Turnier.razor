@@ -1,6 +1,8 @@
 @page "/turnier"
 @rendermode InteractiveServer
 
+<PageTitle>Turnier</PageTitle>
+
 <div class="page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		@if (TeamNamesAvailable)

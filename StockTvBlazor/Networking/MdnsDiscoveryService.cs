@@ -6,6 +6,7 @@ namespace StockTvBlazor.Networking;
 public class MdnsDiscoveryService : BackgroundService
 {
 	private readonly ServiceDiscovery _serviceDiscovery;
+	
 	private readonly ServiceProfile _profile;
 
 	public MdnsDiscoveryService()

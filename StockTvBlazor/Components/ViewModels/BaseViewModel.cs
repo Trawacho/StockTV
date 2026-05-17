@@ -7,6 +7,7 @@ namespace StockTvBlazor.Components.ViewModels;
 public abstract class BaseViewModel : IDisposable
 {
 	protected readonly SettingsService _settingsService;
+
 	private readonly MatchService _matchService;
 
 	public event Action? OnViewModelChanged;
@@ -21,6 +22,7 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 	private bool _disposed;
+
 	protected bool _isDemoMode;
 
 	public void EnableDemoMode() => _isDemoMode = true;
@@ -36,6 +38,7 @@ public abstract class BaseViewModel : IDisposable
 
 
 	private void HandleMatchChanged() => OnViewModelChanged?.Invoke();
+
 	private void HandleSettingsChanged() => OnViewModelChanged?.Invoke();
 
 	protected Match CurrentMatch => _matchService.CurrentMatch;
@@ -62,9 +65,11 @@ public abstract class BaseViewModel : IDisposable
 	public string InputValue => _isDemoMode ? DemoData.InputValue : (_matchService.Inputvalue < 0 ? "" : _matchService.Inputvalue.ToString());
 
 	public int LeftPointsSum => _isDemoMode ? DemoData.LeftPointsSum : CurrentMatch.CurrentGame.LeftPointsSum;
+
 	public int RightPointsSum => _isDemoMode ? DemoData.RightPointsSum : CurrentMatch.CurrentGame.RightPointsSum;
 
 	public string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
+
 	public string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
 
 	#endregion
@@ -118,14 +123,4 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 	#endregion
-
-
-
-
-
-	[Obsolete("Wurde in den MatchService verschoben")]
-	public async Task ProcessKeyAsync(string value)
-	{
-		throw new NotImplementedException("Diese Methode wurde in den MatchService verschoben. Bitte MatchService.ProcessKeyAsync verwenden.");
-	}
 }

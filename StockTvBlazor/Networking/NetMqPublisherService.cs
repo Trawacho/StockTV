@@ -11,10 +11,15 @@ namespace StockTvBlazor.Networking;
 public class NetMqPublisherService : BackgroundService, IDisposable
 {
 	private readonly XPublisherSocket _pubSocket;
+
 	private readonly NetMQPoller _poller;
+
 	private readonly NetMQTimer _aliveTimer;
+
 	private readonly Channel<(string Topic, object Payload)> _messageChannel;
+
 	private readonly string _serializedAliveInfo;
+	
 	private readonly ILogger<NetMqPublisherService> _logger;
 
 	public NetMqPublisherService(ILogger<NetMqPublisherService> logger)

@@ -31,14 +31,19 @@ public class ZielViewModel : IDisposable
 	public event Action? OnViewModelChanged;
 
 	private bool _disposed;
+
 	private bool _isDemoMode;
+
 	private readonly ZielService _zielService;
+
 	private readonly SettingsService _settingsService;
+
 	private readonly ZielBewerb _currentBewerb;
 
 	public void EnableDemoMode() => _isDemoMode = true;
 
 	public string GesamtText => "Gesamt:";
+	
 	public string SpielerName => _isDemoMode ? DemoData.ZielSpielerName : _currentBewerb.Spielername;
 
 	public bool IsSpielernameAvailable => !string.IsNullOrEmpty(SpielerName);

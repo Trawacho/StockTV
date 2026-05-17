@@ -18,6 +18,7 @@ public partial class Ziel : IDisposable
 	private bool IsDemo { get; set; }
 
 	private ElementReference inputRef;
+	
 	private bool _disposed = false;
 
 	protected override void OnInitialized()

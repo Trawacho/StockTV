@@ -1,102 +1,86 @@
-﻿namespace StockTvBlazor.Models
+﻿namespace StockTvBlazor.Models;
+
+public class Game
 {
-	public class Game
+	private readonly Settings.Settings _settings;
+
+	private readonly List<Turn> _turns = [];
+
+	public Game(Settings.Settings settings, int gameNumber)
 	{
-		private readonly Settings.Settings _settings;
-		private readonly List<Turn> _turns = [];
+		_settings = settings;
+		GameNumber = gameNumber;
+	}
 
-		public Game(Settings.Settings settings, int gameNumber)
+	public Game(int gameNumber)
+	{
+		GameNumber = gameNumber;
+		_settings = new();
+	}
+
+	public int GameNumber { get; }
+
+	public List<Turn> Turns =>  _turns;
+
+	internal int GamePointsLeft
+	{
+		get
 		{
-			_settings = settings;
-			GameNumber = gameNumber;
-		}
-		public Game(int gameNumber)
-		{
-			GameNumber = gameNumber;
-			_settings = new();
-		}
-		public int GameNumber { get; }
-		public List<Turn> Turns
-		{
-			get
+			if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
+				return 0;
+
+			if (LeftPointsSum > RightPointsSum)
 			{
-				return _turns;
+				return 2;
+			}
+			else if (LeftPointsSum == RightPointsSum)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
 			}
 		}
+	}
 
-
-		internal int GamePointsLeft
+	internal int GamePointsRight
+	{
+		get
 		{
-			get
-			{
-				if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
-					return 0;
+			if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
+				return 0;
 
-				if (LeftPointsSum > RightPointsSum)
-				{
-					return 2;
-				}
-				else if (LeftPointsSum == RightPointsSum)
-				{
-					return 1;
-				}
-				else
-				{
-					return 0;
-				}
+			if (RightPointsSum > LeftPointsSum)
+			{
+				return 2;
 			}
-		}
-
-		internal int GamePointsRight
-		{
-			get
+			else if (LeftPointsSum == RightPointsSum)
 			{
-				if (Turns.Count < _settings.Game.MaxKehrenProSpiel)
-					return 0;
-
-				if (RightPointsSum > LeftPointsSum)
-				{
-					return 2;
-				}
-				else if (LeftPointsSum == RightPointsSum)
-				{
-					return 1;
-				}
-				else
-				{
-					return 0;
-				}
+				return 1;
 			}
-
-		}
-
-		internal int LeftPointsSum
-		{
-			get
+			else
 			{
-				return Turns.Sum(t => t.PointsLeft);
-			}
-		}
-
-		internal int RightPointsSum
-		{
-			get
-			{
-				return Turns.Sum(t => t.PointsRight);
-			}
-		}
-
-		internal string LeftPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsLeft));
-
-		internal string RightPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsRight));
-
-		public void DeleteLastTurn()
-		{
-			if (Turns.Count > 0)
-			{
-				Turns.RemoveAt(Turns.Count - 1);
+				return 0;
 			}
 		}
 
 	}
+
+	internal int LeftPointsSum => Turns.Sum(t => t.PointsLeft);
+
+	internal int RightPointsSum => Turns.Sum(t => t.PointsRight);
+
+	internal string LeftPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsLeft));
+
+	internal string RightPoints => string.Join("-", Turns.OrderBy(t => t.TurnNumber).Select(t => t.PointsRight));
+
+	public void DeleteLastTurn()
+	{
+		if (Turns.Count > 0)
+		{
+			Turns.RemoveAt(Turns.Count - 1);
+		}
+	}
+
 }

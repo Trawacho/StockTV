@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
-using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.Layout;
 

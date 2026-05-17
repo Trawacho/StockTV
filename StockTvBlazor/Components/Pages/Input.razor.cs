@@ -10,7 +10,9 @@ public class InputBase : ComponentBase, IDisposable
 	[Inject] protected ZielService ZielService { get; set; } = default!;
 
 	internal string _lastAction = "START";
+
 	internal string _internalUrl = "";
+	
 	internal StockTvBlazor.Settings.UiSettings.Richtung _spielRichtung;
 
 	private bool _disposed = false;

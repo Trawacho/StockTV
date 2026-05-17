@@ -1,6 +1,5 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
-using StockTvBlazor.Models;
 using StockTvBlazor.Services;
 using StockTvBlazor.Settings;
 using System.Text;
@@ -11,10 +10,15 @@ namespace StockTvBlazor.Networking;
 public class NetMqResponseService : BackgroundService, IDisposable
 {
 	private readonly ResponseSocket _repSocket;
+
 	private readonly NetMQPoller _poller;
+
 	private readonly ILogger<NetMqResponseService> _logger;
+
 	private readonly SettingsService _settingsService;
+
 	private readonly MatchService _matchService;
+	
 	private readonly ZielService _zielService;
 
 	private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();
