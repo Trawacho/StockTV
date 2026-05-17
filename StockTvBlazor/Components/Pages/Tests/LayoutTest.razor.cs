@@ -6,8 +6,6 @@ namespace BlazorAppTests.Components.Pages
 {
     public class LayoutTestBase : ComponentBase
     {
-        [Inject] protected NavigationManager? NavManager { get; set; }
-        [Inject] protected SettingsService? SettingsService { get; set; }
         [Inject] protected MatchService MatchService { get; set; } = default!;
         [Inject] protected StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel { get; set; } = default!;
 

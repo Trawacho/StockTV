@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using StockTvBlazor.Components.ViewModels;
-using StockTvBlazor.Networking;
 using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Components.Pages;
@@ -11,7 +10,6 @@ public partial class Training : IDisposable
 {
 	[Inject] private SettingsService _settingsService { get; set; } = default!;
 	[Inject] private NavigationManager _navigationManager { get; set; } = default!;
-	[Inject] private NetMqPublisherService _publisherService { get; set; } = default!;
 	[Inject] private MatchService _matchService { get; set; } = default!;
 	[Inject] private TrainingViewModel ViewModel { get; set; } = default!;
 	[Inject] private IJSRuntime JS { get; set; } = default!;
