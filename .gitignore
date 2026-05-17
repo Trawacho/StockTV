@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Settings Datei von StockTV
 stocktv.config.json
+
+# VS Code Ordner
+.vscode/
