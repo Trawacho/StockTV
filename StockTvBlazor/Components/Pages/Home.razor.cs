@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using StockTvBlazor.Services;
 
@@ -9,6 +10,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
     [Inject] protected NavigationManager? NavManager { get; set; }
     [Inject] protected SettingsService? SettingsService { get; set; }
     [Inject] protected IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] protected MatchService? MatchService { get; set; }
 
     protected int countdown = 10;
     protected int progress = 0;
@@ -30,7 +32,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
                 countdown = 3;
 
             _countdownTask = RunCountdownAsync(_cts.Token);
@@ -59,7 +61,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
                 }
                 else
                 {
-                    await NavigateToPageTest();
+                    await NavigateToConfiguredPageAsync();
                     break;
                 }
             }
@@ -101,7 +103,7 @@ public class HomeBase : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task NavigateToPageTest()
+    private async Task NavigateToConfiguredPageAsync()
     {
         try
         {
@@ -110,8 +112,14 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 
             var settings = SettingsService.CurrentSettings;
             string pageName = SettingsService.GetModusUrl(settings.Game.CurrentModus);
+            string[] pagesToOpen = [pageName];
 
-            string[] pagesToOpen = new[] { "LayoutTest", "training", "turnier" , "bestof", "input", "settings", "themes"};
+            if (Debugger.IsAttached)
+            {
+                pagesToOpen = new[] { "LayoutTest", "training", "turnier" , "bestof", "input", "settings", "themes"};
+                var sampleNames = System.Text.Encoding.UTF8.GetBytes("1:ESF Hankofen:SV Pilgramsberg;2:EC Neubänrdorf Regen:EC Moitzerlitz Regen;");
+                MatchService?.SetTeamNames(sampleNames);
+            }
 
             if (pagesToOpen.Length == 1)
             {
