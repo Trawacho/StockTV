@@ -1,5 +1,4 @@
 ﻿using StockTvBlazor.Services;
-using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Components.ViewModels;
 
@@ -10,4 +9,6 @@ public class TrainingViewModel(SettingsService settingsSerivce, MatchService mat
 	public string HeaderText => CurrentMatch.CurrentGame.Turns.Count == 0
 		? base.HeaderTextBasis
 		: $"{HeaderTextBasis}     Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
+
+		public new string GetShellGridStyle() => "grid-template-columns: 100%;";
 }
