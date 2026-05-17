@@ -1,3 +1,13 @@
-<div class="tp-wrapper">
-    <iframe src="@_internalUrl" title="Theme preview" style="pointer-events: none;"></iframe>
+@using StockTvBlazor.Settings
+
+<div class="tp-container">
+    <select class="tp-select" value="@((int)_selectedModus)" @onchange="OnModusSelected">
+        @foreach (var modus in Enum.GetValues<GameSettings.Modus>())
+        {
+            <option value="@((int)modus)">@modus</option>
+        }
+    </select>
+    <div class="tp-wrapper">
+        <iframe src="@_internalUrl" title="Theme preview" style="pointer-events: none;"></iframe>
+    </div>
 </div>

@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.Pages.SettingPages;
 
@@ -9,31 +10,31 @@ public partial class ThemePreview : IDisposable
 
 	private string _internalUrl = "";
 	private bool _disposed;
+	private GameSettings.Modus _selectedModus = GameSettings.Modus.Training;
 
 	protected override void OnInitialized()
 	{
 		_settingsService.OnSettingsChanged += HandleSettingsChanged;
-		_settingsService.OnNavigationRequested += HandleNavigationRequested;
 		UpdateUrl();
 	}
 
 	private void UpdateUrl()
 	{
-		var modus = _settingsService.CurrentSettings.Game.CurrentModus;
-		_internalUrl = SettingsService.GetModusUrl(modus);
+		_internalUrl = SettingsService.GetModusUrl(_selectedModus) + "?demo=true";
+	}
+
+	private void OnModusSelected(ChangeEventArgs e)
+	{
+		if (int.TryParse(e.Value?.ToString(), out var value))
+		{
+			_selectedModus = (GameSettings.Modus)value;
+			UpdateUrl();
+		}
 	}
 
 	private void HandleSettingsChanged()
 	{
 		if (_disposed) return;
-		UpdateUrl();
-		InvokeAsync(StateHasChanged);
-	}
-
-	private void HandleNavigationRequested(string url)
-	{
-		if (_disposed) return;
-		UpdateUrl();
 		InvokeAsync(StateHasChanged);
 	}
 
@@ -41,6 +42,5 @@ public partial class ThemePreview : IDisposable
 	{
 		_disposed = true;
 		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
-		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
 	}
 }
