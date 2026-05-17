@@ -4,35 +4,35 @@ using StockTvBlazor.Services;
 
 namespace BlazorAppTests.Components.Pages
 {
-    public class LayoutTestBase : ComponentBase
-    {
-        [Inject] protected MatchService MatchService { get; set; } = default!;
-        [Inject] protected StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel { get; set; } = default!;
+	public class LayoutTestBase : ComponentBase
+	{
+		[Inject] protected MatchService MatchService { get; set; } = default!;
+		[Inject] protected StockTvBlazor.Components.ViewModels.TrainingViewModel ViewModel { get; set; } = default!;
 
-        protected bool isAdvertVisible = false;
-        protected bool isLeftPanelVisible = true;
-        protected bool isRightPanelVisible = true;
+		protected bool isAdvertVisible = false;
+		protected bool isLeftPanelVisible = true;
+		protected bool isRightPanelVisible = true;
 
-        protected ElementReference inputRef;
+		protected ElementReference inputRef;
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                // optional: noch stabiler
-                await Task.Yield();
-                await inputRef.FocusAsync();
-            }
-        }
+		protected override async Task OnAfterRenderAsync(bool firstRender)
+		{
+			if (firstRender)
+			{
+				// optional: noch stabiler
+				await Task.Yield();
+				await inputRef.FocusAsync();
+			}
+		}
 
-        protected void ToggleLine4()
-        {
-            isAdvertVisible = !isAdvertVisible;
-        }
+		protected void ToggleLine4()
+		{
+			isAdvertVisible = !isAdvertVisible;
+		}
 
-        protected async Task HandleGlobalKeyDown(KeyboardEventArgs e)
-        {
-            await MatchService.ProcessKeyAsync(e.Key);
-        }
-    }
+		protected async Task HandleGlobalKeyDown(KeyboardEventArgs e)
+		{
+			await MatchService.ProcessKeyAsync(e.Key);
+		}
+	}
 }

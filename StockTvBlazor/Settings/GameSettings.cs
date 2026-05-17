@@ -5,19 +5,19 @@ namespace StockTvBlazor.Settings;
 
 public class GameSettings
 {
-    public enum Modus
-    {
-        Training = 0,
-        BestOf = 1,
-        Turnier = 2,
-        Ziel = 100
-    }
+	public enum Modus
+	{
+		Training = 0,
+		BestOf = 1,
+		Turnier = 2,
+		Ziel = 100
+	}
 
-    public Modus CurrentModus { get; set; } = Modus.Training;
+	public Modus CurrentModus { get; set; } = Modus.Training;
 
-    public int MaxPunkteProKehre { get; set; } = 10;
-    public int MaxKehrenProSpiel { get; set; } = 6;
+	public int MaxPunkteProKehre { get; set; } = 10;
+	public int MaxKehrenProSpiel { get; set; } = 6;
 
-    [JsonIgnore]
-    public List<Turn> Kehren { get; set; } = new();
+	[JsonIgnore]
+	public List<Turn> Kehren { get; set; } = new();
 }

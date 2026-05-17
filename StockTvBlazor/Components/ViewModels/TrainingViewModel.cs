@@ -10,5 +10,5 @@ public class TrainingViewModel(SettingsService settingsSerivce, MatchService mat
 		? base.HeaderTextBasis
 		: $"{HeaderTextBasis}     Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
 
-		public new string GetShellGridStyle() => "grid-template-columns: 100%;";
+	public new string GetShellGridStyle() => "grid-template-columns: 100%;";
 }

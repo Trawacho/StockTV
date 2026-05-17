@@ -2,7 +2,7 @@
 
 namespace StockTvBlazor.Models
 {
-	public class Turn 
+	public class Turn
 	{
 		[JsonConstructor]
 		private Turn()

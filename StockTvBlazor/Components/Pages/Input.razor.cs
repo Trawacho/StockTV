@@ -61,7 +61,7 @@ public class InputBase : ComponentBase, IDisposable
 
 	private void SetInteralUrl()
 	{
-		if(SettingsService.SettingsPageActive)
+		if (SettingsService.SettingsPageActive)
 			return;
 
 		var modus = SettingsService.CurrentSettings.Game.CurrentModus;
@@ -78,10 +78,11 @@ public class InputBase : ComponentBase, IDisposable
 	internal async Task HandleInput(string input)
 	{
 		_lastAction = input;
-		if(SettingsService.SettingsPageActive)
+		if (SettingsService.SettingsPageActive)
 			await SettingsService.ProcessKeyAsync(input);
-		else{
-			if (SettingsService.CurrentSettings.Game.CurrentModus == StockTvBlazor.Settings.GameSettings.Modus.Ziel )
+		else
+		{
+			if (SettingsService.CurrentSettings.Game.CurrentModus == StockTvBlazor.Settings.GameSettings.Modus.Ziel)
 				await ZielService.ProcessKeyAsync(input);
 			else
 				await MatchService.ProcessKeyAsync(input);

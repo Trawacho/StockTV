@@ -23,7 +23,7 @@
 				return _turns;
 			}
 		}
-		
+
 
 		internal int GamePointsLeft
 		{

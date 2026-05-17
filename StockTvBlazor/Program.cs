@@ -9,26 +9,26 @@ using StockTvBlazor.Settings;
 //GLOBAL EXCEPTION HANDLER
 void LogError(string title, object ex)
 {
-    var oldColor = Console.ForegroundColor;
+	var oldColor = Console.ForegroundColor;
 
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("=================================");
-    Console.WriteLine(title);
-    Console.WriteLine(ex);
-    Console.WriteLine("=================================");
+	Console.ForegroundColor = ConsoleColor.Red;
+	Console.WriteLine("=================================");
+	Console.WriteLine(title);
+	Console.WriteLine(ex);
+	Console.WriteLine("=================================");
 
-    Console.ForegroundColor = oldColor;
+	Console.ForegroundColor = oldColor;
 }
 
 AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 {
-    LogError("UNHANDLED EXCEPTION", e.ExceptionObject);
+	LogError("UNHANDLED EXCEPTION", e.ExceptionObject);
 };
 
 TaskScheduler.UnobservedTaskException += (sender, e) =>
 {
-    LogError("TASK ERROR", e.Exception);
-    e.SetObserved();
+	LogError("TASK ERROR", e.Exception);
+	e.SetObserved();
 };
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,7 +41,7 @@ builder.Logging.AddFileLogger();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
@@ -69,28 +69,28 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
+	var services = scope.ServiceProvider;
 
-    var settingsService = services.GetRequiredService<SettingsService>();
-    await settingsService.InitializeAsync();
+	var settingsService = services.GetRequiredService<SettingsService>();
+	await settingsService.InitializeAsync();
 
-    var matchService = services.GetRequiredService<MatchService>();
-    matchService.InitializeMatch();
+	var matchService = services.GetRequiredService<MatchService>();
+	matchService.InitializeMatch();
 
-    var zielService = services.GetRequiredService<ZielService>();
-    zielService.InitializeZiel();
-	
+	var zielService = services.GetRequiredService<ZielService>();
+	zielService.InitializeZiel();
+
 }
 
 // WICHTIG: Development richtig behandeln!
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
+	app.UseDeveloperExceptionPage();
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
+	app.UseExceptionHandler("/Error", createScopeForErrors: true);
+	app.UseHsts();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
@@ -103,7 +103,7 @@ app.UseStaticFiles();
 app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+	.AddInteractiveServerRenderMode();
 
 app.Run();
 

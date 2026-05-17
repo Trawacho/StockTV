@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
 using StockTvBlazor.Settings;
 
@@ -107,7 +107,7 @@ public partial class CustomThemePage : IDisposable
 	{
 		BackgroundColor = s.BackgroundColor,
 		ForegroundColor = s.ForegroundColor,
-		ForegroundLeft  = s.ForegroundLeft,
+		ForegroundLeft = s.ForegroundLeft,
 		ForegroundRight = s.ForegroundRight,
 		ZielSummeGesamt = s.ZielSummeGesamt,
 		ZielSummeEinzel = s.ZielSummeEinzel

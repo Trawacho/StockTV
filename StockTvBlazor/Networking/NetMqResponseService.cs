@@ -10,188 +10,188 @@ namespace StockTvBlazor.Networking;
 
 public class NetMqResponseService : BackgroundService, IDisposable
 {
-    private readonly ResponseSocket _repSocket;
-    private readonly NetMQPoller _poller;
-    private readonly ILogger<NetMqResponseService> _logger;
-    private readonly SettingsService _settingsService;
-    private readonly MatchService _matchService;
-    private readonly ZielService _zielService;
+	private readonly ResponseSocket _repSocket;
+	private readonly NetMQPoller _poller;
+	private readonly ILogger<NetMqResponseService> _logger;
+	private readonly SettingsService _settingsService;
+	private readonly MatchService _matchService;
+	private readonly ZielService _zielService;
 
-    private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();
+	private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();
 
-    public NetMqResponseService(
-        ILogger<NetMqResponseService> logger,
-        SettingsService settingsService,
-        MatchService matchService,
-        ZielService zielService)
-    {
-        _logger = logger;
-        _settingsService = settingsService;
-        _matchService = matchService;
-        _zielService = zielService;
+	public NetMqResponseService(
+		ILogger<NetMqResponseService> logger,
+		SettingsService settingsService,
+		MatchService matchService,
+		ZielService zielService)
+	{
+		_logger = logger;
+		_settingsService = settingsService;
+		_matchService = matchService;
+		_zielService = zielService;
 
-        _repSocket = new ResponseSocket();
+		_repSocket = new ResponseSocket();
 
-        try
-        {
-            _repSocket.Bind("tcp://*:4747");
-            _logger.LogInformation("NetMQ bound on port 4747");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "Failed to bind port 4747");
-            throw;
-        }
+		try
+		{
+			_repSocket.Bind("tcp://*:4747");
+			_logger.LogInformation("NetMQ bound on port 4747");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "Failed to bind port 4747");
+			throw;
+		}
 
-        _repSocket.Options.Identity =
-            Encoding.UTF8.GetBytes($"{Environment.MachineName}-{Guid.NewGuid()}");
+		_repSocket.Options.Identity =
+			Encoding.UTF8.GetBytes($"{Environment.MachineName}-{Guid.NewGuid()}");
 
-        _repSocket.ReceiveReady += OnReceiveReady;
+		_repSocket.ReceiveReady += OnReceiveReady;
 
-        _poller = new NetMQPoller { _repSocket };
-    }
+		_poller = new NetMQPoller { _repSocket };
+	}
 
-    private void OnReceiveReady(object? sender, NetMQSocketEventArgs e)
-    {
-        try
-        {
-            NetMQMessage? request = null;
+	private void OnReceiveReady(object? sender, NetMQSocketEventArgs e)
+	{
+		try
+		{
+			NetMQMessage? request = null;
 
-            if (!e.Socket.TryReceiveMultipartMessage(ref request))
-            {
-                _logger.LogWarning("Invalid multipart message received");
-                return;
-            }
+			if (!e.Socket.TryReceiveMultipartMessage(ref request))
+			{
+				_logger.LogWarning("Invalid multipart message received");
+				return;
+			}
 
-            var response = Process(request);
+			var response = Process(request);
 
-            if (response.IsEmpty)
-                response.Append("ACK");
+			if (response.IsEmpty)
+				response.Append("ACK");
 
-            e.Socket.SendMultipartMessage(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "NetMQ processing error");
-            try { e.Socket.SendFrame("ERROR"); } catch { }
-        }
-    }
+			e.Socket.SendMultipartMessage(response);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "NetMQ processing error");
+			try { e.Socket.SendFrame("ERROR"); } catch { }
+		}
+	}
 
-    private NetMQMessage Process(NetMQMessage request)
-    {
-        var response = new NetMQMessage();
-        var topic = request[0].ConvertToString();
+	private NetMQMessage Process(NetMQMessage request)
+	{
+		var response = new NetMQMessage();
+		var topic = request[0].ConvertToString();
 
-        switch (topic)
-        {
-            case "Hello":
-                response.Append("Welcome");
-                break;
+		switch (topic)
+		{
+			case "Hello":
+				response.Append("Welcome");
+				break;
 
-            case "GetResult":
-                response.Append("GetResult");
+			case "GetResult":
+				response.Append("GetResult");
 
-                if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
-                    response.Append(_zielService.CurrentZielBewerb.SerializeJson());
-                else
-                    response.Append(_matchService.CurrentMatch.SerializeJson());
-                break;
+				if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
+					response.Append(_zielService.CurrentZielBewerb.SerializeJson());
+				else
+					response.Append(_matchService.CurrentMatch.SerializeJson());
+				break;
 
-            case "ResetResult":
-                _ = _actionChannel.Writer.TryWrite(() =>
-                {
-                    if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
-                        _zielService.CurrentZielBewerb.Reset();
-                    else
-                        _matchService.CurrentMatch.Reset(true);
-                });
+			case "ResetResult":
+				_ = _actionChannel.Writer.TryWrite(() =>
+				{
+					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
+						_zielService.CurrentZielBewerb.Reset();
+					else
+						_matchService.CurrentMatch.Reset(true);
+				});
 
-                response.Append("ACK");
-                break;
+				response.Append("ACK");
+				break;
 
-            case "GetSettings":
-                response.Append("GetSettings");
-                response.Append(_settingsService.GetSettings());
-                break;
+			case "GetSettings":
+				response.Append("GetSettings");
+				response.Append(_settingsService.GetSettings());
+				break;
 
-            case "SetSettings":
-                _ = _actionChannel.Writer.TryWrite(() =>
-                    _settingsService.SetSettings(request[1].ToByteArray()));
+			case "SetSettings":
+				_ = _actionChannel.Writer.TryWrite(() =>
+					_settingsService.SetSettings(request[1].ToByteArray()));
 
-                response.Append("ACK");
-                break;
+				response.Append("ACK");
+				break;
 
-            case "SetTeamNames":
-                _ = _actionChannel.Writer.TryWrite(() =>
-                    _matchService.SetTeamNames(request[1].ToByteArray()));
+			case "SetTeamNames":
+				_ = _actionChannel.Writer.TryWrite(() =>
+					_matchService.SetTeamNames(request[1].ToByteArray()));
 
-                response.Append("ACK");
-                break;
+				response.Append("ACK");
+				break;
 
-            case "SetTeilnehmer":
-                _ = _actionChannel.Writer.TryWrite(() =>
-                    _zielService.SetTeilnehmer(request[1].ToByteArray()));
+			case "SetTeilnehmer":
+				_ = _actionChannel.Writer.TryWrite(() =>
+					_zielService.SetTeilnehmer(request[1].ToByteArray()));
 
-                response.Append("ACK");
-                break;
+				response.Append("ACK");
+				break;
 
-            default:
-                _logger.LogWarning("Unknown topic: {Topic}", topic);
-                response.Append("unknown topic");
-                break;
-        }
+			default:
+				_logger.LogWarning("Unknown topic: {Topic}", topic);
+				response.Append("unknown topic");
+				break;
+		}
 
-        return response;
-    }
+		return response;
+	}
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("NetMQ service started");
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+	{
+		_logger.LogInformation("NetMQ service started");
 
-        _poller.RunAsync();
+		_poller.RunAsync();
 
-        try
-        {
-            await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Channel action error");
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
+		try
+		{
+			await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
+			{
+				try
+				{
+					action();
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Channel action error");
+				}
+			}
+		}
+		catch (OperationCanceledException)
+		{
+		}
 
-        if (_poller.IsRunning)
-            _poller.Stop();
+		if (_poller.IsRunning)
+			_poller.Stop();
 
-        _logger.LogInformation("NetMQ service stopped");
-    }
+		_logger.LogInformation("NetMQ service stopped");
+	}
 
-    private bool _disposed;
+	private bool _disposed;
 
-    public override void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
+	public override void Dispose()
+	{
+		if (_disposed) return;
+		_disposed = true;
 
-        _logger.LogInformation("Disposing NetMQ service");
+		_logger.LogInformation("Disposing NetMQ service");
 
-        if (_poller.IsRunning)
-            _poller.Stop();
+		if (_poller.IsRunning)
+			_poller.Stop();
 
-        _actionChannel.Writer.TryComplete();
+		_actionChannel.Writer.TryComplete();
 
-        _poller.Dispose();
-        _repSocket.Close();
-        _repSocket.Dispose();
+		_poller.Dispose();
+		_repSocket.Close();
+		_repSocket.Dispose();
 
-        base.Dispose();
-    }
+		base.Dispose();
+	}
 }

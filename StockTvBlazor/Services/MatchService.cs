@@ -50,7 +50,7 @@ namespace StockTvBlazor.Services
 
 		public int Inputvalue => _inputValue;
 
-		
+
 
 
 		public async Task ProcessKeyAsync(string value)
@@ -180,7 +180,7 @@ namespace StockTvBlazor.Services
 
 			if (_inputValue == 0)
 			{
-				 _settingsService.SettingsPageActive = true;
+				_settingsService.SettingsPageActive = true;
 				OnNavigationRequested?.Invoke("/settings");
 			}
 			else if (_inputValue == 10)
