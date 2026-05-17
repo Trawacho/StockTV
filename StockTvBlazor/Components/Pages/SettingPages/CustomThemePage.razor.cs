@@ -18,6 +18,8 @@ public partial class CustomThemePage : IDisposable
 	protected override void OnInitialized()
 	{
 		SettingsService.OnSettingsChanged += HandleSettingsChanged;
+		var activeTheme = SettingsService.CurrentSettings.UI.ActiveTheme;
+		SelectTheme(activeTheme);
 	}
 
 	public void Dispose()
@@ -53,11 +55,12 @@ public partial class CustomThemePage : IDisposable
 	{
 		_isNew = true;
 		_previewColors = null;
-		var defaultColors = ColorSettingsFactory.FromTheme(UiSettings.Theme.Hell, UiSettings.Richtung.Links);
+		var activeTheme = SettingsService.CurrentSettings.UI.ActiveTheme;
+		var templateColors = activeTheme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung);
 		_editingTheme = new CustomTheme
 		{
 			Name = "Mein Theme",
-			Colors = CopyColors(defaultColors)
+			Colors = CopyColors(templateColors)
 		};
 	}
 
