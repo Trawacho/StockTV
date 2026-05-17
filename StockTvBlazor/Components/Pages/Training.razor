@@ -3,7 +3,7 @@
 
 <div class="training-main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
-	<div class="score-row score-top-row header-text">@ViewModel.HeaderText</div>
+	<div class="score-row score-top-row header-text" data-autofit data-autofit-min="6">@ViewModel.HeaderText</div>
 
 	<div class="score-row training-mid-grid">
 		<div class="score-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
