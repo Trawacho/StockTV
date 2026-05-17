@@ -28,6 +28,13 @@ build\buildproject.bat
 ```powershell
 # Remote-Deployment auf Server 'csl' (4 Container: stocktvBahn1–4)
 build\remotebuild_std.ps1
+
+# Raspberry Pi: bauen + Release-Zip erstellen (fuer GitHub Release)
+build\rpi\publish-rpi.ps1
+
+# Raspberry Pi: bauen + direkt auf Pi deployen
+build\rpi\publish-rpi.ps1 -PiHost 192.168.1.xx
+build\rpi\publish-rpi.ps1 -PiHost 192.168.1.xx -Install   # Erstinstallation
 ```
 
 ---
