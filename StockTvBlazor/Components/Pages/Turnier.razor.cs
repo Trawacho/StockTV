@@ -52,7 +52,7 @@ public partial class Turnier : IDisposable
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".turnier-main-grid");
+		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".page-fullscreen");
 		if (firstRender)
 			await inputRef.FocusAsync();
 	}

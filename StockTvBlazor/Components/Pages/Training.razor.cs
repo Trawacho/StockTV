@@ -51,7 +51,7 @@ public partial class Training : IDisposable
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".training-main-grid");
+		await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".page-fullscreen");
 		if (firstRender)
 			await inputRef.FocusAsync();
 	}
