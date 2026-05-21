@@ -13,6 +13,9 @@ on:
         required: false
         default: 'dev'
 
+permissions:
+  contents: write
+
 jobs:
   build-image:
     name: Build Raspberry Pi Image
