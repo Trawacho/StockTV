@@ -1,0 +1,74 @@
+﻿@page "/"
+@inject NavigationManager NavManager
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<p></p>
+<ul>
+    @foreach (var log in logs)
+    {
+        <li>@log</li>
+    }
+</ul>
+
+
+@code {
+    private List<string> logs = new();
+
+    // protected override void OnInitialized()
+    // {
+    //     logs.Add("OnInitialized");
+  
+    //     NavManager.NavigateTo("/lifecycle-demo");
+  
+    // }
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs.Add("OnInitializedAsync (Start)");
+        await Task.Delay(500);
+        logs.Add("OnInitializedAsync (Ende)");
+
+        await Task.Yield(); // lässt Render durchlaufen
+        NavManager.NavigateTo("/lifecycle-demo");
+
+    }
+
+    protected override void OnParametersSet()
+    {
+        logs.Add("OnParametersSet");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        logs.Add("OnParametersSetAsync");
+        await Task.Delay(200);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        logs.Add($"OnAfterRender (firstRender: {firstRender})");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        logs.Add($"OnAfterRenderAsync (firstRender: {firstRender})");
+        await Task.CompletedTask;
+    }
+
+    private void TriggerRender()
+    {
+        logs.Add("Button geklickt → Re-Render");
+    }
+
+    public void Dispose()
+    {
+        logs.Add("Dispose");
+    }
+}

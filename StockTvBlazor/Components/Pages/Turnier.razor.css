@@ -1,0 +1,11 @@
+.turnier-mid-grid {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 45% 10% 45%;
+    align-items: stretch;
+}
+
+/* Fallback (ohne JS): wird durch AutoFit inline überschrieben */
+/*.turnier-mid-grid .training-cell { font-size: min(16vh, 12vw); }
+.score-bottom-grid .training-cell { font-size: min(8vh, 12vw); }*/

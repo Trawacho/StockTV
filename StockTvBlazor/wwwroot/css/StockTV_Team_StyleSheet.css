@@ -1,0 +1,78 @@
+﻿
+.teamname {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: var(--fg-color);
+    font-weight: 650;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.teamname-left {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg); /* 270° */
+    color: var(--fg-left);
+}
+
+.teamname-right {
+    writing-mode: vertical-rl; /* 90° */
+    color: var(--fg-right);
+}
+
+.scoreboard-shell {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    align-items: stretch;
+}
+
+.scoreboard-center {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 15% 65% 20%;
+    height: 100%;
+    width: 100%;
+}
+
+.score-row {
+    width: 100%;
+    height: 100%;
+}
+
+.score-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important; /* überschreibt header-text padding */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    line-height: 1;
+    font-size: min(8vh, 10vw);
+}
+
+.score-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 650;
+    line-height: 1;
+}
+
+.score-bottom-grid {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 42.5% 15% 42.5%;
+    align-items: stretch;
+}

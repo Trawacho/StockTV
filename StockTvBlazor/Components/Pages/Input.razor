@@ -1,0 +1,95 @@
+﻿@page "/input"
+@rendermode InteractiveServer
+@inherits InputBase
+
+<PageTitle>Input</PageTitle>
+
+<div class="main-container">
+    @* Erster Container: Die Anzeige *@
+    <div class="content-panel">
+        @if (!string.IsNullOrEmpty(_internalUrl))
+         {
+             @* das iframe erhält pointer-events: none direkt, um klicks zu ignorieren *@
+             <iframe src="@_internalUrl" title="internal content" style="pointer-events: none;"></iframe>
+             @* das overlay sichert den bereich zusätzlich ab *@
+             <div class="interaction-blocker"></div>
+         }
+    </div>
+
+    @* Zweiter Container: Das Keypad *@
+    @* z-index und position:relative stellen sicher, dass dieser Bereich "oben" liegt *@
+    <div class="keypad-panel">
+        <div class="display">
+            @SpielModus
+        </div>
+
+        <div class="numbers-grid">
+            @if(SettingsService.SettingsPageActive)
+            {
+                <button type="button" @onclick='() => HandleInput("7")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("8")' class="key">up</button>
+                <button type="button" @onclick='() => HandleInput("9")' class="key"></button>
+
+                <button type="button" @onclick='() => HandleInput("4")' class="key">prev</button>
+                <button type="button" @onclick='() => HandleInput("5")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("6")' class="key">next</button>
+
+                <button type="button" @onclick='() => HandleInput("1")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("2")' class="key">down</button>
+                <button type="button" @onclick='() => HandleInput("3")' class="key"></button>
+
+                <button type="button" @onclick='() => HandleInput("0")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+            } 
+            else 
+            {
+                <button type="button" @onclick='() => HandleInput("7")' class="key">7</button>
+                <button type="button" @onclick='() => HandleInput("8")' class="key">8</button>
+                <button type="button" @onclick='() => HandleInput("9")' class="key">9</button>
+
+                <button type="button" @onclick='() => HandleInput("4")' class="key">4</button>
+                <button type="button" @onclick='() => HandleInput("5")' class="key">5</button>
+                <button type="button" @onclick='() => HandleInput("6")' class="key">6</button>
+
+                <button type="button" @onclick='() => HandleInput("1")' class="key">1</button>
+                <button type="button" @onclick='() => HandleInput("2")' class="key">2</button>
+                <button type="button" @onclick='() => HandleInput("3")' class="key">3</button>
+
+                <button type="button" @onclick='() => HandleInput("0")' class="key">0</button>
+                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+                <button type="button" @onclick='() => HandleInput("Enter")' class="key"></button>
+            }
+           
+        </div>
+
+        <div class="color-section">
+            <div class="color-row-double">
+                @if (_spielRichtung == StockTvBlazor.Settings.UiSettings.Richtung.Links)
+                {
+                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-links">R</button>
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-rechts">G</button>
+                }
+                else
+                {
+                    <button type="button" @onclick='() => HandleInput("*")' class="key btn-links">G</button>
+                    <button type="button" @onclick='() => HandleInput("/")' class="key btn-rechts">R</button>
+                }
+            </div>
+
+            <div class="color-row-single">
+                <button type="button" @onclick='() => HandleInput("-")' class="key btn-blue">
+                    Löschen
+                </button>
+            </div>
+
+            <div class="color-row-single">
+                <button type="button" @onclick='() => HandleInput("+")' class="key btn-yellow">
+                    Bestätigen
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

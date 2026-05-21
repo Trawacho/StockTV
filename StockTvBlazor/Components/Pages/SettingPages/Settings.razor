@@ -1,0 +1,64 @@
+@page "/settings"
+@rendermode InteractiveServer
+
+<PageTitle>Settings</PageTitle>
+
+<div class="settings-main-grid"
+     @onkeydown="HandleGlobalKeyDown"
+     @onkeydown:stopPropagation
+     tabindex="0"
+     style="outline:none;"
+     @ref="inputRef">
+
+    <div class="settings-list">
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsThemeActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.ThemeValue</div>
+            <div class="label">Theme</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsRichtungActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.RichtungValue</div>
+            <div class="label">Richtung (links/rechts)</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsModusActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.ModusValue</div>
+            <div class="label">Modus</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsBahnNummerActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.BahnNummerValue</div>
+            <div class="label">Bahnnr.</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsMaxPunkteProKehreActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.MaxPunkteProKehreValue</div>
+            <div class="label">Max Punkte pro Kehre</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsMaxKehrenProSpielActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.MaxKehrenProSpielValue</div>
+            <div class="label">Kehren pro Spiel</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsSpielgruppeActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.SpielgruppeValue</div>
+            <div class="label">Spielgruppe</div>
+        </div>
+
+        <div class="setting-row">
+            <div class="icon">@(ViewModel.IsNetworkingActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.NetworkingValue</div>
+            <div class="label">Netzwerk</div>
+        </div>
+
+    </div>
+</div>

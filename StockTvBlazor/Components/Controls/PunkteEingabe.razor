@@ -1,0 +1,33 @@
+<div class="punkte-eingabe">
+
+    <table class="punkte-table">
+        <colgroup>
+            <col style="width:40%">
+            <col style="width:auto">
+            <col style="width:40%">
+        </colgroup>
+
+        <tr>
+            <td colspan="3" class="hilfe-cell">
+                <small class="hilfe-text">
+                    Zahl eingeben und / oder * drücken
+                </small>
+            </td>
+        </tr>
+        <tr>
+            <td class="punkte-links">@LeftPoints</td>
+
+            <td class="punkte-mitte">
+                <input id="punkteInput"
+                       @ref="inputRef"
+                       class="punkte-input"
+                       @bind="InputValue"
+                       @onkeydown="HandleKeyDown"
+                       @onkeydown:preventDefault="!IstErlaubteTaste" />
+            </td>
+
+            <td class="punkte-rechts">@RightPoints</td>
+        </tr>
+    </table>
+
+</div>

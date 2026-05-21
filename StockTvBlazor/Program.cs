@@ -1,57 +1,110 @@
+﻿using NetMQ;
 using StockTvBlazor.Components;
-using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Services;
+using StockTvBlazor.Components.ViewModels;
+using StockTvBlazor.Networking;
+using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
+
+
+//GLOBAL EXCEPTION HANDLER
+void LogError(string title, object ex)
+{
+	var oldColor = Console.ForegroundColor;
+
+	Console.ForegroundColor = ConsoleColor.Red;
+	Console.WriteLine("=================================");
+	Console.WriteLine(title);
+	Console.WriteLine(ex);
+	Console.WriteLine("=================================");
+
+	Console.ForegroundColor = oldColor;
+}
+
+AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+{
+	LogError("UNHANDLED EXCEPTION", e.ExceptionObject);
+};
+
+TaskScheduler.UnobservedTaskException += (sender, e) =>
+{
+	LogError("TASK ERROR", e.Exception);
+	e.SetObserved();
+};
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddFileLogger();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<SettingsService>();
-//builder.Services.AddSingleton<Settings>(sp =>
-//	sp.GetRequiredService<SettingsService>().CurrentSettings);
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
+builder.Services.AddSingleton<MatchService>();
+builder.Services.AddSingleton<ZielService>();
+
+builder.Services.AddHostedService<MdnsDiscoveryService>();
+
+builder.Services.AddSingleton<NetMqPublisherService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqPublisherService>());
+
+builder.Services.AddSingleton<NetMqResponseService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<NetMqResponseService>());
+
+builder.Services.AddTransient<TurnierViewModel>();
+builder.Services.AddTransient<TrainingViewModel>();
+builder.Services.AddTransient<BestOfViewModel>();
+builder.Services.AddTransient<SettingsViewModel>();
+builder.Services.AddTransient<ZielViewModel>();
+
+
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+
+	var settingsService = services.GetRequiredService<SettingsService>();
+	await settingsService.InitializeAsync();
+
+	var matchService = services.GetRequiredService<MatchService>();
+	matchService.InitializeMatch();
+
+	var zielService = services.GetRequiredService<ZielService>();
+	zielService.InitializeZiel();
+
+}
+
+// WICHTIG: Development richtig behandeln!
+if (app.Environment.IsDevelopment())
+{
+	app.UseDeveloperExceptionPage();
+}
+else
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-
-
-// Server-side decision: redirect root ('/') to the configured start page from Settings.
-app.MapGet("/", (context) =>
-{
-	var _settings = context.RequestServices.GetRequiredService<SettingsService>().CurrentSettings;
-	switch (_settings.Modus)
-	{
-		case Settings.MODUS.TRAINING:
-			context.Response.Redirect("/training");
-			break;
-		case Settings.MODUS.TURNIER:
-			context.Response.Redirect("/turnier");
-			break;
-		case Settings.MODUS.BESTOF:
-			context.Response.Redirect("/bestof");
-			break;
-		default:
-			context.Response.Redirect("/settings");
-			break;
-	}
-	return System.Threading.Tasks.Task.CompletedTask;
-});
-
+app.UseStaticFiles();
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
 
 app.Run();
+
+NetMQConfig.Cleanup();

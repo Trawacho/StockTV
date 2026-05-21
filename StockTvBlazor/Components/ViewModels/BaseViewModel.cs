@@ -1,180 +1,126 @@
-﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Models;
+using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public abstract class BaseViewModel(SettingsService settingsService, NavigationManager navigationManager) 
+public abstract class BaseViewModel : IDisposable
 {
-	private readonly SettingsService _settingsService = settingsService;
+	protected readonly SettingsService _settingsService;
 
-	private int _inputValue;
-	private int _specialCounter;
-	private readonly Models.Match _match = new(settingsService);
-	protected readonly Settings _currentSettings = settingsService.CurrentSettings;
-	private readonly NavigationManager _navigationManager = navigationManager;
+	private readonly MatchService _matchService;
 
 	public event Action? OnViewModelChanged;
-	protected Models.Match Match { get { return _match; } }
-	protected int InputValue => _inputValue;
-	protected void SpecialCounterIncrease() => _specialCounter++;
-	protected void SpecialCounterReset() => _specialCounter = 0;
 
-	private void AddToGreen()
+	public BaseViewModel(SettingsService settingsService, MatchService matchService)
 	{
+		_settingsService = settingsService;
+		_matchService = matchService;
 
-		if (_inputValue == -1)
-			return;
-
-		var turn = new Turn();
-
-		if(_currentSettings.Richtung == Settings.RICHTUNG.LINKS)
-		{
-			turn.PointsRight = _inputValue;
-		}
-		else
-		{
-			turn.PointsLeft = _inputValue;
-		}
-
-		this._match.AddTurn(turn);
-
-
-		_inputValue = -1;
-
-	}
-	private void AddToRed()
-	{
-		if (_inputValue == -1)
-			return;
-
-		var turn = new Turn();
-
-		if(_currentSettings.Richtung == Settings.RICHTUNG.RECHTS)
-		{
-			turn.PointsRight = _inputValue;
-		}
-		else
-		{
-			turn.PointsLeft = _inputValue;
-		}
-
-		this._match.AddTurn(turn);
-
-		_inputValue = -1;
-	}
-	private void Reset(bool force = false)
-	{
-		_match.Reset(force);
-		_inputValue = -1;
+		_settingsService.OnSettingsChanged += HandleSettingsChanged;
+		_matchService.CurrentMatch.OnMatchChanged += HandleMatchChanged;
 	}
 
-	private void DeleteLastTurn()
-	{
-		if (_inputValue > 0)
-		{
-			_inputValue = -1;
-			return;
-		}
+	private bool _disposed;
 
-		_match.DeleteLastTurn();
+	protected bool _isDemoMode;
+
+	public void EnableDemoMode() => _isDemoMode = true;
+
+	public void Dispose()
+	{
+		if (_disposed) return;
+		_disposed = true;
+
+		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
+		_matchService.CurrentMatch.OnMatchChanged -= HandleMatchChanged;
 	}
 
-	private protected void ShowSpecialPage()
+
+	private void HandleMatchChanged() => OnViewModelChanged?.Invoke();
+
+	private void HandleSettingsChanged() => OnViewModelChanged?.Invoke();
+
+	protected Match CurrentMatch => _matchService.CurrentMatch;
+
+	#region Header
+
+	protected string HeaderTextBasis
 	{
-		if (_specialCounter < 5) return;
-		_specialCounter = 0;
-
-		if (_inputValue == 0)
+		get
 		{
-			_navigationManager.NavigateTo("/settings");
+			var s = _settingsService.CurrentSettings;
+			var prefix = s.General.BlockLocalChanges ? "." : "";
 
-		}
-		else if (_inputValue == 10)
-		{
-			//todo: implement marketing page navigation
-			//NavigateTo(typeof(Pages.MarketingPage));
-		}
-
-	}
-
-	public void AddInput(int value)
-	{
-		int newValue = (_inputValue < 0) ? value : (_inputValue * 10) + value;
-		int maxPoints = _currentSettings.MaxPunkteProKehre;
-
-		if (newValue <= maxPoints)
-		{
-			_inputValue = newValue;
-		}
-		else
-		{
-			_inputValue = (value <= maxPoints) ? value : -1;
+			return string.IsNullOrEmpty(s.General.SpielgruppeLetter)
+				? $"{prefix}Bahn: {s.General.BahnNummer}"
+				: $"{prefix}Bahn: {s.General.SpielgruppeLetter}-{s.General.BahnNummer}";
 		}
 	}
 
-	public void ProcessKey(string value)
+	#endregion
+
+	#region Points
+
+	public string InputValue => _isDemoMode ? DemoData.InputValue : (_matchService.Inputvalue < 0 ? "" : _matchService.Inputvalue.ToString());
+
+	public int LeftPointsSum => _isDemoMode ? DemoData.LeftPointsSum : CurrentMatch.CurrentGame.LeftPointsSum;
+
+	public int RightPointsSum => _isDemoMode ? DemoData.RightPointsSum : CurrentMatch.CurrentGame.RightPointsSum;
+
+	public string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
+
+	public string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
+
+	#endregion
+
+	#region Layout
+
+	public string GetShellGridStyle()
 	{
+		if (!TeamNamesAvailable)
+			return "grid-template-columns: 100%;";
 
-		//Settings Or Marekting SpecialCounter
-		if ((_inputValue == 0 || _inputValue == 10)
-			&& value == "Enter"
-			&& !_currentSettings.BlockLocalChanges)
-		{
-			SpecialCounterIncrease();
-		}
-		else
-		{
-			SpecialCounterReset();
-		}
+		var s = _settingsService.CurrentSettings;
+		var mid = s.UI.MidColumnWidth;
+		var side = (100 - mid) / 2.0;
 
-
-		//Debouncing 
-		if (!(value == "-" && _inputValue == 0 && !_currentSettings.BlockLocalChanges)) //Blaue Taste und 0 sowie kein BlockLocalChanges übergeht die Debounce-Funktion
-		{
-			if (!Debounce.IsDebounceOk(value))
-			{
-				return;
-			}
-		}
-
-		switch (value)
-		{
-			case "Enter":				ShowSpecialPage();	break;
-			case "*":					AddToGreen();		break;
-			case "-":					DeleteLastTurn();	break;
-			case "/" or "Backspace":	AddToRed();			break;
-			case "+":					Reset();			break;
-
-			default:
-				int? input = value switch
-				{
-					"1" or "End" =>			1,
-					"2" or "ArrowDown" =>	2,
-					"3" or "PageDown" =>	3,
-					"4" or "ArrowLeft" =>	4,
-					"5" or "Clear" =>		5,
-					"6" or "ArrowRight" =>	6,
-					"7" or "Home" =>		7,
-					"8" or "ArrowUp" =>		8,
-					"9" or "PageUp" =>		9,
-					"0" or "Insert" =>		0,
-					_ => null
-				};
-
-				if (input.HasValue) AddInput(input.Value);
-				break;
-		}
-
-		OnViewModelChanged?.Invoke();
-
-		//todo: Send after each key press a network notification
-		//if (Settings.IsBroadcasting)
-		//{
-		//	if (Settings.MessageVersion == 0)
-		//		BroadcastService.SendData(_match.Serialize());
-		//	else if (Settings.MessageVersion == 1)
-		//		BroadcastService.SendData(_match.SerializeJson());
-		//}
+		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+                                          {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+                                          {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
+
+	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
+
+	public string LeftTeamName
+	{
+		get
+		{
+			if (_isDemoMode) return DemoData.LeftTeamName;
+
+			var s = _settingsService.CurrentSettings;
+
+			return CurrentMatch.Begegnungen
+				.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
+				?.TeamNameLeft(s.UI.CurrentRichtung == UiSettings.Richtung.Links)
+				?? string.Empty;
+		}
+	}
+
+	public string RightTeamName
+	{
+		get
+		{
+			if (_isDemoMode) return DemoData.RightTeamName;
+
+			var s = _settingsService.CurrentSettings;
+
+			return CurrentMatch.Begegnungen
+				.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
+				?.TeamNameRight(s.UI.CurrentRichtung == UiSettings.Richtung.Links)
+				?? string.Empty;
+		}
+	}
+
+	#endregion
 }

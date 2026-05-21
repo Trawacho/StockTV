@@ -1,0 +1,45 @@
+﻿.page-fullscreen {
+    background-color: var(--bg-color);
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+}
+
+.header-text {
+    color: var(--fg-color, red); /* fallback */
+    padding: 5px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 5vmin;
+    white-space: nowrap; /* verhindert Zeilenumbruch */
+    min-width: 0; /* verhindert Flex-Überlauf */
+}
+
+
+:root .left-point-sum {
+    color: var(--fg-left);
+}
+
+:root .right-point-sum {
+    color: var(--fg-right);
+}
+
+:root .seperator {
+    color: var(--fg-color);
+}
+
+:root .left-points {
+    color: var(--fg-left);
+}
+
+:root .right-points {
+    color: var(--fg-right);
+}
+
+:root .input-value {
+    color: var(--fg-color);
+}
+

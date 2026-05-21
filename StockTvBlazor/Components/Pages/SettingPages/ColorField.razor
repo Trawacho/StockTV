@@ -1,0 +1,14 @@
+<div class="color-field">
+    <label>@Label</label>
+    <div class="color-input-row">
+        <input type="color"
+               value="@Value"
+               @oninput="OnColorInput" />
+        <input type="text"
+               value="@Value"
+               maxlength="7"
+               @oninput="OnTextInput"
+               placeholder="#000000" />
+        <span class="color-swatch" style="background:@Value;"></span>
+    </div>
+</div>

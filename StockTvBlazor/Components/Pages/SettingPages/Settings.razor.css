@@ -1,0 +1,64 @@
+﻿/* Haupt-Layout: 3 Spalten (Icon | Value | Label) */
+.settings-main-grid {
+    display: grid;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    box-sizing: border-box;
+    padding: clamp(0.5rem, 2vmin, 1rem);
+    background-color: var(--bg-color);
+    color: var(--fg-color); /* globale Textfarbe */
+    overflow: hidden;
+}
+
+/* Liste übernimmt das Grid */
+.settings-list {
+    grid-column: 1 / span 3;
+    display: grid;
+    grid-template-columns: 10% 40% 50%;
+    grid-auto-rows: minmax(auto, 1fr);
+    row-gap: clamp(0.25rem, 1vmin, 0.5rem);
+    align-items: center;
+    align-content: center;
+    overflow: hidden;
+}
+
+/* Rows geben Layout an Parent weiter */
+.setting-row {
+    display: contents;
+}
+
+/* Icon */
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1rem, 2vmin, 1.25rem);
+}
+
+/* Wert */
+.value {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-left: clamp(0.5rem, 1vmin, 1rem);
+    font-size: clamp(1.25rem, 4vmin, 2rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Label */
+.label {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-left: clamp(0.5rem, 1vmin, 1rem);
+    font-size: clamp(1rem, 3vmin, 2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

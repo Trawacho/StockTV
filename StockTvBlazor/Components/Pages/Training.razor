@@ -1,124 +1,29 @@
-﻿@page "/training"
-@using StockTvBlazor.Components.Models
-@using System.Diagnostics
+@page "/training"
 @rendermode InteractiveServer
-@inject StockTvBlazor.Components.Services.SettingsService _settingsService
-@inject NavigationManager _navigationManager
-@implements IDisposable
 
-<div class="main-grid" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+<PageTitle>Training</PageTitle>
 
-	<div class="header-text">@Model.HeaderText</div>
+<div class="page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
 
-	<div class="row-2 sub-grid">
-		<div class="left-point-sum">@Model.LeftPointsSum</div>
-		<div class="seperator">:</div>
-		<div class="right-point-sum">@Model.RightPointsSum</div>
-	</div>
+	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
+		
+		<div class="scoreboard-center">
+			<div class="score-row score-top-row header-text" data-autofit data-autofit-min="8">@ViewModel.HeaderText</div>
 
-	<div class="row-3 sub-grid">
-		<div class="left-points">@Model.LeftPoins</div>
-		<div class="input-value">@Model.InputValue</div>
-		<div class="right-points">@Model.RightPoints</div>
+			<div class="score-row training-mid-grid">
+				<div class="score-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
+				<div class="score-cell seperator" data-autofit data-autofit-min="12">:</div>
+				<div class="score-cell right-point-sum" data-autofit data-autofit-min="12">@ViewModel.RightPointsSum</div>
+			</div>
+
+			<div class="score-row score-bottom-grid">
+				<div class="score-cell left-points" data-autofit data-autofit-min="10">@ViewModel.LeftPoints</div>
+				<div class="score-cell input-value" data-autofit data-autofit-min="10">@ViewModel.InputValue</div>
+				<div class="score-cell right-points" data-autofit data-autofit-min="10">@ViewModel.RightPoints</div>
+			</div>
+		</div>
+
+		
 	</div>
 
 </div>
-
-<style>
-	html, body {
-		margin: 0;
-		padding: 0;
-		overflow: hidden;
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-	}
-
-	/* Haupt-Layout: 3 Spalten */
-	.main-grid {
-		background-color: @(System.Drawing.ColorTranslator.ToHtml(_settings.BackgroundColor));
-		display: grid;
-		grid-template-rows: auto 1fr auto; /* Mitte füllt den Rest */
-		position: fixed;
-		inset: 0;
-		height: 100vh;
-		width: 100vw;
-	}
-
-	/* Die Sub-Grids für Zeile 2 und 3: Jeweils 3 Spalten */
-	.sub-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr; /* 3 gleich große Spalten */
-		gap: 5px;
-		align-items: center;
-		text-align: center;
-	}
-
-	.header-text {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-		padding: 5px;
-		text-align: center;
-	}
-
-	.left-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
-	}
-
-	.right-point-sum {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
-	}
-
-	.seperator {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-	}
-
-	.left-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorLeftt));
-	}
-
-	.right-points {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColorRight));
-	}
-
-	.input-value {
-		color: @(System.Drawing.ColorTranslator.ToHtml(_settings.ForegroundColor));
-	}
-
-	.row-3 {
-		align-self: end;
-		padding-bottom: 5px;
-	}
-
-	.sub-grid div {
-		padding: 5px;
-	}
-
-</style>
-
-@code {
-	private ElementReference inputRef;
-	private StockTvBlazor.Components.Models.Settings _settings => _settingsService.CurrentSettings;
-
-	public TrainingViewModel Model { get; set; } = default!;
-
-	protected override void OnInitialized()
-	{
-		Model = new TrainingViewModel(_settingsService, _navigationManager);
-		Model.OnViewModelChanged += StateHasChanged;
-	}
-	public void Dispose()
-	{
-		Model.OnViewModelChanged -= StateHasChanged;
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await inputRef.FocusAsync();
-		}
-	}
-	private void HandleGlobalKeyDown(KeyboardEventArgs e)
-	{
-		Model.ProcessKey(e.Key);
-		StateHasChanged(); // Sicherstellen, dass die Punkte sofort umschalten
-	}
-}

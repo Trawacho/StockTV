@@ -1,116 +1,43 @@
-﻿@page "/oldHome"
+﻿@page "/"
 @rendermode InteractiveServer
+@using StockTvBlazor.Components.Pages
+@inherits HomeBase
 
-<h3 style="text-align:center; margin:0; padding:10px; font-size:3vw;">
-    Punkteanzeigen
-</h3>
-<style>
-    .custom-placeholder::placeholder{
-        font-size:1.1vw;
-    }
-</style>
-<div style="
-    display:flex;
-    flex-direction:column;
-    height:90vh;
-">
+<PageTitle>StockTV</PageTitle>
 
-    <!-- Scorebereich (80% Höhe) -->
-    <div style="
-        flex:8;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        padding:20px;
-        background-color: darkgray;
-    ">
-        <div style="
-            flex:1;
-            margin-right:10px;
-            background:#007BFF;
-            color:white;
-            border-radius:20px;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-        ">
-            <h2 style="font-size:6vw; margin:0;">Blau</h2>
-            <h1 style="font-size:12vw; margin:0;">@ScoreBlue</h1>
+<ErrorBoundary>
+    <ChildContent>
+
+        <div class="hero">
+            <h1>StockTV</h1>
+            <p>Die Anzeige für den Stocksport</p>
         </div>
 
-        <div style="
-            flex:1;
-            margin-left:10px;
-            background:#FF3B30;
-            color:white;
-            border-radius:20px;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-        ">
-            <h2 style="font-size:6vw; margin:0;">Rot</h2>
-            <h1 style="font-size:12vw; margin:0;">@ScoreRed</h1>
-        </div>
-    </div>
-
-    <!-- Eingabebereich (20% Höhe) -->
-    <div style="
-        flex:2;
-        text-align:center;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-    ">
-        <input class="custom-placeholder"
-               @bind="InputValue"
-               @bind:event="oninput"
-               @onkeydown="HandleKey"
-               placeholder="Zahl eingeben und / oder * drücken"
-               style="font-size:2vw; padding:10px; width:20vw; text-align:center;"
-               @ref="inputRef" />
-
-        <p style="margin-top:10px; font-size:1.5vw;">
-            Letzte Eingabe: <strong>@LastInput</strong>
-        </p>
-    </div>
-</div>
-
-
-@code {
-    private int ScoreBlue = 0;
-    private int ScoreRed = 0;
-
-    private string? InputValue;
-    private string? LastInput;
-    private ElementReference inputRef;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await inputRef.FocusAsync();
-        }
-    }
-    private void HandleKey(KeyboardEventArgs e)
-    {
-       
-        if (e.Key == "/" || e.Key == "*")
-        {
-            if (int.TryParse(InputValue, out int value))
+        <div class="grid">
+            @if (CardComponents.Count > currentCardIndex)
             {
-                LastInput = InputValue;
-
-                if (e.Key == "/")
-                    ScoreBlue += value;
-
-                if (e.Key == "*")
-                    ScoreRed += value;
-
-                InputValue = "";
+                <DynamicComponent Type="CardComponents[currentCardIndex]" />
             }
-        }
-    }
-}
+            else
+            {
+                <p style="color:red">Card Fehler</p>
+            }
+        </div>
+
+        <div class="cta">
+            <p>Weiterleitung in <strong>@countdown Sekunden</strong>...</p>
+            <div class="progress-bar">
+                <div class="progress" style="width:@progress%"></div>
+            </div>
+        </div>
+
+    </ChildContent>
+
+    <ErrorContent Context="ex">
+        <div style="color:red; padding:20px;">
+            <h3>⚠ Fehler auf der Seite</h3>
+            <p>@ex.Message</p>
+            <pre>@ex.StackTrace</pre>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>

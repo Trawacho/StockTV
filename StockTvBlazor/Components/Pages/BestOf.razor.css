@@ -1,0 +1,32 @@
+.bestof-mid-grid {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 35% 10% 10% 10% 35%;
+    align-items: stretch;
+}
+
+    .bestof-mid-grid .left-match-points {
+        justify-content: flex-end;
+        align-items: flex-end;
+        color: var(--fg-left);
+        font-weight: 100;
+        font-size: min(20vh, 18vw) !important;
+    }
+
+    .bestof-mid-grid .right-match-points {
+        justify-content: flex-start;
+        align-items: flex-end;
+        color: var(--fg-right);
+        font-weight: 100;
+        font-size: min(20vh, 18vw) !important;
+    }
+
+/* Fallback (ohne JS): wird durch AutoFit inline überschrieben */
+/*.bestof-mid-grid .score-cell {
+    font-size: min(16vh, 12vw);
+}
+
+.score-bottom-grid .score-cell {
+    font-size: min(8vh, 12vw);
+}*/

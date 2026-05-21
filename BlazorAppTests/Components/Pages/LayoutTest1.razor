@@ -1,0 +1,17 @@
+﻿@page "/layouttest1"
+
+<h3>LayoutTest1</h3>
+<input @ref="myInput" tabindex="0" />
+
+@code {
+    private ElementReference myInput;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(10);
+            await myInput.FocusAsync();
+        }
+    }
+}

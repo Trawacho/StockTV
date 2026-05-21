@@ -1,0 +1,40 @@
+﻿@page "/layouttest"
+@rendermode InteractiveServer
+@using BlazorAppTests.Components.Pages
+@using StockTvBlazor.Components.Controls
+@inherits LayoutTestBase
+
+<div class="containerX" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="inputRef">
+    @if (isLeftPanelVisible)
+    {
+        <div class="teamname-left">Mia san a da</div>
+    }
+
+    <div class="content">
+        <div class="line line-1">
+            <span class="header-text">@ViewModel.HeaderText</span>
+        </div>
+
+        <div class="line line-2">
+            <PunkteAnzeige LeftPointsSum="@ViewModel.LeftPointsSum" RightPointsSum="@ViewModel.RightPointsSum" />
+        </div>
+
+        <div class="line line-3">
+            <PunkteEingabe 
+                           LeftPoints="@ViewModel.LeftPoints"
+                           RightPoints="@ViewModel.RightPoints"
+                           InputValue="@ViewModel.InputValue"
+                           OnKeyDown="HandleGlobalKeyDown" />
+        </div>
+
+        @if (isAdvertVisible)
+        {
+            <div class="line line-Advert">Werbung</div>
+        }
+    </div>
+
+    @if (isRightPanelVisible)
+    {
+        <div class="teamname-right">Ein Verein mit einem sehr sehr sehr langen Namen</div>
+    }
+</div>

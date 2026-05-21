@@ -1,0 +1,69 @@
+﻿html, body {
+    margin: 0;
+    height: 100%;
+}
+
+.containerX {
+    background-color: var(--bg-color);
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Seitenleisten */
+.teamname-left, .teamname-right {
+    width: 12vmin; /* skaliert automatisch */
+    background: #ccc;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    writing-mode: vertical-rl;
+    font-size: 4vmin;
+    font-family: Arial, sans-serif;
+}
+
+/* linke Seite drehen */
+.teamname-left {
+    transform: rotate(180deg);
+    color: var(--fg-left);
+}
+
+.teamname-right {
+    color: var(--fg-right);
+}
+
+/* Content-Bereich */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Zeilen */
+.line {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* dynamische Höhen */
+.line-1 {
+    flex: 0 0 12vmin;
+}
+
+.line-2 {
+    flex: 3;
+}
+
+.line-3 {
+    flex: 1;
+}
+
+.line-Advert {
+    flex: 2 0 10vmin;
+    color: white;
+    font-size: 6vmin;
+}

@@ -1,0 +1,60 @@
+﻿@page "/lifecycle-demo"
+
+<h1>Lifecycle Demo</h1>
+
+<ul>
+    @foreach (var log in logs)
+    {
+        <li>@log</li>
+    }
+</ul>
+
+<button @onclick="TriggerRender">Re-Render auslösen</button>
+
+@code {
+    private List<string> logs = new();
+
+    protected override void OnInitialized()
+    {
+        logs.Add("OnInitialized");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs.Add("OnInitializedAsync (Start)");
+        await Task.Delay(500);
+        logs.Add("OnInitializedAsync (Ende)");
+    }
+
+    protected override void OnParametersSet()
+    {
+        logs.Add("OnParametersSet");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        logs.Add("OnParametersSetAsync");
+        await Task.Delay(200);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        logs.Add($"OnAfterRender (firstRender: {firstRender})");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        logs.Add($"OnAfterRenderAsync (firstRender: {firstRender})");
+        await Task.CompletedTask;
+    }
+
+    private void TriggerRender()
+    {
+        logs.Add("Button geklickt → Re-Render");
+    }
+
+    public void Dispose()
+    {
+        logs.Add("Dispose");
+    }
+}

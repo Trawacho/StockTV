@@ -1,0 +1,219 @@
+﻿/* ===================================================
+   MAIN LAYOUT
+=================================================== */
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* ===================================================
+   CONTENT / IFRAME
+=================================================== */
+.content-panel {
+    flex: 1 1 auto;
+    position: relative;
+    background: #eee;
+    min-width: 0;
+    min-height: 0;
+}
+
+    .content-panel iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+.interaction-blocker {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: transparent;
+}
+
+/* ===================================================
+   KEYPAD PANEL – GRID BASIERT
+=================================================== */
+.keypad-panel {
+    display: grid;
+    /* 1 Zeile Display + 7 Button-Reihen (ALLE gleich hoch) */
+    grid-template-rows: auto repeat(7, 1fr);
+    gap: clamp(6px, 1vh, 12px);
+    padding: clamp(6px, 1.5vh, 16px);
+    background: #222;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* ===================================================
+   ORIENTATION: LANDSCAPE
+   Keypad RECHTS – max. 30 %
+=================================================== */
+@media (orientation: landscape) {
+    .main-container {
+        flex-direction: row;
+        background: #222e;
+    }
+
+    .content-panel {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .keypad-panel {
+        flex: 0 0 30%;
+        max-width: 30%;
+        min-width: 260px; /* Touch-sicher */
+        height: clamp(420px, 80vh, 700px);
+        max-height: 80vh;
+        align-self: flex-start;
+    }
+}
+
+/* ===================================================
+   ORIENTATION: PORTRAIT
+   Keypad UNTEN – 50 %
+   + Mindesthöhe zum Schutz des Grids
+=================================================== */
+@media (orientation: portrait) {
+    .main-container {
+        flex-direction: column;
+    }
+
+    /* Keypad hat Priorität */
+    .keypad-panel {
+        flex: 0 0 auto;
+        height: clamp(320px, 55vh, 65vh);
+        max-height: 65vh;
+    }
+
+
+    /* iframe bekommt den restlichen Platz */
+    .content-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+}
+
+
+/* ===================================================
+   DISPLAY
+=================================================== */
+.display {
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(1rem, 2.5vh, 1.6rem);
+    border: 2px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(6px, 1.2vh, 12px);
+    height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ===================================================
+   NUMBERS GRID (4 Reihen)
+=================================================== */
+.numbers-grid {
+    grid-row: 2 / span 4;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: clamp(6px, 1vh, 10px);
+}
+
+/* ===================================================
+   COLOR / ACTION SECTION (3 Reihen)
+=================================================== */
+.color-section {
+    grid-row: 6 / span 3;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: clamp(6px, 1vh, 10px);
+}
+
+.color-row-double {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(6px, 1vh, 10px);
+}
+
+.color-row-single {
+    display: block;
+}
+
+/* ===================================================
+   BUTTONS – ALLE EXAKT GLEICHE HÖHE
+=================================================== */
+.key {
+    width: 100%;
+    height: 100%;
+    padding: 0; /* entscheidend für gleiche Höhen */
+    font-size: clamp(0.85rem, 2vh, 1.3rem);
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #444;
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+    touch-action: manipulation;
+    transition: transform 0.05s ease, filter 0.05s ease;
+}
+
+    .key:active {
+        transform: scale(0.92);
+        filter: brightness(1.4);
+    }
+
+    .key:focus:not(:active) {
+        background-color: #444;
+    }
+
+/* ===================================================
+   FARBTASTEN
+=================================================== */
+.btn-links {
+    background-color: var(--fg-left, #d32f2f);
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.btn-rechts {
+    background-color: var(--fg-right, #388e3c);
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.btn-blue {
+    background-color: #1976d2;
+}
+
+.btn-yellow {
+    background-color: #ffd600;
+    color: black;
+}
+
+/* Fokus-Fix */
+.btn-links:focus:not(:active) {
+    background-color: var(--fg-left, #d32f2f) !important;
+}
+
+.btn-rechts:focus:not(:active) {
+    background-color: var(--fg-right, #388e3c) !important;
+}
+
+.btn-blue:focus:not(:active) {
+    background-color: #1976d2 !important;
+}
+
+.btn-yellow:focus:not(:active) {
+    background-color: #ffd600 !important;
+}

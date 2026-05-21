@@ -1,32 +1,17 @@
-﻿using Microsoft.AspNetCore.Components;
-using StockTvBlazor.Components.Models;
-using StockTvBlazor.Components.Services;
+﻿using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
-namespace StockTvBlazor.Components.ViewModels
+namespace StockTvBlazor.Components.ViewModels;
+
+
+public class TrainingViewModel(SettingsService settingsSerivce, MatchService matchService) :
+	BaseViewModel(settingsSerivce, matchService)
 {
+	public string HeaderText => _isDemoMode
+		? $"{HeaderTextBasis}     Kehre: {DemoData.KehreAnzahl}"
+		: CurrentMatch.CurrentGame.Turns.Count == 0
+			? base.HeaderTextBasis
+			: $"{HeaderTextBasis}     Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
 
-	public class TrainingViewModel(SettingsService settingsSerivce, NavigationManager navigationManager) : BaseViewModel(settingsSerivce, navigationManager)
-	{
-		public string HeaderText
-		{
-			get
-			{
-				if (Match.CurrentGame.GameNumber == 1 &&
-					Match.CurrentGame.Turns.Count == 0)
-				{
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}";
-				}
-				else
-				{
-					return $"{(_currentSettings.BlockLocalChanges ? "." : "")}Bahn: {_currentSettings.BahnNummer}   Kehre: {Match.CurrentGame.Turns.Count}";
-				}
-			}
-		}
-		public int LeftPointsSum => base.Match.CurrentGame.LeftPointsSum;
-		public int RightPointsSum => base.Match.CurrentGame.RightPointsSum;
-		public string LeftPoins => base.Match.CurrentGame.LeftPoints;
-		public string RightPoints => base.Match.CurrentGame.RightPoints;
-		public new string InputValue => base.InputValue < 0 ? "" : base.InputValue.ToString();
-		
-	}
+	public new string GetShellGridStyle() => "grid-template-columns: 100%;";
 }
