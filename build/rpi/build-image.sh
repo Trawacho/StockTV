@@ -107,7 +107,7 @@ parted -s "$PIIMG" resizepart 2 100%
 partprobe "$LOOP_DEV" 2>/dev/null || true
 sleep 1
 
-e2fsck -f "${LOOP_DEV}p2" || true
+e2fsck -f -y "${LOOP_DEV}p2" || true
 resize2fs "${LOOP_DEV}p2"
 
 # ---- 4. Partitionen mounten --------------------------------
@@ -248,7 +248,7 @@ apt-get install -y --no-install-recommends \
     openbox \
     chromium \
     curl \
-    libicu72 \
+    libicu-dev \
     libssl3 \
     zlib1g
 
