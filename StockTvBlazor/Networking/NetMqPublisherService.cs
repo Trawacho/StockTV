@@ -114,7 +114,7 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 			_logger.LogInformation("NetMqPublisherService durch CancellationToken gestoppt");
 		}
 
-		_poller.Stop();
+		_poller.StopAsync();
 		_logger.LogInformation("ExecuteAsync beendet");
 	}
 
@@ -125,17 +125,11 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		_disposed = true;
 
 		_logger.LogInformation("NetMqPublisherService Dispose gestartet");
-		try 
-		{ 
-			_messageChannel.Writer.TryComplete(); 
-		} 
-		catch (Exception ex) 
-		{
-			 _logger.LogWarning(ex, "Channel TryComplete failed during dispose"); 
-		}
+		_messageChannel.Writer.TryComplete();
 		_pubSocket.ReceiveReady -= OnReceiveReady;
-		_pubSocket.Close();
-		_pubSocket.Dispose();
+		if (_poller.IsRunning)
+			_poller.StopAsync();
+		_poller.Dispose();
 		_logger.LogInformation("NetMqPublisherService dispose beendet");
 
 		base.Dispose();

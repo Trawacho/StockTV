@@ -122,9 +122,42 @@ jobs:
             | SSH-User | `pi` |
             | SSH-Passwort | `stocktv` |
             | Hostname | `stocktv` |
+            | Tastaturlayout | Deutsch (`de`) |
             | Web-UI | `http://<ip>:8080` |
 
             > Passwort nach dem ersten Login ändern: `passwd`
+
+            ---
+
+            ### Konfiguration nach dem ersten Start (via SSH)
+
+            **Hostname ändern** (z.B. für mehrere Bahnen im selben Netz: `stocktv-1`, `stocktv-2`, …)
+            ```bash
+            sudo hostnamectl set-hostname stocktv-1
+            sudo sed -i 's/stocktv/stocktv-1/g' /etc/hosts
+            sudo reboot
+            ```
+
+            **Feste IP-Adresse setzen**
+            ```bash
+            # Aktuelle Verbindung anzeigen
+            nmcli connection show
+
+            # Feste IP setzen (Beispiel: 192.168.1.50, Gateway 192.168.1.1)
+            sudo nmcli connection modify "Wired connection 1" \
+              ipv4.method manual \
+              ipv4.addresses 192.168.1.50/24 \
+              ipv4.gateway 192.168.1.1 \
+              ipv4.dns "8.8.8.8 8.8.4.4"
+            sudo nmcli connection up "Wired connection 1"
+            ```
+
+            **Tastaturlayout ändern**
+            ```bash
+            sudo dpkg-reconfigure keyboard-configuration
+            ```
+
+            ---
 
             ### Raspberry Pi – Manuelle Installation
             **`stocktv-rpi.zip`** – für bestehende Pi-Installationen via `install.sh`.

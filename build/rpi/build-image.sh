@@ -151,6 +151,7 @@ WorkingDirectory=$APP_DIR
 ExecStart=$APP_DIR/$APP_BINARY
 Restart=always
 RestartSec=5
+TimeoutStopSec=15
 User=$PI_USER
 Environment=ASPNETCORE_URLS=http://+:8080
 Environment=ASPNETCORE_ENVIRONMENT=Production
@@ -262,6 +263,38 @@ chown -R ${PI_USER}:${PI_USER} $APP_DIR
 chown ${PI_USER}:${PI_USER} \
     /home/${PI_USER}/.bash_profile \
     /home/${PI_USER}/.xinitrc
+
+# Tastaturlayout vorausfüllen (verhindert interaktiven Wizard beim ersten Boot)
+cat > /etc/default/keyboard << 'KBEOF'
+XKBMODEL="pc105"
+XKBLAYOUT="de"
+XKBVARIANT=""
+XKBOPTIONS=""
+BACKSPACE="guess"
+KBEOF
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration
+
+# Console-Setup vorausfüllen
+cat > /etc/default/console-setup << 'CSEOF'
+ACTIVE_CONSOLES="/dev/tty[1-6]"
+CHARMAP="UTF-8"
+VIDEOMODE=
+FONT=
+FONTFACE=
+FONTSIZE=
+CODESET="Lat15"
+CSEOF
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure console-setup
+
+# Cloud-init deaktivieren — sonst überschreibt es beim ersten Boot
+# die autologin-Konfiguration und zeigt Setup-Wizards
+touch /etc/cloud/cloud-init.disabled
+systemctl disable cloud-init-local.service cloud-init-main.service \
+    cloud-config.service cloud-final.service cloud-init-network.service \
+    2>/dev/null || true
+
+# Avahi deaktivieren — belegt Port 5353 und blockiert StockTV-mDNS
+systemctl disable avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
 
 # Dienste aktivieren
 systemctl enable ${SERVICE_NAME}

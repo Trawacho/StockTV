@@ -62,6 +62,11 @@ builder.Services.AddTransient<BestOfViewModel>();
 builder.Services.AddTransient<SettingsViewModel>();
 builder.Services.AddTransient<ZielViewModel>();
 
+builder.Services.Configure<HostOptions>(options =>
+{
+	options.ShutdownTimeout = TimeSpan.FromSeconds(10);
+});
+
 
 
 

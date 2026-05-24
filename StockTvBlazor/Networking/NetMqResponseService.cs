@@ -187,7 +187,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		}
 
 		if (_poller.IsRunning)
-			_poller.Stop();
+			_poller.StopAsync();
 
 		_logger.LogInformation("NetMQ service stopped");
 	}
@@ -201,14 +201,10 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 		_logger.LogInformation("Disposing NetMQ service");
 
-		if (_poller.IsRunning)
-			_poller.Stop();
-
 		_actionChannel.Writer.TryComplete();
-
+		if (_poller.IsRunning)
+			_poller.StopAsync();
 		_poller.Dispose();
-		_repSocket.Close();
-		_repSocket.Dispose();
 
 		base.Dispose();
 	}
