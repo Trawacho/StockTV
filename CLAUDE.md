@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Wichtige Verhaltensregeln
+
+- **Branching**: Niemals direkt in `main` oder `release/*` committen. Jede Änderung erfolgt in einem eigenen `feature/*`- oder `hotfix/*`-Branch. Die vollständige Branching- und Release-Strategie ist in [CONTRIBUTING.md](CONTRIBUTING.md) beschrieben — diese Regeln sind verbindlich.
+- **Commits**: Nur auf explizite Aufforderung des Users committen oder pushen.
+
 ## Projektübersicht
 
 **StockTV2** ist eine Blazor Server-Applikation als **Punkteanzeige und Eingabeterminal** für den Stocksport. Pro Spielbahn läuft eine Instanz der App. Die Anzeige wird auf einem TV dargestellt, die Eingabe primär über Numpad oder alternativ über `/input` auf einem Tablet.
