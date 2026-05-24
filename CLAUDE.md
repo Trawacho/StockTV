@@ -29,13 +29,20 @@ build\buildproject.bat
 # Remote-Deployment auf Server 'csl' (4 Container: stocktvBahn1–4)
 build\remotebuild_std.ps1
 
-# Raspberry Pi: bauen + Release-Zip erstellen (fuer GitHub Release)
+# Raspberry Pi: bauen + Release-Zip / direkt deployen
 build\rpi\publish-rpi.ps1
-
-# Raspberry Pi: bauen + direkt auf Pi deployen
-build\rpi\publish-rpi.ps1 -PiHost 192.168.1.xx
 build\rpi\publish-rpi.ps1 -PiHost 192.168.1.xx -Install   # Erstinstallation
+
+# Windows x64: bauen + Release-Zip / direkt deployen (WinRM)
+build\windows\publish-windows.ps1
+build\windows\publish-windows.ps1 -TargetHost 192.168.1.xx -Install
+
+# Linux x64: bauen + Release-Zip / direkt deployen (SSH)
+build\linux\publish-linux.ps1
+build\linux\publish-linux.ps1 -TargetHost 192.168.1.xx -Install
 ```
+
+Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -44,8 +51,8 @@ build\rpi\publish-rpi.ps1 -PiHost 192.168.1.xx -Install   # Erstinstallation
 - **Framework**: ASP.NET Core 10, Blazor Server (Interactive Server Components)
 - **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS)
 - **UI**: Bootstrap, responsive Text via `wwwroot/js/autofitText.js` (`stockTvAutoFit.observe`)
-- **Deployment**: Docker (multi-stage), Base Image `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`, Ziel-Plattform Linux/amd64
-- **Volumes**: `./_config:/app/_config`, `./_logs:/app/_logs`
+- **Deployment**: Docker (Linux/amd64), Raspberry Pi (linux-arm64, Kiosk), Windows Service (`UseWindowsService()` in `Program.cs`), Linux x64 (systemd)
+- **Volumes / Datenpfade**: `./_config:/app/_config`, `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
 
 ---
 
@@ -68,7 +75,14 @@ StockTV2/
 │   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
 │   └── wwwroot/js/autofitText.js
 ├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
-└── build/                      # Dockerfile, docker-compose.yml, Build-Skripte
+├── build/
+│   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
+│   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1
+│   ├── linux/                  # Linux x64: publish-linux.ps1, install.sh
+│   ├── Dockerfile              # Multi-stage Docker Build (linux/amd64)
+│   └── docker-compose.yml
+└── .github/workflows/
+    └── release.yml             # Unified Release-Workflow (alle 3 Plattformen parallel)
 ```
 
 ---

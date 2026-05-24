@@ -1,0 +1,266 @@
+name: Release
+
+# Wird ausgeloest wenn ein Tag (z.B. v1.2.0) gepusht wird
+# oder manuell über "Run workflow" in GitHub Actions
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versionsnummer (z.B. v1.0.0)'
+        required: false
+        default: 'dev'
+
+permissions:
+  contents: write
+
+jobs:
+
+  # -------------------------------------------------------
+  #  Versionsnummer ermitteln (shared across all jobs)
+  # -------------------------------------------------------
+  version:
+    name: Versionsnummer ermitteln
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - name: Ermittle Version
+        id: v
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+  # -------------------------------------------------------
+  #  Windows x64
+  # -------------------------------------------------------
+  build-windows:
+    name: Build Windows x64
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish (win-x64, self-contained)
+        run: |
+          dotnet publish StockTvBlazor/StockTvBlazor.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained `
+            --output build/windows/publish `
+            -p:UseAppHost=true
+
+      - name: install-service.ps1 ins Paket aufnehmen
+        run: Copy-Item "build/windows/install-service.ps1" "build/windows/publish/install-service.ps1" -Force
+
+      - name: Release-Zip erstellen
+        run: Compress-Archive -Path "build/windows/publish/*" -DestinationPath "build/windows/stocktv-windows-x64.zip"
+
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: build/windows/stocktv-windows-x64.zip
+          retention-days: 7
+
+  # -------------------------------------------------------
+  #  Linux x64
+  # -------------------------------------------------------
+  build-linux:
+    name: Build Linux x64
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish (linux-x64, self-contained)
+        run: |
+          dotnet publish StockTvBlazor/StockTvBlazor.csproj \
+            --configuration Release \
+            --runtime linux-x64 \
+            --self-contained \
+            --output build/linux/publish \
+            -p:UseAppHost=true
+
+      - name: Release-Zip erstellen
+        run: |
+          cd build/linux/publish
+          zip -r ../stocktv-linux-x64.zip .
+
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-zip
+          path: build/linux/stocktv-linux-x64.zip
+          retention-days: 7
+
+  # -------------------------------------------------------
+  #  Raspberry Pi (linux-arm64 + flashbares Image)
+  # -------------------------------------------------------
+  build-rpi:
+    name: Build Raspberry Pi Image
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish (linux-arm64, self-contained)
+        run: |
+          dotnet publish StockTvBlazor/StockTvBlazor.csproj \
+            --configuration Release \
+            --runtime linux-arm64 \
+            --self-contained \
+            --output build/rpi/publish \
+            -p:UseAppHost=true
+
+      - name: Image-Builder Abhaengigkeiten installieren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            qemu-user-static \
+            binfmt-support \
+            kpartx \
+            parted \
+            e2fsprogs \
+            curl \
+            xz-utils
+          sudo update-binfmts --enable qemu-aarch64 || true
+
+      - name: Raspberry Pi Image bauen
+        env:
+          STOCKTV_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          chmod +x build/rpi/build-image.sh
+          sudo --preserve-env=STOCKTV_VERSION bash build/rpi/build-image.sh
+
+      - name: Image-Pfad ermitteln
+        id: img
+        run: |
+          IMG=$(ls build/rpi/stocktv-rpi-*.img.xz | head -1)
+          echo "path=$IMG" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename $IMG)" >> "$GITHUB_OUTPUT"
+
+      - name: Release-Zip erstellen (fuer install.sh)
+        run: |
+          cd build/rpi/publish
+          zip -r ../stocktv-rpi.zip .
+
+      - name: Image als Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpi-image
+          path: ${{ steps.img.outputs.path }}
+          retention-days: 7
+
+      - name: Zip als Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpi-zip
+          path: build/rpi/stocktv-rpi.zip
+          retention-days: 7
+
+  # -------------------------------------------------------
+  #  GitHub Release (nur bei Tag-Push)
+  # -------------------------------------------------------
+  release:
+    name: GitHub Release erstellen
+    needs: [version, build-windows, build-linux, build-rpi]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Artefakte herunterladen
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: GitHub Release erstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          name: StockTV ${{ needs.version.outputs.version }}
+          body: |
+            ## StockTV ${{ needs.version.outputs.version }}
+
+            ---
+
+            ### Raspberry Pi – Fertiges Image
+            **`stocktv-rpi-${{ needs.version.outputs.version }}.img.xz`**
+            Direkt mit [Raspberry Pi Imager](https://www.raspberrypi.com/software/) flashen.
+
+            | Einstellung | Wert |
+            |---|---|
+            | SSH-User | `pi` |
+            | SSH-Passwort | `stocktv` |
+            | Hostname | `stocktv` |
+            | Web-UI | `http://<ip>:8080` |
+
+            > Passwort nach dem ersten Login ändern: `passwd`
+
+            **Konfiguration nach dem ersten Start (SSH):**
+            ```bash
+            # Hostname ändern (z.B. für mehrere Bahnen: stocktv-1, stocktv-2, …)
+            sudo hostnamectl set-hostname stocktv-1
+            sudo sed -i 's/stocktv/stocktv-1/g' /etc/hosts && sudo reboot
+
+            # Feste IP setzen
+            sudo nmcli connection modify "Wired connection 1" \
+              ipv4.method manual ipv4.addresses 192.168.1.50/24 \
+              ipv4.gateway 192.168.1.1 ipv4.dns "8.8.8.8"
+            sudo nmcli connection up "Wired connection 1"
+            ```
+
+            ---
+
+            ### Windows x64
+            **`stocktv-windows-x64.zip`** – ZIP entpacken, dann als Administrator:
+            ```powershell
+            .\install-service.ps1
+            ```
+
+            ---
+
+            ### Linux x64 (Ubuntu/Debian)
+            **`stocktv-linux-x64.zip`** – oder direkt per Script:
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/linux/install.sh | bash
+            ```
+
+            ---
+
+            ### Raspberry Pi – Manuelle Installation
+            **`stocktv-rpi.zip`** – für bestehende Installationen:
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+            ```
+
+          files: |
+            artifacts/rpi-image/*.img.xz
+            artifacts/rpi-zip/stocktv-rpi.zip
+            artifacts/windows-zip/stocktv-windows-x64.zip
+            artifacts/linux-zip/stocktv-linux-x64.zip
+          draft: false
+          prerelease: false

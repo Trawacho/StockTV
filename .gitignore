@@ -365,6 +365,15 @@ FodyWeavers.xsd
 # Settings Datei von StockTV
 stocktv.config.json
 
+# StockTV Laufzeit-Verzeichnisse (werden zur App-Laufzeit erzeugt)
+_logs/
+
+# StockTV Build-Artefakte (publish/ ist bereits durch die publish/-Regel oben abgedeckt)
+build/rpi/stocktv-rpi.zip
+build/rpi/stocktv-rpi-*.img.xz
+build/windows/stocktv-windows-x64.zip
+build/linux/stocktv-linux-x64.zip
+
 # VS Code Ordner
 .vscode/
 
