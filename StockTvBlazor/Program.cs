@@ -72,6 +72,15 @@ builder.Services.Configure<HostOptions>(options =>
 
 var app = builder.Build();
 
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+	Task.Run(async () =>
+	{
+		await Task.Delay(5000);
+		Environment.Exit(0);
+	});
+});
+
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
