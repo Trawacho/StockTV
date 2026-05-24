@@ -8,11 +8,13 @@
 #
 #  Bauen + direkt auf Pi deployen:
 #    .\publish-rpi.ps1 -PiHost 192.168.1.xx
-#    .\publish-rpi.ps1 -PiHost 192.168.1.xx -Install   (Erstinstallation)
+#    .\publish-rpi.ps1 -PiHost 192.168.1.xx -Install            (Erstinstallation)
+#    .\publish-rpi.ps1 -PiHost 192.168.1.xx -SudoPass geheim    (anderes sudo-Passwort)
 
 param(
     [string]$PiHost      = "",
     [string]$PiUser      = "pi",
+    [string]$SudoPass    = "stocktv",
     [string]$RemoteDir   = "/opt/stocktv",
     [string]$ServiceName = "stocktv",
     [switch]$Install
@@ -82,13 +84,19 @@ Write-Host "`n=========================================="
 Write-Host "   DEPLOY: StockTV -> $PiHost"
 Write-Host "=========================================="
 
+# Hilfsfunktion: sudo-Befehl mit Passwort via stdin
+function Invoke-Sudo($cmd) {
+    ssh $RemoteUser "echo '$SudoPass' | sudo -S $cmd"
+}
+
 # --- Service stoppen (falls laufend) ---
 Write-Host "`nStoppe Dienst auf Pi..."
-ssh $RemoteUser "sudo systemctl stop $ServiceName 2>/dev/null; true"
+ssh $RemoteUser "echo '$SudoPass' | sudo -S systemctl stop $ServiceName 2>/dev/null; true"
 
 # --- Zielverzeichnis anlegen ---
 Write-Host "Erstelle Verzeichnis $RemoteDir..."
-ssh $RemoteUser "sudo mkdir -p $RemoteDir && sudo chown ${PiUser}:${PiUser} $RemoteDir"
+Invoke-Sudo "mkdir -p $RemoteDir"
+Invoke-Sudo "chown ${PiUser}:${PiUser} $RemoteDir"
 
 # --- Dateien kopieren ---
 Write-Host "Kopiere Dateien..."
@@ -112,6 +120,7 @@ WorkingDirectory=$RemoteDir
 ExecStart=$RemoteDir/StockTvBlazor
 Restart=always
 RestartSec=5
+TimeoutStopSec=15
 User=$PiUser
 Environment=ASPNETCORE_URLS=http://+:8080
 Environment=ASPNETCORE_ENVIRONMENT=Production
@@ -121,18 +130,19 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 WantedBy=multi-user.target
 "@
 
-    $ServiceContent | ssh $RemoteUser "sudo tee /etc/systemd/system/$ServiceName.service > /dev/null"
-    ssh $RemoteUser "sudo systemctl daemon-reload && sudo systemctl enable $ServiceName"
+    $ServiceContent | ssh $RemoteUser "echo '$SudoPass' | sudo -S tee /etc/systemd/system/$ServiceName.service > /dev/null"
+    Invoke-Sudo "systemctl daemon-reload"
+    Invoke-Sudo "systemctl enable $ServiceName"
     Write-Host "Dienst '$ServiceName' installiert und aktiviert."
 }
 
 # --- Service starten ---
 Write-Host "`nStarte Dienst..."
-ssh $RemoteUser "sudo systemctl start $ServiceName"
+Invoke-Sudo "systemctl start $ServiceName"
 
 # --- Status anzeigen ---
 Write-Host "`n--- Dienst-Status ---"
-ssh $RemoteUser "sudo systemctl status $ServiceName --no-pager"
+Invoke-Sudo "systemctl status $ServiceName --no-pager"
 
 Write-Host "`n=========================================="
 Write-Host "Deployment abgeschlossen!"
