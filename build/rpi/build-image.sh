@@ -231,9 +231,14 @@ chroot "$MNT" /usr/bin/qemu-aarch64-static /bin/bash <<CHROOT
 set -e
 export DEBIAN_FRONTEND=noninteractive
 
-# pi-User anlegen (existiert in neueren Pi-OS-Versionen nicht mehr automatisch)
+# pi-User anlegen oder korrigieren
+# In Pi OS Bookworm existiert 'pi' bereits als System-Account mit nologin-Shell
 if ! id -u $PI_USER &>/dev/null; then
     useradd -m -s /bin/bash \
+        -G sudo,video,audio,input,dialout,plugdev,netdev \
+        $PI_USER
+else
+    usermod -s /bin/bash \
         -G sudo,video,audio,input,dialout,plugdev,netdev \
         $PI_USER
 fi
