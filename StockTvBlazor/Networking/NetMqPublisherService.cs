@@ -18,7 +18,8 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 
 	private readonly Channel<(string Topic, object Payload)> _messageChannel;
 
-	private readonly string _serializedAliveInfo;
+	private string _serializedAliveInfo;
+	private bool _aliveInfoResolved;
 	
 	private readonly ILogger<NetMqPublisherService> _logger;
 
@@ -43,8 +44,8 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		// --- AliveInfo erstellen ---
 		var aliveInfo = AliveInfo.Create();
 		_serializedAliveInfo = JsonSerializer.Serialize(aliveInfo);
+		_aliveInfoResolved = aliveInfo.IpAddress != "127.0.0.1";
 
-		// --- DIREKT LOGGEN ---
 		_logger.LogInformation(
 			"Server AliveInfo: HostName={Host}, IP={Ip}, AppVersion={Version}",
 			aliveInfo.HostName,
@@ -53,7 +54,22 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		);
 
 		_aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
-		_aliveTimer.Elapsed += (s, e) => Publish("Alive", _serializedAliveInfo);
+		_aliveTimer.Elapsed += (s, e) =>
+		{
+			if (!_aliveInfoResolved)
+			{
+				var updated = AliveInfo.Create();
+				if (updated.IpAddress != "127.0.0.1")
+				{
+					_aliveInfoResolved = true;
+					_serializedAliveInfo = JsonSerializer.Serialize(updated);
+					_logger.LogInformation(
+						"AliveInfo aktualisiert: HostName={Host}, IP={Ip}",
+						updated.HostName, updated.IpAddress);
+				}
+			}
+			Publish("Alive", _serializedAliveInfo);
+		};
 
 		_poller = [_pubSocket, _aliveTimer];
 		_messageChannel = Channel.CreateUnbounded<(string, object)>();
