@@ -117,7 +117,8 @@ if [ "$FIRST_INSTALL" = true ]; then
     cat > "$TMPDIR/$SERVICE_NAME.service" <<EOF
 [Unit]
 Description=StockTV Punkteanzeige
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 WorkingDirectory=$INSTALL_DIR

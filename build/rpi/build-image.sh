@@ -144,7 +144,8 @@ mkdir -p "$MNT$APP_DIR/_config" "$MNT$APP_DIR/_logs"
 cat > "$MNT/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
 [Unit]
 Description=StockTV Punkteanzeige
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 WorkingDirectory=$APP_DIR
@@ -186,8 +187,11 @@ xset -dpms
 xset s off
 xset s noblank
 
-# Minimaler Windowmanager
-openbox-session &
+# Minimaler Windowmanager (openbox statt openbox-session: kein xdg-autostart, kein PyXDG noetig)
+openbox &
+
+# Chromium Singleton-Lock entfernen (verhindert Fehler nach unsauberem Shutdown)
+rm -f ~/.config/chromium/Singleton*
 
 # Warte bis StockTV HTTP-Anfragen beantwortet (max. 60 Sekunden)
 for i in $(seq 1 30); do
@@ -218,8 +222,9 @@ sed -i "s/raspberrypi/$HOSTNAME_NEW/g" "$MNT/etc/hosts" 2>/dev/null || true
 # SSH via sentinel-Datei auf Boot-Partition aktivieren
 touch "$MNT/boot/firmware/ssh"
 
-# firstrun.sh entfernen, damit kein Setup-Wizard startet
+# firstrun.sh + userconf-Trigger entfernen
 rm -f "$MNT/boot/firmware/firstrun.sh"
+rm -f "$MNT/boot/firmware/userconf.txt"
 sed -i 's| systemd.run=[^ ]*||g; s| systemd.run_success_action=[^ ]*||g' \
     "$MNT/boot/firmware/cmdline.txt" 2>/dev/null || true
 
@@ -295,6 +300,15 @@ systemctl disable cloud-init-local.service cloud-init-main.service \
 
 # Avahi deaktivieren — belegt Port 5353 und blockiert StockTV-mDNS
 systemctl disable avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
+
+# userconf-pi deaktivieren — verhindert Benutzer-Einrichtungsassistent beim ersten Boot
+systemctl disable userconf-pi.service 2>/dev/null || true
+
+# raspi-config firstboot deaktivieren — verhindert Tastaturlayout-Wizard beim ersten Boot
+systemctl disable raspi-config.service 2>/dev/null || true
+
+# Autologin auf Konsole aktivieren (offizielle Pi-Methode, ueberschreibt eventuell vorhandene Konfigurationen)
+raspi-config nonint do_boot_behaviour B2 2>/dev/null || true
 
 # Dienste aktivieren
 systemctl enable ${SERVICE_NAME}
