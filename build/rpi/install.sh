@@ -56,6 +56,10 @@ done
 echo "Pruefe System-Bibliotheken..."
 $SUDO apt-get install -y --no-install-recommends libicu-dev libssl3 zlib1g -qq
 
+# --- Avahi deaktivieren (belegt Port 5353, blockiert StockTV-mDNS) ---
+$SUDO systemctl mask avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
+$SUDO systemctl stop avahi-daemon.service 2>/dev/null || true
+
 # --- Neueste Release-URL ermitteln ---
 echo "Suche neueste Version auf GitHub..."
 
