@@ -4,7 +4,7 @@ Es gibt zwei Installationswege:
 
 | | [Methode 1: Fertiges Image](#methode-1-fertiges-image-flashen) | [Methode 2: Install-Script](#methode-2-install-script-auf-bestehendem-pi-os) |
 |---|---|---|
-| Voraussetzung | Leere SD-Karte | Laufendes Raspberry Pi OS 64-bit |
+| Voraussetzung | Leere SD-Karte | Laufendes Raspberry Pi OS Lite 64-bit |
 | Kiosk-Modus | Immer enthalten | Optional (Script fragt nach) |
 | Aufwand | Minimal | Minimal |
 
@@ -49,9 +49,9 @@ Nach ca. 30–60 Sekunden öffnet sich Chromium automatisch mit der Punkteanzeig
 
 ---
 
-## Methode 2: Install-Script auf bestehendem Pi OS
+## Methode 2: Install-Script auf bestehendem Raspberry Pi OS Lite 64-bit
 
-Für einen Pi, auf dem bereits Raspberry Pi OS 64-bit läuft.
+Für einen Pi, auf dem bereits Raspberry Pi OS Lite 64-bit läuft.
 
 ### Voraussetzungen
 
