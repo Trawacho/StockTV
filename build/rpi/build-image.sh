@@ -310,6 +310,11 @@ mkdir -p /etc/systemd/system/multi-user.target.wants
 ln -sf /etc/systemd/system/${SERVICE_NAME}.service \
     /etc/systemd/system/multi-user.target.wants/${SERVICE_NAME}.service
 
+# Autologin auf tty1 aktivieren — getty@tty1.service in getty.target.wants eintragen
+mkdir -p /etc/systemd/system/getty.target.wants
+ln -sf /usr/lib/systemd/system/getty@.service \
+    /etc/systemd/system/getty.target.wants/getty@tty1.service
+
 # APT-Cache bereinigen
 apt-get clean
 rm -rf /var/lib/apt/lists/*
