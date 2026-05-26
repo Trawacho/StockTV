@@ -137,6 +137,7 @@ mkdir -p "$MNT$APP_DIR"
 cp -r "$PUBLISH_DIR/"* "$MNT$APP_DIR/"
 chmod +x "$MNT$APP_DIR/$APP_BINARY"
 mkdir -p "$MNT$APP_DIR/_config" "$MNT$APP_DIR/_logs"
+touch "$MNT$APP_DIR/.kiosk"
 
 # ---- 6. Konfigurationsdateien schreiben -------------------
 
