@@ -137,6 +137,7 @@ mkdir -p "$MNT$APP_DIR"
 cp -r "$PUBLISH_DIR/"* "$MNT$APP_DIR/"
 chmod +x "$MNT$APP_DIR/$APP_BINARY"
 mkdir -p "$MNT$APP_DIR/_config" "$MNT$APP_DIR/_logs"
+touch "$MNT$APP_DIR/.kiosk"
 
 # ---- 6. Konfigurationsdateien schreiben -------------------
 
@@ -168,7 +169,7 @@ mkdir -p "$MNT/etc/systemd/system/getty@tty1.service.d"
 cat > "$MNT/etc/systemd/system/getty@tty1.service.d/autologin.conf" <<EOF
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin $PI_USER --noclear %I \$TERM
+ExecStart=-/sbin/agetty --autologin $PI_USER --noclear %I
 EOF
 
 # .bash_profile: X11 automatisch starten wenn auf tty1
@@ -222,9 +223,8 @@ sed -i "s/raspberrypi/$HOSTNAME_NEW/g" "$MNT/etc/hosts" 2>/dev/null || true
 # SSH via sentinel-Datei auf Boot-Partition aktivieren
 touch "$MNT/boot/firmware/ssh"
 
-# firstrun.sh + userconf-Trigger entfernen
+# firstrun.sh entfernen
 rm -f "$MNT/boot/firmware/firstrun.sh"
-rm -f "$MNT/boot/firmware/userconf.txt"
 sed -i 's| systemd.run=[^ ]*||g; s| systemd.run_success_action=[^ ]*||g' \
     "$MNT/boot/firmware/cmdline.txt" 2>/dev/null || true
 
@@ -279,6 +279,9 @@ BACKSPACE="guess"
 KBEOF
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration
 
+# Konsolentastaturlayout setzen — verhindert systemd-firstboot --prompt-keymap
+echo "KEYMAP=de" > /etc/vconsole.conf
+
 # Console-Setup vorausfüllen
 cat > /etc/default/console-setup << 'CSEOF'
 ACTIVE_CONSOLES="/dev/tty[1-6]"
@@ -291,28 +294,27 @@ CODESET="Lat15"
 CSEOF
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure console-setup
 
-# Cloud-init deaktivieren — sonst überschreibt es beim ersten Boot
-# die autologin-Konfiguration und zeigt Setup-Wizards
+# Cloud-init deaktivieren — sonst überschreibt es beim ersten Boot die autologin-Konfiguration
 touch /etc/cloud/cloud-init.disabled
-systemctl disable cloud-init-local.service cloud-init-main.service \
-    cloud-config.service cloud-final.service cloud-init-network.service \
-    2>/dev/null || true
 
 # Avahi deaktivieren — belegt Port 5353 und blockiert StockTV-mDNS
-systemctl disable avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
+# ln -sf statt systemctl: systemctl wird im Chroot ignoriert
+ln -sf /dev/null /etc/systemd/system/avahi-daemon.service
+ln -sf /dev/null /etc/systemd/system/avahi-daemon.socket
 
-# userconf-pi deaktivieren — verhindert Benutzer-Einrichtungsassistent beim ersten Boot
-systemctl disable userconf-pi.service 2>/dev/null || true
+# userconfig.service maskieren — verhindert Konflikt mit dem im Chroot angelegten pi-User
+# (userconf.txt ist primäre Absicherung; Maske verhindert rename-user-Fehler)
+ln -sf /dev/null /etc/systemd/system/userconfig.service
 
-# raspi-config firstboot deaktivieren — verhindert Tastaturlayout-Wizard beim ersten Boot
-systemctl disable raspi-config.service 2>/dev/null || true
+# StockTV-Dienst aktivieren — ln -sf statt systemctl (funktioniert im Chroot)
+mkdir -p /etc/systemd/system/multi-user.target.wants
+ln -sf /etc/systemd/system/${SERVICE_NAME}.service \
+    /etc/systemd/system/multi-user.target.wants/${SERVICE_NAME}.service
 
-# Autologin auf Konsole aktivieren (offizielle Pi-Methode, ueberschreibt eventuell vorhandene Konfigurationen)
-raspi-config nonint do_boot_behaviour B2 2>/dev/null || true
-
-# Dienste aktivieren
-systemctl enable ${SERVICE_NAME}
-systemctl enable ssh
+# Autologin auf tty1 aktivieren — getty@tty1.service in getty.target.wants eintragen
+mkdir -p /etc/systemd/system/getty.target.wants
+ln -sf /usr/lib/systemd/system/getty@.service \
+    /etc/systemd/system/getty.target.wants/getty@tty1.service
 
 # APT-Cache bereinigen
 apt-get clean

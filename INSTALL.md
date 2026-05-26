@@ -1,32 +1,102 @@
 # StockTV – Installation auf dem Raspberry Pi
 
-## Voraussetzungen
+Es gibt zwei Installationswege:
 
-- Raspberry Pi 3, 4 oder 5 mit **64-Bit Betriebssystem** (Raspberry Pi OS 64-bit)
-- Internetverbindung am Pi
-- SSH-Zugang zum Pi (oder direkt Tastatur/Monitor)
-
-> **32-Bit OS wird nicht unterstützt.** Bei einem älteren Image prüfen:  
-> `uname -m` → muss `aarch64` ausgeben (nicht `armv7l`)
+| | [Methode 1: Fertiges Image](#methode-1-fertiges-image-flashen) | [Methode 2: Install-Script](#methode-2-install-script-auf-bestehendem-pi-os) |
+|---|---|---|
+| Voraussetzung | Leere SD-Karte | Laufendes Raspberry Pi OS Lite 64-bit |
+| Kiosk-Modus | Immer enthalten | Optional (Script fragt nach) |
+| Aufwand | Minimal | Minimal |
 
 ---
 
-## Installation (einmaliger Erstaufruf)
+## Methode 1: Fertiges Image flashen
 
-SSH-Verbindung zum Pi herstellen, dann folgenden Befehl ausführen:
+Das einfachste Vorgehen — Pi ist nach dem ersten Start sofort einsatzbereit.
+
+### 1. Image herunterladen
+
+Das neueste Image gibt es unter:  
+**https://github.com/Trawacho/StockTV2/releases/latest**
+
+Datei: `stocktv-rpi-vX.Y.img.xz`
+
+### 2. Image flashen
+
+Mit dem [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
+
+1. **Operating System** → *Use custom* → heruntergeladene `.img.xz` auswählen
+2. **Storage** → SD-Karte auswählen
+3. Auf *Write* klicken — fertig.
+
+> Keine weiteren Einstellungen im Imager nötig (kein SSH, kein WLAN konfigurieren —
+> das Image hat SSH bereits aktiviert).
+
+### 3. Starten
+
+SD-Karte in den Pi einlegen, Monitor anschließen, Strom anlegen.
+
+Nach ca. 30–60 Sekunden öffnet sich Chromium automatisch mit der Punkteanzeige.
+
+**Zugangsdaten:**
+
+| | |
+|---|---|
+| SSH-User | `pi` |
+| SSH-Passwort | `stocktv` |
+| Hostname | `stocktv` |
+| Web-UI | `http://<IP-des-Pi>:8080` |
+
+---
+
+## Methode 2: Install-Script auf bestehendem Raspberry Pi OS Lite 64-bit
+
+Für einen Pi, auf dem bereits Raspberry Pi OS Lite 64-bit läuft.
+
+### Voraussetzungen
+
+- **Raspberry Pi OS Lite 64-bit** (empfohlen — kein Desktop nötig, das Script installiert bei Kiosk-Aktivierung alle benötigten X11-Pakete selbst)
+- Raspberry Pi Imager → *Raspberry Pi OS (other)* → *Raspberry Pi OS Lite (64-bit)*
+- `uname -m` muss `aarch64` ausgeben (nicht `armv7l`)
+- Internetverbindung am Pi
+- SSH-Zugang oder Tastatur/Monitor
+
+### Installation
+
+SSH-Verbindung herstellen und folgenden Befehl ausführen:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
 ```
 
+Das Script fragt interaktiv:
+
+```
+Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N]
+```
+
+**Mit Kiosk (`j`):** Autologin auf tty1, Chromium startet nach dem Reboot automatisch im Vollbild.  
+**Ohne Kiosk (`N`):** Nur der Hintergrunddienst wird eingerichtet, Web-UI unter `http://<IP>:8080`.
+
 Das Script:
-- lädt automatisch die neueste Version herunter
+- lädt automatisch die neueste Version von GitHub herunter
 - installiert die App unter `/opt/stocktv/`
-- richtet einen Systemdienst ein, der beim Start automatisch mitläuft
+- richtet einen systemd-Dienst ein, der beim Start automatisch mitläuft
+- deaktiviert avahi-daemon (würde StockTV-mDNS auf Port 5353 blockieren)
+- richtet bei Bedarf Autologin, X11 und Chromium-Kiosk ein
 - startet die App sofort
 
-Nach der Installation ist die Web-Oberfläche erreichbar unter:  
-**http://\<IP-des-Pi\>:8080**
+### Update
+
+Derselbe Befehl — das Script erkennt automatisch ob es ein Update ist:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+```
+
+Wurde der Kiosk-Modus beim ersten Install aktiviert, wird er beim Update automatisch
+geprüft und bei Bedarf korrigiert (keine erneute Rückfrage).  
+Wurde er nicht aktiviert, wird erneut gefragt (Nachholung möglich).
 
 ---
 
@@ -37,108 +107,33 @@ Nach der Installation ist die Web-Oberfläche erreichbar unter:
 Die Bahnnummer wird über die Einstellungsseite der App gesetzt.  
 Einstellungsseite öffnen: Auf der Punkteanzeige **5× Enter drücken** (bei Punktestand 0).
 
-### Netzwerk-Erkennung
+### Netzwerk-Empfehlungen
 
-Das zentrale Verwaltungsprogramm findet den Pi automatisch per mDNS – keine zusätzliche Konfiguration nötig.
+Das zentrale Verwaltungsprogramm findet den Pi automatisch per mDNS — keine zusätzliche Konfiguration nötig.
 
-> **Nur bei mehreren aktiven Netzwerk-Interfaces** (z.B. WLAN und LAN gleichzeitig) kann es vorkommen, dass die falsche IP gemeldet wird.
->
-> **Empfehlung: WLAN deaktivieren** wenn der Pi per LAN-Kabel angeschlossen ist:
-> ```bash
-> sudo raspi-config
-> ```
-> → *System Options* → *Wireless LAN* → SSID leer lassen und bestätigen
->
-> Alternativ dauerhaft per Konfigurationsdatei:
-> ```bash
-> echo "dtoverlay=disable-wifi" | sudo tee -a /boot/firmware/config.txt
-> sudo reboot
-> ```
->
-> Falls trotzdem nötig, kann die IP manuell eingetragen werden:
-> ```bash
-> sudo nano /etc/systemd/system/stocktv.service
-> ```
-> Zeile einkommentieren und IP eintragen:
-> ```
-> Environment=PUBLIC_HOST=192.168.1.xx
-> ```
-> Danach: `sudo systemctl daemon-reload && sudo systemctl restart stocktv`
-
----
-
-## Browser automatisch starten (Kiosk-Modus)
-
-Damit der Pi beim Start die Punkteanzeige automatisch im Vollbild öffnet, wird Chromium im Kiosk-Modus als Autostart eingerichtet.
-
-> Voraussetzung: **Raspberry Pi OS mit Desktop** (nicht Lite).  
-> Der StockTV-Dienst startet automatisch über systemd — der Browser wartet auf ihn.
-
-### 1. Automatische Anmeldung aktivieren
+**Nur Ethernet-Kabel verwenden.** WLAN wird nicht empfohlen: Wenn WLAN und LAN gleichzeitig aktiv sind, kann die falsche IP gemeldet werden. WLAN dauerhaft deaktivieren:
 
 ```bash
-sudo raspi-config
-```
-→ *System Options* → *Boot / Auto Login* → **Desktop Autologin**
-
-### 2. Wrapper-Script erstellen
-
-Das Script wartet bis StockTV bereit ist, dann öffnet es Chromium:
-
-```bash
-mkdir -p ~/bin
-cat > ~/bin/stocktv-kiosk.sh << 'EOF'
-#!/bin/bash
-# Bildschirm nicht abschalten
-xset s off
-xset -dpms
-xset s noblank
-
-# Warten bis StockTV erreichbar ist
-until curl -s http://localhost:8080 > /dev/null 2>&1; do
-    sleep 1
-done
-
-# Chromium im Kiosk-Modus starten
-chromium-browser \
-    --kiosk \
-    --noerrdialogs \
-    --disable-infobars \
-    --disable-session-crashed-bubble \
-    http://localhost:8080
-EOF
-chmod +x ~/bin/stocktv-kiosk.sh
-```
-
-### 3. Autostart einrichten
-
-```bash
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/stocktv-kiosk.desktop << 'EOF'
-[Desktop Entry]
-Type=Application
-Name=StockTV Kiosk
-Exec=/home/pi/bin/stocktv-kiosk.sh
-EOF
-```
-
-> Falls der Benutzername nicht `pi` ist, den Pfad `/home/pi/bin/...` entsprechend anpassen.
-
-Nach einem Neustart öffnet sich Chromium automatisch mit der Punkteanzeige:
-
-```bash
+echo "dtoverlay=disable-wifi" | sudo tee -a /boot/firmware/config.txt
 sudo reboot
 ```
 
----
-
-## Update auf neue Version
-
-Derselbe Befehl wie bei der Installation – das Script erkennt automatisch ob es ein Update ist:
+**Feste IP-Adresse einrichten** (empfohlen für stabilen Betrieb):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+# Vorhandene Verbindungen anzeigen (Verbindungsname notieren, z.B. "Wired connection 1")
+nmcli con show
+
+# Feste IP setzen — Verbindungsname, IP und Gateway anpassen
+sudo nmcli con mod "Wired connection 1" \
+    ipv4.method manual \
+    ipv4.addresses "192.168.1.xx/24" \
+    ipv4.gateway "192.168.1.1" \
+    ipv4.dns "192.168.1.1"
+sudo nmcli con up "Wired connection 1"
 ```
+
+> Die Änderung wirkt sofort — eine laufende SSH-Verbindung trennt sich dabei.
 
 ---
 
@@ -151,13 +146,10 @@ sudo systemctl status stocktv
 # App neu starten
 sudo systemctl restart stocktv
 
-# App stoppen
-sudo systemctl stop stocktv
-
-# Protokoll (Logs) anzeigen
+# Protokoll (Logs) live anzeigen
 sudo journalctl -u stocktv -f
 
-# App-Logs anzeigen (detaillierter)
+# App-Logs anzeigen
 ls /opt/stocktv/_logs/
 ```
 
@@ -171,10 +163,17 @@ sudo systemctl status stocktv
 sudo journalctl -u stocktv --no-pager -n 50
 ```
 
-**Falsches Betriebssystem (32-Bit):**  
-Raspberry Pi OS 64-Bit neu installieren (Raspberry Pi Imager → OS wählen → „Raspberry Pi OS (64-bit)").
+**Kiosk startet nicht nach Reboot:**
+```bash
+systemctl status getty@tty1
+cat /etc/systemd/system/getty@tty1.service.d/autologin.conf
+# Falls fehlend: install.sh erneut ausführen, Kiosk mit "j" bestätigen
+```
 
-**Port 8080 belegt:**  
+**Falsches Betriebssystem (32-Bit):**  
+Raspberry Pi OS 64-Bit neu installieren: Raspberry Pi Imager → *Raspberry Pi OS (64-bit)*.
+
+**Port 8080 belegt:**
 ```bash
 sudo ss -tlnp | grep 8080
 ```
