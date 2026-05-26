@@ -107,10 +107,21 @@ chmod +x install.sh && ./install.sh
 **Was das Skript macht:**
 - Prüft ARM64-Architektur
 - Installiert benötigte System-Bibliotheken (`libicu-dev`, `libssl3`, `zlib1g`)
+- Deaktiviert avahi-daemon (blockiert sonst StockTV-mDNS auf Port 5353)
 - Lädt das neueste `stocktv-rpi.zip` von GitHub Releases herunter
 - Kopiert die App nach `/opt/stocktv/`
 - Legt beim ersten Aufruf den systemd-Dienst an und aktiviert ihn
 - Startet den Dienst und prüft ob er läuft
+
+**Kiosk-Modus (optional):**
+
+Das Skript fragt beim ersten Aufruf ob Autologin + Chromium eingerichtet werden soll.
+Bei Bestätigung werden installiert/konfiguriert: `xserver-xorg`, `xinit`, `openbox`,
+`chromium`, autologin-Drop-in für `getty@tty1`, `~/.bash_profile`, `~/.xinitrc`.
+
+Der gewählte Zustand wird in `/opt/stocktv/.kiosk` gespeichert:
+- **Kiosk aktiv:** beim Update automatisch geprüft und ggf. korrigiert, keine Rückfrage
+- **Kiosk inaktiv:** beim Update erneut gefragt (Nachholung möglich)
 
 **Eignet sich für:**
 - Erstinstallation auf einem frischen Raspberry Pi OS
