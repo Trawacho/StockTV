@@ -1,5 +1,5 @@
 # ============================================
-#  StockTV – Publish Windows (win-x64)
+#  StockTV - Publish Windows (win-x64)
 # ============================================
 #
 #  Nur bauen + Zip fuer GitHub Release:
@@ -51,6 +51,7 @@ dotnet publish $Project `
 # ============================================
 
 Copy-Item "$PSScriptRoot\install-service.ps1" "$OutputDir\install-service.ps1" -Force
+Copy-Item "$PSScriptRoot\start-kiosk.ps1"   "$OutputDir\start-kiosk.ps1"   -Force
 
 # ============================================
 #  3. Zip fuer GitHub Release erstellen
