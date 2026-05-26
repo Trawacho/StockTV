@@ -93,6 +93,11 @@ if ($Uninstall) {
         Write-Host "Dienst '$ServiceName' nicht gefunden - nichts zu tun."
     }
 
+    foreach ($n in @("StockTV Web UI","StockTV NetMQ REP","StockTV NetMQ PUB","StockTV mDNS")) {
+        Remove-NetFirewallRule -DisplayName $n -ErrorAction SilentlyContinue
+    }
+    Write-Host "Firewall-Regeln entfernt."
+
     $task = Get-ScheduledTask -TaskName $KIOSK_TASK -ErrorAction SilentlyContinue
     if ($task) {
         Unregister-ScheduledTask -TaskName $KIOSK_TASK -Confirm:$false
@@ -186,6 +191,25 @@ if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) {
 } else {
     Write-Host "Dienst '$ServiceName' bereits vorhanden - wird nur aktualisiert."
 }
+
+# Firewall-Regeln anlegen / aktualisieren
+Write-Host "Konfiguriere Firewall-Regeln..."
+$fwRules = @(
+    @{ Name = "StockTV Web UI";    Port = $Port; Protocol = "TCP" },
+    @{ Name = "StockTV NetMQ REP"; Port = 4747;  Protocol = "TCP" },
+    @{ Name = "StockTV NetMQ PUB"; Port = 4748;  Protocol = "TCP" },
+    @{ Name = "StockTV mDNS";      Port = 5353;  Protocol = "UDP" }
+)
+foreach ($rule in $fwRules) {
+    Remove-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue
+    New-NetFirewallRule `
+        -DisplayName $rule.Name `
+        -Direction Inbound `
+        -Protocol $rule.Protocol `
+        -LocalPort $rule.Port `
+        -Action Allow | Out-Null
+}
+Write-Host "Firewall-Regeln gesetzt (TCP $Port, 4747, 4748 / UDP 5353)."
 
 # Dienst starten
 Write-Host "Starte Dienst..."
