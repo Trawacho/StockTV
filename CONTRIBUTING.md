@@ -69,14 +69,7 @@ Der Tag-Push startet automatisch den Workflow [release.yml](.github/workflows/re
 
 Alle vier Dateien landen automatisch im GitHub Release.
 
-> **Patch-Releases** (z.B. `v1.0.1`) folgen demselben Schema: Fix in `main` mergen (oder Hotfix-Branch, s.u.),
-> `release/v1.0` auf den neuen Stand bringen, dann Tag setzen:
-> ```bash
-> git checkout release/v1.0
-> git merge --no-ff main        # oder: merge hotfix/beschreibung
-> git tag v1.0.1
-> git push origin release/v1.0 v1.0.1
-> ```
+> **Patch-Releases** (z.B. `v1.0.1`) entstehen immer über einen Hotfix-Branch — siehe Abschnitt unten.
 
 ---
 
