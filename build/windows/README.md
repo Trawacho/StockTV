@@ -74,7 +74,12 @@ Ausgabe: `build/windows/publish/` + `build/windows/stocktv-windows-x64.zip`
 | `-Port`        | `8080`       | HTTP-Port |
 | `-Uninstall`   | *(Switch)*   | Dienst + Kiosk-Task stoppen und löschen |
 
-**Voraussetzung:** PowerShell als Administrator.
+**Hinweis:** Das Skript erhöht die Rechte automatisch (UAC-Prompt), falls es nicht als Administrator gestartet wurde.
+
+Falls die **ExecutionPolicy** das Starten verhindert, einmalig so aufrufen:
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\install-service.ps1
+```
 
 ---
 
