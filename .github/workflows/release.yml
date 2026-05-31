@@ -276,7 +276,7 @@ jobs:
     if: always()
     steps:
       - name: Artefakte des aktuellen Runs loeschen
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { data } = await github.rest.actions.listWorkflowRunArtifacts({
