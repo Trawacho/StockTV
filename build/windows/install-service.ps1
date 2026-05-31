@@ -1,8 +1,11 @@
 # ============================================
 #  StockTV - Windows Service installieren
 #
-#  Muss als Administrator auf dem Zielrechner
-#  ausgefuehrt werden.
+#  Das Skript erhoeht die Rechte automatisch, falls es nicht
+#  als Administrator gestartet wurde.
+#
+#  Falls die ExecutionPolicy das Starten verhindert:
+#    powershell.exe -ExecutionPolicy Bypass -File .\install-service.ps1
 #
 #  Erstinstallation (lokales ZIP oder Skript-Verzeichnis):
 #    .\install-service.ps1
@@ -71,11 +74,21 @@ if ($Download) {
     Write-Host ""
 }
 
-# Adminrechte pruefen
+# Adminrechte pruefen - bei Bedarf selbst neu starten (elevated)
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
         [Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Error "Dieses Skript muss als Administrator ausgefuehrt werden."
-    exit 1
+    Write-Host "Keine Administratorrechte - starte mit erhoehten Rechten neu..."
+    $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    foreach ($key in $PSBoundParameters.Keys) {
+        $val = $PSBoundParameters[$key]
+        if ($val -is [switch]) {
+            if ($val.IsPresent) { $argList += " -$key" }
+        } else {
+            $argList += " -$key `"$val`""
+        }
+    }
+    Start-Process powershell.exe -Verb RunAs -ArgumentList $argList
+    exit
 }
 
 # ============================================
@@ -127,6 +140,11 @@ $exe = Join-Path $InstallDir "StockTvBlazor.exe"
 # Sentinel pruefen: Kiosk war beim Erstinstall aktiviert -> immer neu einrichten
 if (Test-Path $KIOSK_SENTINEL) { $Kiosk = $true }
 
+if (-not $Kiosk) {
+    $answer = Read-Host "Kiosk-Modus aktivieren? [J/n]"
+    if ($answer -eq "" -or $answer -match "^[JjYy]") { $Kiosk = $true }
+}
+
 Write-Host "=========================================="
 Write-Host "   StockTV Windows Service Setup"
 Write-Host "   Quelle:  $SourceDir"
@@ -137,16 +155,18 @@ if ($Kiosk) {
 }
 Write-Host "==========================================`n"
 
-# Dienst stoppen und auf vollstaendiges Beenden warten
+# Dienst stoppen und auf vollstaendiges Beenden warten (mind. 30 Sek.)
 $existingSvc = Get-Service $ServiceName -ErrorAction SilentlyContinue
 if ($existingSvc -and $existingSvc.Status -eq "Running") {
-    Write-Host "Stoppe laufenden Dienst..."
+    Write-Host "Stoppe laufenden Dienst (warte mind. 30 Sek.)..."
     Stop-Service $ServiceName -Force
-    $timeout = 30
-    $elapsed = 0
-    while ((Get-Service $ServiceName).Status -ne "Stopped" -and $elapsed -lt $timeout) {
+    $minWait = 30
+    $timeout  = 60
+    $elapsed  = 0
+    while ($elapsed -lt $timeout) {
         Start-Sleep -Seconds 1
         $elapsed++
+        if ((Get-Service $ServiceName).Status -eq "Stopped" -and $elapsed -ge $minWait) { break }
     }
     if ((Get-Service $ServiceName).Status -ne "Stopped") {
         Write-Warning "Dienst nach $timeout Sekunden noch nicht gestoppt - Dateien koennen gesperrt sein."
@@ -353,6 +373,7 @@ Write-Host ""
 Write-Host "  Verwaltung:"
 Write-Host "    Start:     Start-Service $ServiceName"
 Write-Host "    Stop:      Stop-Service $ServiceName"
+Write-Host "    Status:    Get-Service $ServiceName"
 Write-Host "    Logs:      Get-EventLog -LogName Application -Source $ServiceName -Newest 20"
 Write-Host "    Entfernen: .\install-service.ps1 -Uninstall"
 Write-Host "=========================================="
