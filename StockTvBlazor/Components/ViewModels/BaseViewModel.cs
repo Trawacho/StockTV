@@ -50,7 +50,7 @@ public abstract class BaseViewModel : IDisposable
 		get
 		{
 			var s = _settingsService.CurrentSettings;
-			var prefix = s.General.BlockLocalChanges ? "." : "";
+			var prefix = s.General.BlockLocalChanges ? "◆ " : "";
 
 			return string.IsNullOrEmpty(s.General.SpielgruppeLetter)
 				? $"{prefix}Bahn: {s.General.BahnNummer}"
