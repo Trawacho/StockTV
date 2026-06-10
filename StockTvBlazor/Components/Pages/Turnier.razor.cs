@@ -65,6 +65,7 @@ public partial class Turnier : IDisposable
 		}
 		catch (JSDisconnectedException) { }
 		catch (ObjectDisposedException) { }
+		catch (TaskCanceledException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

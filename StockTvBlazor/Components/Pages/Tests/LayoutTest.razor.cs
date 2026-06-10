@@ -19,9 +19,14 @@ namespace BlazorAppTests.Components.Pages
 		{
 			if (firstRender)
 			{
-				// optional: noch stabiler
-				await Task.Yield();
-				await inputRef.FocusAsync();
+				try
+				{
+					// optional: noch stabiler
+					await Task.Yield();
+					await inputRef.FocusAsync();
+				}
+				catch (ObjectDisposedException) { }
+				catch (TaskCanceledException) { }
 			}
 		}
 

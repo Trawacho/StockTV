@@ -63,6 +63,7 @@ public partial class Training : IDisposable
 		}
 		catch (JSDisconnectedException) { }
 		catch (ObjectDisposedException) { }
+		catch (TaskCanceledException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

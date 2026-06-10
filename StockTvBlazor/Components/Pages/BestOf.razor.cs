@@ -63,6 +63,7 @@ public partial class BestOf : IDisposable
 		}
 		catch (JSDisconnectedException) { }
 		catch (ObjectDisposedException) { }
+		catch (TaskCanceledException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

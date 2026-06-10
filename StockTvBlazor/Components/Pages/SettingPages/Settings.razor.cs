@@ -43,7 +43,14 @@ public partial class Settings : IDisposable
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
-			await inputRef.FocusAsync();
+		{
+			try
+			{
+				await inputRef.FocusAsync();
+			}
+			catch (ObjectDisposedException) { }
+			catch (TaskCanceledException) { }
+		}
 	}
 
 	public async Task HandleGlobalKeyDown(KeyboardEventArgs e)
