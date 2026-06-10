@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Channels;
+using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Networking;
 
@@ -17,16 +18,18 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 	private readonly NetMQTimer _aliveTimer;
 
 	private readonly Channel<(string Topic, object Payload)> _messageChannel;
+	private readonly Channel<bool> _blockLocalChangesChannel;
 
 	private string _serializedAliveInfo;
 	private bool _aliveInfoResolved;
-	
-	private readonly ILogger<NetMqPublisherService> _logger;
 
-	public NetMqPublisherService(ILogger<NetMqPublisherService> logger)
+	private readonly ILogger<NetMqPublisherService> _logger;
+	private readonly SettingsService settingsService;
+
+	public NetMqPublisherService(ILogger<NetMqPublisherService> logger, SettingsService settingsService)
 	{
 		_logger = logger;
-
+		this.settingsService = settingsService;
 		try
 		{
 			_pubSocket = new XPublisherSocket();
@@ -73,6 +76,7 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 
 		_poller = [_pubSocket, _aliveTimer];
 		_messageChannel = Channel.CreateUnbounded<(string, object)>();
+		_blockLocalChangesChannel = Channel.CreateUnbounded<bool>();
 
 		_pubSocket.ReceiveReady += OnReceiveReady;
 	}
@@ -84,6 +88,7 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		if (msg.Length > 0)
 		{
 			bool isSubscribe = msg[0] == 1;
+			_blockLocalChangesChannel.Writer.TryWrite(isSubscribe);
 			var topic = System.Text.Encoding.UTF8.GetString(msg, 1, msg.Length - 1);
 			_logger.LogDebug("Client {Action} Topic: '{Topic}'",
 				isSubscribe ? "abonniert" : "kündigt", topic);
@@ -107,6 +112,24 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		_logger.LogInformation("ExecuteAsync gestartet");
 		_poller.RunAsync();
 
+		var messageTask = HandleMessagesAsync(stoppingToken);
+		var blockChangesTask = HandleBlockChangesAsync(stoppingToken);
+
+		try
+		{
+			await Task.WhenAll(messageTask, blockChangesTask);
+		}
+		catch (OperationCanceledException)
+		{
+			_logger.LogInformation("NetMqPublisherService durch CancellationToken gestoppt");
+		}
+
+		_poller.StopAsync();
+		_logger.LogInformation("ExecuteAsync beendet");
+	}
+
+	private async Task HandleMessagesAsync(CancellationToken stoppingToken)
+	{
 		try
 		{
 			await foreach (var (topic, payload) in _messageChannel.Reader.ReadAllAsync(stoppingToken))
@@ -125,13 +148,19 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 				}
 			}
 		}
-		catch (OperationCanceledException)
-		{
-			_logger.LogInformation("NetMqPublisherService durch CancellationToken gestoppt");
-		}
+		catch (OperationCanceledException) { }
+	}
 
-		_poller.StopAsync();
-		_logger.LogInformation("ExecuteAsync beendet");
+	private async Task HandleBlockChangesAsync(CancellationToken stoppingToken)
+	{
+		try
+		{
+			await foreach (var block in _blockLocalChangesChannel.Reader.ReadAllAsync(stoppingToken))
+			{
+				settingsService.ChangeBlockLocalChanges(block);
+			}
+		}
+		catch (OperationCanceledException) { }
 	}
 
 	private bool _disposed = false;
@@ -142,6 +171,7 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 
 		_logger.LogInformation("NetMqPublisherService Dispose gestartet");
 		_messageChannel.Writer.TryComplete();
+		_blockLocalChangesChannel.Writer.TryComplete();
 		_pubSocket.ReceiveReady -= OnReceiveReady;
 		if (_poller.IsRunning)
 			_poller.StopAsync();

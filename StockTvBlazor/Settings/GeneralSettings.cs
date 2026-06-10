@@ -5,6 +5,8 @@ namespace StockTvBlazor.Settings
 	public class GeneralSettings
 	{
 		public bool FileLoggingEnabled { get; set; } = true;
+		
+		[JsonIgnore]
 		public bool BlockLocalChanges { get; set; } = false;
 
 		public int BahnNummer { get; set; } = 1;

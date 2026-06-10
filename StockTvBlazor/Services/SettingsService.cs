@@ -156,6 +156,12 @@ public class SettingsService : BackgroundService
 	{
 		CurrentSettings.General.BlockLocalChanges =
 			!CurrentSettings.General.BlockLocalChanges;
+		NotifyChanged();
+	}
+	public void ChangeBlockLocalChanges(bool block)
+	{
+		CurrentSettings.General.BlockLocalChanges = block;
+		NotifyChanged();
 	}
 
 	public void ChangeSpielgruppe(bool forward)
