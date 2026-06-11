@@ -186,12 +186,24 @@ public class SettingsService : BackgroundService
 
 	public void ChangeMaxKehrenProSpiel(bool forward)
 	{
-		var s = CurrentSettings.Game;
+		var settings = CurrentSettings.Game;
 
-		if (forward && s.MaxKehrenProSpiel < 30)
-			s.MaxKehrenProSpiel++;
-		else if (!forward && s.MaxKehrenProSpiel > 4)
-			s.MaxKehrenProSpiel--;
+		const int DefaultKehrenMin = 4;
+		const int DefaultKehrenMax = 30;
+		const int ZielVersucheMin = 6;
+		const int ZielVersucheMax = 12;
+
+		if (settings.CurrentModus == GameSettings.Modus.Ziel)
+		{
+			settings.MaxKehrenProSpiel = forward ? ZielVersucheMax : ZielVersucheMin;
+			return;
+		}
+
+		settings.MaxKehrenProSpiel = Math.Clamp(
+			settings.MaxKehrenProSpiel + (forward ? 1 : -1),
+			DefaultKehrenMin,
+			DefaultKehrenMax
+		);
 	}
 
 	public void ChangeMaxPunkteProKehre(bool forward)
