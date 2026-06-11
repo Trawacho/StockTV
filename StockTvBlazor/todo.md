@@ -1,0 +1,6 @@
+- In der Settingspage die Netzwerk IP Adresse anzeigen
+- Schriftarten wählbar machen
+- Theme-Settings in der Netzwerkconfig verfügbar machen
+- Marketing Seite implementieren
+- Homepage designen
+- javascript durch css ersetzen
