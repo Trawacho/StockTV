@@ -1,4 +1,5 @@
-﻿using StockTvBlazor.Services;
+﻿using StockTvBlazor.Networking;
+using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Components.ViewModels;
 
@@ -42,6 +43,9 @@ public class SettingsViewModel(SettingsService settingsService) : IDisposable
 	public string NetworkingValue => _currentSettings.Network.Enabled ? "An" : "Aus";
 
 	#endregion
+
+	public string GetLocalIpAddress => IpAdvertisementService.GetAdvertisedIp().AddressString;
+	
 
 	public void Dispose()
 	{

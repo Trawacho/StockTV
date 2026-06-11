@@ -190,17 +190,8 @@ public class AliveInfo
 
 	public static AliveInfo Create()
 	{
-		var publicHost = Environment.GetEnvironmentVariable("PUBLIC_HOST");
-
-		// Priorität ENV > Hostname
-		string host = !string.IsNullOrWhiteSpace(publicHost)
-			? publicHost
-			: Dns.GetHostName();
-
-		// Optional: echte IPv4 nur, wenn ENV nicht gesetzt
-		string ip = !string.IsNullOrWhiteSpace(publicHost)
-			? publicHost
-			: GetFirstLocalIPv4() ?? "127.0.0.1";
+		var advertisedIp = IpAdvertisementService.GetAdvertisedIp();
+		string host = Dns.GetHostName();
 
 		var alive = new AliveInfo
 		{
@@ -208,24 +199,9 @@ public class AliveInfo
 								 .GetName()
 								 .Version?.ToString() ?? "0.0.0.0",
 			HostName = host,
-			IpAddress = ip
+			IpAddress = advertisedIp.AddressString
 		};
 
 		return alive;
-	}
-
-	private static string? GetFirstLocalIPv4()
-	{
-		try
-		{
-			var host = Dns.GetHostEntry(Dns.GetHostName());
-			var ipAddress = host.AddressList
-				.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip));
-			return ipAddress?.ToString();
-		}
-		catch
-		{
-			return null;
-		}
 	}
 }

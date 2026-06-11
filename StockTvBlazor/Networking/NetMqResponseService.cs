@@ -18,7 +18,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 	private readonly SettingsService _settingsService;
 
 	private readonly MatchService _matchService;
-	
+
 	private readonly ZielService _zielService;
 
 	private readonly Channel<Action> _actionChannel = Channel.CreateUnbounded<Action>();

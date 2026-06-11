@@ -57,7 +57,7 @@
         <div class="setting-row">
             <div class="icon">@(ViewModel.IsNetworkingActive ? "▶" : "")</div>
             <div class="value">@ViewModel.NetworkingValue</div>
-            <div class="label">Netzwerk</div>
+            <div class="label">Netzwerk | IP: @ViewModel.GetLocalIpAddress</div>
         </div>
 
     </div>

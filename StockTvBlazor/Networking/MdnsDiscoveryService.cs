@@ -6,7 +6,7 @@ namespace StockTvBlazor.Networking;
 public class MdnsDiscoveryService : BackgroundService
 {
 	private readonly ServiceDiscovery _serviceDiscovery;
-	
+
 	private readonly ServiceProfile _profile;
 
 	public MdnsDiscoveryService()
@@ -14,11 +14,18 @@ public class MdnsDiscoveryService : BackgroundService
 		// Initialisiere den Discovery-Dienst
 		_serviceDiscovery = new ServiceDiscovery();
 
-		// Profil erstellen: Rechnername, Service-Typ (TCP), Port 4747
-		// Wichtig: Der Typ muss mit einem Punkt enden, damit er RFC-konform ist
-		_profile = new ServiceProfile(Environment.MachineName, "_stockTV._tcp.", 4747);
+		// Hole die zu advertisierte IP-Adresse (bereits als IPAddress konvertiert)
+		var advertisedIp = IpAdvertisementService.GetAdvertisedIp();
 
-		// Deine spezifischen Metadaten (TXT-Records) hinzufügen
+		// Profil erstellen: Rechnername, Service-Typ (TCP), Port, IP-Adressen
+		_profile = new ServiceProfile(
+			Environment.MachineName,
+			"_stockTV._tcp.",
+			4747,
+			new[] { advertisedIp.Address }
+		);
+
+		// Metadaten (TXT-Records) hinzufügen
 		_profile.AddProperty("pubSvc", "4748");
 		_profile.AddProperty("ctrSvc", "4747");
 		_profile.AddProperty("pkgVer", GetAppVersion());
