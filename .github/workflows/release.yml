@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
 
@@ -271,7 +272,7 @@ jobs:
   # -------------------------------------------------------
   cleanup:
     name: Artefakte bereinigen
-    needs: [build-windows, build-linux, build-rpi, release]
+    needs: [build-windows, build-linux, build-rpi]
     runs-on: ubuntu-latest
     if: always()
     steps:
