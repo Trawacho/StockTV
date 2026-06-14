@@ -25,6 +25,9 @@ public class InputBase : ComponentBase, IDisposable
 		MatchService.OnNavigationRequested += HandleNavigationRequested;
 		MatchService.OnGlobalRefresh += HandleUpdate;
 
+		ZielService.OnGlobalRefresh += HandleUpdate;
+		ZielService.OnNavigationRequested += HandleNavigationRequested;
+
 		_spielRichtung = SettingsService.CurrentSettings.UI.CurrentRichtung;
 		SetInteralUrl();
 	}
@@ -38,8 +41,10 @@ public class InputBase : ComponentBase, IDisposable
 		_disposed = true;
 		SettingsService.OnSettingsChanged -= HandleSettingsChanged;
 		MatchService.OnGlobalRefresh -= HandleUpdate;
+		ZielService.OnGlobalRefresh -= HandleUpdate;
 		SettingsService.OnNavigationRequested -= HandleNavigationRequested;
 		MatchService.OnNavigationRequested -= HandleNavigationRequested;
+		ZielService.OnNavigationRequested -= HandleNavigationRequested;
 	}
 
 	private void HandleSettingsChanged()
@@ -84,7 +89,8 @@ public class InputBase : ComponentBase, IDisposable
 			await SettingsService.ProcessKeyAsync(input);
 		else
 		{
-			if (SettingsService.CurrentSettings.Game.CurrentModus == StockTvBlazor.Settings.GameSettings.Modus.Ziel)
+			var modus = SettingsService.CurrentSettings.Game.CurrentModus;
+			if (modus == StockTvBlazor.Settings.GameSettings.Modus.Ziel || modus == StockTvBlazor.Settings.GameSettings.Modus.Ziel2)
 				await ZielService.ProcessKeyAsync(input);
 			else
 				await MatchService.ProcessKeyAsync(input);

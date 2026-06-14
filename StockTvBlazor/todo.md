@@ -1,4 +1,5 @@
-- In der Settingspage die Netzwerk IP Adresse anzeigen
+- [x] In der Settingspage die Netzwerk IP Adresse anzeigen
+- Über die Settingspage den Netzwerkstack nDNS, publisher und responseServer neu starten
 - Schriftarten wählbar machen
 - Theme-Settings in der Netzwerkconfig verfügbar machen
 - Marketing Seite implementieren

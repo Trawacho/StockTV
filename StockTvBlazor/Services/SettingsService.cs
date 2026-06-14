@@ -231,7 +231,7 @@ public class SettingsService : BackgroundService
 		GameSettings.Modus.Training => "/training",
 		GameSettings.Modus.BestOf => "/bestof",
 		GameSettings.Modus.Turnier => "/turnier",
-		GameSettings.Modus.Ziel => "/ziel",
+		GameSettings.Modus.Ziel or GameSettings.Modus.Ziel2=> "/ziel",
 		_ => "/settings"
 	};
 

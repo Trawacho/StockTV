@@ -23,8 +23,16 @@ public class ZielBewerb
 
 	public int KombinierenSumme => _kombinieren.Sum();
 
-	public int GesamtSumme =>
-		MassenVorneSumme + SchiessenSumme + MassenSeiteSumme + KombinierenSumme;
+	public int GesamtSumme
+	{
+		get
+		{
+			var aktuelleRunde = MassenVorneSumme + SchiessenSumme + MassenSeiteSumme + KombinierenSumme;
+			return IsZiel2Mode ? _runde1Summe + aktuelleRunde : aktuelleRunde;
+		}
+	}
+
+	private bool IsZiel2Mode => _settingsService.CurrentSettings.Game.CurrentModus == Settings.GameSettings.Modus.Ziel2;
 
 	private readonly List<int> _massenVorne = [];
 
@@ -36,9 +44,15 @@ public class ZielBewerb
 
 	private string? _spielerName;
 
+	private int _runde1Summe = 0;
+
+	private int _aktuellerDurchgang = 1;
+
 	public int MaxKehrenProSpiel => _settingsService.CurrentSettings.Game.MaxKehrenProSpiel;
 
 	public int MaxVersucheGesamt => MaxKehrenProSpiel * 4;
+	public int MaxVersucheDisplay => IsZiel2Mode ? MaxVersucheGesamt * 2 : MaxVersucheGesamt;
+	public int AnzahlVersucheDisplay => _aktuellerDurchgang == 1 ? AnzahlVersuche() : AnzahlVersuche() + MaxVersucheGesamt;
 
 	public bool IsMassValue(int value)
 		=> value is 0 or 2 or 4 or 6 or 8 or 10;
@@ -78,40 +92,59 @@ public class ZielBewerb
 		OnZielBewerbChanged?.Invoke();
 	}
 
+	private bool TryAddVersuchInternal(int value)
+	{
+		var phases = new (List<int> Phase, Func<int, bool> Validator)[]
+		{
+			(_massenVorne, IsMassValue),
+			(_schiessen, IsSchussValue),
+			(_massenSeite, IsMassValue),
+			(_kombinieren, IsMassValue),
+		};
+
+		for (int i = 0; i < phases.Length; i++)
+		{
+			var (phase, validator) = phases[i];
+
+			if (i > 0 && phases[i - 1].Phase.Count < MaxKehrenProSpiel)
+				continue;
+
+			if (phase.Count < MaxKehrenProSpiel && validator(value))
+			{
+				phase.Add(value);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public bool AddVersuch(int value)
 	{
-		if (AnzahlVersuche() >= MaxVersucheGesamt)
-			return false;
+		bool success = false;
 
-		if (_massenVorne.Count < MaxKehrenProSpiel && IsMassValue(value))
+		if (AnzahlVersuche() >= MaxVersucheGesamt)
 		{
-			_massenVorne.Add(value);
-		}
-		else if (_massenVorne.Count >= MaxKehrenProSpiel &&
-				 _schiessen.Count < MaxKehrenProSpiel &&
-				 IsSchussValue(value))
-		{
-			_schiessen.Add(value);
-		}
-		else if (_schiessen.Count >= MaxKehrenProSpiel &&
-				 _massenSeite.Count < MaxKehrenProSpiel &&
-				 IsMassValue(value))
-		{
-			_massenSeite.Add(value);
-		}
-		else if (_massenSeite.Count >= MaxKehrenProSpiel &&
-				 _kombinieren.Count < MaxKehrenProSpiel &&
-				 IsMassValue(value))
-		{
-			_kombinieren.Add(value);
+			if (IsZiel2Mode && _aktuellerDurchgang == 1)
+			{
+				_runde1Summe += MassenVorneSumme + SchiessenSumme + MassenSeiteSumme + KombinierenSumme;
+				_massenVorne.Clear();
+				_schiessen.Clear();
+				_massenSeite.Clear();
+				_kombinieren.Clear();
+				_aktuellerDurchgang = 2;
+				success = TryAddVersuchInternal(value);
+			}
 		}
 		else
 		{
-			return false;
+			success = TryAddVersuchInternal(value);
 		}
 
-		OnZielBewerbChanged?.Invoke();
-		return true;
+		if (success)
+			OnZielBewerbChanged?.Invoke();
+
+		return success;
 	}
 
 	public void Reset()
@@ -121,6 +154,8 @@ public class ZielBewerb
 		_massenSeite.Clear();
 		_kombinieren.Clear();
 		_spielerName = string.Empty;
+		_runde1Summe = 0;
+		_aktuellerDurchgang = 1;
 
 		OnZielBewerbChanged?.Invoke();
 	}

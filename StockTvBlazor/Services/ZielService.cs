@@ -171,6 +171,7 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 
 		if (_inputValue == 0)
 		{
+			_settingsService.SettingsPageActive = true;
 			OnNavigationRequested?.Invoke("/settings");
 		}
 		else if (_inputValue == 10)

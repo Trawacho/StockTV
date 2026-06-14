@@ -10,7 +10,8 @@ public class GameSettings
 		Training = 0,
 		BestOf = 1,
 		Turnier = 2,
-		Ziel = 100
+		Ziel = 100,
+		Ziel2 = 101
 	}
 
 	public Modus CurrentModus { get; set; } = Modus.Training;

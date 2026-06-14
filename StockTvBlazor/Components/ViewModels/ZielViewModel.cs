@@ -55,8 +55,7 @@ public class ZielViewModel : IDisposable
 		get
 		{
 			if (_isDemoMode) return DemoData.ZielAnzahlVersuche;
-			var s = _settingsService.CurrentSettings;
-			return $"{_currentBewerb.AnzahlVersuche()}/{s.Game.MaxKehrenProSpiel * 4}";
+			return $"{_currentBewerb.AnzahlVersucheDisplay}/{_currentBewerb.MaxVersucheDisplay}";
 		}
 	}
 
