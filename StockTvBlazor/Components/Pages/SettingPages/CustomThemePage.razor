@@ -1,5 +1,6 @@
 @page "/themes"
 @rendermode InteractiveServer
+@using StockTvBlazor.Settings
 
 <PageTitle>Themes verwalten</PageTitle>
 
@@ -25,7 +26,12 @@
                     {
                         <span class="badge">Standard</span>
                     }
-                    else
+                    else if (theme is CustomTheme customTheme && customTheme.BaseTheme.HasValue)
+                    {
+                        <span class="badge">@customTheme.BaseTheme.Value</span>
+                    }
+
+                    @if (!theme.IsBuiltIn)
                     {
                         <button class="btn-icon btn-delete" title="Löschen"
                                 @onclick:stopPropagation="true"
@@ -47,6 +53,15 @@
                 <div class="field">
                     <label>Name</label>
                     <input type="text" @bind="_editingTheme.Name" placeholder="Theme-Name" />
+                </div>
+
+                <div class="field">
+                    <label>Basis-Theme (optional)</label>
+                    <select value="@_baseThemeValue" @onchange="OnBaseThemeChanged">
+                        <option value="-1">-- Keine Basis --</option>
+                        <option value="0">Hell</option>
+                        <option value="1">Dunkel</option>
+                    </select>
                 </div>
 
                 <div class="color-grid">

@@ -35,6 +35,11 @@ public class CustomTheme : ITheme
 	public bool IsBuiltIn => false;
 
 	/// <summary>
+	/// Optional: Welches Standard-Theme (Hell/Dunkel) ist die Basis dieses Custom Themes
+	/// </summary>
+	public UiSettings.Theme? BaseTheme { get; set; }
+
+	/// <summary>
 	/// Single color set - Richtung determines Left/Right assignment
 	/// </summary>
 	public ColorSettings Colors { get; set; } = new();

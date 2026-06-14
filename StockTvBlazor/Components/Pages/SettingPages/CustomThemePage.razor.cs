@@ -14,6 +14,7 @@ public partial class CustomThemePage : IDisposable
 	private ColorSettings? _previewColors;
 	private string _previewName = "";
 	private bool _disposed;
+	private int _baseThemeValue = -1;
 
 	protected override void OnInitialized()
 	{
@@ -57,11 +58,14 @@ public partial class CustomThemePage : IDisposable
 		_previewColors = null;
 		var activeTheme = SettingsService.CurrentSettings.UI.ActiveTheme;
 		var templateColors = activeTheme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung);
+		UiSettings.Theme? baseTheme = activeTheme is BuiltInTheme builtin ? builtin.ThemeType : null;
 		_editingTheme = new CustomTheme
 		{
 			Name = "Mein Theme",
-			Colors = CopyColors(templateColors)
+			Colors = CopyColors(templateColors),
+			BaseTheme = baseTheme
 		};
+		_baseThemeValue = baseTheme.HasValue ? (int)baseTheme.Value : -1;
 	}
 
 	private void EditTheme(CustomTheme theme)
@@ -71,8 +75,10 @@ public partial class CustomThemePage : IDisposable
 		{
 			Id = theme.Id,
 			Name = theme.Name,
-			Colors = CopyColors(theme.Colors)
+			Colors = CopyColors(theme.Colors),
+			BaseTheme = theme.BaseTheme
 		};
+		_baseThemeValue = theme.BaseTheme.HasValue ? (int)theme.BaseTheme.Value : -1;
 	}
 
 	private void SaveTheme()
@@ -97,6 +103,23 @@ public partial class CustomThemePage : IDisposable
 	{
 		_editingTheme = null;
 		_errorMessage = "";
+		_baseThemeValue = -1;
+	}
+
+	private void OnBaseThemeChanged(ChangeEventArgs e)
+	{
+		if (_editingTheme is null) return;
+
+		if (int.TryParse(e.Value?.ToString(), out var value) && value >= 0)
+		{
+			_baseThemeValue = value;
+			_editingTheme.BaseTheme = (UiSettings.Theme)value;
+		}
+		else
+		{
+			_baseThemeValue = -1;
+			_editingTheme.BaseTheme = null;
+		}
 	}
 
 	private void DeleteTheme(Guid id)

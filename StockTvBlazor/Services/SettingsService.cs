@@ -348,6 +348,19 @@ public class SettingsService : BackgroundService
 	public byte[] GetSettings()
 	{
 		var s = CurrentSettings;
+		var activeTheme = s.UI.ActiveTheme;
+		byte themeValue = 0;
+
+		// Wenn aktives Theme ein Built-in ist, sende deren Wert
+		// Wenn es ein Custom Theme ist, sende dessen BaseTheme (falls definiert)
+		if (activeTheme is BuiltInTheme builtIn)
+		{
+			themeValue = (byte)builtIn.ThemeType;
+		}
+		else if (activeTheme is CustomTheme custom && custom.BaseTheme.HasValue)
+		{
+			themeValue = (byte)custom.BaseTheme.Value;
+		}
 
 		return
 		[
@@ -355,7 +368,7 @@ public class SettingsService : BackgroundService
 			(byte)s.General.Spielgruppe,
 			(byte)s.Game.CurrentModus,
 			(byte)s.UI.CurrentRichtung,
-			0,//(byte)s.UI.CurrentTheme,
+			themeValue,
             (byte)s.Game.MaxPunkteProKehre,
 			(byte)s.Game.MaxKehrenProSpiel,
 			(byte)s.UI.MidColumnWidth,
@@ -393,7 +406,23 @@ public class SettingsService : BackgroundService
 		}
 
 		s.UI.CurrentRichtung = (UiSettings.Richtung)settings[3];
-		//s.UI.CurrentTheme = (UiSettings.Theme)settings[4];
+
+		// Theme-Logik: Suche Custom Theme mit dieser BaseTheme, sonst Built-in
+		var themeValue = (UiSettings.Theme)settings[4];
+		var customThemeWithBase = s.UI.CustomThemes.FirstOrDefault(t => t.BaseTheme == themeValue);
+		if (customThemeWithBase != null)
+		{
+			s.UI.ActivateTheme(customThemeWithBase.Id);
+		}
+		else if (themeValue == UiSettings.Theme.Hell)
+		{
+			s.UI.ActivateTheme(UiSettings.HellThemeId);
+		}
+		else
+		{
+			s.UI.ActivateTheme(UiSettings.DunkelThemeId);
+		}
+
 		s.Game.MaxPunkteProKehre = settings[5];
 		s.Game.MaxKehrenProSpiel = settings[6];
 		s.UI.MidColumnWidth = settings[7];
