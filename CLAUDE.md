@@ -131,14 +131,15 @@ Pro Disziplin werden `MaxKehrenProSpiel` Versuche eingegeben. Ungültige Werte w
 ## Services & Architektur
 
 ### Singletons
-- `SettingsService` — Einstellungen laden/speichern (via asynchronen `Channel`-Queue, nie direkt schreiben), Navigation
+- `SettingsService` — Einstellungen laden/speichern (via asynchronen `Channel`-Queue, nie direkt schreiben), Navigation. Läuft als `HostedService`.
 - `MatchService` — aktuelles Spiel, Eingabe-Verarbeitung
 - `ZielService` — Zielbewerb-Logik
-- `NetMqPublisherService` — PUB-Socket Port 4748
-- `NetMqResponseService` — REP-Socket Port 4747
+- `FontService` — Verwaltung von System-Schriftarten (geladen aus lokalen Fonts)
+- `NetMqPublisherService` — PUB-Socket Port 4748, läuft als `HostedService`
+- `NetMqResponseService` — REP/REQ-Socket Port 4747, läuft als `HostedService`
 
 ### Transient ViewModels
-`TurnierViewModel`, `TrainingViewModel`, `BestOfViewModel`, `ZielViewModel` erben von `BaseViewModel`, abonnieren Events und müssen in `Dispose()` abgemeldet werden.
+`TurnierViewModel`, `TrainingViewModel`, `BestOfViewModel`, `ZielViewModel`, `SettingsViewModel` erben von `BaseViewModel`, abonnieren Events und müssen in `Dispose()` abgemeldet werden.
 
 ### Events-Muster
 ```
@@ -212,13 +213,43 @@ HTML-Attribute zur Steuerung:
 
 ---
 
-## Datenspeicherung
+## Konfiguration & Umgebung
 
-- **Config**: `_config/stocktv.config.json` (relativ zum App-Verzeichnis)
-- **Logs**: `_logs/`
-- Speicherung über `Channel`-Queue im `SettingsService` — nie direkt auf `CurrentSettings` schreiben
+### Konfigurationsdatei (`_config/stocktv.config.json`)
+
+| Sektion | Einstellung | Bedeutung |
+|---------|-------------|-----------|
+| `General.FileLoggingEnabled` | `true/false` | Protokollierung in `_logs/` aktivieren |
+| `General.BahnNummer` | `1–4` | Bahnnummer für mDNS und externe Verwaltung |
+| `General.Spielgruppe` | Zahl | Spielgruppen-ID (extern gesetzt) |
+| `General.MessageVersion` | `1` | Protokoll-Version für NetMQ |
+| `Game.CurrentModus` | `0/1/2/100` | Training / BestOf / Turnier / Ziel |
+| `Game.MaxPunkteProKehre` | Zahl | Max. Punkte je Kehre (Standard: 15) |
+| `Game.MaxKehrenProSpiel` | Zahl | Max. Kehren je Spiel (Standard: 30) |
+| `UI.CurrentRichtung` | `0/1` | Spielrichtung: 0=Links, 1=Rechts |
+| `UI.MidColumnWidth` | Zahl | Breite der Mittelspalte (% oder px) |
+| `UI.ActiveThemeId` | GUID | Aktives Theme (per UUID verlinkt) |
+| `UI.CustomThemes` | Array | Benutzerdefinierte Themes mit Farben |
+| `Network.Enabled` | `true/false` | NetMQ-Netzwerk aktivieren |
+
+### Umgebungsvariablen
+
+| Variable | Zweck | Beispiel |
+|----------|-------|---------|
+| `PUBLIC_HOST` | IP-Adresse im mDNS Alive-Paket (überschreibt die automatisch erkannte IP) | `192.168.1.10` |
+| `ASPNETCORE_URLS` | HTTP-Bindungsadresse | `http://0.0.0.0:8080` |
+| `ASPNETCORE_ENVIRONMENT` | Umgebung für `appsettings.{Environment}.json` | `Development` oder `Production` |
+
+---
+
+## Datenspeicherung & Logging
+
+- **Config**: `_config/stocktv.config.json` (relativ zum App-Verzeichnis, wird beim Start geladen)
+- **Logs**: `_logs/` (JSON-Dateien mit Timestamps, nur wenn `FileLoggingEnabled=true`)
+- **Speicherung**: Via `Channel`-Queue im `SettingsService` — **nie direkt** auf `CurrentSettings` schreiben
 - Im Training-Modus werden Kehren **nicht** persistiert
-- `SaveTurnsAsync` / `RequestSaveSettings` nach State-Änderungen aufrufen
+- `SaveTurnsAsync()` / `RequestSaveSettings()` nach State-Änderungen aufrufen
+- Logging-Level in `appsettings.json`: Microsoft.AspNetCore auf `Warning`, default auf `Information`
 
 ---
 
@@ -243,3 +274,88 @@ namespace StockTvBlazor.Components.Layout;           // Layout/
 **Ausnahme:** `Home.razor.cs` verwendet `HomeBase : ComponentBase` (Vererbung statt partial), weil die Home-Seite keinen `@rendermode` hat und eine eigene Basisklasse nutzt.
 
 Event-Handler in `Dispose()` immer abmelden.
+
+---
+
+## Service-Initialisierung & Lifecycle
+
+Die App folgt einem **zweistufigen** Initialisierungs-Prozess in `Program.cs`:
+
+1. **Service-Registrierung** — alle Singletons und ViewModels in DI-Container
+2. **Nach `app.Build()`** — `SettingsService.InitializeAsync()`, `MatchService.InitializeMatch()`, `ZielService.InitializeZiel()` aufrufen (synchron auf dem main-Thread vor `app.Run()`)
+
+Wichtig: `SettingsService` ist gleichzeitig `IHostedService` — das bedeutet, dass Einstellungen asynchron geladen werden, aber die synchrone Init sorgt dafür, dass die UI beim Rendern schon Daten hat.
+
+**SettingsService-Pattern**: Änderungen immer über `RequestSaveSettings()` oder `SaveTurnsAsync()` einleiten, nicht direkt `CurrentSettings` mutieren. Der Service nutzt eine `Channel`-Queue um Schreibzugriffe zu serialisieren.
+
+---
+
+## Entwicklung & Debugging
+
+### Lokale Entwicklung
+
+```powershell
+# Abhängigkeiten prüfen
+dotnet restore StockTvBlazor/StockTvBlazor.csproj
+
+# Debug-Build und Start (mit Hot Reload)
+dotnet watch run --project StockTvBlazor/StockTvBlazor.csproj
+```
+
+App läuft dann auf `https://localhost:5001` oder konfiguriert via `appsettings.Development.json`.
+
+### Debugging im Browser
+
+- **Chrome/Edge DevTools** — öffne F12, Tab "Network" um WebSocket (`/blazor?id=…`) zu prüfen
+- **Circuit Disconnect** — wenn die WebSocket trennt, sieht man Fehler auf der Seite; Logs im `_logs/` Ordner prüfen
+- **Hot Reload** — wenn Code geändert wird (außer `Program.cs`), lädt Blazor automatisch neu
+
+### NetMQ-Debugging
+
+NetMQ läuft auf eigenem `Poller`-Thread. Bei State-Änderungen von außen (z.B. `SetSettings` vom zentralen System):
+
+1. **Callback wird auf Poller-Thread aufgerufen**
+2. **State-Änderung muss über `_actionChannel` delegiert werden** (nicht direkt `MatchService.UpdateMatch()` aufrufen)
+3. **Main-Thread verarbeitet die Änderung** und triggert Events
+4. **UI wird via Blazor WebSocket benachrichtigt**
+
+→ Wenn die UI nicht aktualisiert wird, nachdem externe Befehle kommen, ist oft der Fehler, dass die State-Änderung nicht über den Channel lief.
+
+### Troubleshooting
+
+| Problem | Ursache | Lösung |
+|---------|--------|--------|
+| Einstellungen werden nicht gespeichert | Direkter Zugriff auf `CurrentSettings` statt `RequestSaveSettings()` | `SettingsService.RequestSaveSettings()` aufrufen |
+| WebSocket trennt häufig | Circuit timeout oder Netzwerk-Problem | Logs in `_logs/` prüfen, ggf. `Logging.LogLevel` auf `Debug` setzen |
+| UI aktualisiert sich nicht nach NetMQ-Befehl | State-Änderung nicht über `_actionChannel` | Callback-Code prüfen, muss `_actionChannel.Writer.WriteAsync()` nutzen |
+| Theme-Farben ändern sich nicht | `OnSettingsChanged` Event nicht abonniert | ViewModel muss in `Dispose()` unsubscribe aufrufen |
+
+---
+
+## Git Workflow
+
+Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für vollständige Anleitung. Kurz zusammengefasst:
+
+**Branch-Struktur:**
+```
+main (nur Releases)
+  ← release/v1.0 (Tag v1.0.0)
+    ← develop (Integration)
+      ← feature/* (neue Features)
+```
+
+**Workflows:**
+- **Feature**: `git checkout -b feature/kurzbeschreibung` von `develop`, Merge zu `develop` mit `--no-ff`
+- **Release**: `develop` → `release/vX.Y`, dann `release/vX.Y` → `main`, Tag setzen (z.B. `git tag v1.0.0`), `release/vX.Y` → `develop` zurück (wichtig!)
+- **Hotfix**: `git checkout -b hotfix/kurzbeschreibung` von `release/vX.Y`, Merge zu `release/vX.Y`, Tag (`v1.0.1`), dann zu `main` **und `develop`** (verhindert Divergence)
+
+⚠️ **Wichtig:** Nach jedem Merge von `release/vX.Y` immer auch zu `develop` zurück mergen!
+
+---
+
+## Testprojekt & Manuelle Tests
+
+`BlazorAppTests/` ist ein **interaktives Testprojekt**, keine automatisierte Test-Suite:
+- Dient zum **manuellen Testen** von Komponenten in Isolation (`LayoutTest`, `HomeCards`, usw.)
+- Im Debug-Modus öffnet die Home-Seite automatisch alle Test-Tabs
+- **Nicht** für xUnit / Automatisierung gedacht (würde zu viele Blazor-Komplexitäten mitschleppen)
