@@ -130,7 +130,11 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 WantedBy=multi-user.target
 "@
 
-    $ServiceContent | ssh $RemoteUser "echo '$SudoPass' | sudo -S tee /etc/systemd/system/$ServiceName.service > /dev/null"
+    $TempServiceFile = New-TemporaryFile
+    [System.IO.File]::WriteAllText($TempServiceFile, $ServiceContent, [System.Text.Encoding]::UTF8)
+    scp -T $TempServiceFile "${RemoteUser}:/tmp/$ServiceName.service"
+    Invoke-Sudo "mv /tmp/$ServiceName.service /etc/systemd/system/$ServiceName.service"
+    Remove-Item $TempServiceFile
     Invoke-Sudo "systemctl daemon-reload"
     Invoke-Sudo "systemctl enable $ServiceName"
     Write-Host "Dienst '$ServiceName' installiert und aktiviert."
