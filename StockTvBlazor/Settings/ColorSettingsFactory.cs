@@ -45,7 +45,8 @@ public static class ColorSettingsFactory
 			ForegroundLeft = colors.ForegroundRight,    // Swap
 			ForegroundRight = colors.ForegroundLeft,    // Swap
 			ZielSummeGesamt = colors.ZielSummeGesamt,
-			ZielSummeEinzel = colors.ZielSummeEinzel
+			ZielSummeEinzel = colors.ZielSummeEinzel,
+			FontFamily = colors.FontFamily
 		};
 	}
 }

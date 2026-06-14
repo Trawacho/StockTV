@@ -64,6 +64,17 @@
                     </select>
                 </div>
 
+                <div class="field">
+                    <label>Schriftart (optional)</label>
+                    <select value="@_selectedFontFamily" @onchange="OnFontFamilyChanged">
+                        <option value="">-- Standard --</option>
+                        @foreach (var font in FontService.GetAvailableFonts())
+                        {
+                            <option value="@font">@font</option>
+                        }
+                    </select>
+                </div>
+
                 <div class="color-grid">
                     <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
                     <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />

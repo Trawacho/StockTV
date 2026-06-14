@@ -1,5 +1,6 @@
 ﻿.page-fullscreen {
     background-color: var(--bg-color);
+    font-family: var(--font-family, inherit);
     position: fixed;
     inset: 0;
     height: 100vh;

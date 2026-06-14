@@ -49,6 +49,7 @@ builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
+builder.Services.AddSingleton<FontService>();
 
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 

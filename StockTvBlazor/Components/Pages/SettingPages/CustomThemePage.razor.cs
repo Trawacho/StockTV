@@ -7,6 +7,7 @@ namespace StockTvBlazor.Components.Pages.SettingPages;
 public partial class CustomThemePage : IDisposable
 {
 	[Inject] private SettingsService SettingsService { get; set; } = default!;
+	[Inject] private FontService FontService { get; set; } = default!;
 
 	private CustomTheme? _editingTheme;
 	private bool _isNew;
@@ -15,6 +16,7 @@ public partial class CustomThemePage : IDisposable
 	private string _previewName = "";
 	private bool _disposed;
 	private int _baseThemeValue = -1;
+	private string _selectedFontFamily = "";
 
 	protected override void OnInitialized()
 	{
@@ -66,6 +68,7 @@ public partial class CustomThemePage : IDisposable
 			BaseTheme = baseTheme
 		};
 		_baseThemeValue = baseTheme.HasValue ? (int)baseTheme.Value : -1;
+		_selectedFontFamily = templateColors.FontFamily ?? "";
 	}
 
 	private void EditTheme(CustomTheme theme)
@@ -79,6 +82,7 @@ public partial class CustomThemePage : IDisposable
 			BaseTheme = theme.BaseTheme
 		};
 		_baseThemeValue = theme.BaseTheme.HasValue ? (int)theme.BaseTheme.Value : -1;
+		_selectedFontFamily = theme.Colors.FontFamily ?? "";
 	}
 
 	private void SaveTheme()
@@ -104,6 +108,7 @@ public partial class CustomThemePage : IDisposable
 		_editingTheme = null;
 		_errorMessage = "";
 		_baseThemeValue = -1;
+		_selectedFontFamily = "";
 	}
 
 	private void OnBaseThemeChanged(ChangeEventArgs e)
@@ -122,6 +127,14 @@ public partial class CustomThemePage : IDisposable
 		}
 	}
 
+	private void OnFontFamilyChanged(ChangeEventArgs e)
+	{
+		if (_editingTheme is null) return;
+
+		_selectedFontFamily = e.Value?.ToString() ?? "";
+		_editingTheme.Colors.FontFamily = _selectedFontFamily;
+	}
+
 	private void DeleteTheme(Guid id)
 	{
 		SettingsService.DeleteCustomTheme(id);
@@ -136,6 +149,7 @@ public partial class CustomThemePage : IDisposable
 		ForegroundLeft = s.ForegroundLeft,
 		ForegroundRight = s.ForegroundRight,
 		ZielSummeGesamt = s.ZielSummeGesamt,
-		ZielSummeEinzel = s.ZielSummeEinzel
+		ZielSummeEinzel = s.ZielSummeEinzel,
+		FontFamily = s.FontFamily
 	};
 }

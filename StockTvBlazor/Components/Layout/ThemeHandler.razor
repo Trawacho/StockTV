@@ -8,5 +8,6 @@
         --fg-right: @_settings.UI.Colors.ForegroundRight;
         --fg-color-ziel-gesamt: @_settings.UI.Colors.ZielSummeGesamt;
         --fg-color-ziel-einzel: @_settings.UI.Colors.ZielSummeEinzel;
+        --font-family: @(!string.IsNullOrEmpty(_settings.UI.Colors.FontFamily) ? $"\"{_settings.UI.Colors.FontFamily}\"" : "inherit");
     }
 </style>
