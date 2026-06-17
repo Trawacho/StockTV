@@ -1,4 +1,9 @@
-﻿.hero {
+﻿.home-container {
+    margin: 20px;
+    margin-bottom: 100px;
+}
+
+.hero {
     text-align: center;
     padding: 20px 10px;
     background: linear-gradient(135deg,#1e3c72,#2a5298);
