@@ -7,21 +7,22 @@
 
 <ErrorBoundary>
     <ChildContent>
+        <div class="home-container">
+            <div class="hero">
+                <h1>StockTV</h1>
+                <p>Die Anzeige für den Stocksport</p>
+            </div>
 
-        <div class="hero">
-            <h1>StockTV</h1>
-            <p>Die Anzeige für den Stocksport</p>
-        </div>
-
-        <div class="grid">
-            @if (CardComponents.Count > currentCardIndex)
-            {
-                <DynamicComponent Type="CardComponents[currentCardIndex]" />
-            }
-            else
-            {
-                <p style="color:red">Card Fehler</p>
-            }
+            <div class="grid">
+                @if (CardComponents.Count > currentCardIndex)
+                {
+                    <DynamicComponent Type="CardComponents[currentCardIndex]" />
+                }
+                else
+                {
+                    <p style="color:red">Card Fehler</p>
+                }
+            </div>
         </div>
 
         <div class="cta">

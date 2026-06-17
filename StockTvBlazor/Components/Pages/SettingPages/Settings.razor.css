@@ -17,9 +17,9 @@
 .settings-list {
     grid-column: 1 / span 3;
     display: grid;
-    grid-template-columns: 10% 40% 50%;
+    grid-template-columns: 8% 35% 57%;
     grid-auto-rows: minmax(auto, 1fr);
-    row-gap: clamp(0.25rem, 1vmin, 0.5rem);
+    row-gap: clamp(0.5rem, 2vmin, 1.5rem);
     align-items: center;
     align-content: center;
     overflow: hidden;
@@ -43,8 +43,8 @@
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
-    padding-left: clamp(0.5rem, 1vmin, 1rem);
-    font-size: clamp(1.25rem, 4vmin, 2rem);
+    padding-left: clamp(0.75rem, 1.5vmin, 1.5rem);
+    font-size: clamp(1.5rem, 5vmin, 3rem);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -56,8 +56,8 @@
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
-    padding-left: clamp(0.5rem, 1vmin, 1rem);
-    font-size: clamp(1rem, 3vmin, 2rem);
+    padding-left: clamp(0.75rem, 1.5vmin, 1.5rem);
+    font-size: clamp(1.25rem, 3.5vmin, 2.5rem);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
