@@ -104,7 +104,8 @@ public class NetMqResponseService : BackgroundService, IDisposable
 			case "GetResult":
 				response.Append("GetResult");
 
-				if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
+				if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel
+					|| _settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel2)
 					response.Append(_zielService.CurrentZielBewerb.SerializeJson());
 				else
 					response.Append(_matchService.CurrentMatch.SerializeJson());
@@ -114,7 +115,8 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				_logger.LogInformation("ResetResult requested");
 				_ = _actionChannel.Writer.TryWrite(() =>
 				{
-					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel)
+					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel
+						|| _settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel2)
 						_zielService.CurrentZielBewerb.Reset();
 					else
 						_matchService.CurrentMatch.Reset(true);
@@ -149,6 +151,24 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				_ = _actionChannel.Writer.TryWrite(() =>
 					_zielService.SetTeilnehmer(request[1].ToByteArray()));
 
+				response.Append("ACK");
+				break;
+
+			case "SetImage":
+				_logger.LogInformation("SetImage requested");
+				// TODO: Implement SetImage functionality
+				response.Append("ACK");
+				break;
+
+			case "GoToImage":
+				_logger.LogInformation("GoToImage requested");
+				// TODO: Implement GoToImage functionality
+				response.Append("ACK");
+				break;
+
+			case "ClearImage":
+				_logger.LogInformation("ClearImage requested");
+				// TODO: Implement ClearImage functionality
 				response.Append("ACK");
 				break;
 

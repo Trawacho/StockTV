@@ -5,3 +5,6 @@
 - Marketing Seite implementieren
 - Homepage designen
 - javascript durch css ersetzen
+- NetMQ SetImage Befehl implementieren
+- NetMQ GoToImage Befehl implementieren
+- NetMQ ClearImage Befehl implementieren
