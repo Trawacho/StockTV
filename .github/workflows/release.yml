@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
 
@@ -271,9 +272,11 @@ jobs:
   # -------------------------------------------------------
   cleanup:
     name: Artefakte bereinigen
-    needs: [build-windows, build-linux, build-rpi, release]
+    needs: [build-windows, build-linux, build-rpi]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      actions: write
     steps:
       - name: Artefakte des aktuellen Runs loeschen
         uses: actions/github-script@v9
