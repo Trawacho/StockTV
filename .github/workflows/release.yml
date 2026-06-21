@@ -275,6 +275,8 @@ jobs:
     needs: [build-windows, build-linux, build-rpi]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      actions: write
     steps:
       - name: Artefakte des aktuellen Runs loeschen
         uses: actions/github-script@v9
