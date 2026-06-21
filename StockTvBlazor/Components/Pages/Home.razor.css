@@ -40,6 +40,18 @@
     font-size: 16px;
 }
 
+.banner-image {
+    margin-top: 15px;
+    width: 100%;
+}
+
+.banner-image img {
+    width: 100%;
+    max-height: calc(100vh - 220px);
+    object-fit: contain;
+    display: block;
+}
+
 .cta {
     position: fixed;
     bottom: 0;
