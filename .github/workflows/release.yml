@@ -16,6 +16,7 @@ on:
 permissions:
   contents: write
   actions: write
+  packages: write
 
 jobs:
 
@@ -39,6 +40,13 @@ jobs:
             echo "version=dev" >> "$GITHUB_OUTPUT"
           fi
 
+  build-docker:
+    name: Build Docker
+    needs: version
+    uses: ./.github/workflows/docker.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      
   # -------------------------------------------------------
   #  Windows x64
   # -------------------------------------------------------
