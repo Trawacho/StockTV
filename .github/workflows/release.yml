@@ -272,7 +272,7 @@ jobs:
   # -------------------------------------------------------
   cleanup:
     name: Artefakte bereinigen
-    needs: [build-windows, build-linux, build-rpi]
+    needs: [build-windows, build-linux, build-rpi, release]
     runs-on: ubuntu-latest
     if: always()
     permissions:
