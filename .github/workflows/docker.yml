@@ -6,6 +6,10 @@ on:
       version:
         required: true
         type: string
+      platforms:
+        required: false
+        type: string
+        default: "linux/amd64,linux/arm64"
 
   workflow_dispatch:
     inputs:
@@ -13,6 +17,10 @@ on:
         description: "Docker Version (z.B. v0.1.0 oder dev)"
         required: true
         default: "dev"
+      platforms:
+        description: "Zielplattformen, Komma-getrennt (z.B. nur 'linux/amd64' zum Seeden eines neuen GHCR-Packages)"
+        required: false
+        default: "linux/amd64,linux/arm64"
 
 permissions:
   contents: read
@@ -50,7 +58,7 @@ jobs:
           context: .
           push: true
           provenance: false
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ inputs.platforms }}
           tags: |
             ghcr.io/${{ steps.repo.outputs.owner }}/stocktv:${{ inputs.version }}
             ghcr.io/${{ steps.repo.outputs.owner }}/stocktv:latest
