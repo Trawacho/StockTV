@@ -3,9 +3,9 @@
 ## Branch-Übersicht
 
 ```
-main (Releases)
+main (Releases, Tag: v1.0.0, v1.0.1, ...)
   ↑
-  release/v1.0 (Tag: v1.0.0, v1.0.1, ...)
+  release/v1.0
   ↑
 develop (Integration)
   ↑
@@ -63,8 +63,8 @@ git checkout main
 git merge --no-ff release/v1.0
 git push
 
-# 4. Tag auf dem Release-Branch setzen → löst GitHub Actions aus
-git tag v1.0.0 release/v1.0
+# 4. Tag auf main setzen → löst GitHub Actions aus
+git tag v1.0.0 main
 git push origin v1.0.0
 
 # 5. release/v1.0 auch zurück zu develop mergen (verhindert Divergence!)
@@ -105,14 +105,14 @@ git checkout release/v1.0
 git merge --no-ff hotfix/beschreibung
 git push
 
-# 4. Tag setzen → löst GitHub Actions aus
-git tag v1.0.1 release/v1.0
-git push origin v1.0.1
-
-# 5. Hotfix auch in main mergen
+# 4. Hotfix auch in main mergen
 git checkout main
 git merge --no-ff release/v1.0
 git push
+
+# 5. Tag auf main setzen → löst GitHub Actions aus
+git tag v1.0.1 main
+git push origin v1.0.1
 
 # 6. WICHTIG: Hotfix auch in develop mergen (verhindert Divergence!)
 git checkout develop
@@ -122,7 +122,7 @@ git push
 git branch -d hotfix/beschreibung
 ```
 
-⚠️ **Kritisch:** Der Hotfix muss zu **develop zurück**, sonst fehlt der Fix im nächsten Release!
+⚠️ **Kritisch:** Der Hotfix muss zu **main und develop zurück**, sonst fehlt der Fix im nächsten Release bzw. der Tag landet auf einem Commit, der nicht auf main liegt!
 
 ---
 
