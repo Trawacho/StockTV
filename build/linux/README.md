@@ -46,7 +46,7 @@ Lädt automatisch das neueste Release von GitHub.
 
 **Auf dem Zielserver ausführen:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/linux/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/install.sh | bash
 ```
 
 **Oder nach manuellem Download:**

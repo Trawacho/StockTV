@@ -5,14 +5,14 @@
 # ============================================
 #
 #  Aufruf:
-#    curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+#    curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
 #
 #  Oder nach manuellem Download:
 #    chmod +x install.sh && ./install.sh
 
 set -e
 
-REPO="Trawacho/StockTV2"
+REPO="Trawacho/StockTV"
 ASSET_NAME="stocktv-rpi.zip"
 INSTALL_DIR="/opt/stocktv"
 KIOSK_SENTINEL="$INSTALL_DIR/.kiosk"

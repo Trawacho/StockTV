@@ -73,7 +73,7 @@ if (-not $PiHost) {
     Write-Host "`n=========================================="
     Write-Host "Fertig! Naechster Schritt:"
     Write-Host "  GitHub Release erstellen und stocktv-rpi.zip hochladen"
-    Write-Host "  https://github.com/Trawacho/StockTV2/releases/new"
+    Write-Host "  https://github.com/Trawacho/StockTV/releases/new"
     Write-Host "=========================================="
     exit 0
 }
