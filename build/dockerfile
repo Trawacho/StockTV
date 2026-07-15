@@ -4,19 +4,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Projekt kopieren
+# Projektdateien für Cache
 COPY StockTvBlazor.slnx .
-COPY StockTvBlazor/ StockTvBlazor/
+COPY StockTvBlazor/*.csproj StockTvBlazor/
 
-WORKDIR /src/StockTvBlazor
+RUN dotnet restore StockTvBlazor/StockTvBlazor.csproj
 
-# Restore & Publish (optimiert)
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/publish \
-    -p:UseAppHost=false
+# Rest kopieren
+COPY . .
+
+RUN dotnet publish StockTvBlazor/StockTvBlazor.csproj -c Release -o /app/publish -p:UseAppHost=false
 
 # =========================
-# RUNTIME STAGE (schlank)
+# RUNTIME STAGE
 # =========================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app

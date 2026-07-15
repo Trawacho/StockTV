@@ -56,6 +56,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
+          file: build/Dockerfile
           push: true
           provenance: false
           platforms: ${{ inputs.platforms }}
