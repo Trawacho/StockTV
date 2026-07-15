@@ -27,6 +27,9 @@ Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und
 Wenn die erste Bahn erledigt ist, hat man es schon fast geschafft. Man hat die Möglichkeit das System zu Hause am Computermonitor oder TV zu testen. Für unter 100€ ist ein testen zu Hause möglich,
 ohne ein Risiko einzugehen.
 
+### Installation
+Die Installation auf dem Raspberry Pi ist entweder über ein fertiges, sofort einsatzbereites Image oder per Install-Script auf einem bestehenden Raspberry Pi OS möglich. Eine Schritt-für-Schritt-Anleitung findest du in der [INSTALL.md].
+
 ### Bilder
 Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfrage)  
 <img src="Bilder/Keypad.jpg" width="150"/> 
@@ -95,6 +98,7 @@ In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung.
 Dank auch an [IGEL Design] für die Erstellung der Banner!  
 Bei weiteren Fragen nutzen Sie bitte den Bereich [Discussions] oder [Issues]. Alternativ auch per Mail an *stocktv at gmx.de*
 
+[INSTALL.md]: <INSTALL.md>
 [Kabelloser Ziffernblock]: <https://www.amazon.de/gp/product/B00KYPJAMK/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1>
 [IGEL Design]: <https://webdesign.igel-web.de/>
 [Discussions]: <https://github.com/Trawacho/StockTV/discussions>
