@@ -104,7 +104,7 @@ entpackt es in ein temporäres Verzeichnis und installiert den Windows-Dienst.
 
 ### Variante B — Manuelles ZIP (ohne Internetzugang)
 
-1. `stocktv-windows-x64.zip` von [GitHub Releases](https://github.com/Trawacho/StockTV2/releases) herunterladen
+1. `stocktv-windows-x64.zip` von [GitHub Releases](https://github.com/Trawacho/StockTV/releases) herunterladen
 2. ZIP auf den Zielrechner kopieren und entpacken (z.B. nach `C:\StockTV-Install\`)
 3. PowerShell als Administrator öffnen und ausführen:
    ```powershell

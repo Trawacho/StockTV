@@ -32,7 +32,7 @@ param(
     [switch]$Uninstall
 )
 
-$REPO            = "Trawacho/StockTV2"
+$REPO            = "Trawacho/StockTV"
 $ASSET_NAME      = "stocktv-windows-x64.zip"
 $KIOSK_TASK      = "StockTV Kiosk"
 $KIOSK_SENTINEL  = Join-Path $InstallDir ".kiosk"

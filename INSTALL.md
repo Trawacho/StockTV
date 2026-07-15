@@ -17,7 +17,7 @@ Das einfachste Vorgehen — Pi ist nach dem ersten Start sofort einsatzbereit.
 ### 1. Image herunterladen
 
 Das neueste Image gibt es unter:  
-**https://github.com/Trawacho/StockTV2/releases/latest**
+**https://github.com/Trawacho/StockTV/releases/latest**
 
 Datei: `stocktv-rpi-vX.Y.img.xz`
 
@@ -66,7 +66,7 @@ Für einen Pi, auf dem bereits Raspberry Pi OS Lite 64-bit läuft.
 SSH-Verbindung herstellen und folgenden Befehl ausführen:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
 ```
 
 Das Script fragt interaktiv:
@@ -91,7 +91,7 @@ Das Script:
 Derselbe Befehl — das Script erkennt automatisch ob es ein Update ist:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
 ```
 
 Wurde der Kiosk-Modus beim ersten Install aktiviert, wird er beim Update automatisch

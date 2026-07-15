@@ -257,7 +257,7 @@ jobs:
             ### Linux x64 (Ubuntu/Debian)
             **`stocktv-linux-x64.zip`** – oder direkt per Script:
             ```bash
-            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/linux/install.sh | bash
+            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/install.sh | bash
             ```
 
             ---
@@ -265,7 +265,7 @@ jobs:
             ### Raspberry Pi – Manuelle Installation
             **`stocktv-rpi.zip`** – für bestehende Installationen:
             ```bash
-            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
             ```
 
           files: |

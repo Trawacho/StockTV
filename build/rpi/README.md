@@ -96,7 +96,7 @@ Raspberry Pi OS (64-bit). Lädt automatisch das neueste Release von GitHub.
 
 **Auf dem Pi ausführen:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV2/main/build/rpi/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
 ```
 
 **Oder nach manuellem Download:**
