@@ -14,17 +14,13 @@ Training|Turnier|BestOf|Ziel
 <img src="Bilder/Training.png" width="225" />|<img src="Bilder/Turnier.png" width="225" />|<img src="Bilder/BestOf.png" width="225" />|<img src="Bilder/Ziel.png" width="225" />|
 
 ### Was wird benötigt (pro Spielbahn):
- - 1x [Raspberry Pi 3] (alternativ ein Windows-PC)
+ - 1x Raspberry 3 oder neuer (alternativ ein Windows oder Linux-PC)
  - 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
  - 2x [Kabelloser Ziffernblock]
  - 1x LCD-Display 55". (kleiner geht, aber nicht zu empfehlen!!)
  - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
  - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
-#### !!! Info bzgl Raspberry !!!
-Für die Installation mit einem Raspberry ist das IoT-Dashobard von Microsoft notwendig. Das Produkt wurde eingestellt und ist nicht mehr offiziell verfügbar.  
-Daher empfehle ich aktuell den Einsatz von Windows-PCs. Hier gibt es verschiedene Anbieter von Refurbished-Geräten, bei denen man Windows-PCs unter 100€ erwerben kann.  
-Die StockTV-App wird dann im KIOSK-Modus unter Windows 10/11 eingesetzt.  
-Wichtig wäre, dass sich der PC automatisch einschaltet, sobald er mit Strom versorgt wird!
+ - als Alternative für die Ziffernblöcke ist die Eingabe auch über Tablets möglich
 
 ### Was sollte vorhanden sein:
 Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und mit einer SD-Karte umgehen kann. Neben der Montage braucht man für die Ersteinrichtung etwas Zeit. 
@@ -99,7 +95,6 @@ In diesem Zug einen herzlichen Dank an Michael für seine aktive Unterstützung.
 Dank auch an [IGEL Design] für die Erstellung der Banner!  
 Bei weiteren Fragen nutzen Sie bitte den Bereich [Discussions] oder [Issues]. Alternativ auch per Mail an *stocktv at gmx.de*
 
-[Raspberry Pi 3]: <https://www.amazon.de/gp/product/B01CI5879A/ref=ppx_yo_dt_b_asin_title_o00_s01?ie=UTF8&th=1>
 [Kabelloser Ziffernblock]: <https://www.amazon.de/gp/product/B00KYPJAMK/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1>
 [IGEL Design]: <https://webdesign.igel-web.de/>
 [Discussions]: <https://github.com/Trawacho/StockTV/discussions>
