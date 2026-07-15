@@ -49,6 +49,8 @@ build\linux\publish-linux.ps1 -TargetHost 192.168.1.xx -Install
 
 Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**Wichtig:** [INSTALL.md](INSTALL.md) enthält die vollständige Endanwender-Installationsanleitung (Raspberry Pi + Windows), Inhalte sind dort bewusst ausformuliert statt nur verlinkt. Bei Änderungen an `build/rpi/install.sh` oder `build/windows/install-service.ps1` (Parameter, Ablauf) muss `INSTALL.md` entsprechend aktualisiert werden.
+
 ---
 
 ## Tech-Stack
