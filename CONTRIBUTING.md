@@ -50,6 +50,14 @@ git branch -d feature/meine-funktion
 
 Ein Release entsteht immer aus dem aktuellen Stand von `develop`.
 
+> ⚠️ **Wichtig:** Der Git-Tag allein reicht nicht aus. Die `<Version>` in
+> [`StockTvBlazor/StockTvBlazor.csproj`](StockTvBlazor/StockTvBlazor.csproj) muss vor dem Tag
+> manuell auf denselben Stand gesetzt werden — der `release.yml`-Workflow leitet sie **nicht**
+> automatisch aus dem Tag ab. Diese Zahl landet im kompilierten Binary und wird als `pkgVer`
+> im mDNS-Alive-Paket verbreitet (siehe [MdnsDiscoveryService.cs](StockTvBlazor/Networking/MdnsDiscoveryService.cs)).
+> Wird sie vergessen, meldet die App über mDNS eine veraltete Version, obwohl Tag und
+> GitHub-Release schon weiter sind.
+
 ```bash
 # 1. develop ist aktuell und vollständig getestet
 git checkout develop
@@ -59,16 +67,22 @@ git pull
 git checkout -b release/v1.0
 git push -u origin release/v1.0
 
-# 3. release/v1.0 → main mergen (kein Fast-Forward)
+# 3. Versionsnummer in StockTvBlazor.csproj auf die neue Version setzen
+#    (<Version>1.0.0.0</Version> in StockTvBlazor/StockTvBlazor.csproj), dann committen
+git add StockTvBlazor/StockTvBlazor.csproj
+git commit -m "chore: Version auf 1.0.0 gesetzt"
+git push
+
+# 4. release/v1.0 → main mergen (kein Fast-Forward)
 git checkout main
 git merge --no-ff release/v1.0
 git push
 
-# 4. Tag auf main setzen → löst GitHub Actions aus
+# 5. Tag auf main setzen → löst GitHub Actions aus
 git tag v1.0.0 main
 git push origin v1.0.0
 
-# 5. release/v1.0 auch zurück zu develop mergen (verhindert Divergence!)
+# 6. release/v1.0 auch zurück zu develop mergen (verhindert Divergence!)
 git checkout develop
 git merge --no-ff release/v1.0
 git push
@@ -101,21 +115,26 @@ git checkout -b hotfix/beschreibung
 # 2. Fix entwickeln und committen
 # ...
 
-# 3. In den Release-Branch mergen
+# 3. Versionsnummer in StockTvBlazor.csproj auf den Patch-Stand setzen
+#    (<Version>1.0.1.0</Version> in StockTvBlazor/StockTvBlazor.csproj), dann committen
+git add StockTvBlazor/StockTvBlazor.csproj
+git commit -m "chore: Version auf 1.0.1 gesetzt"
+
+# 4. In den Release-Branch mergen
 git checkout release/v1.0
 git merge --no-ff hotfix/beschreibung
 git push
 
-# 4. Hotfix auch in main mergen
+# 5. Hotfix auch in main mergen
 git checkout main
 git merge --no-ff release/v1.0
 git push
 
-# 5. Tag auf main setzen → löst GitHub Actions aus
+# 6. Tag auf main setzen → löst GitHub Actions aus
 git tag v1.0.1 main
 git push origin v1.0.1
 
-# 6. WICHTIG: Hotfix auch in develop mergen (verhindert Divergence!)
+# 7. WICHTIG: Hotfix auch in develop mergen (verhindert Divergence!)
 git checkout develop
 git merge --no-ff release/v1.0
 git push
