@@ -3,9 +3,9 @@
 ## Branch-Übersicht
 
 ```
-main (Releases)
+main (Releases, Tag: v1.0.0, v1.0.1, ...)
   ↑
-  release/v1.0 (Tag: v1.0.0, v1.0.1, ...)
+  release/v1.0
   ↑
 develop (Integration)
   ↑
@@ -18,11 +18,12 @@ release/v0.1 (ältere Releases, Hotfixes möglich)
 
 | Branch | Zweck | Direkte Commits |
 |---|---|---|
-| `main` | Production-Branch, nur Releases | Nein – nur Merges von release/* |
-| `develop` | Integrations-Branch, aktueller Entwicklungsstand | Nein – nur Merges von feature/* und release/* |
+| `main` | Production-Branch, nur Releases | Nein – nur Merges von release/* (Ausnahme: docs/*, siehe unten) |
+| `develop` | Integrations-Branch, aktueller Entwicklungsstand | Nein – nur Merges von feature/*, release/* und docs/* |
 | `release/vX.Y` | Release-Kandidat (eingefrorener Stand) | Ja, nur Hotfixes |
 | `feature/*` | Neue Funktionen und Weiterentwicklungen | Ja |
 | `hotfix/*` | Dringende Fixes für einen bestehenden Release | Ja |
+| `docs/*` | Nicht-funktionale Änderungen (Doku, README, Lizenztexte, …) | Ja |
 
 ---
 
@@ -63,8 +64,8 @@ git checkout main
 git merge --no-ff release/v1.0
 git push
 
-# 4. Tag auf dem Release-Branch setzen → löst GitHub Actions aus
-git tag v1.0.0 release/v1.0
+# 4. Tag auf main setzen → löst GitHub Actions aus
+git tag v1.0.0 main
 git push origin v1.0.0
 
 # 5. release/v1.0 auch zurück zu develop mergen (verhindert Divergence!)
@@ -105,14 +106,14 @@ git checkout release/v1.0
 git merge --no-ff hotfix/beschreibung
 git push
 
-# 4. Tag setzen → löst GitHub Actions aus
-git tag v1.0.1 release/v1.0
-git push origin v1.0.1
-
-# 5. Hotfix auch in main mergen
+# 4. Hotfix auch in main mergen
 git checkout main
 git merge --no-ff release/v1.0
 git push
+
+# 5. Tag auf main setzen → löst GitHub Actions aus
+git tag v1.0.1 main
+git push origin v1.0.1
 
 # 6. WICHTIG: Hotfix auch in develop mergen (verhindert Divergence!)
 git checkout develop
@@ -122,7 +123,37 @@ git push
 git branch -d hotfix/beschreibung
 ```
 
-⚠️ **Kritisch:** Der Hotfix muss zu **develop zurück**, sonst fehlt der Fix im nächsten Release!
+⚠️ **Kritisch:** Der Hotfix muss zu **main und develop zurück**, sonst fehlt der Fix im nächsten Release bzw. der Tag landet auf einem Commit, der nicht auf main liegt!
+
+---
+
+## Doku-only-Änderungen ohne Release
+
+Für Änderungen, die **keinerlei Programmverhalten beeinflussen** (z.B. `README.md`, `CONTRIBUTING.md`, Lizenztexte, reine Kommentare) muss nicht der volle Release-Zyklus durchlaufen werden. Solche Änderungen dürfen direkt nach `main` **und** `develop` gemergt werden, ohne Tag und ohne Release-Build.
+
+```bash
+# 1. Von develop abzweigen
+git checkout develop
+git pull
+git checkout -b docs/kurzbeschreibung
+
+# 2. Änderung committen
+# ...
+
+# 3. Nach develop mergen
+git checkout develop
+git merge --no-ff docs/kurzbeschreibung
+git push
+
+# 4. Direkt nach main mergen (kein Tag, kein Release-Build!)
+git checkout main
+git merge --no-ff docs/kurzbeschreibung
+git push
+
+git branch -d docs/kurzbeschreibung
+```
+
+⚠️ **Wichtig:** Dieser Weg ist ausschließlich für Änderungen erlaubt, die keinen Einfluss auf das Programmverhalten haben. Im Zweifel: normalen Feature-/Release-Weg nutzen. Ein Merge nach `main` ohne Tag löst **keinen** GitHub-Actions-Build aus (der Workflow reagiert nur auf `v*`-Tags), Doku-Änderungen sind also risikolos für die Release-Pipeline.
 
 ---
 
