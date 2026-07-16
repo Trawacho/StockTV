@@ -14,6 +14,10 @@ develop (Integration)
 release/v0.1 (ältere Releases, Hotfixes möglich)
   ↑
   hotfix/beschreibung
+
+main
+  ↑
+  docs/beschreibung (Doku-only — landet in main UND develop, siehe unten)
 ```
 
 | Branch | Zweck | Direkte Commits |
@@ -23,7 +27,7 @@ release/v0.1 (ältere Releases, Hotfixes möglich)
 | `release/vX.Y` | Release-Kandidat (eingefrorener Stand) | Ja, nur Hotfixes |
 | `feature/*` | Neue Funktionen und Weiterentwicklungen | Ja |
 | `hotfix/*` | Dringende Fixes für einen bestehenden Release | Ja |
-| `docs/*` | Nicht-funktionale Änderungen (Doku, README, Lizenztexte, …) | Ja |
+| `docs/*` | Nicht-funktionale Änderungen (Doku, README, Lizenztexte, …) | Ja — zweigt von `main` ab, siehe unten |
 
 ⚠️ **Aufräumen:** Sobald ein `feature/*`-, `hotfix/*`- oder `docs/*`-Branch gemergt ist, wird
 er **sowohl lokal als auch auf dem Remote gelöscht** (`git branch -d <branch>` und
@@ -97,7 +101,7 @@ git merge --no-ff release/v1.0
 git push
 ```
 
-Der Tag-Push startet automatisch den Workflow [release.yml](.github/workflows/release.yml), der für **alle drei Plattformen parallel** baut:
+Der Tag-Push startet automatisch den Workflow [release.yml](.github/workflows/release.yml), der **vier Jobs parallel** baut:
 
 | Plattform | Artefakt |
 |---|---|
@@ -105,7 +109,16 @@ Der Tag-Push startet automatisch den Workflow [release.yml](.github/workflows/re
 | Windows x64 | `stocktv-windows-x64.zip` |
 | Linux x64 | `stocktv-linux-x64.zip` |
 
-Alle Dateien landen automatisch im GitHub Release.
+Diese drei Dateien landen automatisch im GitHub Release.
+
+Zusätzlich baut derselbe Tag-Push über den wiederverwendbaren Workflow [docker.yml](.github/workflows/docker.yml) ein Multi-Arch-Docker-Image (`linux/amd64` + `linux/arm64`) und pusht es direkt nach GitHub Container Registry (GHCR) — **nicht** als Release-Datei, sondern als Image:
+
+```text
+ghcr.io/trawacho/stocktv:vX.Y.Z
+ghcr.io/trawacho/stocktv:latest
+```
+
+Installationsanleitung dafür: [INSTALL.md → Docker](INSTALL.md#docker). Der Docker-Build läuft unabhängig von den drei anderen Jobs — schlägt z.B. der Windows-Build fehl, wird das Docker-Image trotzdem gebaut und gepusht (und umgekehrt).
 
 > **Patch-Releases** (z.B. `v1.0.1`) entstehen über einen Hotfix-Branch auf dem existierenden `release/v1.0` — siehe Abschnitt unten.
 
@@ -160,11 +173,18 @@ git push origin --delete hotfix/beschreibung
 
 ## Doku-only-Änderungen ohne Release
 
-Für Änderungen, die **keinerlei Programmverhalten beeinflussen** (z.B. `README.md`, `CONTRIBUTING.md`, Lizenztexte, reine Kommentare) muss nicht der volle Release-Zyklus durchlaufen werden. Solche Änderungen dürfen direkt nach `main` **und** `develop` gemergt werden, ohne Tag und ohne Release-Build.
+Für Änderungen, die **keinerlei Verhalten der App selbst beeinflussen** (z.B. `README.md`, `CONTRIBUTING.md`, Lizenztexte, reine Kommentare, sowie reine CI/Workflow-Konfiguration unter `.github/workflows/*`, die nur die Build-/Release-Pipeline betrifft) muss nicht der volle Release-Zyklus durchlaufen werden. Solche Änderungen dürfen direkt nach `main` **und** `develop` gemergt werden, ohne Tag und ohne Release-Build.
+
+> ⚠️ **Wichtig — von `main` abzweigen, nicht von `develop`:** `develop` ist zwischen zwei
+> Releases so gut wie immer ein Stück voraus (unreleaste Feature-/Hotfix-Arbeit). Würde man
+> einen docs/*-Branch von `develop` abzweigen und anschließend nach `main` mergen, brächte
+> dieser Merge automatisch die gesamte Vorgeschichte von `develop` mit nach `main` — inklusive
+> Code, der noch gar nicht released werden sollte. Ein docs/*-Branch zweigt daher immer von
+> `main` ab; dadurch enthält er garantiert nur den main-Stand plus die eine Doku-Änderung.
 
 ```bash
-# 1. Von develop abzweigen
-git checkout develop
+# 1. Von main abzweigen (nicht von develop!)
+git checkout main
 git pull
 git checkout -b docs/kurzbeschreibung
 
@@ -172,13 +192,14 @@ git checkout -b docs/kurzbeschreibung
 # ...
 git push -u origin docs/kurzbeschreibung
 
-# 3. Nach develop mergen
-git checkout develop
+# 3. Zuerst nach main mergen (kein Tag, kein Release-Build!)
+git checkout main
 git merge --no-ff docs/kurzbeschreibung
 git push
 
-# 4. Direkt nach main mergen (kein Tag, kein Release-Build!)
-git checkout main
+# 4. Denselben Branch danach auch nach develop mergen (verhindert Divergence)
+git checkout develop
+git pull
 git merge --no-ff docs/kurzbeschreibung
 git push
 
@@ -197,8 +218,14 @@ Für Tests oder Vorab-Binaries kann der Workflow manuell gestartet werden:
 
 GitHub → Repository → **Actions** → **Release** → **Run workflow**
 
-Alle drei Plattformen werden gebaut. Die Artefakte sind 7 Tage verfügbar.
-Es wird kein GitHub Release angelegt.
+Alle vier Jobs werden gebaut (Raspberry Pi, Windows x64, Linux x64, Docker). Die drei
+Installer-Artefakte sind 7 Tage verfügbar, es wird kein GitHub Release angelegt.
+
+**`:latest` bleibt bei manuellen Läufen unangetastet:** Der Docker-Job taggt bei einem
+manuellen "Run workflow" nur die gewählte Versionsnummer (Default `dev`), **nicht** `:latest`
+— gesteuert über den `push_latest`-Input von [docker.yml](.github/workflows/docker.yml), den
+`release.yml` nur bei einem echten Tag-Push auf `true` setzt (`push_latest: ${{ github.event_name == 'push' }}`).
+`:latest` in GHCR entspricht damit immer dem letzten echten Release.
 
 ---
 
@@ -209,3 +236,4 @@ Es wird kein GitHub Release angelegt.
 | Raspberry Pi | `build/rpi/publish-rpi.ps1` | `stocktv-rpi.zip` + `.img.xz` | [build/rpi/README.md](build/rpi/README.md) |
 | Windows x64 | `build/windows/publish-windows.ps1` | `stocktv-windows-x64.zip` | [build/windows/README.md](build/windows/README.md) |
 | Linux x64 | `build/linux/publish-linux.ps1` | `stocktv-linux-x64.zip` | [build/linux/README.md](build/linux/README.md) |
+| Docker (Multi-Arch) | `build/buildproject.bat` (lokal) / `build/remotebuild_std.ps1` (Deploy) | `ghcr.io/trawacho/stocktv:<version>` + `:latest` | [INSTALL.md → Docker](INSTALL.md#docker) |

@@ -46,7 +46,8 @@ jobs:
     uses: ./.github/workflows/docker.yml
     with:
       version: ${{ needs.version.outputs.version }}
-      
+      push_latest: ${{ github.event_name == 'push' }}
+
   # -------------------------------------------------------
   #  Windows x64
   # -------------------------------------------------------
