@@ -1,11 +1,16 @@
 ![StockTVBanner](/Bilder/StockTV.jpg)
 
-# StockTV - Die Anzeige für den Stocksport
-Der Zuschauer kann auf jeder Bahn den aktuellen Spielstand erkennen. Ein Mehrwert für Verein und Zuschauer. 
-Ein Spiel genau beobachten und trotzdem alle Spiele im Blick haben. Auch für die Schützen wird es interessanter. Sie sehen nicht nur den eigenen Spielstand sondern auch die Spielstände auf den anderen Bahnen, was Turniere nochmal 
-interessanter macht. Die Bedienung ist denkbar einfach und für jedes Alter geeignet (ältester bisher bekannter Schütze und Bediener des Systems ist 82 Jahre alt).
+# Neue Version
 
-### ..für die typischen Wettbewerbe
+Seit der Version v1.7.0 ist die Basis des Programms von UWP auf BLAZOR geändert worden. Grund hierfür ist, dass Microsoft das Windows IoT Core nicht mehr unterstützt. Somit musste das Programm auf eine neue Umgebung umgestellt werden. Mit der neuen Version, sind nun Installation auf Windows und Linux Plattformen möglich. Das Programm basiert nun auf einem Webdienst und einer browserbasierten Steuerung. Die Anzeige und Bedienung bleibt aber identisch und wurde nicht geändert.
+
+# StockTV - Die Anzeige für den Stocksport
+
+Der Zuschauer kann auf jeder Bahn den aktuellen Spielstand erkennen. Ein Mehrwert für Verein und Zuschauer. 
+Ein Spiel genau beobachten und trotzdem alle Spiele im Blick haben. Auch für die Schützen wird es interessanter. Sie sehen nicht nur den eigenen Spielstand sondern auch die Spielstände auf den anderen Bahnen, was Turniere nochmal interessanter macht. Die Bedienung ist denkbar einfach und für jedes Alter geeignet (ältester bisher bekannter Schütze und Bediener des Systems ist über 82 Jahre alt).
+
+## ...für die typischen Wettbewerbe
+
 Es sind momentan vier verschiedene Modis möglich. Neben dem Trainingsmodus kann man auch Turniere, BestOf-Begegnungen oder das Zielschiessen abbilden.
 Die Anzeige ist auf jeden Modus individuell angepasst.
 
@@ -14,23 +19,34 @@ Training|Turnier|BestOf|Ziel
 <img src="Bilder/Training.png" width="225" />|<img src="Bilder/Turnier.png" width="225" />|<img src="Bilder/BestOf.png" width="225" />|<img src="Bilder/Ziel.png" width="225" />|
 
 ### Was wird benötigt (pro Spielbahn):
- - 1x Raspberry 3 oder neuer (alternativ ein Windows oder Linux-PC)
- - 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
- - 2x [Kabelloser Ziffernblock]
- - 1x LCD-Display 55". (kleiner geht, aber nicht zu empfehlen!!)
- - Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
- - 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
- - als Alternative für die Ziffernblöcke ist die Eingabe auch über Tablets möglich
+
+- 1x Raspberry 3 oder neuer (alternativ ein Windows oder Linux-PC)
+- 1x HDMI-Kabel für die Verbindung zwischen Raspi und TV
+- 2x [Kabelloser Ziffernblock]
+- 1x LCD-Display 55". (kleiner geht, aber nicht zu empfehlen!!)
+- Halterung für Ziffernblöcke (Eigenbau), Halterung für Display
+- 1x aktive USB-Verlängerung (z. B.: DeLock 83453), wird benötigt, um den Abstand zw. Funkempfänger und Tastatur auf der Raspi abgewandten Seite zu verringern. Alternativ kann auch LogiLink UA0021D - USB 2.0 Extender eingesetzt werden.
+- als Alternative für die Ziffernblöcke ist die Eingabe auch über Tablets möglich
 
 ### Was sollte vorhanden sein:
+
 Du solltest im Verein jemanden haben, der von einem Computer keine Angst hat und mit einer SD-Karte umgehen kann. Neben der Montage braucht man für die Ersteinrichtung etwas Zeit. 
-Wenn die erste Bahn erledigt ist, hat man es schon fast geschafft. Man hat die Möglichkeit das System zu Hause am Computermonitor oder TV zu testen. Für unter 100€ ist ein testen zu Hause möglich,
+Wenn die erste Bahn erledigt ist, hat man es schon fast geschafft. Man hat die Möglichkeit das System zu Hause am Computermonitor oder TV zu testen. Für unter 100€ ist ein Testen zu Hause möglich,
 ohne ein Risiko einzugehen.
 
 ### Installation
-Die Installation auf dem Raspberry Pi ist entweder über ein fertiges, sofort einsatzbereites Image oder per Install-Script auf einem bestehenden Raspberry Pi OS möglich. Eine Schritt-für-Schritt-Anleitung findest du in der [INSTALL.md].
+
+Die Installation auf dem Raspberry Pi ist entweder über ein fertiges, sofort einsatzbereites Image oder per Install-Script auf einem bestehenden Raspberry Pi OS möglich. Alternativ kann auch ein "normaler" PC mit Windows oder Linux genutzt werden. Eine Schritt-für-Schritt-Anleitung findest du in der [INSTALL.md].
+
+### Konzept
+
+Man benötigt für jede Bahn einen PC, auf dem StockTV installiert wird. Die Bedienung erfolgt über 2 Ziffernblöcke. Pro Zielfeld einer Bahn ein Ziffernblock. Somit kann nach jeder Kehre sofort das Ergebnis eingegeben werden. Die Ziffernblöcke sind kabellos per Dongle mit dem Rechner verbunden. Um den Abstand zu verkürzen, sollte man eine USB-Verlängerung nutzen, um den Abstand von USB-Dongle und Ziffernblock zu verkürzen (max 10m). Am Rechner wird das große Display (TV) angeschlossen. Wenn man StockTV in Verbindung mit StockAPP nutzen möchte, müssen alle Systeme vernetzt werden. Hierzu wird dringend von WLAN abgeraten da die Rechner, vor allem Raspberry, ein schlechtes WLAN haben; es empfiehlt sich alles zu verkabeln. Ab der Version v1.7.0 ist es auch möglich, die Eingabe der Spielstände per Tablet zu realisieren. Dazu empfiehlt es sich, eine KIOSK-App zu nutzen.  
+
+*Exemplarischer Aufbau:*
+<img src="Bilder/StockTV_Aufbau_1.png">
 
 ### Bilder
+
 Ziffernblock mit Aufklebersatz zur besseren Lesbarkeit. (Aufklebersatz auf Anfrage)  
 <img src="Bilder/Keypad.jpg" width="150"/> 
 
