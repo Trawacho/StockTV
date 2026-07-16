@@ -236,4 +236,4 @@ manuellen "Run workflow" nur die gewählte Versionsnummer (Default `dev`), **nic
 | Raspberry Pi | `build/rpi/publish-rpi.ps1` | `stocktv-rpi.zip` + `.img.xz` | [build/rpi/README.md](build/rpi/README.md) |
 | Windows x64 | `build/windows/publish-windows.ps1` | `stocktv-windows-x64.zip` | [build/windows/README.md](build/windows/README.md) |
 | Linux x64 | `build/linux/publish-linux.ps1` | `stocktv-linux-x64.zip` | [build/linux/README.md](build/linux/README.md) |
-| Docker (Multi-Arch) | `build/buildproject.bat` (lokal) / `build/remotebuild_std.ps1` (Deploy) | `ghcr.io/trawacho/stocktv:<version>` + `:latest` | [INSTALL.md → Docker](INSTALL.md#docker) |
+| Docker (Multi-Arch) | – (zentral über [docker.yml](.github/workflows/docker.yml) gebaut, kein lokales Publish-Skript) | `ghcr.io/trawacho/stocktv:<version>` + `:latest` | [INSTALL.md → Docker](INSTALL.md#docker) |
