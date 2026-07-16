@@ -25,6 +25,11 @@ release/v0.1 (ältere Releases, Hotfixes möglich)
 | `hotfix/*` | Dringende Fixes für einen bestehenden Release | Ja |
 | `docs/*` | Nicht-funktionale Änderungen (Doku, README, Lizenztexte, …) | Ja |
 
+⚠️ **Aufräumen:** Sobald ein `feature/*`-, `hotfix/*`- oder `docs/*`-Branch gemergt ist, wird
+er **sowohl lokal als auch auf dem Remote gelöscht** (`git branch -d <branch>` und
+`git push origin --delete <branch>`, sofern der Branch zuvor gepusht wurde). Alte, bereits
+gemergte Branches bleiben nicht liegen.
+
 ---
 
 ## Neue Funktion entwickeln
@@ -36,12 +41,16 @@ git pull
 git checkout -b feature/meine-funktion
 
 # ... entwickeln, committen ...
+git push -u origin feature/meine-funktion
 
 # Zurück nach develop mergen (kein Fast-Forward, damit der Merge sichtbar bleibt)
 git checkout develop
 git merge --no-ff feature/meine-funktion
 git push
+
+# Branch ist gemergt — lokal und remote löschen
 git branch -d feature/meine-funktion
+git push origin --delete feature/meine-funktion
 ```
 
 ---
@@ -114,6 +123,7 @@ git checkout -b hotfix/beschreibung
 
 # 2. Fix entwickeln und committen
 # ...
+git push -u origin hotfix/beschreibung
 
 # 3. Versionsnummer in StockTvBlazor.csproj auf den Patch-Stand setzen
 #    (<Version>1.0.1.0</Version> in StockTvBlazor/StockTvBlazor.csproj), dann committen
@@ -139,7 +149,9 @@ git checkout develop
 git merge --no-ff release/v1.0
 git push
 
+# Hotfix-Branch ist gemergt — lokal und remote löschen
 git branch -d hotfix/beschreibung
+git push origin --delete hotfix/beschreibung
 ```
 
 ⚠️ **Kritisch:** Der Hotfix muss zu **main und develop zurück**, sonst fehlt der Fix im nächsten Release bzw. der Tag landet auf einem Commit, der nicht auf main liegt!
@@ -158,6 +170,7 @@ git checkout -b docs/kurzbeschreibung
 
 # 2. Änderung committen
 # ...
+git push -u origin docs/kurzbeschreibung
 
 # 3. Nach develop mergen
 git checkout develop
@@ -169,7 +182,9 @@ git checkout main
 git merge --no-ff docs/kurzbeschreibung
 git push
 
+# Branch ist in beide Ziele gemergt — lokal und remote löschen
 git branch -d docs/kurzbeschreibung
+git push origin --delete docs/kurzbeschreibung
 ```
 
 ⚠️ **Wichtig:** Dieser Weg ist ausschließlich für Änderungen erlaubt, die keinen Einfluss auf das Programmverhalten haben. Im Zweifel: normalen Feature-/Release-Weg nutzen. Ein Merge nach `main` ohne Tag löst **keinen** GitHub-Actions-Build aus (der Workflow reagiert nur auf `v*`-Tags), Doku-Änderungen sind also risikolos für die Release-Pipeline.
