@@ -216,58 +216,16 @@ jobs:
           body: |
             ## StockTV ${{ needs.version.outputs.version }}
 
-            ---
+            ### Enthaltene Dateien
 
-            ### Raspberry Pi – Fertiges Image
-            **`stocktv-rpi-${{ needs.version.outputs.version }}.img.xz`**
-            Direkt mit [Raspberry Pi Imager](https://www.raspberrypi.com/software/) flashen.
-
-            | Einstellung | Wert |
+            | Datei | Beschreibung |
             |---|---|
-            | SSH-User | `pi` |
-            | SSH-Passwort | `stocktv` |
-            | Hostname | `stocktv` |
-            | Web-UI | `http://<ip>:8080` |
+            | `stocktv-rpi-${{ needs.version.outputs.version }}.img.xz` | Fertiges Raspberry Pi Image zum Flashen mit dem [Raspberry Pi Imager](https://www.raspberrypi.com/software/) |
+            | `stocktv-rpi.zip` | Installations-/Update-Paket für bestehendes Raspberry Pi OS Lite 64-bit |
+            | `stocktv-windows-x64.zip` | Installationspaket für Windows (x64), läuft als Windows-Dienst |
+            | `stocktv-linux-x64.zip` | Installationspaket für Linux (x64), läuft als systemd-Dienst |
 
-            > Passwort nach dem ersten Login ändern: `passwd`
-
-            **Konfiguration nach dem ersten Start (SSH):**
-            ```bash
-            # Hostname ändern (z.B. für mehrere Bahnen: stocktv-1, stocktv-2, …)
-            sudo hostnamectl set-hostname stocktv-1
-            sudo sed -i 's/stocktv/stocktv-1/g' /etc/hosts && sudo reboot
-
-            # Feste IP setzen
-            sudo nmcli connection modify "Wired connection 1" \
-              ipv4.method manual ipv4.addresses 192.168.1.50/24 \
-              ipv4.gateway 192.168.1.1 ipv4.dns "8.8.8.8"
-            sudo nmcli connection up "Wired connection 1"
-            ```
-
-            ---
-
-            ### Windows x64
-            **`stocktv-windows-x64.zip`** – ZIP entpacken, dann:
-            ```powershell
-            powershell.exe -ExecutionPolicy Bypass -File .\install-service.ps1
-            ```
-            > Das Skript fordert automatisch Administrator-Rechte an (UAC).
-
-            ---
-
-            ### Linux x64 (Ubuntu/Debian)
-            **`stocktv-linux-x64.zip`** – oder direkt per Script:
-            ```bash
-            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/install.sh | bash
-            ```
-
-            ---
-
-            ### Raspberry Pi – Manuelle Installation
-            **`stocktv-rpi.zip`** – für bestehende Installationen:
-            ```bash
-            curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
-            ```
+            Installationsanleitung: [INSTALL.md](https://github.com/Trawacho/StockTV/blob/main/INSTALL.md)
 
           files: |
             artifacts/rpi-image/*.img.xz
