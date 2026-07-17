@@ -132,29 +132,37 @@ Wurde er nicht aktiviert, wird erneut gefragt (Nachholung möglich).
 
 ### Netzwerkkonfiguration
 
-**WLAN dauerhaft deaktivieren** (empfohlen, siehe [Netzwerk-Empfehlungen](#netzwerk-empfehlungen)):
+**Feste IP-Adresse einrichten** (empfohlen für stabilen Betrieb) — mit `nmtui`:
 
 ```bash
-echo "dtoverlay=disable-wifi" | sudo tee -a /boot/firmware/config.txt
+sudo nmtui
+```
+
+1. **Edit a connection** auswählen
+2. Die kabelgebundene Verbindung auswählen (z. B. *Wired connection 1*) → **Edit**
+3. Bei **IPv4 CONFIGURATION** von `Automatic` auf `Manual` umstellen → **Show**
+4. **Addresses** (z. B. `192.168.1.xx/24`) und **Gateway** (z. B. `192.168.1.1`) eintragen
+5. Bei **DNS servers** zwei Einträge hinzufügen — das Standardgateway und einen öffentlichen DNS-Server als Fallback, z. B. `192.168.1.1` und `1.1.1.1`
+6. **OK** → **Back**
+7. **Activate a connection** auswählen, die Verbindung deaktivieren und wieder aktivieren (oder Pi neu starten), damit die Änderung wirkt
+8. **Quit**
+
+> Eine laufende SSH-Verbindung kann dabei kurz getrennt werden.
+
+**Hostnamen anpassen** — ebenfalls mit `nmtui`:
+
+```bash
+sudo nmtui
+```
+
+1. **Set system hostname** auswählen
+2. Neuen Hostnamen eingeben (z. B. `stocktv-bahn1`) → **OK**
+3. **Quit**
+4. Pi neu starten, damit die Änderung überall (z. B. mDNS) greift:
+
+```bash
 sudo reboot
 ```
-
-**Feste IP-Adresse einrichten** (empfohlen für stabilen Betrieb):
-
-```bash
-# Vorhandene Verbindungen anzeigen (Verbindungsname notieren, z.B. "Wired connection 1")
-nmcli con show
-
-# Feste IP setzen — Verbindungsname, IP und Gateway anpassen
-sudo nmcli con mod "Wired connection 1" \
-    ipv4.method manual \
-    ipv4.addresses "192.168.1.xx/24" \
-    ipv4.gateway "192.168.1.1" \
-    ipv4.dns "192.168.1.1"
-sudo nmcli con up "Wired connection 1"
-```
-
-> Die Änderung wirkt sofort — eine laufende SSH-Verbindung trennt sich dabei.
 
 ### Nützliche Befehle
 
