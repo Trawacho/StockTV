@@ -1,0 +1,29 @@
+/* ============================================================
+   JS-freie Textskalierung (ersetzt wwwroot/js/autofitText.js)
+
+   Ansatz:
+   - Die umgebende Zelle ist ein Größen-Container (container-type: size),
+     gesetzt an den gemeinsamen Zellklassen (.score-cell, .score-top-row,
+     .teamname, .ziel-cell, .ziel-spielername).
+   - Der Text steckt in einem <span class="autofit"> (Komponente AutoFitText).
+   - Die Schriftgröße ergibt sich aus:
+       * Höhe des Containers            -> deckelt nach oben  (…cqh / …cqw)
+       * Breite / Zeichenanzahl (--len) -> schrumpft langen Text
+   - --len wird serverseitig aus der Textlänge gesetzt, --min ist die
+     Mindestgröße in px (früher data-autofit-min).
+
+   Faktoren: 84  ~ Kanten-Deckel inkl. line-height-Metrik (Ober-/Unterlänge)
+             150 ~ 100 / mittlere Zeichenbreite (~0,66 em), konservativ
+   ============================================================ */
+
+.autofit {
+    font-size: max(var(--min, 8px), min(84cqh, calc(150cqw / var(--len, 1))));
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Vertikaler Text (writing-mode vertical-*): Länge läuft entlang der Höhe,
+   Glyphen-Dicke entlang der Breite -> cqh/cqw vertauscht. */
+.autofit.vertical {
+    font-size: max(var(--min, 8px), min(84cqw, calc(150cqh / var(--len, 1))));
+}

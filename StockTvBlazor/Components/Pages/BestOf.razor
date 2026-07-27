@@ -7,30 +7,30 @@
 	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-left" data-autofit data-autofit-min="8" data-autofit-vertical="true">@ViewModel.LeftTeamName</div>
+			<div class="teamname teamname-left"><AutoFitText Text="@ViewModel.LeftTeamName" Min="8" Vertical="true" /></div>
 		}
 
 		<div class="scoreboard-center">
-			<div class="score-row score-top-row header-text " data-autofit data-autofit-min="6">@ViewModel.HeaderText</div>
+			<div class="score-row score-top-row header-text"><AutoFitText Text="@ViewModel.HeaderText" Min="6" /></div>
 
 			<div class="score-row bestof-mid-grid">
-				<div class="score-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
-				<div class="score-cell left-match-points" data-autofit data-autofit-min="10">@ViewModel.LeftMatchPoints</div>
-				<div class="score-cell seperator" data-autofit data-autofit-min="12">:</div>
-				<div class="score-cell right-match-points" data-autofit data-autofit-min="10">@ViewModel.RightMatchPoints</div>
-				<div class="score-cell right-point-sum" data-autofit data-autofit-min="12">@ViewModel.RightPointsSum</div>
+				<div class="score-cell left-point-sum"><AutoFitText Text="@ViewModel.LeftPointsSum.ToString()" Min="12" /></div>
+				<div class="score-cell left-match-points">@ViewModel.LeftMatchPoints</div>
+				<div class="score-cell seperator"><AutoFitText Text=":" Min="12" /></div>
+				<div class="score-cell right-match-points">@ViewModel.RightMatchPoints</div>
+				<div class="score-cell right-point-sum"><AutoFitText Text="@ViewModel.RightPointsSum.ToString()" Min="12" /></div>
 			</div>
 
 			<div class="score-row score-bottom-grid">
-				<div class="score-cell left-points" data-autofit data-autofit-min="10">@ViewModel.LeftPoints</div>
-				<div class="score-cell input-value" data-autofit data-autofit-min="10">@ViewModel.InputValue</div>
-				<div class="score-cell right-points" data-autofit data-autofit-min="10">@ViewModel.RightPoints</div>
+				<div class="score-cell left-points"><AutoFitText Text="@ViewModel.LeftPoints" Min="10" /></div>
+				<div class="score-cell input-value"><AutoFitText Text="@ViewModel.InputValue" Min="10" /></div>
+				<div class="score-cell right-points"><AutoFitText Text="@ViewModel.RightPoints" Min="10" /></div>
 			</div>
 		</div>
 
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-right" data-autofit data-autofit-min="8" data-autofit-vertical="true">@ViewModel.RightTeamName</div>
+			<div class="teamname teamname-right"><AutoFitText Text="@ViewModel.RightTeamName" Min="8" Vertical="true" /></div>
 		}
 	</div>
 </div>
