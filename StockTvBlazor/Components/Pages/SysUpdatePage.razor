@@ -13,9 +13,10 @@
 else
 {
     <div class="sysupdate-page">
+    <div class="sysupdate-content">
         <section class="hostname-section">
             <h2>Hostname</h2>
-            <p class="hint">Nach dem Ändern ist ein Neustart des Pi nötig (z.B. per SSH: <code>sudo reboot</code>), damit die Änderung überall (z.B. mDNS) wirksam wird.</p>
+            <p class="hint">Nach dem Ändern ist ein Neustart des Pi nötig, damit die Änderung überall (z.B. mDNS) wirksam wird.</p>
 
             <div class="field">
                 <label>Hostname</label>
@@ -64,7 +65,7 @@ else
                         @foreach (var iface in _interfaces)
                         {
                             <option value="@iface.Device">
-                                @iface.Device (@(iface.ConnectionName is null ? "nicht verbunden" : "verbunden"))
+                                @iface.Device
                             </option>
                         }
                     </select>
@@ -87,12 +88,12 @@ else
                     @if (_isStaticMode)
                     {
                         <div class="field">
-                            <label>IP-Adresse</label>
-                            <input type="text" @bind="_ipText" @bind:event="oninput" placeholder="192.168.1.50" />
-                        </div>
-                        <div class="field">
-                            <label>Netzwerkpräfix <span class="hint">(z.B. 24 = 255.255.255.0)</span></label>
-                            <input type="text" @bind="_prefixText" placeholder="24" />
+                            <label>IP-Adresse / Präfix <span class="hint">(Präfix z.B. 24 = 255.255.255.0)</span></label>
+                            <div class="ip-prefix-group">
+                                <input type="text" @bind="_ipText" @bind:event="oninput" placeholder="192.168.1.50" class="ip-input" />
+                                <span class="ip-prefix-separator">/</span>
+                                <input type="text" @bind="_prefixText" placeholder="24" class="prefix-input" />
+                            </div>
                         </div>
                         <div class="field">
                             <label>Gateway</label>
@@ -101,6 +102,7 @@ else
                         <div class="field">
                             <label>DNS-Server <span class="hint">(kommagetrennt)</span></label>
                             <input type="text" @bind="_dnsText" placeholder="192.168.1.1, 1.1.1.1" />
+                            <p class="hint">Meist die IP Ihres Routers (hier auch als Gateway eingetragen). Alternativ öffentliche DNS-Server wie 1.1.1.1 und/oder 8.8.8.8.</p>
                         </div>
 
                         @if (GetTargetUrlPreview() is { } targetUrlPreview)
@@ -209,5 +211,6 @@ else
                 <div class="toast-error">@_rebootErrorMessage</div>
             }
         </section>
+    </div>
     </div>
 }

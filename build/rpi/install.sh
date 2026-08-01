@@ -145,6 +145,33 @@ UPDATESCRIPTEOF
 $SUDO install -m 0755 -o root -g root "$UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-update.sh
 rm -f "$UPDATE_SCRIPT_TMP"
 
+# --- Hostname-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR, siehe Begruendung oben) ---
+# Setzt Hostname UND die "127.0.1.1"-Zeile in /etc/hosts atomar in einem Rutsch - "nmcli general
+# hostname" alleine laesst /etc/hosts unveraendert, was zu "sudo: unable to resolve host ..." fuehrt,
+# sobald beide auseinanderlaufen.
+echo "Aktualisiere Hostname-Skript (/usr/local/sbin/stocktv-set-hostname.sh)..."
+HOSTNAME_SCRIPT_TMP=$(mktemp)
+cat > "$HOSTNAME_SCRIPT_TMP" <<'HOSTNAMESCRIPTEOF'
+#!/bin/bash
+set -e
+NEW_HOSTNAME="$1"
+
+if ! [[ "$NEW_HOSTNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$ ]]; then
+    echo "Ungueltiger Hostname: $NEW_HOSTNAME" >&2
+    exit 1
+fi
+
+nmcli general hostname "$NEW_HOSTNAME"
+
+if grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts; then
+    sed -i "s/^127\.0\.1\.1[[:space:]]\+.*/127.0.1.1\t$NEW_HOSTNAME/" /etc/hosts
+else
+    echo -e "127.0.1.1\t$NEW_HOSTNAME" >> /etc/hosts
+fi
+HOSTNAMESCRIPTEOF
+$SUDO install -m 0755 -o root -g root "$HOSTNAME_SCRIPT_TMP" /usr/local/sbin/stocktv-set-hostname.sh
+rm -f "$HOSTNAME_SCRIPT_TMP"
+
 # --- sudoers-Regel fuer die /sysupdate-Seite (bei jedem Lauf, damit auch bestehende ---
 # --- Installationen die Regel beim naechsten Update nachgezogen bekommen) ---
 echo "Pruefe sudoers-Regel..."
@@ -158,10 +185,10 @@ Cmnd_Alias STOCKTV_NM_READ = /usr/bin/nmcli -t -f DEVICE\,TYPE\,STATE\,CONNECTIO
     /usr/bin/nmcli -t -f * con show *
 
 Cmnd_Alias STOCKTV_NM_WRITE = /usr/bin/nmcli con mod * ipv4.method manual ipv4.addresses * ipv4.gateway * ipv4.dns *, \
-    /usr/bin/nmcli con mod * ipv4.method auto ipv4.addresses "" ipv4.gateway "" ipv4.dns "", \
+    /usr/bin/nmcli con mod * ipv4.method auto, \
     /usr/bin/nmcli con up *
 
-Cmnd_Alias STOCKTV_HOSTNAME = /usr/bin/nmcli general hostname *
+Cmnd_Alias STOCKTV_HOSTNAME = /usr/local/sbin/stocktv-set-hostname.sh *
 
 Cmnd_Alias STOCKTV_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-update.sh
 

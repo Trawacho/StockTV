@@ -17,12 +17,12 @@ public record NetworkConnectionDetails(
 public record NetworkOperationResult(bool Success, string? ErrorMessage);
 
 /// <summary>
-/// Liest/schreibt die Netzwerkkonfiguration und den Hostnamen auf einem Raspberry Pi über nmcli
-/// (NetworkManager). Alle schreibenden Aufrufe laufen über "sudo -n /usr/bin/nmcli ..." mit exakt
-/// den Argument-Formen, die in der sudoers-Regel aus build/rpi/install.sh (Cmnd_Alias
-/// STOCKTV_NM_READ/STOCKTV_NM_WRITE/STOCKTV_HOSTNAME) freigegeben sind. Wird die Argument-Reihenfolge
-/// hier geändert, muss install.sh entsprechend angepasst werden, sonst schlagen die Aufrufe mit
-/// "sudo: no command matches" fehl.
+/// Liest/schreibt die Netzwerkkonfiguration und den Hostnamen auf einem Raspberry Pi. Netzwerk-
+/// Aufrufe laufen über "sudo -n /usr/bin/nmcli ..." (Cmnd_Alias STOCKTV_NM_READ/STOCKTV_NM_WRITE),
+/// der Hostname über das feste Skript /usr/local/sbin/stocktv-set-hostname.sh (Cmnd_Alias
+/// STOCKTV_HOSTNAME), beide freigegeben in der sudoers-Regel aus build/rpi/install.sh. Wird die
+/// Argument-Reihenfolge/der Skriptpfad hier geändert, muss install.sh entsprechend angepasst werden,
+/// sonst schlagen die Aufrufe mit "sudo: no command matches" fehl.
 /// </summary>
 public class NetworkConfigService
 {
@@ -42,11 +42,17 @@ public class NetworkConfigService
 	// dieselbe Quelle, die auch MdnsDiscoveryService fuer den mDNS-Instanznamen verwendet.
 	public string GetHostname() => Environment.MachineName;
 
+	// Setzt den Hostnamen NICHT direkt per nmcli, sondern ueber das von install.sh ausgelieferte
+	// Skript /usr/local/sbin/stocktv-set-hostname.sh: "nmcli general hostname" alleine aktualisiert
+	// zwar den Kernel-/persistenten Hostnamen, laesst aber die "127.0.1.1 <hostname>"-Zeile in
+	// /etc/hosts unangetastet - das fuehrt zu "sudo: unable to resolve host ..."-Meldungen bei jedem
+	// sudo-Aufruf, sobald beide auseinanderlaufen. Das Skript aktualisiert beides atomar.
+	private const string SetHostnameScriptPath = "/usr/local/sbin/stocktv-set-hostname.sh";
+
 	public async Task<NetworkOperationResult> SetHostnameAsync(string hostname, CancellationToken ct = default)
 	{
-		var (exitCode, _, stdErr) = await RunSudoNmcliAsync(
-			["general", "hostname", hostname],
-			TimeSpan.FromSeconds(10), ct);
+		var (exitCode, _, stdErr) = await RunSudoAsync(
+			SetHostnameScriptPath, [hostname], TimeSpan.FromSeconds(10), ct);
 
 		return exitCode == 0
 			? new NetworkOperationResult(true, null)
@@ -170,12 +176,13 @@ public class NetworkConfigService
 
 	public async Task<NetworkOperationResult> SetDhcpAsync(string connectionName, CancellationToken ct = default)
 	{
+		// ipv4.addresses/gateway/dns bewusst NICHT explizit leeren: NetworkManager wertet diese
+		// Werte ohnehin nur bei ipv4.method=manual aus. Ein leeres Argument ("") liesse sich in der
+		// sudoers-Regel nicht zuverlaessig matchen (sudo baut den Vergleichs-String aus dem argv
+		// zusammen, ein leeres Element ergibt dort ein doppeltes Leerzeichen statt der literalen
+		// Zeichen "" aus dem sudoers-Muster) - das fuehrte zu "sudo: a password is required".
 		var (modExit, _, modErr) = await RunSudoNmcliAsync(
-			["con", "mod", connectionName,
-				"ipv4.method", "auto",
-				"ipv4.addresses", "",
-				"ipv4.gateway", "",
-				"ipv4.dns", ""],
+			["con", "mod", connectionName, "ipv4.method", "auto"],
 			TimeSpan.FromSeconds(10), ct);
 
 		if (modExit != 0)
