@@ -1,0 +1,213 @@
+@page "/sysupdate"
+@rendermode InteractiveServer
+
+<PageTitle>System</PageTitle>
+
+@if (!PlatformInfo.IsRaspberryPi)
+{
+    <div class="sysupdate-page">
+        <h3>System</h3>
+        <p>Dies ist kein Raspberry Pi, diese Funktion ist hier nicht verfügbar.</p>
+    </div>
+}
+else
+{
+    <div class="sysupdate-page">
+        <section class="hostname-section">
+            <h2>Hostname</h2>
+            <p class="hint">Nach dem Ändern ist ein Neustart des Pi nötig (z.B. per SSH: <code>sudo reboot</code>), damit die Änderung überall (z.B. mDNS) wirksam wird.</p>
+
+            <div class="field">
+                <label>Hostname</label>
+                <input type="text" @bind="_hostnameText" placeholder="stocktv-bahn1" />
+            </div>
+
+            <div class="field-actions">
+                <button class="btn-save" disabled="@_isApplyingHostname" @onclick="ApplyHostnameAsync">
+                    @(_isApplyingHostname ? "Wird angewendet…" : "Speichern")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_hostnameErrorMessage))
+            {
+                <div class="toast-error">@_hostnameErrorMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(_hostnameSuccessMessage))
+            {
+                <div class="toast-success">@_hostnameSuccessMessage</div>
+            }
+        </section>
+
+        <section class="network-section">
+            <h2>Netzwerk</h2>
+
+            <div class="warning-box">
+                ⚠ Eine fehlerhafte Konfiguration kann den Pi vom Netz trennen. Falls die Seite danach
+                nicht mehr erreichbar ist: per SSH verbinden und <code>nmtui</code> nutzen (siehe
+                INSTALL.md). Falls der Browser gerade über das geänderte Interface verbunden ist, kann
+                die Verbindung während der Änderung kurz abreißen.
+            </div>
+
+            @if (_loadingInterfaces)
+            {
+                <p>Lade Netzwerk-Interfaces…</p>
+            }
+            else if (_interfaces.Count == 0)
+            {
+                <p>Keine Netzwerk-Interfaces gefunden.</p>
+            }
+            else
+            {
+                <div class="field">
+                    <label>Interface</label>
+                    <select value="@_selectedDevice" @onchange="OnDeviceChangedAsync">
+                        @foreach (var iface in _interfaces)
+                        {
+                            <option value="@iface.Device">
+                                @iface.Device (@(iface.ConnectionName is null ? "nicht verbunden" : "verbunden"))
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                @if (_selectedInterface is { ConnectionName: null })
+                {
+                    <p class="hint">Dieses Interface hat keine aktive Verbindung, Konfiguration hier nicht unterstützt.</p>
+                }
+                else if (_details is not null)
+                {
+                    <div class="field">
+                        <label>Modus</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="mode" checked="@(!_isStaticMode)" @onchange="() => _isStaticMode = false" /> DHCP (automatisch)</label>
+                            <label><input type="radio" name="mode" checked="@_isStaticMode" @onchange="() => _isStaticMode = true" /> Statisch</label>
+                        </div>
+                    </div>
+
+                    @if (_isStaticMode)
+                    {
+                        <div class="field">
+                            <label>IP-Adresse</label>
+                            <input type="text" @bind="_ipText" @bind:event="oninput" placeholder="192.168.1.50" />
+                        </div>
+                        <div class="field">
+                            <label>Netzwerkpräfix <span class="hint">(z.B. 24 = 255.255.255.0)</span></label>
+                            <input type="text" @bind="_prefixText" placeholder="24" />
+                        </div>
+                        <div class="field">
+                            <label>Gateway</label>
+                            <input type="text" @bind="_gatewayText" placeholder="192.168.1.1" />
+                        </div>
+                        <div class="field">
+                            <label>DNS-Server <span class="hint">(kommagetrennt)</span></label>
+                            <input type="text" @bind="_dnsText" placeholder="192.168.1.1, 1.1.1.1" />
+                        </div>
+
+                        @if (GetTargetUrlPreview() is { } targetUrlPreview)
+                        {
+                            <p class="hint target-url-preview">
+                                Nach dem Speichern erreichbar unter: <strong>@targetUrlPreview</strong>
+                                @if (_selectedInterface?.Device is not null)
+                                {
+                                    <text> (falls Sie über <strong>@_selectedInterface.Device</strong> verbunden sind, bitte diese Adresse notieren, bevor Sie speichern)</text>
+                                }
+                            </p>
+                        }
+                    }
+                    else
+                    {
+                        <div class="readonly-info">
+                            <p>Aktuelle IP: @(_details.IpAddress ?? "-")@(_details.Prefix is not null ? $"/{_details.Prefix}" : "")</p>
+                            <p>Gateway: @(_details.Gateway ?? "-")</p>
+                            <p>DNS: @(_details.DnsServers.Count > 0 ? string.Join(", ", _details.DnsServers) : "-")</p>
+                        </div>
+                    }
+
+                    <div class="field-actions">
+                        <button class="btn-save" disabled="@_isApplyingNetwork" @onclick="ApplyNetworkChangesAsync">
+                            @(_isApplyingNetwork ? "Wird angewendet…" : "Speichern")
+                        </button>
+                    </div>
+                }
+            }
+
+            @if (!string.IsNullOrEmpty(_networkErrorMessage))
+            {
+                <div class="toast-error">@_networkErrorMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(_networkSuccessMessage))
+            {
+                <div class="toast-success">@_networkSuccessMessage</div>
+            }
+        </section>
+
+        <section class="update-section">
+            <h2>Update</h2>
+            <p>Aktuelle Version: @UpdateService.GetCurrentVersion()</p>
+
+            <div class="field-actions">
+                <button class="btn-secondary" disabled="@_isCheckingUpdate" @onclick="CheckForUpdateAsync">
+                    @(_isCheckingUpdate ? "Prüfe…" : "Auf Update prüfen")
+                </button>
+
+                @if (_updateCheckResult is { UpdateAvailable: true })
+                {
+                    <button class="btn-save" disabled="@(_isUpdating || UpdateService.UpdateInProgress)" @onclick="StartUpdateAsync">
+                        @(_isUpdating || UpdateService.UpdateInProgress ? "Update läuft…" : "Update starten")
+                    </button>
+                }
+            </div>
+
+            @if (_updateCheckResult is not null)
+            {
+                <p class="update-result">
+                    @if (_updateCheckResult.ErrorMessage is not null)
+                    {
+                        @_updateCheckResult.ErrorMessage
+                    }
+                    else if (_updateCheckResult.UpdateAvailable)
+                    {
+                        @($"Update verfügbar: Version {_updateCheckResult.LatestVersion} (aktuell {_updateCheckResult.CurrentVersion})")
+                    }
+                    else
+                    {
+                        @($"Bereits aktuell (Version {_updateCheckResult.CurrentVersion})")
+                    }
+                </p>
+            }
+
+            @if (_updateStartedMessage is not null)
+            {
+                <p class="update-result">@_updateStartedMessage</p>
+            }
+        </section>
+
+        <section class="reboot-section">
+            <h2>Neustart</h2>
+            <p class="hint">Startet den Raspberry Pi sofort neu. Laufende Spiele/Verbindungen werden unterbrochen.</p>
+
+            <div class="field-actions">
+                @if (!_rebootArmed)
+                {
+                    <button class="btn-secondary" @onclick="() => _rebootArmed = true">
+                        Pi neu starten
+                    </button>
+                }
+                else
+                {
+                    <button class="btn-danger" disabled="@_isRebooting" @onclick="RebootAsync">
+                        @(_isRebooting ? "Startet neu…" : "Wirklich neu starten?")
+                    </button>
+                    <button class="btn-secondary" disabled="@_isRebooting" @onclick="() => _rebootArmed = false">
+                        Abbrechen
+                    </button>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_rebootErrorMessage))
+            {
+                <div class="toast-error">@_rebootErrorMessage</div>
+            }
+        </section>
+    </div>
+}

@@ -131,6 +131,56 @@ $SUDO mkdir -p "$INSTALL_DIR/_config" "$INSTALL_DIR/_logs"
 APP_USER="${SUDO_USER:-$(whoami)}"
 $SUDO chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
 
+# --- Update-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR) ---
+# Liegt bewusst NICHT unter $INSTALL_DIR: das obige "chown -R $APP_USER" wuerde es sonst fuer den
+# App-User beschreibbar machen, der ueber die sudoers-Regel unten genau dieses Skript als root
+# ausfuehren darf - das waere eine Privilege-Escalation-Luecke.
+echo "Aktualisiere Update-Skript (/usr/local/sbin/stocktv-run-update.sh)..."
+UPDATE_SCRIPT_TMP=$(mktemp)
+cat > "$UPDATE_SCRIPT_TMP" <<'UPDATESCRIPTEOF'
+#!/bin/bash
+set -e
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
+UPDATESCRIPTEOF
+$SUDO install -m 0755 -o root -g root "$UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-update.sh
+rm -f "$UPDATE_SCRIPT_TMP"
+
+# --- sudoers-Regel fuer die /sysupdate-Seite (bei jedem Lauf, damit auch bestehende ---
+# --- Installationen die Regel beim naechsten Update nachgezogen bekommen) ---
+echo "Pruefe sudoers-Regel..."
+SUDOERS_FILE="/etc/sudoers.d/stocktv"
+SUDOERS_TMP=$(mktemp)
+
+cat > "$SUDOERS_TMP" <<'SUDOERS_EOF'
+# Managed by StockTV install.sh - manuelle Aenderungen werden beim naechsten Update ueberschrieben.
+Cmnd_Alias STOCKTV_NM_READ = /usr/bin/nmcli -t -f DEVICE\,TYPE\,STATE\,CONNECTION device status, \
+    /usr/bin/nmcli -t -f * device show *, \
+    /usr/bin/nmcli -t -f * con show *
+
+Cmnd_Alias STOCKTV_NM_WRITE = /usr/bin/nmcli con mod * ipv4.method manual ipv4.addresses * ipv4.gateway * ipv4.dns *, \
+    /usr/bin/nmcli con mod * ipv4.method auto ipv4.addresses "" ipv4.gateway "" ipv4.dns "", \
+    /usr/bin/nmcli con up *
+
+Cmnd_Alias STOCKTV_HOSTNAME = /usr/bin/nmcli general hostname *
+
+Cmnd_Alias STOCKTV_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-update.sh
+
+Cmnd_Alias STOCKTV_REBOOT = /usr/bin/systemctl reboot
+SUDOERS_EOF
+echo "$APP_USER ALL=(root) NOPASSWD: STOCKTV_NM_READ, STOCKTV_NM_WRITE, STOCKTV_HOSTNAME, STOCKTV_UPDATE, STOCKTV_REBOOT" >> "$SUDOERS_TMP"
+
+if ! $SUDO cmp -s "$SUDOERS_TMP" "$SUDOERS_FILE" 2>/dev/null; then
+    if $SUDO visudo -c -f "$SUDOERS_TMP" >/dev/null 2>&1; then
+        $SUDO install -m 0440 -o root -g root "$SUDOERS_TMP" "$SUDOERS_FILE"
+        echo -e "${GREEN}sudoers-Regel aktualisiert.${NC}"
+    else
+        echo -e "${RED}Warnung: neue sudoers-Regel ungueltig, bestehende Regel bleibt unveraendert.${NC}"
+    fi
+else
+    echo "sudoers-Regel bereits aktuell."
+fi
+rm -f "$SUDOERS_TMP"
+
 # --- Systemd-Dienst installieren (nur beim ersten Mal) ---
 if [ "$FIRST_INSTALL" = true ]; then
     echo "Installiere systemd-Dienst..."
