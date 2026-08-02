@@ -180,7 +180,9 @@ Payloads liefern `NACK:invalid-payload`/`invalid-mode`/`invalid-ip`/`invalid-gat
 - `GetHostname` — liest den aktuellen Hostnamen
 - `RebootPi` — kein Payload
 
-**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`. `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
+**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`,
+`osVer=<SystemKind>: <OSDescription>` (`SystemKind` = `Windows`/`RaspberryPi`/`Docker`/`Linux`,
+siehe `Services/PlatformInfoService.cs`). `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
 
 ---
 
