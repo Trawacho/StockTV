@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StockTvBlazor.Services;
 
@@ -26,6 +27,10 @@ public record NetworkOperationResult(bool Success, string? ErrorMessage);
 /// </summary>
 public class NetworkConfigService
 {
+	// RFC-1123-Hostname-Label: Buchstaben/Ziffern, Bindestrich erlaubt, nicht am Anfang/Ende, 1-63 Zeichen.
+	// Gemeinsam von Web-UI (SysUpdatePage) und NetMQ-Pfad (NetMqResponseService) verwendet.
+	public static readonly Regex HostnameRegex = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
+
 	private static readonly string[] AllowedInterfaceTypes = ["ethernet", "wifi"];
 
 	private readonly ILogger<NetworkConfigService> _logger;

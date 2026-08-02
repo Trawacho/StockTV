@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
 
@@ -16,17 +15,12 @@ public partial class SysUpdatePage : IDisposable
 	[Inject] private NavigationManager NavigationManager { get; set; } = default!;
 	[Inject] private ILogger<SysUpdatePage> Logger { get; set; } = default!;
 
-	// Sicherheitssperre: sobald irgendwo Kehren-/Zielwerte hinterlegt sind, verhaelt sich die Seite
-	// wie auf einem Nicht-Pi (siehe Markup) - verhindert versehentliche Netzwerk-/Update-/Reboot-
-	// Aktionen waehrend eines laufenden Spiels. AnzahlVersuche() UND GesamtSumme werden beide
-	// geprueft, weil bei Ziel2 nach Runde 1 die Versuchslisten geleert werden, _runde1Summe aber
-	// den bereits erfassten Wert weiter enthaelt.
-	private bool HasRecordedValues =>
-		MatchService.CurrentMatch.Games.Any(g => g.Turns.Count > 0) ||
-		ZielService.CurrentZielBewerb.AnzahlVersuche() > 0 ||
-		ZielService.CurrentZielBewerb.GesamtSumme > 0;
-
-	private static readonly Regex HostnameRegex = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
+	// Sicherheitssperre: sobald Match-/Zieldaten hinterlegt sind, verhaelt sich die Seite wie auf
+	// einem Nicht-Pi (siehe Markup) - verhindert versehentliche Netzwerk-/Update-/Reboot-Aktionen
+	// waehrend eines laufenden bzw. bereits vorbereiteten Spiels. Zentrale Logik in GameStateGuard,
+	// damit der NetMQ-Pfad (NetMqResponseService) dieselbe Sperre verwendet und sie nicht umgangen
+	// werden kann.
+	private bool HasRecordedValues => GameStateGuard.HasRecordedValues(MatchService, ZielService);
 
 	private readonly CancellationTokenSource _cts = new();
 
@@ -113,7 +107,7 @@ public partial class SysUpdatePage : IDisposable
 		_hostnameSuccessMessage = "";
 
 		var candidate = _hostnameText.Trim();
-		if (!HostnameRegex.IsMatch(candidate))
+		if (!NetworkConfigService.HostnameRegex.IsMatch(candidate))
 		{
 			_hostnameErrorMessage = "Hostname darf nur Buchstaben, Ziffern und Bindestriche enthalten, " +
 				"darf nicht mit einem Bindestrich beginnen/enden und muss 1-63 Zeichen lang sein.";
