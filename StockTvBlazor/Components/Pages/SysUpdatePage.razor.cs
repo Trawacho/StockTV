@@ -11,8 +11,20 @@ public partial class SysUpdatePage : IDisposable
 	[Inject] private PlatformInfoService PlatformInfo { get; set; } = default!;
 	[Inject] private NetworkConfigService NetworkConfig { get; set; } = default!;
 	[Inject] private UpdateService UpdateService { get; set; } = default!;
+	[Inject] private MatchService MatchService { get; set; } = default!;
+	[Inject] private ZielService ZielService { get; set; } = default!;
 	[Inject] private NavigationManager NavigationManager { get; set; } = default!;
 	[Inject] private ILogger<SysUpdatePage> Logger { get; set; } = default!;
+
+	// Sicherheitssperre: sobald irgendwo Kehren-/Zielwerte hinterlegt sind, verhaelt sich die Seite
+	// wie auf einem Nicht-Pi (siehe Markup) - verhindert versehentliche Netzwerk-/Update-/Reboot-
+	// Aktionen waehrend eines laufenden Spiels. AnzahlVersuche() UND GesamtSumme werden beide
+	// geprueft, weil bei Ziel2 nach Runde 1 die Versuchslisten geleert werden, _runde1Summe aber
+	// den bereits erfassten Wert weiter enthaelt.
+	private bool HasRecordedValues =>
+		MatchService.CurrentMatch.Games.Any(g => g.Turns.Count > 0) ||
+		ZielService.CurrentZielBewerb.AnzahlVersuche() > 0 ||
+		ZielService.CurrentZielBewerb.GesamtSumme > 0;
 
 	private static readonly Regex HostnameRegex = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
 
@@ -46,9 +58,14 @@ public partial class SysUpdatePage : IDisposable
 	private bool _isRebooting;
 	private string _rebootErrorMessage = "";
 
+	private bool _disposed;
+
 	protected override async Task OnInitializedAsync()
 	{
-		if (!PlatformInfo.IsRaspberryPi)
+		MatchService.OnGlobalRefresh += HandleRecordedValuesChanged;
+		ZielService.OnGlobalRefresh += HandleRecordedValuesChanged;
+
+		if (!PlatformInfo.IsRaspberryPi || HasRecordedValues)
 			return;
 
 		_hostnameText = NetworkConfig.GetHostname();
@@ -77,8 +94,17 @@ public partial class SysUpdatePage : IDisposable
 
 	public void Dispose()
 	{
+		_disposed = true;
+		MatchService.OnGlobalRefresh -= HandleRecordedValuesChanged;
+		ZielService.OnGlobalRefresh -= HandleRecordedValuesChanged;
 		_cts.Cancel();
 		_cts.Dispose();
+	}
+
+	private void HandleRecordedValuesChanged()
+	{
+		if (_disposed) return;
+		InvokeAsync(StateHasChanged);
 	}
 
 	private async Task ApplyHostnameAsync()
