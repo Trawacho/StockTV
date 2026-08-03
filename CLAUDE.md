@@ -167,7 +167,22 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 
 **NetMQ-Topics (4747):** `Hello`, `GetResult`, `ResetResult`, `GetSettings`, `SetSettings`, `SetTeamNames` (`"Spielnr:TeamA:TeamB;..."`), `SetTeilnehmer`
 
-**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`. `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
+**NetMQ-Topics für Raspberry-Pi-Verwaltung (4747, siehe `Services/NetworkConfigService.cs`/`Services/GameStateGuard.cs`):**
+Nur auf echten Raspberry Pis nutzbar (`PlatformInfoService.IsRaspberryPi`) und nur solange keine
+Match-/Zieldaten hinterlegt sind (`GameStateGuard.HasRecordedValues` — Kehren, Zielversuche,
+Teamnamen oder Ziel-Spielername), sonst `NACK:not-a-pi` bzw. `NACK:values-present`. Ungültige
+Payloads liefern `NACK:invalid-payload`/`invalid-mode`/`invalid-ip`/`invalid-gateway`/`invalid-dns`/
+`invalid-hostname`, gültige Schreib-Kommandos `ACK` (Anwendung läuft asynchron im Hintergrund).
+- `SetNetworkConfig` (`"<device>:<mode>:<cidr>:<gateway>:<dnsServers>"`, `mode` = `dhcp`/`static`,
+  z.B. `"eth0:static:192.168.1.50/24:192.168.1.1:192.168.1.1,8.8.8.8"` oder `"eth0:dhcp:::"`)
+- `GetNetworkConfig` — liest alle verbundenen Interfaces, Antwort im selben Format, `;`-getrennt
+- `SetHostname` (Hostname als reiner Text-Payload)
+- `GetHostname` — liest den aktuellen Hostnamen
+- `RebootPi` — kein Payload
+
+**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`,
+`osVer=<SystemKind>: <OSDescription>` (`SystemKind` = `Windows`/`RaspberryPi`/`Docker`/`Linux`,
+siehe `Services/PlatformInfoService.cs`). `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
 
 ---
 

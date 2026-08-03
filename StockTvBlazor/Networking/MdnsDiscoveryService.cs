@@ -1,4 +1,5 @@
 ﻿using Makaretu.Dns;
+using StockTvBlazor.Services;
 using System.Reflection;
 
 namespace StockTvBlazor.Networking;
@@ -9,7 +10,7 @@ public class MdnsDiscoveryService : BackgroundService
 
 	private readonly ServiceProfile _profile;
 
-	public MdnsDiscoveryService()
+	public MdnsDiscoveryService(PlatformInfoService platformInfo)
 	{
 		// Initialisiere den Discovery-Dienst
 		_serviceDiscovery = new ServiceDiscovery();
@@ -29,6 +30,7 @@ public class MdnsDiscoveryService : BackgroundService
 		_profile.AddProperty("pubSvc", "4748");
 		_profile.AddProperty("ctrSvc", "4747");
 		_profile.AddProperty("pkgVer", GetAppVersion());
+		_profile.AddProperty("osVer", platformInfo.OsVersion);
 	}
 
 	protected override Task ExecuteAsync(CancellationToken stoppingToken)
