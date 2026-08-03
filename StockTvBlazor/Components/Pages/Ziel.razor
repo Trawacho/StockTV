@@ -7,17 +7,17 @@
 
 	@if (ViewModel.IsSpielernameAvailable)
 	{
-		<div class="ziel-spielername" data-autofit data-autofit-min="8">@ViewModel.SpielerName</div>
+		<div class="ziel-spielername"><AutoFitText Text="@ViewModel.SpielerName" Min="8" /></div>
 	}
 
 	<div class="ziel-block">
 
 		<div class="ziel-row ziel-row-top">
-			<div class="ziel-cell ziel-versuche" data-autofit data-autofit-min="10">
-				@ViewModel.AnzahlVersuche
+			<div class="ziel-cell ziel-versuche">
+				<AutoFitText Text="@ViewModel.AnzahlVersuche" Min="10" Numeric="true" Fill="70" />
 			</div>
-			<div class="ziel-cell ziel-gesamt" data-autofit data-autofit-min="10">
-				@ViewModel.GesamtText
+			<div class="ziel-cell ziel-gesamt">
+				<AutoFitText Text="@ViewModel.GesamtText" Min="10" />
 			</div>
 		</div>
 
@@ -25,26 +25,26 @@
 
 			@if (ViewModel.InvalidInput)
 			{
-				<div class="ziel-overlay show" data-autofit data-autofit-min="10">
+				<div class="ziel-overlay show">
 					ungültig
 				</div>
 			}
 
-			<div class="ziel-cell ziel-col-a" data-autofit data-autofit-min="10">
-				@ViewModel.LastValue
+			<div class="ziel-cell ziel-col-a">
+				<AutoFitText Text="@ViewModel.LastValue" Min="10" Numeric="true" Fill="80" />
 			</div>
 
-			<div class="ziel-cell ziel-col-b input-value" data-autofit data-autofit-min="10">
-				@ViewModel.InputValue
+			<div class="ziel-cell ziel-col-b input-value">
+				<AutoFitText Text="@ViewModel.InputValue" Min="10" Numeric="true" Fill="80" />
 			</div>
-			<div class="ziel-cell ziel-col-c" data-autofit data-autofit-min="10">
-				@ViewModel.GesamtPunkteText
+			<div class="ziel-cell ziel-col-c">
+				<AutoFitText Text="@ViewModel.GesamtPunkteText" Min="10" Numeric="true" Fill="90" />
 			</div>
 		</div>
 
 		<div class="ziel-row ziel-row-bottom">
-			<div class="ziel-cell ziel-summe" data-autofit data-autofit-min="8">
-				@ViewModel.SummeDerVersuche
+			<div class="ziel-cell ziel-summe">
+				<AutoFitText Text="@ViewModel.SummeDerVersuche" Min="8" Numeric="true" Fill="80" />
 			</div>
 		</div>
 

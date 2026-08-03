@@ -1,5 +1,6 @@
 ﻿
 .teamname {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -44,6 +45,7 @@
 }
 
 .score-top-row {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -57,6 +59,7 @@
 }
 
 .score-cell {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -74,5 +77,15 @@
     height: 100%;
     width: 100%;
     grid-template-columns: 42.5% 15% 42.5%;
+    align-items: stretch;
+}
+
+/* Gemeinsames Mittel-Grid für Training + Turnier (früher dupliziert
+   als .training-mid-grid / .turnier-mid-grid). BestOf bleibt speziell. */
+.mid-grid-3 {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 45% 10% 45%;
     align-items: stretch;
 }

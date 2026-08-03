@@ -57,7 +57,7 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 
 - **Framework**: ASP.NET Core 10, Blazor Server (Interactive Server Components)
 - **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS)
-- **UI**: Bootstrap, responsive Text via `wwwroot/js/autofitText.js` (`stockTvAutoFit.observe`)
+- **UI**: Bootstrap, responsive Text **rein per CSS** (Container Queries) über die Komponente `Controls/AutoFitText` + `wwwroot/css/StockTV_AutoFit.css` — **kein eigenes JavaScript**
 - **Deployment**: Docker (Linux/amd64), Raspberry Pi (linux-arm64, Kiosk), Windows Service (`UseWindowsService()` in `Program.cs`), Linux x64 (systemd)
 - **Volumes / Datenpfade**: `./_config:/app/_config`, `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
 
@@ -73,14 +73,14 @@ StockTV/
 │   │   │   ├── SettingPages/   # Settings, CustomThemePage, ThemePreview, ColorField
 │   │   │   ├── HomeCards/      # CardDisplay1–4 (rotieren auf der Home-Seite)
 │   │   │   └── ...             # Training, Turnier, BestOf, Ziel, Input, Home
-│   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv
+│   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv, AutoFitText
 │   │   ├── ViewModels/         # ViewModels pro Modus (erben von BaseViewModel)
 │   │   └── Layout/             # MainLayout, ThemeHandler
 │   ├── Models/                 # Game, Match, Turn, Begegnung, ZielBewerb, Debounce
 │   ├── Networking/             # NetMqPublisherService, NetMqResponseService, MdnsDiscoveryService
 │   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
 │   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
-│   └── wwwroot/js/autofitText.js
+│   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
 ├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
 │   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
@@ -203,15 +203,20 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 
 ---
 
-## Responsives Text-Sizing (autofitText.js)
+## Responsives Text-Sizing (CSS, kein JavaScript)
 
-`stockTvAutoFit.observe(containerSelector)` wird in `OnAfterRenderAsync` auf **jedes** Render aufgerufen (nicht nur `firstRender`). Das JS registriert `ResizeObserver` + `MutationObserver` per Element (WeakMap, kein Doppel-Register) und berechnet per Binary Search die maximale Schriftgröße via `scrollWidth`/`scrollHeight <= clientWidth`/`clientHeight`.
+Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es gibt **kein eigenes JS** mehr (das frühere `autofitText.js` wurde entfernt). Kernidee: Da Blazor **serverseitig** rendert, ist die Textlänge bereits bekannt und wird als CSS-Variable `--len` übergeben, sodass langer Text schrumpft, kurzer Text die Box füllt.
 
-HTML-Attribute zur Steuerung:
-- `data-autofit` — aktiviert AutoFit auf dem Element
-- `data-autofit-min="10"` — minimale Schriftgröße in px
-- `data-autofit-max="300"` — überschreibt die berechnete Obergrenze
-- `data-autofit-vertical="true"` — für `writing-mode: vertical-*` Elemente
+**Bausteine:**
+- **Komponente `Controls/AutoFitText`** — rendert `<span class="autofit" style="--len:…; --min:…px">`. Parameter: `Text`, `Min` (Mindest-px, früher `data-autofit-min`), `Vertical` (writing-mode vertical), `Class`.
+- **`wwwroot/css/StockTV_AutoFit.css`** — enthält die `.autofit`-Regel:
+  `font-size: max(var(--min), min(84cqh, calc(150cqw / var(--len))))`
+  (vertikal: `cqh`/`cqw` vertauscht). `84` = Kanten-Deckel inkl. line-height-Metrik, `150` ≈ 100 / mittlere Zeichenbreite.
+- **Container:** Die umgebende Zelle muss `container-type: size` haben. Das ist an den gemeinsamen Klassen gesetzt: `.score-cell`, `.score-top-row`, `.teamname` (in `StockTV_Team_StyleSheet.css`) sowie `.ziel-cell`, `.ziel-spielername` (in `Ziel.razor.css`).
+
+**Verwendung im Markup:** `<div class="score-cell left-points"><AutoFitText Text="@ViewModel.LeftPoints" Min="10" /></div>`. Für `int`-Werte am Aufruf `.ToString()` anhängen (der `Text`-Parameter ist `string?`).
+
+**Ausnahmen (bewusst viewport-basiert, kein AutoFitText):** BestOf-`match-points` (`font-size: min(20vh,18vw)`) und das Ziel-`ungültig`-Overlay (`font-size: 4vw`).
 
 ---
 

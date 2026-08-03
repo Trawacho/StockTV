@@ -20,6 +20,7 @@
    ============================================================ */
 
 .ziel-spielername {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,6 +114,7 @@
    ============================================================ */
 
 .ziel-cell {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -122,7 +124,7 @@
     white-space: nowrap;
     font-weight: 500;
     line-height: 1;
-    font-size: 12px; /* Fallback — AutoFit übernimmt */
+    font-size: 12px; /* Fallback */
 }
 
 /* ========================================================================

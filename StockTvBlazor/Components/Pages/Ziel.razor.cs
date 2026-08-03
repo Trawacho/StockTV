@@ -12,7 +12,6 @@ public partial class Ziel : IDisposable
 	[Inject] private ZielService _zielService { get; set; } = default!;
 	[Inject] private NavigationManager _navigationManager { get; set; } = default!;
 	[Inject] private ZielViewModel ViewModel { get; set; } = default!;
-	[Inject] private IJSRuntime JS { get; set; } = default!;
 
 	[SupplyParameterFromQuery(Name = "demo")]
 	private bool IsDemo { get; set; }
@@ -56,15 +55,16 @@ public partial class Ziel : IDisposable
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (_disposed) return;
-		try
+		if (firstRender && !IsDemo)
 		{
-			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".ziel-main-grid");
-			if (firstRender && !IsDemo)
+			try
+			{
 				await inputRef.FocusAsync();
+			}
+			catch (JSDisconnectedException) { }
+			catch (ObjectDisposedException) { }
+			catch (TaskCanceledException) { }
 		}
-		catch (JSDisconnectedException) { }
-		catch (ObjectDisposedException) { }
-		catch (TaskCanceledException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

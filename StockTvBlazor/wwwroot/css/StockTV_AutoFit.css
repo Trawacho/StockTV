@@ -1,0 +1,66 @@
+/* ============================================================
+   JS-freie Textskalierung (ersetzt wwwroot/js/autofitText.js)
+
+   Ansatz:
+   - Die umgebende Zelle ist ein Größen-Container (container-type: size),
+     gesetzt an den gemeinsamen Zellklassen (.score-cell, .score-top-row,
+     .teamname, .ziel-cell, .ziel-spielername).
+   - Der Text steckt in einem <span class="autofit"> (Komponente AutoFitText).
+   - Die Schriftgröße ergibt sich aus:
+       * Höhe des Containers            -> deckelt nach oben  (…cqh / …cqw)
+       * Breite / Zeichenanzahl (--len) -> schrumpft langen Text
+   - --len wird serverseitig aus der Textlänge gesetzt, --min ist die
+     Mindestgröße in px (früher data-autofit-min).
+
+   Faktoren: 84  ~ Kanten-Deckel inkl. line-height-Metrik (Ober-/Unterlänge)
+             150 ~ 100 / mittlere Zeichenbreite (~0,66 em), konservativ
+   ============================================================ */
+
+.autofit {
+    font-size: max(var(--min, 8px), min(84cqh, calc(150cqw / var(--len, 1))));
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Vertikaler Text (writing-mode vertical-*): Länge läuft entlang der Höhe,
+   Glyphen-Dicke entlang der Breite -> cqh/cqw vertauscht. */
+.autofit.vertical {
+    font-size: max(var(--min, 8px), min(84cqw, calc(150cqh / var(--len, 1))));
+}
+
+/* Punktestände (Ziffern, "-", "/", Leerzeichen). Breite bleibt beim
+   allgemeinen Faktor 150 (Ziffern sind bei diesem fetten Schnitt,
+   font-weight:650, nicht schmaler als der Text-Durchschnitt - ein
+   grosszuegigerer Faktor lief bei kurzen Zahlen wie "9" ueber, da dort
+   praktisch nur noch der Hoehen-Deckel zaehlt). */
+.autofit.numeric {
+    font-size: max(var(--min, 8px), min(84cqh, calc(150cqw / var(--len, 1))));
+}
+
+/* Statt geschaetzter Faktoren (84/150 etc.) werden hier echte, vom Browser
+   zur Laufzeit gemessene Font-Metriken des jeweils aktiven Fonts verwendet
+   (relevant, da der Font ueber den FontService frei waehlbar ist):
+     - 1ch  = tatsaechliche Breite der Ziffer "0" im aktuellen Font
+     - 1cap = tatsaechliche Cap-Height im aktuellen Font
+     - calc(1cap / 1em) bzw. calc(1ch / 1em) liefert daraus das Verhaeltnis
+       (Laenge-durch-Laenge-Division -> reine Zahl), sodass sich die noetige
+       Font-Size direkt aus Container-Groesse / gemessenem Verhaeltnis ergibt
+       - keine geschaetzte Konstante mehr noetig.
+   font-variant-numeric: tabular-nums sorgt dafuer, dass alle Ziffern exakt
+   die Breite von "0" haben, damit len * 1ch der Textbreite entspricht.
+   text-box-trim schneidet die Line-Box auf Cap-Height/Baseline, passend zum
+   1cap-Wert der Hoehen-Berechnung. --fill (Default 96, ueber den Parameter
+   AutoFitText.Fill im Razor-Markup steuerbar) ist die Ziel-Ausnutzung je
+   Dimension in Prozent - eine kleine Sicherheitsmarge unter der theoretischen
+   100%-Grenze (Rundung/Antialiasing), keine geschaetzte Font-Eigenschaft. */
+@supports (text-box-trim: trim-both) {
+    .autofit.numeric {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+        font-variant-numeric: tabular-nums;
+        font-size: max(var(--min, 8px), min(
+            calc(var(--fill, 96) * 1cqh / (1cap / 1em)),
+            calc(var(--fill, 96) * 1cqw / (var(--len, 1) * (1ch / 1em)))
+        ));
+    }
+}
