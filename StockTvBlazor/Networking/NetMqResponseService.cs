@@ -152,6 +152,15 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				response.Append(_networkConfigService.GetHostname());
 				break;
 
+			// Blockiert bewusst synchron auf dem Poller-Thread (die beiden .GetAwaiter().GetResult()
+			// unten rufen "sudo nmcli" auf, bis zu 10s+10s Timeout) - verstoesst damit formal gegen die
+			// sonst geltende Regel "Blocking-Work ueber _actionChannel delegieren, nicht direkt im
+			// Poller-Callback" (siehe CLAUDE.md). Bewusst in Kauf genommen: dieser Pfad wird nur einmalig
+			// bei der Ersteinrichtung eines Geraets ueber /sysupdate genutzt, nie waehrend eines
+			// laufenden Spiels - das Live-Score-Reporting laeuft ohnehin ueber den separaten
+			// Publisher-Port 4748, nicht ueber diesen REP-Port. Sollte GetNetworkConfig kuenftig auch
+			// waehrend des Betriebs regelmaessig abgefragt werden, muss das ueber _actionChannel +
+			// asynchrones Reply nachgezogen werden.
 			case "GetNetworkConfig":
 			{
 				if (!_platformInfo.IsRaspberryPi)

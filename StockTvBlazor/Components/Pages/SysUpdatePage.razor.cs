@@ -20,6 +20,15 @@ public partial class SysUpdatePage : IDisposable
 	// waehrend eines laufenden bzw. bereits vorbereiteten Spiels. Zentrale Logik in GameStateGuard,
 	// damit der NetMQ-Pfad (NetMqResponseService) dieselbe Sperre verwendet und sie nicht umgangen
 	// werden kann.
+	//
+	// Die Action-Handler unten (ApplyHostnameAsync, ApplyNetworkChangesAsync, RebootAsync,
+	// StartUpdateAsync) pruefen HasRecordedValues bewusst NICHT zusaetzlich selbst, sondern
+	// verlassen sich auf diese bedingte Razor-Anzeige (siehe SysUpdatePage.razor). Diese Seite wird
+	// nur einmalig bei der Ersteinrichtung eines Geraets aufgerufen, nie waehrend eines laufenden
+	// Spiels - die theoretische TOCTOU-Race (Werte werden ueber einen anderen Weg eingetragen,
+	// waehrend eine Aktion hier noch laeuft) ist praktisch nicht erreichbar. Der NetMQ-Pfad prueft
+	// die Sperre dagegen weiterhin explizit vor jeder Aktion, da er jederzeit von einem externen
+	// System angesprochen werden kann.
 	private bool HasRecordedValues => GameStateGuard.HasRecordedValues(MatchService, ZielService);
 
 	private readonly CancellationTokenSource _cts = new();
