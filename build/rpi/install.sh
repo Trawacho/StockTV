@@ -172,7 +172,7 @@ HOSTNAMESCRIPTEOF
 $SUDO install -m 0755 -o root -g root "$HOSTNAME_SCRIPT_TMP" /usr/local/sbin/stocktv-set-hostname.sh
 rm -f "$HOSTNAME_SCRIPT_TMP"
 
-# --- sudoers-Regel fuer die /sysupdate-Seite (bei jedem Lauf, damit auch bestehende ---
+# --- sudoers-Regel fuer die /setup-Seite (bei jedem Lauf, damit auch bestehende ---
 # --- Installationen die Regel beim naechsten Update nachgezogen bekommen) ---
 echo "Pruefe sudoers-Regel..."
 SUDOERS_FILE="/etc/sudoers.d/stocktv"

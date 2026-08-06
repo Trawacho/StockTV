@@ -149,9 +149,9 @@ sudo nmtui
 
 > Eine laufende SSH-Verbindung kann dabei kurz getrennt werden.
 
-**Alternative: Web-UI unter `/sysupdate`**
+**Alternative: Web-UI unter `/setup`**
 
-Auf dem Pi selbst steht zusätzlich die Seite `http://<IP>:8080/sysupdate` zur Verfügung, über
+Auf dem Pi selbst steht zusätzlich die Seite `http://<IP>:8080/setup` zur Verfügung, über
 die sich Hostname, Netzwerk-Interfaces (DHCP/Statisch, IP, Gateway, DNS), ein manuelles Update
 ("Auf Update prüfen" / "Update starten") sowie ein Neustart des Pi direkt im Browser bedienen
 lassen — nur auf echten Raspberry Pis sichtbar, es gibt keinen Link dorthin (Route direkt
@@ -159,7 +159,7 @@ aufrufen). Wichtig:
 Wenn eine fehlerhafte Netzwerkänderung über diese Seite den Pi vom Netz trennt, bleibt `nmtui`
 per SSH wie oben beschrieben der Rettungsweg.
 
-**Hostnamen anpassen** — ebenfalls mit `nmtui` (oder alternativ über `/sysupdate`, siehe oben):
+**Hostnamen anpassen** — ebenfalls mit `nmtui` (oder alternativ über `/setup`, siehe oben):
 
 ```bash
 sudo nmtui

@@ -1,11 +1,11 @@
-.sysupdate-page {
+.setup-page {
     height: 100%;
     overflow-y: auto;
     box-sizing: border-box;
     font-family: 'Segoe UI', sans-serif;
 }
 
-.sysupdate-content {
+.setup-content {
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -15,7 +15,7 @@
     box-sizing: border-box;
 }
 
-.sysupdate-content > section h2 {
+.setup-content > section h2 {
     margin: 0 0 0.8rem;
     font-size: 1.2rem;
 }
