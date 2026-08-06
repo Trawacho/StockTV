@@ -1,18 +1,18 @@
-@page "/sysupdate"
+@page "/setup"
 @rendermode InteractiveServer
 
 <PageTitle>System</PageTitle>
 
 @if (!PlatformInfo.IsRaspberryPi)
 {
-    <div class="sysupdate-page">
+    <div class="setup-page">
         <h3>System</h3>
         <p>Dies ist kein Raspberry Pi, diese Funktion ist hier nicht verfügbar.</p>
     </div>
 }
 else if (HasRecordedValues)
 {
-    <div class="sysupdate-page">
+    <div class="setup-page">
         <h3>System</h3>
         <p>Es sind bereits Werte (Kehren bzw. Zielwerte) hinterlegt. Aus Sicherheitsgründen können
            hier keine Änderungen vorgenommen werden, solange das laufende Spiel Daten enthält.</p>
@@ -20,8 +20,8 @@ else if (HasRecordedValues)
 }
 else
 {
-    <div class="sysupdate-page">
-    <div class="sysupdate-content">
+    <div class="setup-page">
+    <div class="setup-content">
         <section class="hostname-section">
             <h2>Hostname</h2>
             <p class="hint">Nach dem Ändern ist ein Neustart des Pi nötig, damit die Änderung überall (z.B. mDNS) wirksam wird.</p>

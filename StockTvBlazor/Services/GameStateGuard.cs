@@ -4,7 +4,7 @@ namespace StockTvBlazor.Services;
 /// Zentrale Sicherheitssperre: liefert true, sobald irgendetwas hinterlegt ist, das bei einem
 /// Reboot/einer Netzwerk-Umkonfiguration verloren ginge oder ein laufendes Match gefährden würde
 /// (Kehren/Zielversuche persistieren zwar, Teamnamen und Ziel-Spielername aber nicht). Wird sowohl
-/// von der Web-UI (SysUpdatePage) als auch vom NetMQ-Pfad (NetMqResponseService) verwendet,
+/// von der Web-UI (SetupPage) als auch vom NetMQ-Pfad (NetMqResponseService) verwendet,
 /// damit die Sperre nicht über einen der beiden Wege umgangen werden kann.
 /// </summary>
 public static class GameStateGuard

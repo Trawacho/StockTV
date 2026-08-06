@@ -156,7 +156,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 			// unten rufen "sudo nmcli" auf, bis zu 10s+10s Timeout) - verstoesst damit formal gegen die
 			// sonst geltende Regel "Blocking-Work ueber _actionChannel delegieren, nicht direkt im
 			// Poller-Callback" (siehe CLAUDE.md). Bewusst in Kauf genommen: dieser Pfad wird nur einmalig
-			// bei der Ersteinrichtung eines Geraets ueber /sysupdate genutzt, nie waehrend eines
+			// bei der Ersteinrichtung eines Geraets ueber /setup genutzt, nie waehrend eines
 			// laufenden Spiels - das Live-Score-Reporting laeuft ohnehin ueber den separaten
 			// Publisher-Port 4748, nicht ueber diesen REP-Port. Sollte GetNetworkConfig kuenftig auch
 			// waehrend des Betriebs regelmaessig abgefragt werden, muss das ueber _actionChannel +
@@ -377,7 +377,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		string Device, bool IsDhcp, IPAddress? Ip, int Prefix, IPAddress? Gateway, IReadOnlyList<IPAddress>? DnsServers);
 
 	// Payload: "<device>:<mode>:<cidr>:<gateway>:<dnsServers>" - siehe CLAUDE.md fuer das genaue
-	// Format. Bewusst kein Code-Sharing mit SysUpdatePage.razor.cs's TryValidateStaticInput, da dort
+	// Format. Bewusst kein Code-Sharing mit SetupPage.razor.cs's TryValidateStaticInput, da dort
 	// auf Formularfeldern statt einem String-Payload validiert wird.
 	private static bool TryParseNetworkConfigPayload(string payload, out ParsedNetworkConfig? cmd, out string? error)
 	{

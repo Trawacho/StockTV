@@ -3,9 +3,9 @@ using System.Net.Sockets;
 using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
 
-namespace StockTvBlazor.Components.Pages;
+namespace StockTvBlazor.Components.Pages.SettingPages;
 
-public partial class SysUpdatePage : IDisposable
+public partial class SetupPage : IDisposable
 {
 	[Inject] private PlatformInfoService PlatformInfo { get; set; } = default!;
 	[Inject] private NetworkConfigService NetworkConfig { get; set; } = default!;
@@ -13,7 +13,7 @@ public partial class SysUpdatePage : IDisposable
 	[Inject] private MatchService MatchService { get; set; } = default!;
 	[Inject] private ZielService ZielService { get; set; } = default!;
 	[Inject] private NavigationManager NavigationManager { get; set; } = default!;
-	[Inject] private ILogger<SysUpdatePage> Logger { get; set; } = default!;
+	[Inject] private ILogger<SetupPage> Logger { get; set; } = default!;
 
 	// Sicherheitssperre: sobald Match-/Zieldaten hinterlegt sind, verhaelt sich die Seite wie auf
 	// einem Nicht-Pi (siehe Markup) - verhindert versehentliche Netzwerk-/Update-/Reboot-Aktionen
@@ -23,7 +23,7 @@ public partial class SysUpdatePage : IDisposable
 	//
 	// Die Action-Handler unten (ApplyHostnameAsync, ApplyNetworkChangesAsync, RebootAsync,
 	// StartUpdateAsync) pruefen HasRecordedValues bewusst NICHT zusaetzlich selbst, sondern
-	// verlassen sich auf diese bedingte Razor-Anzeige (siehe SysUpdatePage.razor). Diese Seite wird
+	// verlassen sich auf diese bedingte Razor-Anzeige (siehe SetupPage.razor). Diese Seite wird
 	// nur einmalig bei der Ersteinrichtung eines Geraets aufgerufen, nie waehrend eines laufenden
 	// Spiels - die theoretische TOCTOU-Race (Werte werden ueber einen anderen Weg eingetragen,
 	// waehrend eine Aktion hier noch laeuft) ist praktisch nicht erreichbar. Der NetMQ-Pfad prueft
@@ -242,7 +242,7 @@ public partial class SysUpdatePage : IDisposable
 			return null;
 
 		var current = new Uri(NavigationManager.BaseUri);
-		return $"{current.Scheme}://{ip}:{current.Port}/sysupdate";
+		return $"{current.Scheme}://{ip}:{current.Port}/setup";
 	}
 
 	private bool TryValidateStaticInput(
