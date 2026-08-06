@@ -16,12 +16,12 @@
 .teamname-left {
     writing-mode: vertical-rl;
     transform: rotate(180deg); /* 270° */
-    color: var(--fg-left);
+    color: var(--fg-color-teamname-left);
 }
 
 .teamname-right {
     writing-mode: vertical-rl; /* 90° */
-    color: var(--fg-right);
+    color: var(--fg-color-teamname-right);
 }
 
 .scoreboard-shell {

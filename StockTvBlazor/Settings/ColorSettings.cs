@@ -6,7 +6,10 @@ public class ColorSettings
 	public string ForegroundColor { get; set; } = "#000000";
 	public string ForegroundLeft { get; set; } = "#ff0000";
 	public string ForegroundRight { get; set; } = "#008000";
+	public string TeamNameLeft { get; set; } = "#ff0000";
+	public string TeamNameRight { get; set; } = "#008000";
 	public string ZielSummeGesamt { get; set; } = "#8b008b";
 	public string ZielSummeEinzel { get; set; } = "#008b8b";
+	public string ZielSpielername { get; set; } = "#8b008b";
 	public string FontFamily { get; set; } = "";
 }

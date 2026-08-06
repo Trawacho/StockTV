@@ -80,8 +80,11 @@
                     <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
                     <ColorField Label="Links-Farbe"     @bind-Value="_editingTheme.Colors.ForegroundLeft" />
                     <ColorField Label="Rechts-Farbe"    @bind-Value="_editingTheme.Colors.ForegroundRight" />
+                    <ColorField Label="Teamname Links"  @bind-Value="_editingTheme.Colors.TeamNameLeft" />
+                    <ColorField Label="Teamname Rechts" @bind-Value="_editingTheme.Colors.TeamNameRight" />
                     <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" />
                     <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" />
+                    <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" />
                 </div>
 
                 <div class="preview-section">
@@ -124,6 +127,16 @@
                         <span class="hex-value">@_previewColors.ForegroundRight</span>
                     </div>
                     <div class="color-field-readonly">
+                        <span class="field-label">Teamname Links</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameLeft;"></span>
+                        <span class="hex-value">@_previewColors.TeamNameLeft</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Teamname Rechts</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameRight;"></span>
+                        <span class="hex-value">@_previewColors.TeamNameRight</span>
+                    </div>
+                    <div class="color-field-readonly">
                         <span class="field-label">ZielSumme Ges.</span>
                         <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeGesamt;"></span>
                         <span class="hex-value">@_previewColors.ZielSummeGesamt</span>
@@ -132,6 +145,11 @@
                         <span class="field-label">ZielSumme Einz.</span>
                         <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeEinzel;"></span>
                         <span class="hex-value">@_previewColors.ZielSummeEinzel</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Ziel-Spielername</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSpielername;"></span>
+                        <span class="hex-value">@_previewColors.ZielSpielername</span>
                     </div>
                 </div>
 

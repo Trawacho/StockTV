@@ -27,8 +27,27 @@ public static class ColorSettingsFactory
 				_ => "#ff0000"
 			},
 
+			TeamNameLeft = (richtung, theme) switch
+			{
+				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#ff0000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#008000",
+				(UiSettings.Richtung.Links, UiSettings.Theme.Dunkel) => "#ff0000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Dunkel) => "#9acd32",
+				_ => "#008000"
+			},
+
+			TeamNameRight = (richtung, theme) switch
+			{
+				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#008000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#ff0000",
+				(UiSettings.Richtung.Links, UiSettings.Theme.Dunkel) => "#9acd32",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Dunkel) => "#ff0000",
+				_ => "#ff0000"
+			},
+
 			ZielSummeGesamt = theme == UiSettings.Theme.Hell ? "#8b008b" : "#ff00ff",
-			ZielSummeEinzel = theme == UiSettings.Theme.Hell ? "#008b8b" : "#00ffff"
+			ZielSummeEinzel = theme == UiSettings.Theme.Hell ? "#008b8b" : "#00ffff",
+			ZielSpielername = theme == UiSettings.Theme.Hell ? "#8b008b" : "#ff00ff"
 		};
 	}
 
@@ -44,8 +63,11 @@ public static class ColorSettingsFactory
 			ForegroundColor = colors.ForegroundColor,
 			ForegroundLeft = colors.ForegroundRight,    // Swap
 			ForegroundRight = colors.ForegroundLeft,    // Swap
+			TeamNameLeft = colors.TeamNameRight,        // Swap
+			TeamNameRight = colors.TeamNameLeft,        // Swap
 			ZielSummeGesamt = colors.ZielSummeGesamt,
 			ZielSummeEinzel = colors.ZielSummeEinzel,
+			ZielSpielername = colors.ZielSpielername,
 			FontFamily = colors.FontFamily
 		};
 	}
