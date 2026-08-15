@@ -17,19 +17,21 @@ public class IpAdvertisementService
 
 		var publicHost = Environment.GetEnvironmentVariable("PUBLIC_HOST");
 
-		string ipString;
-		if (!string.IsNullOrWhiteSpace(publicHost))
-		{
-			ipString = publicHost;
-		}
-		else
-		{
-			ipString = GetFirstLocalIPv4() ?? "127.0.0.1";
-		}
+		string? ipString = !string.IsNullOrWhiteSpace(publicHost)
+			? publicHost
+			: GetFirstLocalIPv4();
 
-		var address = IPAddress.Parse(ipString);
-		_cachedInfo = new AdvertisedIpInfo(address, ipString);
-		return _cachedInfo;
+		var address = IPAddress.Parse(ipString ?? "127.0.0.1");
+		var info = new AdvertisedIpInfo(address, ipString ?? "127.0.0.1");
+
+		// Nur eine echte IP (oder PUBLIC_HOST) dauerhaft cachen. Bleibt es beim
+		// Fallback auf 127.0.0.1, wird beim naechsten Aufruf (naechster mDNS-Alive-
+		// Broadcast, naechstes Laden der Settings-Seite) erneut versucht - heilt
+		// eine Boot-Race-Condition selbst, ohne dass der Dienst neu gestartet werden muss.
+		if (ipString != null)
+			_cachedInfo = info;
+
+		return info;
 	}
 
 	private static string? GetFirstLocalIPv4()
