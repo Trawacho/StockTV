@@ -1,10 +1,10 @@
 - [x] In der Settingspage die Netzwerk IP Adresse anzeigen
-- Über die Settingspage den Netzwerkstack nDNS, publisher und responseServer neu starten
+- [x] Über die Settingspage den Netzwerkstack mDNS, publisher und responseServer neu starten
 - [x] Schriftarten wählbar machen
 - [x] Theme-Settings in der Netzwerkconfig verfügbar machen
 - Marketing Seite implementieren
 - Homepage designen
-- javascript durch css ersetzen
+- [x] javascript durch css ersetzen
 - NetMQ SetImage Befehl implementieren
 - NetMQ GoToImage Befehl implementieren
 - NetMQ ClearImage Befehl implementieren
