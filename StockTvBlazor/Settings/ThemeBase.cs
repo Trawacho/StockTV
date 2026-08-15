@@ -40,7 +40,7 @@ public class CustomTheme : ITheme
 	public UiSettings.Theme? BaseTheme { get; set; }
 
 	/// <summary>
-	/// Single color set - Richtung determines Left/Right assignment
+	/// Single color set - Richtung determines A/B assignment
 	/// </summary>
 	public ColorSettings Colors { get; set; } = new();
 
@@ -49,7 +49,7 @@ public class CustomTheme : ITheme
 		if (richtung == UiSettings.Richtung.Links)
 			return Colors;
 
-		// Swap Left/Right for Rechts orientation
+		// Swap A/B for Rechts orientation
 		return ColorSettingsFactory.SwapLeftRight(Colors);
 	}
 }

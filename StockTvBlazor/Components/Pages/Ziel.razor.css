@@ -27,7 +27,7 @@
     overflow: visible;
     white-space: nowrap;
     text-transform: uppercase;
-    color: var(--fg-color-ziel-gesamt);
+    color: var(--fg-color-ziel-spielername);
     font-weight: 650;
     font-size: 12px; /* Fallback — AutoFit übernimmt */
     line-height: 1;

@@ -23,8 +23,10 @@ public partial class ThemeHandler : IDisposable
 			Console.WriteLine($"-----------------------------------------");
 			Console.WriteLine($"bg-color: {c.BackgroundColor}");
 			Console.WriteLine($"fg-color: {c.ForegroundColor}");
-			Console.WriteLine($"fg-left: {c.ForegroundLeft}");
-			Console.WriteLine($"fg-right: {c.ForegroundRight}");
+			Console.WriteLine($"fg-left: {c.ForegroundA}");
+			Console.WriteLine($"fg-color-teamname-left: {c.TeamNameA}");
+			Console.WriteLine($"fg-right: {c.ForegroundB}");
+			Console.WriteLine($"fg-color-teamname-right: {c.TeamNameB}");
 			Console.WriteLine($"fg-color-ziel-gesamt: {c.ZielSummeGesamt}");
 			Console.WriteLine($"fg-color-ziel-einzel: {c.ZielSummeEinzel}");
 		}

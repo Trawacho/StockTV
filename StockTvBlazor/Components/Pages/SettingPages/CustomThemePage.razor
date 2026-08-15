@@ -78,10 +78,13 @@
                 <div class="color-grid">
                     <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
                     <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
-                    <ColorField Label="Links-Farbe"     @bind-Value="_editingTheme.Colors.ForegroundLeft" />
-                    <ColorField Label="Rechts-Farbe"    @bind-Value="_editingTheme.Colors.ForegroundRight" />
+                    <ColorField Label="Werte A"     @bind-Value="_editingTheme.Colors.ForegroundA" />
+                    <ColorField Label="Werte B"     @bind-Value="_editingTheme.Colors.ForegroundB" />
+                    <ColorField Label="Teamname A"  @bind-Value="_editingTheme.Colors.TeamNameA" />
+                    <ColorField Label="Teamname B"  @bind-Value="_editingTheme.Colors.TeamNameB" />
                     <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" />
                     <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" />
+                    <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" />
                 </div>
 
                 <div class="preview-section">
@@ -114,14 +117,24 @@
                         <span class="hex-value">@_previewColors.ForegroundColor</span>
                     </div>
                     <div class="color-field-readonly">
-                        <span class="field-label">Links-Farbe</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundLeft;"></span>
-                        <span class="hex-value">@_previewColors.ForegroundLeft</span>
+                        <span class="field-label">Werte A</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundA;"></span>
+                        <span class="hex-value">@_previewColors.ForegroundA</span>
                     </div>
                     <div class="color-field-readonly">
-                        <span class="field-label">Rechts-Farbe</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundRight;"></span>
-                        <span class="hex-value">@_previewColors.ForegroundRight</span>
+                        <span class="field-label">Werte B</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundB;"></span>
+                        <span class="hex-value">@_previewColors.ForegroundB</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Teamname A</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameA;"></span>
+                        <span class="hex-value">@_previewColors.TeamNameA</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Teamname B</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameB;"></span>
+                        <span class="hex-value">@_previewColors.TeamNameB</span>
                     </div>
                     <div class="color-field-readonly">
                         <span class="field-label">ZielSumme Ges.</span>
@@ -132,6 +145,11 @@
                         <span class="field-label">ZielSumme Einz.</span>
                         <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeEinzel;"></span>
                         <span class="hex-value">@_previewColors.ZielSummeEinzel</span>
+                    </div>
+                    <div class="color-field-readonly">
+                        <span class="field-label">Ziel-Spielername</span>
+                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSpielername;"></span>
+                        <span class="hex-value">@_previewColors.ZielSpielername</span>
                     </div>
                 </div>
 

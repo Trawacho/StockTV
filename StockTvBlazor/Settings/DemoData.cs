@@ -8,8 +8,8 @@ internal static class DemoData
 	public const string LeftPoints = "4-0-4-0";
 	public const string RightPoints = "0-2-0-3";
 	public const string InputValue = "4";
-	public const string LeftTeamName = "Team Links";
-	public const string RightTeamName = "Team Rechts";
+	public const string LeftTeamName = "Mannschaft Gut";
+	public const string RightTeamName = "Mannschaft Besser";
 	public const int KehreAnzahl = 4;
 	public const int SpielNummer = 2;
 
