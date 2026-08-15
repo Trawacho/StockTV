@@ -9,7 +9,7 @@ public static class ColorSettingsFactory
 			BackgroundColor = theme == UiSettings.Theme.Hell ? "#ffffff" : "#000000",
 			ForegroundColor = theme == UiSettings.Theme.Hell ? "#000000" : "#d3d3d3",
 
-			ForegroundLeft = (richtung, theme) switch
+			ForegroundA = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#ff0000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#008000",
@@ -18,7 +18,7 @@ public static class ColorSettingsFactory
 				_ => "#008000"
 			},
 
-			ForegroundRight = (richtung, theme) switch
+			ForegroundB = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#008000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#ff0000",
@@ -27,7 +27,7 @@ public static class ColorSettingsFactory
 				_ => "#ff0000"
 			},
 
-			TeamNameLeft = (richtung, theme) switch
+			TeamNameA = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#ff0000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#008000",
@@ -36,7 +36,7 @@ public static class ColorSettingsFactory
 				_ => "#008000"
 			},
 
-			TeamNameRight = (richtung, theme) switch
+			TeamNameB = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#008000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#ff0000",
@@ -52,7 +52,7 @@ public static class ColorSettingsFactory
 	}
 
 	/// <summary>
-	/// Swaps ForegroundLeft and ForegroundRight colors
+	/// Swaps ForegroundA and ForegroundB colors
 	/// Used for CustomTheme when orientation is Rechts
 	/// </summary>
 	public static ColorSettings SwapLeftRight(ColorSettings colors)
@@ -61,10 +61,10 @@ public static class ColorSettingsFactory
 		{
 			BackgroundColor = colors.BackgroundColor,
 			ForegroundColor = colors.ForegroundColor,
-			ForegroundLeft = colors.ForegroundRight,    // Swap
-			ForegroundRight = colors.ForegroundLeft,    // Swap
-			TeamNameLeft = colors.TeamNameRight,        // Swap
-			TeamNameRight = colors.TeamNameLeft,        // Swap
+			ForegroundA = colors.ForegroundB,    // Swap
+			ForegroundB = colors.ForegroundA,    // Swap
+			TeamNameA = colors.TeamNameB,        // Swap
+			TeamNameB = colors.TeamNameA,        // Swap
 			ZielSummeGesamt = colors.ZielSummeGesamt,
 			ZielSummeEinzel = colors.ZielSummeEinzel,
 			ZielSpielername = colors.ZielSpielername,
