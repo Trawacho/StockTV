@@ -8,3 +8,5 @@
 - NetMQ SetImage Befehl implementieren
 - NetMQ GoToImage Befehl implementieren
 - NetMQ ClearImage Befehl implementieren
+- Neuer Spielmodus "Special1" (Kopie von BestOf, Quote 6/9/12=Aus, keine Netzwerkübertragung) — Plan siehe [Special1-Modus-Plan.md](Special1-Modus-Plan.md)
+- Training-Modus: keine Daten per Publisher übertragen (`MatchService.ProcessKeyAsync` ruft aktuell immer `Publish("GetResult", ...)` auf, unabhängig vom Modus)
