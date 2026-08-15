@@ -36,7 +36,16 @@ public partial class AutoFitText
 	/// <summary>Optionale zusätzliche CSS-Klassen.</summary>
 	[Parameter] public string? Class { get; set; }
 
-	private int Len => System.Math.Max(1, (Text ?? string.Empty).Length);
+	/// <summary>
+	/// Reserviert --len rechnerisch für mindestens so viele Zeichen, auch wenn
+	/// <see cref="Text"/> aktuell kürzer ist. Verhindert, dass z. B. "0" sichtbar
+	/// größer erscheint als "12" im selben Feld (die Schriftgröße hängt sonst direkt
+	/// von der aktuellen Zeichenanzahl ab). Bei längerem Text greift weiterhin die
+	/// tatsächliche Länge, sodass ein Überlaufen nach wie vor verhindert wird.
+	/// </summary>
+	[Parameter] public int? MinLen { get; set; }
+
+	private int Len => System.Math.Max(MinLen ?? 1, (Text ?? string.Empty).Length);
 
 	private string CssClass =>
 		"autofit"
