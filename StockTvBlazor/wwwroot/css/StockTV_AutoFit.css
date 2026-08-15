@@ -18,7 +18,7 @@
 
 .autofit {
     font-size: max(var(--min, 8px), min(84cqh, calc(150cqw / var(--len, 1))));
-    white-space: nowrap;
+    white-space: pre;
     line-height: 1;
 }
 
