@@ -227,8 +227,6 @@ TimeoutStopSec=15
 User=$APP_USER
 Environment=ASPNETCORE_URLS=http://+:8080
 Environment=ASPNETCORE_ENVIRONMENT=Production
-# PUBLIC_HOST setzen, damit das zentrale System die richtige IP bekommt:
-# Environment=PUBLIC_HOST=192.168.1.xx
 
 [Install]
 WantedBy=multi-user.target
@@ -237,14 +235,6 @@ EOF
     $SUDO cp "$TMPDIR/$SERVICE_NAME.service" "/etc/systemd/system/$SERVICE_NAME.service"
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable "$SERVICE_NAME"
-
-    echo ""
-    echo -e "${YELLOW}Hinweis: Nur bei mehreren Netzwerk-Interfaces (WLAN + LAN)${NC}"
-    echo "  falls das zentrale System den Pi nicht findet:"
-    echo "  sudo nano /etc/systemd/system/$SERVICE_NAME.service"
-    echo "  Zeile einkommentieren: Environment=PUBLIC_HOST=<IP-des-Pi>"
-    echo "  Danach: sudo systemctl daemon-reload && sudo systemctl restart $SERVICE_NAME"
-    echo ""
 fi
 
 # --- Kiosk-Modus einrichten / pruefen ---
