@@ -102,6 +102,7 @@ StockTV/
 | BestOf   | 1   | 6         | 10        | Mehrere Spiele pro Match |
 | Turnier  | 2   | 6         | 10        | Wie BestOf, mit Teamnamen (extern gesetzt) |
 | Ziel     | 100 | konfig.   | konfig.   | Zielbewerb mit 4 fixen Disziplinen |
+| Ziel2    | 101 | konfig.   | konfig.   | Wie Ziel, aber zwei Runden (Gesamtsumme = Runde 1 + Runde 2) |
 
 ### Ziel-Modus (4 fixe Disziplinen, Reihenfolge fix)
 1. **MassenVorne** — gültige Werte: 0, 2, 4, 6, 8, 10
@@ -110,6 +111,16 @@ StockTV/
 4. **Kombinieren** — gültige Werte: 0, 2, 4, 6, 8, 10
 
 Pro Disziplin werden `MaxKehrenProSpiel` Versuche eingegeben. Ungültige Werte werden 1,5 Sekunden angezeigt.
+
+### Ziel2-Modus (Zwei-Runden-Variante von Ziel)
+Gleiche 4 Disziplinen wie im Ziel-Modus. Sobald alle `MaxVersucheGesamt` (= `MaxKehrenProSpiel * 4`)
+Versuche der ersten Runde abgeschlossen sind, setzt `ZielBewerb.AddVersuch()` die vier
+Versuchslisten automatisch zurück, merkt sich die Rundensumme (`_runde1Summe`) und startet
+transparent eine zweite Runde mit denselben Disziplinen in gleicher Reihenfolge. `GesamtSumme`
+ergibt sich aus Runde 1 + Runde 2; `MaxVersucheDisplay`/`AnzahlVersucheDisplay` verdoppeln sich
+entsprechend für die Anzeige. Routing (`/ziel`), die NetMQ-Sonderbehandlung von `GetResult`/
+`ResetResult` (→ `ZielService` statt `MatchService`) sowie das `/input`-iframe-Handling sind
+identisch zu Ziel — überall dort, wo `Modus.Ziel` geprüft wird, wird `Modus.Ziel2` mitgeprüft.
 
 ---
 
@@ -245,7 +256,7 @@ Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es g
 | `General.BahnNummer` | `1–4` | Bahnnummer für mDNS und externe Verwaltung |
 | `General.Spielgruppe` | Zahl | Spielgruppen-ID (extern gesetzt) |
 | `General.MessageVersion` | `1` | Protokoll-Version für NetMQ |
-| `Game.CurrentModus` | `0/1/2/100` | Training / BestOf / Turnier / Ziel |
+| `Game.CurrentModus` | `0/1/2/100/101` | Training / BestOf / Turnier / Ziel / Ziel2 |
 | `Game.MaxPunkteProKehre` | Zahl | Max. Punkte je Kehre (Standard: 15) |
 | `Game.MaxKehrenProSpiel` | Zahl | Max. Kehren je Spiel (Standard: 30) |
 | `UI.CurrentRichtung` | `0/1` | Spielrichtung: 0=Links, 1=Rechts |
