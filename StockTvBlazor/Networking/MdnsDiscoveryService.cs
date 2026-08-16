@@ -1,4 +1,4 @@
-﻿using Makaretu.Dns;
+using Makaretu.Dns;
 using StockTvBlazor.Services;
 using System.Reflection;
 
@@ -6,48 +6,88 @@ namespace StockTvBlazor.Networking;
 
 public class MdnsDiscoveryService : BackgroundService
 {
-	private readonly ServiceDiscovery _serviceDiscovery;
+	private readonly PlatformInfoService _platformInfo;
 
-	private readonly ServiceProfile _profile;
+	private readonly ILogger<MdnsDiscoveryService> _logger;
 
-	public MdnsDiscoveryService(PlatformInfoService platformInfo)
+	private ServiceDiscovery? _serviceDiscovery;
+
+	public MdnsDiscoveryService(PlatformInfoService platformInfo, ILogger<MdnsDiscoveryService> logger)
 	{
-		// Initialisiere den Discovery-Dienst
+		_platformInfo = platformInfo;
+		_logger = logger;
+	}
+
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+	{
+		// Boot-Race-Vermeidung: War beim Erstellen von ServiceDiscovery/MulticastService das
+		// Netzwerk-Interface noch ohne IP (nur "up", aber ohne Adresse - typisch kurz nach dem
+		// Boot), tritt es der mDNS-Multicast-Gruppe (224.0.0.251) nie bei. Die eingebaute
+		// periodische Neuerkennung (Standard: alle 2 Minuten) behebt das nicht, da das Interface
+		// selbst schon als "bekannt" galt - nur der Gruppenbeitritt schlug fehl. Ein nachtraeglicher
+		// Stop()/Start() von MulticastService wurde auf einem Pi4 getestet und behebt zwar den
+		// Gruppenbeitritt, doppelt aber die Socket-Bindings und beantwortet danach trotzdem keine
+		// Anfragen mehr - deshalb hier der robustere Weg: ServiceDiscovery wird erst erstellt und
+		// gestartet, wenn eine echte IP feststeht (derselbe Realitaets-Check, den auch
+		// IpAdvertisementService fuer den NetMQ-Alive-Broadcast nutzt).
+		AdvertisedIpInfo advertisedIp;
+		try
+		{
+			advertisedIp = await WaitForRealIpAsync(stoppingToken);
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
+
 		_serviceDiscovery = new ServiceDiscovery();
 
-		// Hole die zu advertisierte IP-Adresse (bereits als IPAddress konvertiert)
-		var advertisedIp = IpAdvertisementService.GetAdvertisedIp();
-
-		// Profil erstellen: Rechnername, Service-Typ (TCP), Port, IP-Adressen
-		_profile = new ServiceProfile(
+		var profile = new ServiceProfile(
 			Environment.MachineName,
 			"_stockTV._tcp.",
 			4747,
 			new[] { advertisedIp.Address }
 		);
 
-		// Metadaten (TXT-Records) hinzufügen
-		_profile.AddProperty("pubSvc", "4748");
-		_profile.AddProperty("ctrSvc", "4747");
-		_profile.AddProperty("pkgVer", GetAppVersion());
-		_profile.AddProperty("osVer", platformInfo.OsVersion);
+		profile.AddProperty("pubSvc", "4748");
+		profile.AddProperty("ctrSvc", "4747");
+		profile.AddProperty("pkgVer", GetAppVersion());
+		profile.AddProperty("osVer", _platformInfo.OsVersion);
+
+		try
+		{
+			_serviceDiscovery.Advertise(profile);
+			_logger.LogInformation("mDNS-Advertising gestartet: Instance={Instance}, IP={Ip}",
+				Environment.MachineName, advertisedIp.AddressString);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical(ex, "mDNS-Advertising konnte nicht gestartet werden");
+		}
 	}
 
-	protected override Task ExecuteAsync(CancellationToken stoppingToken)
+	private static async Task<AdvertisedIpInfo> WaitForRealIpAsync(CancellationToken stoppingToken)
 	{
-		// Startet das Advertising im Netzwerk
-		_serviceDiscovery.Advertise(_profile);
+		while (true)
+		{
+			var info = IpAdvertisementService.GetAdvertisedIp();
+			if (info.AddressString != "127.0.0.1")
+				return info;
 
-		// Da Advertise() im Hintergrund läuft, geben wir Task.CompletedTask zurück.
-		// Der BackgroundService bleibt aktiv, bis die App gestoppt wird.
-		return Task.CompletedTask;
+			await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+		}
 	}
 
 	public override void Dispose()
 	{
-		// Wichtig: Beim Beenden der App den Dienst im Netzwerk abmelden
-		_serviceDiscovery.Unadvertise();
-		_serviceDiscovery.Dispose();
+		if (_serviceDiscovery is not null)
+		{
+			// Wichtig: Beim Beenden der App den Dienst im Netzwerk abmelden
+			_serviceDiscovery.Unadvertise();
+			_serviceDiscovery.Dispose();
+			_logger.LogInformation("mDNS-Advertising beendet und abgemeldet");
+		}
+
 		base.Dispose();
 	}
 
