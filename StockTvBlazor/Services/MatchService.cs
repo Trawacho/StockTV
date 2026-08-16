@@ -1,5 +1,6 @@
 ﻿using StockTvBlazor.Models;
 using StockTvBlazor.Networking;
+using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Services;
 
@@ -102,7 +103,11 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 
 		OnGlobalRefresh?.Invoke();
 
-		_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
+		// Training ist freies Spiel ohne Spielzaehlung/Persistierung (siehe CurrentMatch.Reset()
+		// bzw. SaveTurnsToLocalSettingsAsync) - entsprechend soll auch nichts an das zentrale
+		// Verwaltungsprogramm gesendet werden.
+		if (s.Game.CurrentModus != GameSettings.Modus.Training)
+			_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
 	}
 
 	private void AddInput(int value)
