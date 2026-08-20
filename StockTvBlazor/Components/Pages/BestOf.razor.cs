@@ -12,7 +12,6 @@ public partial class BestOf : IDisposable
 	[Inject] private NavigationManager _navigationManager { get; set; } = default!;
 	[Inject] private MatchService _matchService { get; set; } = default!;
 	[Inject] private BestOfViewModel ViewModel { get; set; } = default!;
-	[Inject] private IJSRuntime JS { get; set; } = default!;
 
 	[SupplyParameterFromQuery(Name = "demo")]
 	private bool IsDemo { get; set; }
@@ -55,15 +54,16 @@ public partial class BestOf : IDisposable
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (_disposed) return;
-		try
+		if (firstRender && !IsDemo)
 		{
-			await JS.InvokeVoidAsync("stockTvAutoFit.observe", ".page-fullscreen");
-			if (firstRender && !IsDemo)
+			try
+			{
 				await inputRef.FocusAsync();
+			}
+			catch (JSDisconnectedException) { }
+			catch (ObjectDisposedException) { }
+			catch (TaskCanceledException) { }
 		}
-		catch (JSDisconnectedException) { }
-		catch (ObjectDisposedException) { }
-		catch (TaskCanceledException) { }
 	}
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)

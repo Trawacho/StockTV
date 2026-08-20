@@ -14,7 +14,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 5vmin;
+    font-size: 5vmin; /* wirkt nur auf /layouttest (Span ohne AutoFitText-Wrapper);
+                          bei BestOf/Turnier/Training überschreibt .autofit dies */
     white-space: nowrap; /* verhindert Zeilenumbruch */
     min-width: 0; /* verhindert Flex-Überlauf */
 }
@@ -30,6 +31,8 @@
 
 :root .seperator {
     color: var(--fg-color);
+    font-weight: 600;
+    transform: scaleY(1.5) scaleX(1.5);
 }
 
 :root .left-points {

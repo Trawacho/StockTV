@@ -250,7 +250,12 @@ public class SettingsService : BackgroundService
 		try
 		{
 			var json = await File.ReadAllTextAsync(_settingsFilePath);
-			return JsonSerializer.Deserialize<Settings.Settings>(json) ?? new Settings.Settings();
+			var settings = JsonSerializer.Deserialize<Settings.Settings>(json) ?? new Settings.Settings();
+
+			_logger.LogInformation("Config geladen: BahnNummer={BahnNummer}, Modus={Modus}",
+				settings.General.BahnNummer, settings.Game.CurrentModus);
+
+			return settings;
 		}
 		catch (Exception ex)
 		{

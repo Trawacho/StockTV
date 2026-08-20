@@ -57,7 +57,7 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 
 - **Framework**: ASP.NET Core 10, Blazor Server (Interactive Server Components)
 - **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS)
-- **UI**: Bootstrap, responsive Text via `wwwroot/js/autofitText.js` (`stockTvAutoFit.observe`)
+- **UI**: Bootstrap, responsive Text **rein per CSS** (Container Queries) über die Komponente `Controls/AutoFitText` + `wwwroot/css/StockTV_AutoFit.css` — **kein eigenes JavaScript**
 - **Deployment**: Docker (Linux/amd64), Raspberry Pi (linux-arm64, Kiosk), Windows Service (`UseWindowsService()` in `Program.cs`), Linux x64 (systemd)
 - **Volumes / Datenpfade**: `./_config:/app/_config`, `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
 
@@ -73,14 +73,14 @@ StockTV/
 │   │   │   ├── SettingPages/   # Settings, CustomThemePage, ThemePreview, ColorField
 │   │   │   ├── HomeCards/      # CardDisplay1–4 (rotieren auf der Home-Seite)
 │   │   │   └── ...             # Training, Turnier, BestOf, Ziel, Input, Home
-│   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv
+│   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv, AutoFitText
 │   │   ├── ViewModels/         # ViewModels pro Modus (erben von BaseViewModel)
 │   │   └── Layout/             # MainLayout, ThemeHandler
 │   ├── Models/                 # Game, Match, Turn, Begegnung, ZielBewerb, Debounce
 │   ├── Networking/             # NetMqPublisherService, NetMqResponseService, MdnsDiscoveryService
 │   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
 │   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
-│   └── wwwroot/js/autofitText.js
+│   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
 ├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
 │   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
@@ -102,6 +102,7 @@ StockTV/
 | BestOf   | 1   | 6         | 10        | Mehrere Spiele pro Match |
 | Turnier  | 2   | 6         | 10        | Wie BestOf, mit Teamnamen (extern gesetzt) |
 | Ziel     | 100 | konfig.   | konfig.   | Zielbewerb mit 4 fixen Disziplinen |
+| Ziel2    | 101 | konfig.   | konfig.   | Wie Ziel, aber zwei Runden (Gesamtsumme = Runde 1 + Runde 2) |
 
 ### Ziel-Modus (4 fixe Disziplinen, Reihenfolge fix)
 1. **MassenVorne** — gültige Werte: 0, 2, 4, 6, 8, 10
@@ -110,6 +111,16 @@ StockTV/
 4. **Kombinieren** — gültige Werte: 0, 2, 4, 6, 8, 10
 
 Pro Disziplin werden `MaxKehrenProSpiel` Versuche eingegeben. Ungültige Werte werden 1,5 Sekunden angezeigt.
+
+### Ziel2-Modus (Zwei-Runden-Variante von Ziel)
+Gleiche 4 Disziplinen wie im Ziel-Modus. Sobald alle `MaxVersucheGesamt` (= `MaxKehrenProSpiel * 4`)
+Versuche der ersten Runde abgeschlossen sind, setzt `ZielBewerb.AddVersuch()` die vier
+Versuchslisten automatisch zurück, merkt sich die Rundensumme (`_runde1Summe`) und startet
+transparent eine zweite Runde mit denselben Disziplinen in gleicher Reihenfolge. `GesamtSumme`
+ergibt sich aus Runde 1 + Runde 2; `MaxVersucheDisplay`/`AnzahlVersucheDisplay` verdoppeln sich
+entsprechend für die Anzeige. Routing (`/ziel`), die NetMQ-Sonderbehandlung von `GetResult`/
+`ResetResult` (→ `ZielService` statt `MatchService`) sowie das `/input`-iframe-Handling sind
+identisch zu Ziel — überall dort, wo `Modus.Ziel` geprüft wird, wird `Modus.Ziel2` mitgeprüft.
 
 ---
 
@@ -167,7 +178,22 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 
 **NetMQ-Topics (4747):** `Hello`, `GetResult`, `ResetResult`, `GetSettings`, `SetSettings`, `SetTeamNames` (`"Spielnr:TeamA:TeamB;..."`), `SetTeilnehmer`
 
-**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`. `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
+**NetMQ-Topics für Raspberry-Pi-Verwaltung (4747, siehe `Services/NetworkConfigService.cs`/`Services/GameStateGuard.cs`):**
+Nur auf echten Raspberry Pis nutzbar (`PlatformInfoService.IsRaspberryPi`) und nur solange keine
+Match-/Zieldaten hinterlegt sind (`GameStateGuard.HasRecordedValues` — Kehren, Zielversuche,
+Teamnamen oder Ziel-Spielername), sonst `NACK:not-a-pi` bzw. `NACK:values-present`. Ungültige
+Payloads liefern `NACK:invalid-payload`/`invalid-mode`/`invalid-ip`/`invalid-gateway`/`invalid-dns`/
+`invalid-hostname`, gültige Schreib-Kommandos `ACK` (Anwendung läuft asynchron im Hintergrund).
+- `SetNetworkConfig` (`"<device>:<mode>:<cidr>:<gateway>:<dnsServers>"`, `mode` = `dhcp`/`static`,
+  z.B. `"eth0:static:192.168.1.50/24:192.168.1.1:192.168.1.1,8.8.8.8"` oder `"eth0:dhcp:::"`)
+- `GetNetworkConfig` — liest alle verbundenen Interfaces, Antwort im selben Format, `;`-getrennt
+- `SetHostname` (Hostname als reiner Text-Payload)
+- `GetHostname` — liest den aktuellen Hostnamen
+- `RebootPi` — kein Payload
+
+**mDNS:** Service-Typ `_stockTV._tcp.`, TXT-Records `pubSvc=4748`, `ctrSvc=4747`, `pkgVer=<Version>`,
+`osVer=<SystemKind>: <OSDescription>` (`SystemKind` = `Windows`/`RaspberryPi`/`Docker`/`Linux`,
+siehe `Services/PlatformInfoService.cs`). `PUBLIC_HOST` Env-Variable überschreibt die IP im Alive-Paket.
 
 ---
 
@@ -203,15 +229,20 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 
 ---
 
-## Responsives Text-Sizing (autofitText.js)
+## Responsives Text-Sizing (CSS, kein JavaScript)
 
-`stockTvAutoFit.observe(containerSelector)` wird in `OnAfterRenderAsync` auf **jedes** Render aufgerufen (nicht nur `firstRender`). Das JS registriert `ResizeObserver` + `MutationObserver` per Element (WeakMap, kein Doppel-Register) und berechnet per Binary Search die maximale Schriftgröße via `scrollWidth`/`scrollHeight <= clientWidth`/`clientHeight`.
+Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es gibt **kein eigenes JS** mehr (das frühere `autofitText.js` wurde entfernt). Kernidee: Da Blazor **serverseitig** rendert, ist die Textlänge bereits bekannt und wird als CSS-Variable `--len` übergeben, sodass langer Text schrumpft, kurzer Text die Box füllt.
 
-HTML-Attribute zur Steuerung:
-- `data-autofit` — aktiviert AutoFit auf dem Element
-- `data-autofit-min="10"` — minimale Schriftgröße in px
-- `data-autofit-max="300"` — überschreibt die berechnete Obergrenze
-- `data-autofit-vertical="true"` — für `writing-mode: vertical-*` Elemente
+**Bausteine:**
+- **Komponente `Controls/AutoFitText`** — rendert `<span class="autofit" style="--len:…; --min:…px">`. Parameter: `Text`, `Min` (Mindest-px, früher `data-autofit-min`), `Vertical` (writing-mode vertical), `Class`.
+- **`wwwroot/css/StockTV_AutoFit.css`** — enthält die `.autofit`-Regel:
+  `font-size: max(var(--min), min(84cqh, calc(150cqw / var(--len))))`
+  (vertikal: `cqh`/`cqw` vertauscht). `84` = Kanten-Deckel inkl. line-height-Metrik, `150` ≈ 100 / mittlere Zeichenbreite.
+- **Container:** Die umgebende Zelle muss `container-type: size` haben. Das ist an den gemeinsamen Klassen gesetzt: `.score-cell`, `.score-top-row`, `.teamname` (in `StockTV_Team_StyleSheet.css`) sowie `.ziel-cell`, `.ziel-spielername` (in `Ziel.razor.css`).
+
+**Verwendung im Markup:** `<div class="score-cell left-points"><AutoFitText Text="@ViewModel.LeftPoints" Min="10" /></div>`. Für `int`-Werte am Aufruf `.ToString()` anhängen (der `Text`-Parameter ist `string?`).
+
+**Ausnahmen (bewusst viewport-basiert, kein AutoFitText):** BestOf-`match-points` (`font-size: min(20vh,18vw)`) und das Ziel-`ungültig`-Overlay (`font-size: 4vw`).
 
 ---
 
@@ -225,7 +256,7 @@ HTML-Attribute zur Steuerung:
 | `General.BahnNummer` | `1–4` | Bahnnummer für mDNS und externe Verwaltung |
 | `General.Spielgruppe` | Zahl | Spielgruppen-ID (extern gesetzt) |
 | `General.MessageVersion` | `1` | Protokoll-Version für NetMQ |
-| `Game.CurrentModus` | `0/1/2/100` | Training / BestOf / Turnier / Ziel |
+| `Game.CurrentModus` | `0/1/2/100/101` | Training / BestOf / Turnier / Ziel / Ziel2 |
 | `Game.MaxPunkteProKehre` | Zahl | Max. Punkte je Kehre (Standard: 15) |
 | `Game.MaxKehrenProSpiel` | Zahl | Max. Kehren je Spiel (Standard: 30) |
 | `UI.CurrentRichtung` | `0/1` | Spielrichtung: 0=Links, 1=Rechts |

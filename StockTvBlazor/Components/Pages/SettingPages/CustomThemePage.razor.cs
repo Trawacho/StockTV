@@ -146,10 +146,13 @@ public partial class CustomThemePage : IDisposable
 	{
 		BackgroundColor = s.BackgroundColor,
 		ForegroundColor = s.ForegroundColor,
-		ForegroundLeft = s.ForegroundLeft,
-		ForegroundRight = s.ForegroundRight,
+		ForegroundA = s.ForegroundA,
+		ForegroundB = s.ForegroundB,
+		TeamNameA = s.TeamNameA,
+		TeamNameB = s.TeamNameB,
 		ZielSummeGesamt = s.ZielSummeGesamt,
 		ZielSummeEinzel = s.ZielSummeEinzel,
+		ZielSpielername = s.ZielSpielername,
 		FontFamily = s.FontFamily
 	};
 }

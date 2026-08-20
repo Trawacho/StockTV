@@ -157,8 +157,6 @@ TimeoutStopSec=15
 User=$PI_USER
 Environment=ASPNETCORE_URLS=http://+:8080
 Environment=ASPNETCORE_ENVIRONMENT=Production
-# PUBLIC_HOST=192.168.x.x einkommentieren bei mehreren Interfaces:
-# Environment=PUBLIC_HOST=192.168.1.xx
 
 [Install]
 WantedBy=multi-user.target

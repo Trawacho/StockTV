@@ -9,7 +9,7 @@ public static class ColorSettingsFactory
 			BackgroundColor = theme == UiSettings.Theme.Hell ? "#ffffff" : "#000000",
 			ForegroundColor = theme == UiSettings.Theme.Hell ? "#000000" : "#d3d3d3",
 
-			ForegroundLeft = (richtung, theme) switch
+			ForegroundA = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#ff0000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#008000",
@@ -18,7 +18,25 @@ public static class ColorSettingsFactory
 				_ => "#008000"
 			},
 
-			ForegroundRight = (richtung, theme) switch
+			ForegroundB = (richtung, theme) switch
+			{
+				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#008000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#ff0000",
+				(UiSettings.Richtung.Links, UiSettings.Theme.Dunkel) => "#9acd32",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Dunkel) => "#ff0000",
+				_ => "#ff0000"
+			},
+
+			TeamNameA = (richtung, theme) switch
+			{
+				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#ff0000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#008000",
+				(UiSettings.Richtung.Links, UiSettings.Theme.Dunkel) => "#ff0000",
+				(UiSettings.Richtung.Rechts, UiSettings.Theme.Dunkel) => "#9acd32",
+				_ => "#008000"
+			},
+
+			TeamNameB = (richtung, theme) switch
 			{
 				(UiSettings.Richtung.Links, UiSettings.Theme.Hell) => "#008000",
 				(UiSettings.Richtung.Rechts, UiSettings.Theme.Hell) => "#ff0000",
@@ -28,12 +46,13 @@ public static class ColorSettingsFactory
 			},
 
 			ZielSummeGesamt = theme == UiSettings.Theme.Hell ? "#8b008b" : "#ff00ff",
-			ZielSummeEinzel = theme == UiSettings.Theme.Hell ? "#008b8b" : "#00ffff"
+			ZielSummeEinzel = theme == UiSettings.Theme.Hell ? "#008b8b" : "#00ffff",
+			ZielSpielername = theme == UiSettings.Theme.Hell ? "#8b008b" : "#ff00ff"
 		};
 	}
 
 	/// <summary>
-	/// Swaps ForegroundLeft and ForegroundRight colors
+	/// Swaps ForegroundA and ForegroundB colors
 	/// Used for CustomTheme when orientation is Rechts
 	/// </summary>
 	public static ColorSettings SwapLeftRight(ColorSettings colors)
@@ -42,10 +61,13 @@ public static class ColorSettingsFactory
 		{
 			BackgroundColor = colors.BackgroundColor,
 			ForegroundColor = colors.ForegroundColor,
-			ForegroundLeft = colors.ForegroundRight,    // Swap
-			ForegroundRight = colors.ForegroundLeft,    // Swap
+			ForegroundA = colors.ForegroundB,    // Swap
+			ForegroundB = colors.ForegroundA,    // Swap
+			TeamNameA = colors.TeamNameB,        // Swap
+			TeamNameB = colors.TeamNameA,        // Swap
 			ZielSummeGesamt = colors.ZielSummeGesamt,
 			ZielSummeEinzel = colors.ZielSummeEinzel,
+			ZielSpielername = colors.ZielSpielername,
 			FontFamily = colors.FontFamily
 		};
 	}

@@ -25,11 +25,13 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 
 	private readonly ILogger<NetMqPublisherService> _logger;
 	private readonly SettingsService settingsService;
+	private readonly string _osVersion;
 
-	public NetMqPublisherService(ILogger<NetMqPublisherService> logger, SettingsService settingsService)
+	public NetMqPublisherService(ILogger<NetMqPublisherService> logger, SettingsService settingsService, PlatformInfoService platformInfo)
 	{
 		_logger = logger;
 		this.settingsService = settingsService;
+		_osVersion = platformInfo.OsVersion;
 		try
 		{
 			_pubSocket = new XPublisherSocket();
@@ -45,15 +47,16 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		}
 
 		// --- AliveInfo erstellen ---
-		var aliveInfo = AliveInfo.Create();
+		var aliveInfo = AliveInfo.Create(_osVersion);
 		_serializedAliveInfo = JsonSerializer.Serialize(aliveInfo);
 		_aliveInfoResolved = aliveInfo.IpAddress != "127.0.0.1";
 
 		_logger.LogInformation(
-			"Server AliveInfo: HostName={Host}, IP={Ip}, AppVersion={Version}",
+			"Server AliveInfo: HostName={Host}, IP={Ip}, AppVersion={Version}, OsVersion={OsVersion}",
 			aliveInfo.HostName,
 			aliveInfo.IpAddress,
-			aliveInfo.AppVersion
+			aliveInfo.AppVersion,
+			aliveInfo.OsVersion
 		);
 
 		_aliveTimer = new NetMQTimer(TimeSpan.FromSeconds(5));
@@ -61,14 +64,14 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		{
 			if (!_aliveInfoResolved)
 			{
-				var updated = AliveInfo.Create();
+				var updated = AliveInfo.Create(_osVersion);
 				if (updated.IpAddress != "127.0.0.1")
 				{
 					_aliveInfoResolved = true;
 					_serializedAliveInfo = JsonSerializer.Serialize(updated);
 					_logger.LogInformation(
-						"AliveInfo aktualisiert: HostName={Host}, IP={Ip}",
-						updated.HostName, updated.IpAddress);
+						"AliveInfo aktualisiert: HostName={Host}, IP={Ip}, OsVersion={OsVersion}",
+						updated.HostName, updated.IpAddress, updated.OsVersion);
 				}
 			}
 			Publish("Alive", _serializedAliveInfo);
@@ -187,8 +190,9 @@ public class AliveInfo
 	public string? IpAddress { get; private set; }
 	public string? HostName { get; private set; }
 	public string? AppVersion { get; private set; }
+	public string? OsVersion { get; private set; }
 
-	public static AliveInfo Create()
+	public static AliveInfo Create(string osVersion)
 	{
 		var advertisedIp = IpAdvertisementService.GetAdvertisedIp();
 		string host = Dns.GetHostName();
@@ -199,7 +203,8 @@ public class AliveInfo
 								 .GetName()
 								 .Version?.ToString() ?? "0.0.0.0",
 			HostName = host,
-			IpAddress = advertisedIp.AddressString
+			IpAddress = advertisedIp.AddressString,
+			OsVersion = osVersion
 		};
 
 		return alive;

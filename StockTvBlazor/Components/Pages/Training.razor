@@ -8,18 +8,18 @@
 	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		
 		<div class="scoreboard-center">
-			<div class="score-row score-top-row header-text" data-autofit data-autofit-min="8">@ViewModel.HeaderText</div>
+			<div class="score-row score-top-row header-text"><AutoFitText Text="@ViewModel.HeaderText" Min="8" /></div>
 
-			<div class="score-row training-mid-grid">
-				<div class="score-cell left-point-sum" data-autofit data-autofit-min="12">@ViewModel.LeftPointsSum</div>
-				<div class="score-cell seperator" data-autofit data-autofit-min="12">:</div>
-				<div class="score-cell right-point-sum" data-autofit data-autofit-min="12">@ViewModel.RightPointsSum</div>
+			<div class="score-row mid-grid-3">
+				<div class="score-cell left-point-sum"><AutoFitText Text="@ViewModel.LeftPointsSum.ToString()" Min="12" Numeric="true" Fill="90" MinLen="2"/></div>
+				<div class="score-cell seperator"><AutoFitText Text=":" Min="12" Numeric="true" /></div>
+				<div class="score-cell right-point-sum"><AutoFitText Text="@ViewModel.RightPointsSum.ToString()" Min="12" Numeric="true" Fill="90" MinLen="2"/></div>
 			</div>
 
 			<div class="score-row score-bottom-grid">
-				<div class="score-cell left-points" data-autofit data-autofit-min="10">@ViewModel.LeftPoints</div>
-				<div class="score-cell input-value" data-autofit data-autofit-min="10">@ViewModel.InputValue</div>
-				<div class="score-cell right-points" data-autofit data-autofit-min="10">@ViewModel.RightPoints</div>
+				<div class="score-cell left-points"><AutoFitText Text="@ViewModel.LeftPoints" Min="10" Numeric="true" Fill="98" MinLen="11" /></div>
+				<div class="score-cell input-value"><AutoFitText Text="@ViewModel.InputValue" Min="10" Numeric="true" Fill="90" MinLen="2" /></div>
+				<div class="score-cell right-points"><AutoFitText Text="@ViewModel.RightPoints" Min="10" Numeric="true" Fill="98" MinLen="11" /></div>
 			</div>
 		</div>
 

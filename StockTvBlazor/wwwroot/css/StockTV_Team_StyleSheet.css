@@ -1,5 +1,6 @@
 ﻿
 .teamname {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7,20 +8,19 @@
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
-    font-weight: 650;
-    font-size: 12px;
+    font-weight: 400;
     line-height: 1;
 }
 
 .teamname-left {
     writing-mode: vertical-rl;
     transform: rotate(180deg); /* 270° */
-    color: var(--fg-left);
+    color: var(--fg-color-teamname-left);
 }
 
 .teamname-right {
     writing-mode: vertical-rl; /* 90° */
-    color: var(--fg-right);
+    color: var(--fg-color-teamname-right);
 }
 
 .scoreboard-shell {
@@ -33,7 +33,7 @@
 .scoreboard-center {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 15% 65% 20%;
+    grid-template-rows: 13% 69% 18%;
     height: 100%;
     width: 100%;
 }
@@ -44,6 +44,7 @@
 }
 
 .score-top-row {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,10 +54,10 @@
     text-overflow: ellipsis;
     font-weight: 700;
     line-height: 1;
-    font-size: min(8vh, 10vw);
 }
 
 .score-cell {
+    container-type: size; /* Größen-Container für AutoFitText */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,7 +66,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-weight: 650;
+    font-weight: 700;
     line-height: 1;
 }
 
@@ -74,5 +75,15 @@
     height: 100%;
     width: 100%;
     grid-template-columns: 42.5% 15% 42.5%;
+    align-items: stretch;
+}
+
+/* Gemeinsames Mittel-Grid für Training + Turnier (früher dupliziert
+   als .training-mid-grid / .turnier-mid-grid). BestOf bleibt speziell. */
+.mid-grid-3 {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: 47% 6% 47%;
     align-items: stretch;
 }

@@ -50,6 +50,15 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>()
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
 builder.Services.AddSingleton<FontService>();
+builder.Services.AddSingleton<PlatformInfoService>();
+builder.Services.AddSingleton<NetworkConfigService>();
+builder.Services.AddSingleton<UpdateService>();
+
+builder.Services.AddHttpClient("GitHub", c =>
+{
+	c.DefaultRequestHeaders.UserAgent.ParseAdd("StockTV-UpdateChecker");
+	c.Timeout = TimeSpan.FromSeconds(10);
+});
 
 builder.Services.AddHostedService<MdnsDiscoveryService>();
 
