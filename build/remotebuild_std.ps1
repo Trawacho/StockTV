@@ -20,6 +20,25 @@ Write-Host "   BUILD + DEPLOY: StockTV"
 Write-Host "==========================================`n"
 
 # ================================
+# Preflight: Remote-Host muss erreichbar sein
+# ================================
+# Prueft VOR dem (teuren) lokalen Build/Export, ob der Remote-Host per SSH erreichbar ist.
+# Ohne diese Pruefung liefe das Skript bei nicht erreichbarem Host bis zum Ende durch und
+# meldete faelschlich Erfolg, da PowerShell bei fehlgeschlagenen nativen Befehlen (scp/ssh)
+# nicht automatisch abbricht - $ErrorActionPreference="Stop" wirkt nur auf Cmdlet-Fehler.
+Write-Host "Pruefe Erreichbarkeit von $RemoteHost..."
+
+ssh -o BatchMode=yes -o ConnectTimeout=5 "$RemoteUser@$RemoteHost" "exit 0" 2>&1 | Out-Null
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nFEHLER: Remote-Host '$RemoteHost' ist per SSH nicht erreichbar (Exit-Code $LASTEXITCODE)." -ForegroundColor Red
+    Write-Host "Abbruch vor dem Build - es wurde nichts gebaut oder veraendert." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "Remote-Host '$RemoteHost' ist erreichbar.`n"
+
+# ================================
 # Buildx init
 # ================================
 Write-Host "Initialize Docker Buildx..."
@@ -85,6 +104,13 @@ Write-Host "Copying TAR to server..."
 
 scp $TarFile $remotePath
 
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nFEHLER: Kopieren des Images auf $RemoteHost fehlgeschlagen (Exit-Code $LASTEXITCODE)." -ForegroundColor Red
+    Write-Host "Entferne lokale TAR-Datei und breche ab, Remote-Container wurden NICHT aktualisiert." -ForegroundColor Red
+    Remove-Item $TarFile -Force -ErrorAction SilentlyContinue
+    exit 1
+}
+
 # ================================
 # Remote commands
 # ================================
@@ -96,6 +122,13 @@ $remoteCommand = "docker load -i $RemoteDir/$TarFile; cd $RemoteDir; STOCKTV_TAG
 Write-Host "Running deployment on server..."
 
 ssh $remoteUserHost $remoteCommand
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nFEHLER: Remote-Deployment auf $RemoteHost fehlgeschlagen (Exit-Code $LASTEXITCODE)." -ForegroundColor Red
+    Write-Host "Entferne lokale TAR-Datei und breche ab, Remote-Container wurden moeglicherweise NICHT vollstaendig aktualisiert." -ForegroundColor Red
+    Remove-Item $TarFile -Force -ErrorAction SilentlyContinue
+    exit 1
+}
 
 # ================================
 # Cleanup local
