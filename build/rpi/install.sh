@@ -116,9 +116,15 @@ else
 fi
 
 # --- Laufenden Dienst stoppen ---
-if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
-    echo "Stoppe laufenden Dienst..."
-    $SUDO systemctl stop "$SERVICE_NAME"
+# "systemctl is-active --quiet" erkennt nur den sauberen "active"-Zustand. Haengt der Dienst nach
+# einem vorherigen fehlgeschlagenen Update im Neustart-Loop fest (Zustand "activating", z.B. durch
+# Restart=always nach einem Absturz), wird dieser Check faelschlich uebersprungen und "cp" scheitert
+# anschliessend am noch laufenden Binary ("Text file busy"). Deshalb stattdessen: stoppen, sobald die
+# Unit-Datei ueberhaupt existiert (unabhaengig vom genauen Laufzeitzustand); "|| true" haelt das
+# Skript auch dann am Laufen, falls "stop" aus einem anderen Grund scheitert.
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    echo "Stoppe Dienst (falls aktiv)..."
+    $SUDO systemctl stop "$SERVICE_NAME" 2>/dev/null || true
 fi
 
 # --- Dateien installieren ---
