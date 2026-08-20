@@ -128,7 +128,21 @@ $SUDO cp -r "$TMPDIR/app/"* "$INSTALL_DIR/"
 $SUDO chmod +x "$INSTALL_DIR/StockTvBlazor"
 $SUDO mkdir -p "$INSTALL_DIR/_config" "$INSTALL_DIR/_logs"
 
-APP_USER="${SUDO_USER:-$(whoami)}"
+# APP_USER ermitteln: Bei einem Update MUSS der bereits konfigurierte Service-User verwendet werden.
+# SUDO_USER ist dafuer nicht zuverlaessig - beim Update-Weg ueber die /setup-Seite startet
+# UpdateService.cs das Skript per "sudo systemd-run ... stocktv-run-update.sh", und systemd-run
+# erzeugt eine neue transiente Unit OHNE die SUDO_USER-Variable der aufrufenden Shell. APP_USER
+# faellt dort auf "$(whoami)" zurueck, also root (die Unit laeuft als root) - "chown -R root:root"
+# sperrt den tatsaechlich als $APP_USER laufenden Dienst danach vom Schreiben auf _config/_logs aus
+# (genau das hat stocktv.service nach einem Update ueber /setup zum Absturz gebracht). Deshalb hier
+# bevorzugt aus der bestehenden systemd-Unit lesen (die "User="-Zeile bleibt bei einem Update
+# unveraendert, siehe FIRST_INSTALL-Block weiter unten); nur beim allerersten Install (keine
+# bestehende Unit vorhanden) gilt weiterhin der bisherige SUDO_USER/whoami-Fallback.
+EXISTING_SERVICE_USER=""
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null)
+fi
+APP_USER="${EXISTING_SERVICE_USER:-${SUDO_USER:-$(whoami)}}"
 $SUDO chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
 
 # --- Update-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR) ---
