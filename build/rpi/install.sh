@@ -140,7 +140,10 @@ $SUDO mkdir -p "$INSTALL_DIR/_config" "$INSTALL_DIR/_logs"
 # bestehende Unit vorhanden) gilt weiterhin der bisherige SUDO_USER/whoami-Fallback.
 EXISTING_SERVICE_USER=""
 if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
-    EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null)
+    # tr -d '\r': aeltere Service-Dateien wurden teils mit CRLF-Zeilenenden geschrieben
+    # (PowerShell-Here-String in publish-rpi.ps1) - ohne das Stripping haengt ein \r am
+    # extrahierten Usernamen, was "chown -R pi<CR>:pi<CR>" mit "invalid user" abbrechen liess.
+    EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null | tr -d '\r')
 fi
 APP_USER="${EXISTING_SERVICE_USER:-${SUDO_USER:-$(whoami)}}"
 $SUDO chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
