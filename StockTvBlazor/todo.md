@@ -8,6 +8,8 @@
 - NetMQ SetImage Befehl implementieren
 - NetMQ GoToImage Befehl implementieren
 - NetMQ ClearImage Befehl implementieren
+- Mannschaft mit Anspiel soll einen farbigen Rahmen bekommen, um Sichtbarkeit zu verbessern
+- Erweiterung der setup page. Ein Update kann aktuell über das Internet gemacht werden, zusätzlich soll es die Möglichkeit geben, eine Version manuell über den Browser hochzuladen und zu installieren.
 - Neuer Spielmodus "Special1" (Kopie von BestOf, Quote 6/9/12=Aus, keine Netzwerkübertragung) — Plan siehe [Special1-Modus-Plan.md](Special1-Modus-Plan.md)
 - [x] Training-Modus: keine Daten per Publisher übertragen (`MatchService.ProcessKeyAsync` published `GetResult` jetzt nur noch, wenn `CurrentModus != Training`; die `GetResult`-Abfrage per NetMQ REQ/REP bleibt bewusst unverändert, da das eine explizite Anfrage des zentralen Systems ist, kein automatischer Broadcast)
 - `UseHttpsRedirection()`/`UseHsts()` aus `Program.cs` entfernen — App bedient nie HTTPS (nur Port 8080 HTTP), erzeugt bei jedem Start nur die sinnlose Warnung "Failed to determine the https port for redirect"
