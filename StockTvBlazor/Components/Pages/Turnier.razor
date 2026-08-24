@@ -4,7 +4,7 @@
 <PageTitle>Turnier</PageTitle>
 
 <div class="page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
-	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
+	<div class="scoreboard-shell @MirrorClass" style="@ViewModel.GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
 			<div class="teamname teamname-left"><AutoFitText Text="@ViewModel.LeftTeamName" Min="8" Vertical="true" /></div>

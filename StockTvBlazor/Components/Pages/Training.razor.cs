@@ -16,6 +16,12 @@ public partial class Training : IDisposable
 	[SupplyParameterFromQuery(Name = "demo")]
 	private bool IsDemo { get; set; }
 
+	// Zweite Anzeige (gegenüberliegende Bahnseite): Spalten gespiegelt, reine Anzeige ohne Eingabe
+	[SupplyParameterFromQuery(Name = "mirror")]
+	private bool IsMirrored { get; set; }
+
+	private string MirrorClass => IsMirrored ? "mirrored" : "";
+
 	private ElementReference inputRef;
 	
 	private bool _disposed = false;
@@ -42,6 +48,10 @@ public partial class Training : IDisposable
 	private void HandleNavigationRequested(string url)
 	{
 		if (_disposed) return;
+
+		// Im Spiegel-Fenster steuert Display2 den iframe - hier nicht selbst navigieren
+		if (IsMirrored) return;
+
 		InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 
@@ -54,7 +64,7 @@ public partial class Training : IDisposable
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (_disposed) return;
-		if (firstRender && !IsDemo)
+		if (firstRender && !IsDemo && !IsMirrored)
 		{
 			try
 			{
@@ -68,6 +78,8 @@ public partial class Training : IDisposable
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
+		if (IsMirrored) return;
+
 		await _matchService.ProcessKeyAsync(e.Key);
 	}
 }

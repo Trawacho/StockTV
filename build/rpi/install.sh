@@ -303,6 +303,7 @@ xset s noblank
 openbox &
 
 rm -f ~/.config/chromium/Singleton*
+rm -f ~/.config/chromium-mirror/Singleton*
 
 for i in $(seq 1 30); do
     curl -s http://localhost:8080 >/dev/null 2>&1 && break
@@ -311,18 +312,55 @@ done
 
 CHROMIUM=$(command -v chromium 2>/dev/null || command -v chromium-browser 2>/dev/null)
 
-exec "$CHROMIUM" \
+COMMON_ARGS=(
+    --noerrdialogs
+    --disable-session-crashed-bubble
+    --disable-infobars
+    --disable-translate
+    --no-first-run
+    --disable-features=TranslateUI
+    --check-for-update-interval=31536000
+)
+
+# Zweite Anzeige (gegenueberliegende Bahnseite): zweiten HDMI-Ausgang suchen
+# und rechts neben den ersten legen. Ist nur ein Bildschirm angeschlossen,
+# bleibt es beim Hauptfenster.
+OUTPUTS=($(xrandr --query | awk '/ connected/ {print $1}'))
+
+if [ "${#OUTPUTS[@]}" -ge 2 ]; then
+    xrandr --output "${OUTPUTS[0]}" --auto --primary \
+           --output "${OUTPUTS[1]}" --auto --right-of "${OUTPUTS[0]}"
+    sleep 1
+
+    # Geometrie des zweiten Ausgangs: BREITExHOEHE+X+Y
+    GEO=$(xrandr --query | grep "^${OUTPUTS[1]} connected" \
+          | grep -o '[0-9]\+x[0-9]\++[0-9]\++[0-9]\+' | head -1)
+
+    if [ -n "$GEO" ]; then
+        M_W=${GEO%%x*}
+        M_REST=${GEO#*x}
+        M_H=${M_REST%%+*}
+        M_POS=${M_REST#*+}
+        M_X=${M_POS%%+*}
+        M_Y=${M_POS#*+}
+
+        # Spiegel-Fenster zuerst starten, damit das danach gestartete
+        # Hauptfenster den Tastatur-Fokus behaelt (Ziffernblock-Eingabe).
+        "$CHROMIUM" "${COMMON_ARGS[@]}" \
+            --user-data-dir="$HOME/.config/chromium-mirror" \
+            --window-position=${M_X},${M_Y} \
+            --window-size=${M_W},${M_H} \
+            --start-fullscreen \
+            --app=http://localhost:8080/display2 &
+        sleep 3
+    fi
+fi
+
+exec "$CHROMIUM" "${COMMON_ARGS[@]}" \
     --kiosk \
-    --noerrdialogs \
-    --disable-session-crashed-bubble \
-    --disable-infobars \
-    --disable-translate \
-    --no-first-run \
-    --disable-features=TranslateUI \
-    --check-for-update-interval=31536000 \
+    --window-position=0,0 \
     http://localhost:8080
 XINITEOF
-
     $SUDO chmod +x "$APP_HOME/.xinitrc"
     $SUDO chown "$APP_USER:$APP_USER" "$APP_HOME/.bash_profile" "$APP_HOME/.xinitrc"
 

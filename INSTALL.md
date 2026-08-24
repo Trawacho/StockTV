@@ -110,6 +110,13 @@ Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N]
 **Mit Kiosk (`j`):** Autologin auf tty1, Chromium startet nach dem Reboot automatisch im Vollbild.  
 **Ohne Kiosk (`N`):** Nur der Hintergrunddienst wird eingerichtet, Web-UI unter `http://<IP>:8080`.
 
+**Zwei Bildschirme (Anzeige für beide Bahnseiten):** Sind beide HDMI-Ausgänge belegt, richtet der
+Kiosk sie automatisch nebeneinander ein und startet auf dem zweiten Bildschirm ein zusätzliches
+Vollbild-Fenster mit `http://localhost:8080/display2`. Dort werden dieselben Daten
+**spiegelverkehrt** angezeigt (linke und rechte Spalte vertauscht), damit jede Bahnseite ihre
+Mannschaft auf der Seite sieht, auf der sie steht. Eingaben nimmt nur der Hauptbildschirm
+(bzw. das Tablet unter `/input`) entgegen; die Ziel-Modi werden nicht gespiegelt.
+
 Das Script:
 - lädt automatisch die neueste Version von GitHub herunter
 - installiert die App unter `/opt/stocktv/`
@@ -275,6 +282,21 @@ notwendig sein soll. Unterstützte Browser (in dieser Reihenfolge gesucht): Micr
 - `C:\StockTV\kiosk-profile\` — Browser-Profil mit deaktivierten Übersetzungs- und Benachrichtigungs-Dialogen
 - Windows Scheduled Task `StockTV Kiosk` — führt das Skript bei Anmeldung jedes Benutzers aus
 - Sentinel-Datei `C:\StockTV\.kiosk` — merkt sich, dass Kiosk aktiv ist; bei Updates wird er automatisch neu eingerichtet
+- `C:\StockTV\kiosk-profile-mirror\` — zweites Browser-Profil, nur wenn ein zweiter Bildschirm erkannt wird
+
+**Zwei Bildschirme (Anzeige für beide Bahnseiten):**
+
+Sind zwei Bildschirme angeschlossen und Windows steht auf **„Erweitern"** (Win+P → Erweitern),
+öffnet `start-kiosk.ps1` automatisch ein zweites Vollbild-Fenster auf dem zweiten Bildschirm mit
+der Adresse `http://localhost:8080/display2`. Dort werden dieselben Daten **spiegelverkehrt**
+angezeigt (linke und rechte Spalte vertauscht), damit jede Bahnseite ihre Mannschaft auf der
+Seite sieht, auf der sie steht. Farben und Teamnamen bleiben dabei bei ihrer Mannschaft.
+
+- Bedient wird ausschließlich über den **Hauptbildschirm** (Ziffernblock) bzw. das Tablet unter
+  `/input` — das Spiegel-Fenster nimmt keine Eingaben entgegen.
+- Steht Windows auf „Duplizieren", meldet es nur einen Bildschirm und es bleibt beim Hauptfenster.
+- Die Ziel-Modi werden nicht gespiegelt; dort zeigt der zweite Bildschirm die normale Ansicht.
+- Zum Testen ohne Kiosk genügt ein zweites Browserfenster auf `http://localhost:8080/display2`.
 
 **Kiosk nachträglich aktivieren:**
 

@@ -87,3 +87,40 @@
     grid-template-columns: 47% 6% 47%;
     align-items: stretch;
 }
+
+/* ===================================================
+   SPIEGELUNG - zweite Anzeige (/display2 -> ?mirror=true)
+   Dreht ausschließlich die Spalten-Reihenfolge um
+   (direction: rtl auf den Grids), Text und Ziffern
+   bleiben normal lesbar. Farbe und Teamname wandern
+   dabei mit ihrer Mannschaft mit.
+=================================================== */
+.scoreboard-shell.mirrored {
+    direction: rtl; /* Teamname-Spalten tauschen */
+}
+
+.mirrored .scoreboard-center {
+    direction: ltr;
+}
+
+.mirrored .mid-grid-3,
+.mirrored .score-bottom-grid,
+.mirrored .bestof-mid-grid {
+    direction: rtl; /* Punkte-Spalten tauschen */
+}
+
+/* Inhalte selbst nicht spiegeln */
+.mirrored .score-top-row,
+.mirrored .score-cell,
+.mirrored .teamname {
+    direction: ltr;
+}
+
+/* Vertikale Teamnamen: Leserichtung der beiden Seiten tauschen */
+.mirrored .teamname-left {
+    transform: none;
+}
+
+.mirrored .teamname-right {
+    transform: rotate(180deg);
+}

@@ -119,6 +119,10 @@ Das Skript fragt beim ersten Aufruf ob Autologin + Chromium eingerichtet werden 
 Bei Bestätigung werden installiert/konfiguriert: `xserver-xorg`, `xinit`, `openbox`,
 `chromium`, autologin-Drop-in für `getty@tty1`, `~/.bash_profile`, `~/.xinitrc`.
 
+Sind beide HDMI-Ausgänge belegt, ordnet `.xinitrc` sie per `xrandr` nebeneinander an und startet
+auf dem zweiten Bildschirm ein zweites Chromium-Fenster mit `http://localhost:8080/display2` —
+die spiegelverkehrte Anzeige für die gegenüberliegende Bahnseite (nur Anzeige, keine Eingabe).
+
 Der gewählte Zustand wird in `/opt/stocktv/.kiosk` gespeichert:
 - **Kiosk aktiv:** beim Update automatisch geprüft und ggf. korrigiert, keine Rückfrage
 - **Kiosk inaktiv:** beim Update erneut gefragt (Nachholung möglich)

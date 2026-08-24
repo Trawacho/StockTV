@@ -132,6 +132,10 @@ jede Browserleiste (`--kiosk`). Ideal für TV-Displays, auf denen kein manueller
 - Autologin in der Registry — der Kiosk-Benutzer meldet sich nach jedem Reboot automatisch an
 - `C:\StockTV\start-kiosk.ps1` — wartet bis der StockTV-Dienst erreichbar ist, startet dann den Browser
 - `C:\StockTV\kiosk-profile\` — Browser-Profil mit deaktivierten Übersetzungs- und Benachrichtigungs-Dialogen
+- `C:\StockTV\kiosk-profile-mirror\` — zweites Browser-Profil; wird nur angelegt, wenn Windows einen
+  zweiten Bildschirm meldet. Dort öffnet sich zusätzlich `http://localhost:8080/display2`, die
+  spiegelverkehrte Anzeige für die gegenüberliegende Bahnseite (nur Anzeige, keine Eingabe).
+  Voraussetzung: Anzeigemodus „Erweitern" statt „Duplizieren".
 - Windows Scheduled Task `StockTV Kiosk` — führt das Skript bei Anmeldung jedes Benutzers aus (Gruppe `Users`)
 - Sentinel-Datei `C:\StockTV\.kiosk` — merkt sich, dass Kiosk aktiv ist; bei Updates wird er automatisch neu eingerichtet
 

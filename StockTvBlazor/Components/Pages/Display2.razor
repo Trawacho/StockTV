@@ -1,0 +1,15 @@
+@page "/display2"
+@rendermode InteractiveServer
+
+<PageTitle>Anzeige 2</PageTitle>
+
+@* Zweite Anzeige (gegenüberliegende Bahnseite): zeigt den aktiven Modus gespiegelt.
+   Reine Anzeige - Eingaben laufen ausschließlich über das Hauptfenster. *@
+<div class="mirror-container">
+	@if (!string.IsNullOrEmpty(_internalUrl))
+	{
+		@* pointer-events: none am iframe, zusätzlich der Blocker darüber *@
+		<iframe src="@_internalUrl" title="mirror content" style="pointer-events: none;"></iframe>
+		<div class="interaction-blocker"></div>
+	}
+</div>

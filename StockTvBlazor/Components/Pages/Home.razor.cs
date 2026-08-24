@@ -115,12 +115,12 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 			string pageName = SettingsService.GetModusUrl(settings.Game.CurrentModus);
 			string[] pagesToOpen = [pageName];
 
-			if (Debugger.IsAttached)
-			{
-				pagesToOpen = new[] { "LayoutTest", "training", "turnier", "bestof", "input", "settings", "themes" };
-				var sampleNames = System.Text.Encoding.UTF8.GetBytes("1:ESF Hankofen:SV Pilgramsberg;2:EC Neubänrdorf Regen:EC Moitzerlitz Regen;");
-				MatchService?.SetTeamNames(sampleNames);
-			}
+			//if (Debugger.IsAttached)
+			//{
+			//	pagesToOpen = new[] { "LayoutTest", "training", "turnier", "bestof", "input", "settings", "themes" };
+			//	var sampleNames = System.Text.Encoding.UTF8.GetBytes("1:ESF Hankofen:SV Pilgramsberg;2:EC Neubänrdorf Regen:EC Moitzerlitz Regen;");
+			//	MatchService?.SetTeamNames(sampleNames);
+			//}
 
 			if (pagesToOpen.Length == 1)
 			{

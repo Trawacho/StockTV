@@ -86,6 +86,7 @@ StockTV/
 │   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
 │   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1
 │   ├── linux/                  # Linux x64: publish-linux.ps1, install.sh
+│   ├── dev/                    # Entwickler-Helfer: test-dualdisplay.ps1/.bat
 │   ├── Dockerfile              # Multi-stage Docker Build (linux/amd64)
 │   └── docker-compose.yml
 └── .github/workflows/
@@ -134,10 +135,28 @@ identisch zu Ziel — überall dort, wo `Modus.Ziel` geprüft wird, wird `Modus.
 | `/bestof`   | Anzeige BestOf-Modus |
 | `/ziel`     | Anzeige Ziel-Modus |
 | `/input`    | Keypad-Seite (Tablet), zeigt aktiven Modus als iframe |
+| `/display2` | Zweite Anzeige (gegenüberliegende Bahnseite), zeigt aktiven Modus gespiegelt als iframe |
 | `/settings` | Einstellungsseite (nur über Geheimtaste erreichbar) |
 | `/themes`   | Theme-Verwaltung (Custom Themes erstellen/bearbeiten) |
 
 **Home im Debug-Modus**: Öffnet automatisch mehrere Tabs (LayoutTest, training, turnier, bestof, input, settings, themes).
+
+### Zweite Anzeige (Spiegelung)
+
+An der Bahnmitte hängen zwei Bildschirme, je einer pro Bahnseite. Fenster 1 zeigt die normale
+Anzeige, Fenster 2 (`/display2`) dieselben Daten mit vertauschten Spalten — dadurch sieht jede
+Seite ihre Mannschaft dort, wo sie steht.
+
+- `/display2` ist ein reiner Wrapper (gleiches Muster wie `/input`): er bettet den aktiven Modus
+  als iframe mit `?mirror=true` ein und navigiert selbst nie — die Kiosk-URL bleibt dauerhaft `/display2`.
+- `Training`, `Turnier` und `BestOf` werten `?mirror=true` aus: die Shell bekommt die CSS-Klasse
+  `mirrored`; Tastatureingabe, Fokus und Navigation sind in diesem Fenster deaktiviert — bedient
+  wird ausschließlich über Fenster 1 (bzw. `/input`).
+- Die Spiegelung ist **reines CSS** (`direction: rtl` auf den Grids, `ltr` auf den Zellen, in
+  `StockTV_Team_StyleSheet.css`). Kein `transform: scaleX(-1)` — Ziffern und Text bleiben lesbar.
+  Farbe und Teamname wandern mit ihrer Mannschaft mit.
+- Die **Ziel-Modi werden nicht gespiegelt**; `/display2` zeigt dort `/ziel` unverändert.
+- Die Einstellungsseite wird auf Fenster 2 ebenfalls unverändert (ungespiegelt) angezeigt.
 
 ---
 
@@ -336,6 +355,24 @@ dotnet watch run --project StockTvBlazor/StockTvBlazor.csproj
 ```
 
 App läuft dann auf `https://localhost:5001` oder konfiguriert via `appsettings.Development.json`.
+
+**Wichtig:** NetMQ bindet die Ports 4747/4748 im Konstruktor — es kann immer nur **eine** Instanz
+laufen. Eine parallel laufende `StockTvBlazor.exe` (z.B. eine installierte) muss vorher beendet werden,
+sonst bricht der Start mit `AddressAlreadyInUseException` ab.
+
+### Zwei Anzeigen lokal testen
+
+```powershell
+build\dev\test-dualdisplay.ps1            # Haupt- und Spiegelfenster nebeneinander
+build\dev\test-dualdisplay.ps1 -Demo      # mit Demo-Daten (Teamnamen, Punkte)
+build\dev\test-dualdisplay.ps1 -SecondScreen
+```
+
+Das Skript beendet auf Rückfrage eine laufende Instanz, baut, startet die App und öffnet zwei
+Browserfenster (Haupt- und Spiegelfenster mit getrennten Profilen). Das Hauptfenster wird zuletzt
+geöffnet und behält damit den Tastatur-Fokus. ENTER im Konsolenfenster beendet alles wieder.
+
+Manuell/in Visual Studio genügen zwei Browserfenster auf `…/turnier` und `…/display2`.
 
 ### Debugging im Browser
 
