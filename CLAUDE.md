@@ -71,7 +71,7 @@ StockTV/
 │   ├── Components/
 │   │   ├── Pages/
 │   │   │   ├── SettingPages/   # Settings, CustomThemePage, ThemePreview, ColorField
-│   │   │   ├── HomeCards/      # CardDisplay1–4 (rotieren auf der Home-Seite)
+│   │   │   ├── HomeCards/      # CardInfo/CardSpielmodi/CardTastenhilfe (rotieren auf Home)
 │   │   │   └── ...             # Training, Turnier, BestOf, Ziel, Input, Home
 │   │   ├── Controls/           # PunkteEingabe, PunkteAnzeige, PunkteeingabePassiv, AutoFitText
 │   │   ├── ViewModels/         # ViewModels pro Modus (erben von BaseViewModel)

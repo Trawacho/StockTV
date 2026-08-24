@@ -23,18 +23,17 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 
 	protected List<Type> CardComponents = new()
 	{
-		typeof(HomeCards.CardDisplay1),
-		typeof(HomeCards.CardDisplay2),
-		typeof(HomeCards.CardDisplay3),
-		typeof(HomeCards.CardDisplay4)
+		typeof(HomeCards.CardInfo),
+		typeof(HomeCards.CardSpielmodi),
+		typeof(HomeCards.CardTastenhilfe)
 	};
 
 	protected override Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
-			if (Debugger.IsAttached)
-				countdown = 3;
+			//if (Debugger.IsAttached)
+			//	countdown = 3;
 
 			_countdownTask = RunCountdownAsync(_cts.Token);
 			_cardTask = RunCardRotationAsync(_cts.Token);

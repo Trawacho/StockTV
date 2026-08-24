@@ -7,20 +7,33 @@
 
 <ErrorBoundary>
     <ChildContent>
+    <div class="home-page">
         <div class="home-container">
             <div class="hero">
                 <h1>StockTV</h1>
                 <p>Die Anzeige für den Stocksport</p>
             </div>
 
-            <div class="grid">
+            @* Buehne fuer die rotierenden Karten: feste Hoehe, damit das Layout beim
+               Wechsel nicht springt. @key sorgt dafuer, dass Blazor den Slot neu
+               aufbaut und die Einblend-Animation erneut laeuft. *@
+            <div class="card-stage">
                 @if (CardComponents.Count > currentCardIndex)
                 {
-                    <DynamicComponent Type="CardComponents[currentCardIndex]" />
+                    <div class="card-slot" @key="currentCardIndex">
+                        <DynamicComponent Type="CardComponents[currentCardIndex]" />
+                    </div>
                 }
                 else
                 {
-                    <p style="color:red">Card Fehler</p>
+                    <p class="card-error">Card Fehler</p>
+                }
+            </div>
+
+            <div class="card-dots">
+                @for (var i = 0; i < CardComponents.Count; i++)
+                {
+                    <span class="dot @(i == currentCardIndex ? "active" : "")"></span>
                 }
             </div>
 
@@ -35,6 +48,7 @@
                 <div class="progress" style="width:@progress%"></div>
             </div>
         </div>
+    </div>
 
     </ChildContent>
 
