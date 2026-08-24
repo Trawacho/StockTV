@@ -4,7 +4,7 @@ using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public abstract class BaseViewModel : IDisposable
+public abstract class BaseViewModel : IPageViewModel
 {
 	protected readonly SettingsService _settingsService;
 

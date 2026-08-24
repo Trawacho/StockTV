@@ -4,7 +4,7 @@ using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Services;
 
-public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService)
+public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 	private readonly ILogger<MatchService> _logger = logger;

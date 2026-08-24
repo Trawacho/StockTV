@@ -3,7 +3,7 @@ using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Services;
 
-public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService)
+public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 

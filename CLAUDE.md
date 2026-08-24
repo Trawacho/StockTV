@@ -330,7 +330,9 @@ namespace StockTvBlazor.Components.Controls;         // Controls/
 namespace StockTvBlazor.Components.Layout;           // Layout/
 ```
 
-**Ausnahme:** `Home.razor.cs` verwendet `HomeBase : ComponentBase` (Vererbung statt partial), weil die Home-Seite keinen `@rendermode` hat und eine eigene Basisklasse nutzt.
+**Ausnahmen:**
+- `Home.razor.cs` verwendet `HomeBase : ComponentBase` (Vererbung statt partial), weil die Home-Seite keinen `@rendermode` hat und eine eigene Basisklasse nutzt.
+- `BestOf`, `Training`, `Turnier` und `Ziel` erben zusätzlich als `partial class` von der gemeinsamen `MirrorableGamePageBase<TViewModel>` (`Components/Pages/MirrorableGamePageBase.cs`). Diese kapselt das für alle vier Seiten identische Demo-/Mirror-Query-Parameter-, Fokus-, Navigations- und Tasten-Handling (Spiegel-Fenster `/display2`, siehe dort); die `.razor`-Datei braucht dafür `@inherits MirrorableGamePageBase<KonkretesViewModel>`. Voraussetzung: das jeweilige ViewModel implementiert `IPageViewModel`, der jeweilige Service (`MatchService`/`ZielService`) implementiert `IGameInputService`.
 
 Event-Handler in `Dispose()` immer abmelden.
 
