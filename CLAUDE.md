@@ -408,6 +408,7 @@ NetMQ läuft auf eigenem `Poller`-Thread. Bei State-Änderungen von außen (z.B.
 | WebSocket trennt häufig | Circuit timeout oder Netzwerk-Problem | Logs in `_logs/` prüfen, ggf. `Logging.LogLevel` auf `Debug` setzen |
 | UI aktualisiert sich nicht nach NetMQ-Befehl | State-Änderung nicht über `_actionChannel` | Callback-Code prüfen, muss `_actionChannel.Writer.WriteAsync()` nutzen |
 | Theme-Farben ändern sich nicht | `OnSettingsChanged` Event nicht abonniert | ViewModel muss in `Dispose()` unsubscribe aufrufen |
+| Seite nach Docker-Deploy komplett unstyled ("An unhandled error has occurred") | Scoped-CSS-Hash-Mismatch: lokale `bin`/`obj` waren im Docker-Build-Context und `dotnet publish` im Container hat das CSS-Bundle (`StockTvBlazor.styles.css`) fälschlich als aktuell angesehen | `.dockerignore` im Repo-Root muss `**/bin/` und `**/obj/` ausschließen (siehe `.dockerignore`); vor `remotebuild_std.ps1` sicherstellen, dass sie greift |
 
 ---
 

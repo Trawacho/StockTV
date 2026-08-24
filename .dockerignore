@@ -1,0 +1,25 @@
+# Build-Artefakte: duerfen nicht in den Docker-Build-Context. Sonst kann
+# dotnet publish im Container lokale (z.B. unter Windows erzeugte) obj/bin
+# faelschlich als aktuell ansehen und Ausgaben wie das gebuendelte Scoped-CSS
+# (StockTvBlazor.styles.css) nicht neu erzeugen - Folge: Hash-Mismatch
+# zwischen gerendertem Markup und CSS, Seiten erscheinen unstyled.
+**/bin/
+**/obj/
+
+# IDE / lokale Tooling-Verzeichnisse
+.vs/
+.vscode/
+
+# Git
+.git/
+.github/
+
+# Laufzeit-Daten (Volumes), nicht Teil des Build-Contexts
+_config/
+_logs/
+**/_config/
+**/_logs/
+
+# Sonstiges
+*.user
+*.suo
