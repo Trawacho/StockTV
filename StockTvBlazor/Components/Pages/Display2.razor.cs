@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
-using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.Pages;
 
@@ -75,20 +74,16 @@ public partial class Display2 : IDisposable
 		// (ungespiegelt - eine gespiegelte Einstellungsliste wäre unlesbar).
 		if (_settingsService.SettingsPageActive)
 		{
-			_internalUrl = "/settings";
+			_internalUrl = "/settings?mirror=true";
 			return;
 		}
 
 		var modus = _settingsService.CurrentSettings.Game.CurrentModus;
 		var url = SettingsService.GetModusUrl(modus);
 
-		// Die Ziel-Modi bleiben unverändert (kein Spiegeln)
-		if (modus is GameSettings.Modus.Ziel or GameSettings.Modus.Ziel2)
-		{
-			_internalUrl = url;
-			return;
-		}
-
+		// mirror=true heißt für die eingebettete Seite: reine Anzeige (keine Eingabe,
+		// kein Fokus, keine Eigennavigation). Die Ziel-Modi werden dabei bewusst nicht
+		// gespiegelt - Ziel.razor hat keine mirrored-CSS-Klasse.
 		_internalUrl = IsDemo ? $"{url}?mirror=true&demo=true" : $"{url}?mirror=true";
 	}
 }

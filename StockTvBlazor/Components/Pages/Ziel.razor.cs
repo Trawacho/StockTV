@@ -16,6 +16,11 @@ public partial class Ziel : IDisposable
 	[SupplyParameterFromQuery(Name = "demo")]
 	private bool IsDemo { get; set; }
 
+	// Im Spiegel-Fenster (/display2) reine Anzeige: keine Eingabe, kein Fokus,
+	// keine Eigennavigation. Das Ziel-Layout selbst wird bewusst nicht gespiegelt.
+	[SupplyParameterFromQuery(Name = "mirror")]
+	private bool IsMirrored { get; set; }
+
 	private ElementReference inputRef;
 	
 	private bool _disposed = false;
@@ -43,6 +48,8 @@ public partial class Ziel : IDisposable
 	private void HandleNavigationRequested(string url)
 	{
 		if (_disposed) return;
+		if (IsMirrored) return;
+
 		InvokeAsync(() => _navigationManager.NavigateTo(url));
 	}
 
@@ -55,7 +62,7 @@ public partial class Ziel : IDisposable
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (_disposed) return;
-		if (firstRender && !IsDemo)
+		if (firstRender && !IsDemo && !IsMirrored)
 		{
 			try
 			{
@@ -69,6 +76,8 @@ public partial class Ziel : IDisposable
 
 	private async Task HandleGlobalKeyDown(KeyboardEventArgs e)
 	{
+		if (IsMirrored) return;
+
 		await _zielService.ProcessKeyAsync(e.Key);
 	}
 }

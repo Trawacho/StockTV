@@ -147,16 +147,21 @@ An der Bahnmitte hängen zwei Bildschirme, je einer pro Bahnseite. Fenster 1 zei
 Anzeige, Fenster 2 (`/display2`) dieselben Daten mit vertauschten Spalten — dadurch sieht jede
 Seite ihre Mannschaft dort, wo sie steht.
 
-- `/display2` ist ein reiner Wrapper (gleiches Muster wie `/input`): er bettet den aktiven Modus
+- `/display2` ist ein reiner Wrapper (gleiches Muster wie `/input`): er bettet die aktive Seite
   als iframe mit `?mirror=true` ein und navigiert selbst nie — die Kiosk-URL bleibt dauerhaft `/display2`.
-- `Training`, `Turnier` und `BestOf` werten `?mirror=true` aus: die Shell bekommt die CSS-Klasse
-  `mirrored`; Tastatureingabe, Fokus und Navigation sind in diesem Fenster deaktiviert — bedient
-  wird ausschließlich über Fenster 1 (bzw. `/input`).
-- Die Spiegelung ist **reines CSS** (`direction: rtl` auf den Grids, `ltr` auf den Zellen, in
-  `StockTV_Team_StyleSheet.css`). Kein `transform: scaleX(-1)` — Ziffern und Text bleiben lesbar.
+- **`?mirror=true` heißt: reine Anzeige.** Jede eingebettete Seite (`Training`, `Turnier`, `BestOf`,
+  `Ziel`, `Settings`) wertet den Parameter aus und deaktiviert damit Tastatureingabe, Autofokus und
+  **Eigennavigation**. Letzteres ist zwingend: sonst navigiert die Seite im iframe beim Moduswechsel
+  selbst, während `Display2` gleichzeitig die iframe-`src` austauscht — zwei konkurrierende
+  Navigationen im selben Dokument, die als JS-Exception in `navigateTo` enden.
+- Bedient wird ausschließlich über Fenster 1 bzw. `/input`. Der iframe hat zusätzlich
+  `pointer-events: none`, `tabindex="-1"` und ein Blocker-Overlay.
+- `Training`, `Turnier` und `BestOf` setzen bei `mirror` zusätzlich die CSS-Klasse `mirrored` auf
+  die Shell. Die Spiegelung ist **reines CSS** (`direction: rtl` auf den Grids, `ltr` auf den Zellen,
+  in `StockTV_Team_StyleSheet.css`). Kein `transform: scaleX(-1)` — Ziffern und Text bleiben lesbar.
   Farbe und Teamname wandern mit ihrer Mannschaft mit.
-- Die **Ziel-Modi werden nicht gespiegelt**; `/display2` zeigt dort `/ziel` unverändert.
-- Die Einstellungsseite wird auf Fenster 2 ebenfalls unverändert (ungespiegelt) angezeigt.
+- **Ziel/Ziel2 und die Einstellungsseite werden nicht gespiegelt** (keine `mirrored`-Klasse), sind
+  über `mirror` aber ebenfalls reine Anzeige.
 
 ---
 
