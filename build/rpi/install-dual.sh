@@ -1,14 +1,18 @@
 #!/bin/bash
 # ============================================
 #  StockTV - Installation / Update Script
-#  Raspberry Pi (arm64)
+#  Raspberry Pi (arm64) - ZWEI BILDSCHIRME
 # ============================================
 #
 #  Aufruf:
-#    curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
+#    curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
 #
 #  Oder nach manuellem Download:
-#    chmod +x install.sh && ./install.sh
+#    chmod +x install-dual.sh && ./install-dual.sh
+#
+#  Unterschied zu install.sh: der Kiosk verteilt sich auf beide HDMI-Ausgaenge,
+#  der zweite zeigt die gespiegelte Anzeige (/display2) fuer die gegenueber-
+#  liegende Bahnseite. Sonst identisch.
 
 set -e
 
@@ -16,8 +20,8 @@ REPO="Trawacho/StockTV"
 ASSET_NAME="stocktv-rpi.zip"
 INSTALL_DIR="/opt/stocktv"
 KIOSK_SENTINEL="$INSTALL_DIR/.kiosk"
-# Merkt sich zusaetzlich, dass der Kiosk auf ZWEI Bildschirme eingerichtet wurde.
-# install.sh prueft diesen Sentinel und stellt nicht stillschweigend auf einen um.
+# Zweiter Sentinel: markiert die Zwei-Bildschirm-Variante, damit ein spaeteres
+# Update mit install.sh nicht stillschweigend auf einen Bildschirm zurueckstellt.
 KIOSK_DUAL_SENTINEL="$INSTALL_DIR/.kiosk-dual"
 SERVICE_NAME="stocktv"
 
@@ -100,44 +104,26 @@ if [ ! -d "$INSTALL_DIR" ]; then
     FIRST_INSTALL=true
 fi
 
-# --- Zwei-Bildschirm-Installation erkennen ---
-# Dieses Skript wuerde die .xinitrc auf einen Bildschirm zurueckschreiben. War das
-# Geraet mit install-dual.sh eingerichtet, wird deshalb nachgefragt statt einfach
-# ueberschrieben.
-KEEP_DUAL_KIOSK=false
-if [ -f "$KIOSK_DUAL_SENTINEL" ]; then
-    echo ""
-    echo -e "${YELLOW}Dieses Geraet ist fuer ZWEI Bildschirme eingerichtet (install-dual.sh).${NC}"
-    DUAL_ANSWER=""
-    read -r -p "Auf EINEN Bildschirm umstellen? [j/N] " DUAL_ANSWER || true
-    if [[ "$DUAL_ANSWER" =~ ^[jJyY]$ ]]; then
-        $SUDO rm -f "$KIOSK_DUAL_SENTINEL"
-        echo -e "${YELLOW}Kiosk wird auf einen Bildschirm zurueckgestellt.${NC}"
-    else
-        KEEP_DUAL_KIOSK=true
-        echo -e "${GREEN}Kiosk-Konfiguration bleibt unveraendert (zwei Bildschirme).${NC}"
-    fi
-fi
-
 # --- Kiosk-Modus: Entscheidung treffen ---
 # Sentinel vorhanden → Kiosk war beim First-Install aktiviert → immer einrichten
 # Sentinel fehlt + First-Install → fragen
 # Sentinel fehlt + Update → fragen (Nachholung moeglich)
 SETUP_KIOSK=false
-if [ "$KEEP_DUAL_KIOSK" = true ]; then
-    # .xinitrc der Dual-Variante unangetastet lassen
-    SETUP_KIOSK=false
-elif [ -f "$KIOSK_SENTINEL" ]; then
+if [ -f "$KIOSK_SENTINEL" ]; then
     SETUP_KIOSK=true
     if [ "$FIRST_INSTALL" = false ]; then
-        echo -e "${YELLOW}Kiosk-Modus ist aktiviert — wird geprueft und ggf. korrigiert.${NC}"
+        if [ -f "$KIOSK_DUAL_SENTINEL" ]; then
+            echo -e "${YELLOW}Kiosk-Modus (zwei Bildschirme) ist aktiviert — wird geprueft und ggf. korrigiert.${NC}"
+        else
+            echo -e "${YELLOW}Kiosk-Modus ist aktiviert — wird auf ZWEI Bildschirme umgestellt.${NC}"
+        fi
     fi
 else
     echo ""
     # "|| true": beim Update ueber die /setup-Seite laeuft das Skript ohne Terminal,
     # "read" liefert dann EOF - ohne den Zusatz wuerde "set -e" das Update abbrechen.
     KIOSK_ANSWER=""
-    read -r -p "Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N] " KIOSK_ANSWER || true
+    read -r -p "Kiosk-Modus aktivieren (Autologin + Chromium, zwei Bildschirme)? [j/N] " KIOSK_ANSWER || true
     if [[ "$KIOSK_ANSWER" =~ ^[jJyY]$ ]]; then
         SETUP_KIOSK=true
     fi
@@ -191,7 +177,7 @@ UPDATE_SCRIPT_TMP=$(mktemp)
 cat > "$UPDATE_SCRIPT_TMP" <<'UPDATESCRIPTEOF'
 #!/bin/bash
 set -e
-curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
 UPDATESCRIPTEOF
 $SUDO install -m 0755 -o root -g root "$UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-update.sh
 rm -f "$UPDATE_SCRIPT_TMP"
@@ -297,7 +283,7 @@ if [ "$SETUP_KIOSK" = true ]; then
 
     # Pakete installieren (idempotent)
     $SUDO apt-get install -y --no-install-recommends \
-        xserver-xorg x11-xserver-utils xinit openbox chromium -qq
+        xserver-xorg x11-xserver-utils xinit openbox chromium wmctrl -qq
 
     # Autologin-Drop-in
     AUTOLOGIN_DIR="/etc/systemd/system/getty@tty1.service.d"
@@ -331,6 +317,7 @@ xset s noblank
 openbox &
 
 rm -f ~/.config/chromium/Singleton*
+rm -f ~/.config/chromium-mirror/Singleton*
 
 for i in $(seq 1 30); do
     curl -s http://localhost:8080 >/dev/null 2>&1 && break
@@ -339,24 +326,111 @@ done
 
 CHROMIUM=$(command -v chromium 2>/dev/null || command -v chromium-browser 2>/dev/null)
 
-exec "$CHROMIUM" \
-    --kiosk \
-    --noerrdialogs \
-    --disable-session-crashed-bubble \
-    --disable-infobars \
-    --disable-translate \
-    --no-first-run \
-    --disable-features=TranslateUI \
-    --check-for-update-interval=31536000 \
-    http://localhost:8080
-XINITEOF
+COMMON_ARGS=(
+    --noerrdialogs
+    --disable-session-crashed-bubble
+    --disable-infobars
+    --disable-translate
+    --no-first-run
+    --disable-features=TranslateUI
+    --check-for-update-interval=31536000
+)
 
+# Geometrie eines Ausgangs als "BREITE HOEHE X Y" ausgeben (leer, wenn inaktiv)
+output_geometry() {
+    xrandr --query \
+        | grep "^$1 connected" \
+        | grep -o '[0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
+        | head -1 \
+        | sed 's/[x+]/ /g'
+}
+
+# Fenster anhand seiner WM_CLASS exakt auf einen Ausgang legen. Chromium
+# platziert mit --window-position zwar meist schon richtig, bei zwei Ausgaengen
+# ist das aber nicht garantiert - deshalb hinterher korrigieren. Ohne wmctrl
+# bleibt es bei Chromiums eigener Platzierung.
+place_window() {
+    local class="$1" x="$2" y="$3" w="$4" h="$5" i
+
+    command -v wmctrl >/dev/null 2>&1 || return 0
+
+    for i in $(seq 1 40); do
+        wmctrl -lx 2>/dev/null | grep -qi "$class" && break
+        sleep 0.5
+    done
+    wmctrl -lx 2>/dev/null | grep -qi "$class" || return 0
+
+    wmctrl -x -r "$class" -b remove,fullscreen 2>/dev/null
+    wmctrl -x -r "$class" -e "0,$x,$y,$w,$h"   2>/dev/null
+    wmctrl -x -r "$class" -b add,fullscreen    2>/dev/null
+}
+
+# Zweite Anzeige (gegenueberliegende Bahnseite): beide HDMI-Ausgaenge nebeneinander
+# legen. Ist nur ein Bildschirm angeschlossen, bleibt es beim Hauptfenster.
+OUTPUTS=($(xrandr --query | awk '/ connected/ {print $1}'))
+MIRROR_ACTIVE=false
+
+if [ "${#OUTPUTS[@]}" -ge 2 ]; then
+    # --pos 0x0 setzt den ersten Ausgang ausdruecklich auf den Ursprung; ohne das
+    # kann eine alte Anordnung bestehen bleiben und das Hauptfenster daneben landen.
+    xrandr --output "${OUTPUTS[0]}" --auto --primary --pos 0x0 --rotate normal \
+           --output "${OUTPUTS[1]}" --auto --right-of "${OUTPUTS[0]}" --rotate normal
+    sleep 1
+
+    read -r M_W M_H M_X M_Y <<< "$(output_geometry "${OUTPUTS[1]}")"
+
+    if [ -n "$M_W" ]; then
+        MIRROR_ACTIVE=true
+
+        # Spiegel-Fenster zuerst starten, damit das Hauptfenster spaeter den
+        # Tastatur-Fokus bekommt (Ziffernblock-Eingabe).
+        "$CHROMIUM" "${COMMON_ARGS[@]}" \
+            --user-data-dir="$HOME/.config/chromium-mirror" \
+            --class=StockTV-Mirror \
+            --window-position=${M_X},${M_Y} \
+            --window-size=${M_W},${M_H} \
+            --kiosk \
+            http://localhost:8080/display2 &
+    fi
+fi
+
+read -r P_W P_H P_X P_Y <<< "$(output_geometry "${OUTPUTS[0]}")"
+P_X=${P_X:-0}
+P_Y=${P_Y:-0}
+
+"$CHROMIUM" "${COMMON_ARGS[@]}" \
+    --user-data-dir="$HOME/.config/chromium" \
+    --class=StockTV-Main \
+    --window-position=${P_X},${P_Y} \
+    --kiosk \
+    http://localhost:8080 &
+
+MAIN_PID=$!
+
+# Beide Fenster nachtraeglich exakt auf ihren Ausgang zwingen
+if [ "$MIRROR_ACTIVE" = true ]; then
+    place_window "StockTV-Mirror" "$M_X" "$M_Y" "$M_W" "$M_H"
+fi
+if [ -n "$P_W" ]; then
+    place_window "StockTV-Main" "$P_X" "$P_Y" "$P_W" "$P_H"
+fi
+
+# Fokus zum Schluss ausdruecklich auf das Bedienfenster - nur dort werden
+# Tastatureingaben verarbeitet.
+if command -v wmctrl >/dev/null 2>&1; then
+    wmctrl -x -a "StockTV-Main" 2>/dev/null
+fi
+
+wait "$MAIN_PID"
+XINITEOF
     $SUDO chmod +x "$APP_HOME/.xinitrc"
     $SUDO chown "$APP_USER:$APP_USER" "$APP_HOME/.bash_profile" "$APP_HOME/.xinitrc"
 
     # Sentinel anlegen
     $SUDO touch "$KIOSK_SENTINEL"
     $SUDO chown "$APP_USER:$APP_USER" "$KIOSK_SENTINEL"
+    $SUDO touch "$KIOSK_DUAL_SENTINEL"
+    $SUDO chown "$APP_USER:$APP_USER" "$KIOSK_DUAL_SENTINEL"
 
     $SUDO systemctl daemon-reload
 

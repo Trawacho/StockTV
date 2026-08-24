@@ -49,7 +49,9 @@ build\linux\publish-linux.ps1 -TargetHost 192.168.1.xx -Install
 
 Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
-**Wichtig:** [INSTALL.md](INSTALL.md) enthält die vollständige Endanwender-Installationsanleitung (Raspberry Pi + Windows), Inhalte sind dort bewusst ausformuliert statt nur verlinkt. Bei Änderungen an `build/rpi/install.sh` oder `build/windows/install-service.ps1` (Parameter, Ablauf) muss `INSTALL.md` entsprechend aktualisiert werden.
+**Wichtig:** [INSTALL.md](INSTALL.md) enthält die vollständige Endanwender-Installationsanleitung (Raspberry Pi + Windows), Inhalte sind dort bewusst ausformuliert statt nur verlinkt. Bei Änderungen an `build/rpi/install.sh`, `build/rpi/install-dual.sh` oder `build/windows/install-service.ps1` (Parameter, Ablauf) muss `INSTALL.md` entsprechend aktualisiert werden.
+
+**Zwei Bildschirme:** Pro Plattform gibt es eine Ein- und eine Zwei-Bildschirm-Variante des Kiosks — Pi: `install.sh` / `install-dual.sh`, Windows: `install-service.ps1` mit bzw. ohne `-DualDisplay` (kopiert `start-kiosk-dual.ps1` über `start-kiosk.ps1`). Die Zwei-Bildschirm-Einrichtung wird per Sentinel `.kiosk-dual` gemerkt, damit ein Update sie nicht stillschweigend entfernt.
 
 ---
 
@@ -83,8 +85,8 @@ StockTV/
 │   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
 ├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
-│   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
-│   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1
+│   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh, install-dual.sh
+│   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1, start-kiosk[-dual].ps1
 │   ├── linux/                  # Linux x64: publish-linux.ps1, install.sh
 │   ├── dev/                    # Entwickler-Helfer: test-dualdisplay.ps1/.bat
 │   ├── Dockerfile              # Multi-stage Docker Build (linux/amd64)

@@ -110,12 +110,28 @@ Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N]
 **Mit Kiosk (`j`):** Autologin auf tty1, Chromium startet nach dem Reboot automatisch im Vollbild.  
 **Ohne Kiosk (`N`):** Nur der Hintergrunddienst wird eingerichtet, Web-UI unter `http://<IP>:8080`.
 
-**Zwei Bildschirme (Anzeige für beide Bahnseiten):** Sind beide HDMI-Ausgänge belegt, richtet der
-Kiosk sie automatisch nebeneinander ein und startet auf dem zweiten Bildschirm ein zusätzliches
-Vollbild-Fenster mit `http://localhost:8080/display2`. Dort werden dieselben Daten
+**Zwei Bildschirme (Anzeige für beide Bahnseiten):** Dafür gibt es ein eigenes Script,
+`install-dual.sh` — sonst identisch zu `install.sh`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
+```
+
+Es ordnet beide HDMI-Ausgänge per `xrandr` nebeneinander an und startet auf dem zweiten Bildschirm
+ein zusätzliches Vollbild-Fenster mit `http://localhost:8080/display2`. Dort werden dieselben Daten
 **spiegelverkehrt** angezeigt (linke und rechte Spalte vertauscht), damit jede Bahnseite ihre
-Mannschaft auf der Seite sieht, auf der sie steht. Eingaben nimmt nur der Hauptbildschirm
-(bzw. das Tablet unter `/input`) entgegen; die Ziel-Modi werden nicht gespiegelt.
+Mannschaft auf der Seite sieht, auf der sie steht. Eingaben nimmt nur der Hauptbildschirm (bzw. das
+Tablet unter `/input`) entgegen; die Ziel-Modi werden nicht gespiegelt.
+
+Damit die Zuordnung sicher stimmt, wird der erste Ausgang ausdrücklich auf Position 0x0 gesetzt und
+zusätzlich `wmctrl` installiert: nach dem Start werden beide Fenster anhand ihrer WM_CLASS
+(`StockTV-Main` / `StockTV-Mirror`) nochmals exakt auf ihren Ausgang gelegt und der Tastaturfokus
+gezielt auf das Bedienfenster gesetzt — Chromium platziert bei zwei Ausgängen von sich aus nicht
+zuverlässig.
+
+Die Zwei-Bildschirm-Einrichtung wird in `/opt/stocktv/.kiosk-dual` vermerkt. Wird später
+versehentlich mit `install.sh` aktualisiert, fragt dieses nach, statt still auf einen Bildschirm
+zurückzustellen — für Updates einer Dual-Installation also weiter `install-dual.sh` verwenden.
 
 Das Script:
 - lädt automatisch die neueste Version von GitHub herunter
@@ -282,26 +298,54 @@ notwendig sein soll. Unterstützte Browser (in dieser Reihenfolge gesucht): Micr
 - `C:\StockTV\kiosk-profile\` — Browser-Profil mit deaktivierten Übersetzungs- und Benachrichtigungs-Dialogen
 - Windows Scheduled Task `StockTV Kiosk` — führt das Skript bei Anmeldung jedes Benutzers aus
 - Sentinel-Datei `C:\StockTV\.kiosk` — merkt sich, dass Kiosk aktiv ist; bei Updates wird er automatisch neu eingerichtet
-- `C:\StockTV\kiosk-profile-mirror\` — zweites Browser-Profil, nur wenn ein zweiter Bildschirm erkannt wird
+- `C:\StockTV\start-kiosk-dual.ps1` — Variante für zwei Bildschirme (siehe unten)
 
 **Zwei Bildschirme (Anzeige für beide Bahnseiten):**
 
-Sind zwei Bildschirme angeschlossen und Windows steht auf **„Erweitern"** (Win+P → Erweitern),
-öffnet `start-kiosk.ps1` automatisch ein zweites Vollbild-Fenster auf dem zweiten Bildschirm mit
-der Adresse `http://localhost:8080/display2`. Dort werden dieselben Daten **spiegelverkehrt**
-angezeigt (linke und rechte Spalte vertauscht), damit jede Bahnseite ihre Mannschaft auf der
-Seite sieht, auf der sie steht. Farben und Teamnamen bleiben dabei bei ihrer Mannschaft.
+Dafür beim Setup zusätzlich `-DualDisplay` angeben:
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay
+```
+
+Das Setup legt dann `start-kiosk-dual.ps1` über `start-kiosk.ps1` — Portersetzung und Scheduled
+Task bleiben unverändert. Beim Ersteinrichten fragt das Script auch danach, wenn der Schalter
+fehlt. Voraussetzung ist der Windows-Anzeigemodus **„Erweitern"** (Win+P → Erweitern); bei
+„Duplizieren" meldet Windows nur einen Bildschirm und es bleibt beim Hauptfenster.
+
+Die Fenster werden anhand der von Windows gemeldeten Bildschirmgrenzen platziert und danach über
+`MoveWindow` nochmals exakt gesetzt; der Tastaturfokus geht zum Schluss per `SetForegroundWindow`
+gezielt auf das Bedienfenster. Damit hängt weder die Zuordnung noch die Eingabe an der
+Startreihenfolge.
+
+Auf dem zweiten Bildschirm öffnet sich ein zusätzliches Vollbild-Fenster mit
+`http://localhost:8080/display2`. Dort werden dieselben Daten **spiegelverkehrt** angezeigt
+(linke und rechte Spalte vertauscht), damit jede Bahnseite ihre Mannschaft auf der Seite sieht,
+auf der sie steht. Farben und Teamnamen bleiben dabei bei ihrer Mannschaft.
 
 - Bedient wird ausschließlich über den **Hauptbildschirm** (Ziffernblock) bzw. das Tablet unter
   `/input` — das Spiegel-Fenster nimmt keine Eingaben entgegen.
-- Steht Windows auf „Duplizieren", meldet es nur einen Bildschirm und es bleibt beim Hauptfenster.
 - Die Ziel-Modi werden nicht gespiegelt; dort zeigt der zweite Bildschirm die normale Ansicht.
+- Sentinel-Datei `C:\StockTV\.kiosk-dual` merkt sich die Einstellung, Updates behalten sie bei.
 - Zum Testen ohne Kiosk genügt ein zweites Browserfenster auf `http://localhost:8080/display2`.
 
 **Kiosk nachträglich aktivieren:**
 
 ```powershell
 .\install-service.ps1 -Kiosk
+```
+
+**Nachträglich auf zwei Bildschirme umstellen:**
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay
+```
+
+**Zurück auf einen Bildschirm** — einmal gesetzt bleibt die Einstellung erhalten, das Zurückstellen
+muss deshalb ausdrücklich passieren:
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay:$false
 ```
 
 **Kiosk deaktivieren** (ohne Dienst zu entfernen):
