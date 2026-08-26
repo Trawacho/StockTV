@@ -34,9 +34,34 @@ public class SettingsService : BackgroundService
 
 	public bool SettingsPageActive = false;
 
+	/// <summary>
+	/// Relative Adresse der Seite, die gerade im Bedienfenster offen ist. Grundlage dafuer,
+	/// dass die zweite Anzeige (Display2) dem Hauptfenster folgt. Gemeldet wird sie vom
+	/// MainWindowTracker im MainLayout.
+	/// </summary>
+	public string? MainWindowUrl { get; private set; }
+
 	public event Action? OnSettingsChanged;
 
 	public event Action<string>? OnNavigationRequested;
+
+	/// <summary>
+	/// Feuert, wenn das Bedienfenster auf eine andere Seite gewechselt ist. Bewusst ein
+	/// eigenes Ereignis und nicht <see cref="OnNavigationRequested"/>: auf letzteres reagieren
+	/// die Spielseiten mit einer eigenen Navigation - das blosse Melden der aktuellen Seite
+	/// wuerde darueber eine Endlosschleife ausloesen.
+	/// </summary>
+	public event Action? OnMainWindowUrlChanged;
+
+	/// <summary>Meldet die im Bedienfenster offene Seite. Mehrfachmeldungen sind unschaedlich.</summary>
+	public void ReportMainWindowUrl(string relativeUrl)
+	{
+		if (string.Equals(MainWindowUrl, relativeUrl, StringComparison.Ordinal))
+			return;
+
+		MainWindowUrl = relativeUrl;
+		OnMainWindowUrlChanged?.Invoke();
+	}
 
 	private string _settingsFilePath
 	{

@@ -13,6 +13,13 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 	[Inject] protected MatchService? MatchService { get; set; }
 	[Inject] private ILogger<HomeBase> Logger { get; set; } = default!;
 
+	// Als Spiegel eingebettet (Display2): der Countdown laeuft sichtbar mit, die Seite
+	// navigiert danach aber NICHT selbst weiter. Sonst laege im iframe eine Seite ohne
+	// mirror=true, die sich beim MainWindowTracker als Bedienfenster melden wuerde.
+	// Den Wechsel loest ohnehin das echte Bedienfenster aus.
+	[SupplyParameterFromQuery(Name = "mirror")]
+	protected bool IsMirrored { get; set; }
+
 	protected int countdown = 10;
 	protected int progress = 0;
 	protected int currentCardIndex = 0;
@@ -108,6 +115,10 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 		try
 		{
 			if (SettingsService == null || NavManager == null)
+				return;
+
+			// Siehe IsMirrored: die Spiegelinstanz navigiert bewusst nicht.
+			if (IsMirrored)
 				return;
 
 			var settings = SettingsService.CurrentSettings;

@@ -25,6 +25,7 @@ public partial class Display2 : IDisposable
 	{
 		_settingsService.OnSettingsChanged += HandleSettingsChanged;
 		_settingsService.OnNavigationRequested += HandleNavigationRequested;
+		_settingsService.OnMainWindowUrlChanged += HandleSettingsChanged;
 
 		_matchService.OnNavigationRequested += HandleNavigationRequested;
 		_zielService.OnNavigationRequested += HandleNavigationRequested;
@@ -39,6 +40,7 @@ public partial class Display2 : IDisposable
 		_disposed = true;
 		_settingsService.OnSettingsChanged -= HandleSettingsChanged;
 		_settingsService.OnNavigationRequested -= HandleNavigationRequested;
+		_settingsService.OnMainWindowUrlChanged -= HandleSettingsChanged;
 		_matchService.OnNavigationRequested -= HandleNavigationRequested;
 		_zielService.OnNavigationRequested -= HandleNavigationRequested;
 	}
@@ -78,12 +80,30 @@ public partial class Display2 : IDisposable
 			return;
 		}
 
-		var modus = _settingsService.CurrentSettings.Game.CurrentModus;
-		var url = SettingsService.GetModusUrl(modus);
+		// Der zweiten Anzeige folgt die Seite des Bedienfensters, sobald sich eines gemeldet
+		// hat (MainWindowTracker). Bis dahin - etwa wenn die Anzeige zuerst hochkommt - dient
+		// der eingestellte Modus als Rückfall.
+		var url = _settingsService.MainWindowUrl;
+		if (string.IsNullOrEmpty(url))
+			url = SettingsService.GetModusUrl(_settingsService.CurrentSettings.Game.CurrentModus);
 
 		// mirror=true heißt für die eingebettete Seite: reine Anzeige (keine Eingabe,
 		// kein Fokus, keine Eigennavigation). Die Ziel-Modi werden dabei bewusst nicht
 		// gespiegelt - Ziel.razor hat keine mirrored-CSS-Klasse.
-		_internalUrl = IsDemo ? $"{url}?mirror=true&demo=true" : $"{url}?mirror=true";
+		_internalUrl = BuildMirrorUrl(url, IsDemo);
+	}
+
+	/// <summary>Hängt mirror=true (und bei Bedarf demo=true) an, ohne eine vorhandene Query zu zerstören.</summary>
+	internal static string BuildMirrorUrl(string url, bool demo)
+	{
+		var result = url;
+
+		if (!result.Contains("mirror=", StringComparison.OrdinalIgnoreCase))
+			result += (result.Contains('?') ? '&' : '?') + "mirror=true";
+
+		if (demo && !result.Contains("demo=", StringComparison.OrdinalIgnoreCase))
+			result += "&demo=true";
+
+		return result;
 	}
 }

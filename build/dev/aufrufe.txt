@@ -1,0 +1,1 @@
+  .\test-dualdisplay.ps1 -MainDisplayIndex 0 -MirrorDisplayIndex 1
