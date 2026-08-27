@@ -32,6 +32,10 @@ public partial class SetupPage : IDisposable
 	// System angesprochen werden kann.
 	private bool HasRecordedValues => GameStateGuard.HasRecordedValues(MatchService, ZielService);
 
+	private enum SetupSection { Hostname, Netzwerk, Update, Neustart }
+
+	private SetupSection _activeSection = SetupSection.Hostname;
+
 	private readonly CancellationTokenSource _cts = new();
 
 	private string _hostnameText = "";
