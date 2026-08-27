@@ -89,7 +89,16 @@ curl -L --progress-bar -o "$TMPDIR/$ASSET_NAME" "$DOWNLOAD_URL"
 
 # --- Entpacken ---
 echo "Entpacke..."
+# Exit-Code 1 von unzip bedeutet nur "Warnung, aber fertig entpackt" (z.B. bei Sonderzeichen) -
+# unter "set -e" oben wuerde das faelschlich abbrechen. Nur Exit-Code >1 ist ein echter Fehler.
+set +e
 unzip -q "$TMPDIR/$ASSET_NAME" -d "$TMPDIR/app"
+UNZIP_EXIT=$?
+set -e
+if [ "$UNZIP_EXIT" -gt 1 ]; then
+    echo -e "${RED}Fehler beim Entpacken (unzip Exit-Code $UNZIP_EXIT)${NC}"
+    exit 1
+fi
 
 # --- Erster Start oder Update? ---
 FIRST_INSTALL=false
@@ -168,6 +177,66 @@ UPDATESCRIPTEOF
 $SUDO install -m 0755 -o root -g root "$UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-update.sh
 rm -f "$UPDATE_SCRIPT_TMP"
 
+# --- Offline-Update-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR, siehe oben) ---
+# Wendet ein manuell ueber die /setup-Seite hochgeladenes Release-Zip an, ohne Internetzugang zu
+# benoetigen - die App legt es dazu unter dem festen Pfad $INSTALL_DIR/_update/upload.zip ab
+# (siehe UpdateService.cs), das Skript selbst nimmt keine Parameter entgegen (sudoers matcht exakt
+# diesen Befehl ohne Argumente, siehe Regel unten).
+echo "Aktualisiere Offline-Update-Skript (/usr/local/sbin/stocktv-run-offline-update.sh)..."
+OFFLINE_UPDATE_SCRIPT_TMP=$(mktemp)
+cat > "$OFFLINE_UPDATE_SCRIPT_TMP" <<'OFFLINEUPDATESCRIPTEOF'
+#!/bin/bash
+set -e
+INSTALL_DIR="/opt/stocktv"
+SERVICE_NAME="stocktv"
+UPLOAD_ZIP="$INSTALL_DIR/_update/upload.zip"
+
+if [ ! -f "$UPLOAD_ZIP" ]; then
+    echo "Keine Offline-Update-Datei gefunden: $UPLOAD_ZIP" >&2
+    exit 1
+fi
+
+# Extract-Verzeichnis bewusst auf demselben Dateisystem wie $UPLOAD_ZIP (statt im Standard-/tmp) -
+# die Web-UI hat den freien Speicherplatz nur dort vorab geprueft. Wird in jedem Fall entfernt,
+# ebenso wie das hochgeladene Zip selbst - unabhaengig davon ob das Update gelingt oder scheitert,
+# damit nie stillschweigend ein alter/fehlgeschlagener Upload liegen bleibt.
+TMPDIR=$(mktemp -d -p "$INSTALL_DIR/_update")
+trap 'rm -rf "$TMPDIR"; rm -f "$UPLOAD_ZIP"' EXIT
+
+echo "Entpacke Offline-Update..."
+# "unzip" liefert Exit-Code 1 bereits bei blossen Warnungen (z.B. Backslashes als Pfadtrenner in
+# einem unter Windows per Compress-Archive statt "zip -r" gebauten Zip) - unter "set -e" wuerde das
+# faelschlich das gesamte Update abbrechen, OHNE den Dienst je gestoppt zu haben. Deshalb hier
+# gezielt "set +e" um den unzip-Aufruf: nur Exit-Code >1 (echter Fehler laut unzip-Dokumentation)
+# gilt als fatal.
+set +e
+unzip -q "$UPLOAD_ZIP" -d "$TMPDIR/app"
+UNZIP_EXIT=$?
+set -e
+if [ "$UNZIP_EXIT" -gt 1 ]; then
+    echo "Fehler beim Entpacken (unzip Exit-Code $UNZIP_EXIT)" >&2
+    exit 1
+fi
+
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+fi
+
+# APP_USER wie im regulaeren Install/Update-Pfad aus der bestehenden Unit lesen, NICHT aus
+# SUDO_USER/whoami - diese Unit laeuft ueber systemd-run als root, siehe Begruendung weiter oben
+# in diesem Skript.
+EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null | tr -d '\r')
+APP_USER="${EXISTING_SERVICE_USER:-root}"
+
+cp -r "$TMPDIR/app/"* "$INSTALL_DIR/"
+chmod +x "$INSTALL_DIR/StockTvBlazor"
+chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
+
+systemctl start "$SERVICE_NAME" 2>/dev/null || true
+OFFLINEUPDATESCRIPTEOF
+$SUDO install -m 0755 -o root -g root "$OFFLINE_UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-offline-update.sh
+rm -f "$OFFLINE_UPDATE_SCRIPT_TMP"
+
 # --- Hostname-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR, siehe Begruendung oben) ---
 # Setzt Hostname UND die "127.0.1.1"-Zeile in /etc/hosts atomar in einem Rutsch - "nmcli general
 # hostname" alleine laesst /etc/hosts unveraendert, was zu "sudo: unable to resolve host ..." fuehrt,
@@ -215,9 +284,11 @@ Cmnd_Alias STOCKTV_HOSTNAME = /usr/local/sbin/stocktv-set-hostname.sh *
 
 Cmnd_Alias STOCKTV_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-update.sh
 
+Cmnd_Alias STOCKTV_OFFLINE_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-offline-update.sh
+
 Cmnd_Alias STOCKTV_REBOOT = /usr/bin/systemctl reboot
 SUDOERS_EOF
-echo "$APP_USER ALL=(root) NOPASSWD: STOCKTV_NM_READ, STOCKTV_NM_WRITE, STOCKTV_HOSTNAME, STOCKTV_UPDATE, STOCKTV_REBOOT" >> "$SUDOERS_TMP"
+echo "$APP_USER ALL=(root) NOPASSWD: STOCKTV_NM_READ, STOCKTV_NM_WRITE, STOCKTV_HOSTNAME, STOCKTV_UPDATE, STOCKTV_OFFLINE_UPDATE, STOCKTV_REBOOT" >> "$SUDOERS_TMP"
 
 if ! $SUDO cmp -s "$SUDOERS_TMP" "$SUDOERS_FILE" 2>/dev/null; then
     if $SUDO visudo -c -f "$SUDOERS_TMP" >/dev/null 2>&1; then
