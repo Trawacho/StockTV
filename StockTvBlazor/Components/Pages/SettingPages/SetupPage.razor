@@ -190,6 +190,41 @@ else
             {
                 <p class="update-result">@_updateStartedMessage</p>
             }
+
+            <hr />
+
+            <h3>Offline-Update</h3>
+            <p class="hint">Falls dieser Pi keinen Internetzugang hat: Release-Zip (z.B. von
+                <a href="https://github.com/Trawacho/StockTV/releases" target="_blank" rel="noopener">GitHub Releases</a>)
+                manuell hochladen und von hier installieren.</p>
+
+            <div class="field">
+                <label>Release-Zip (stocktv-rpi.zip)</label>
+                <InputFile OnChange="OnOfflinePackageSelectedAsync" accept=".zip" disabled="@(_isUploadingOfflinePackage || _isStartingOfflineUpdate || UpdateService.UpdateInProgress)" />
+            </div>
+
+            @if (_isUploadingOfflinePackage)
+            {
+                <p class="hint upload-progress">
+                    <span class="spinner" aria-hidden="true"></span>
+                    Datei wird hochgeladen und geprüft… (bricht nach @StockTvBlazor.Services.UpdateService.OfflineUpdateUploadTimeout.TotalMinutes.ToString("0") Minuten automatisch ab, falls die Verbindung hängt)
+                </p>
+            }
+
+            <div class="field-actions">
+                <button class="btn-save" disabled="@(!_offlineUpdateReady || _isStartingOfflineUpdate || UpdateService.UpdateInProgress)" @onclick="StartOfflineUpdateAsync">
+                    @(_isStartingOfflineUpdate || UpdateService.UpdateInProgress ? "Update läuft…" : "Update aus Datei starten")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_offlineUpdateErrorMessage))
+            {
+                <div class="toast-error">@_offlineUpdateErrorMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(_offlineUpdateSuccessMessage))
+            {
+                <div class="toast-success">@_offlineUpdateSuccessMessage</div>
+            }
         </section>
 
         <section class="reboot-section">

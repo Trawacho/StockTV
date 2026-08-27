@@ -384,6 +384,12 @@ main (nur Releases)
 
 ⚠️ **Wichtig:** Nach jedem Merge von `release/vX.Y` immer auch zu `develop` zurück mergen!
 
+⚠️ **Vor jedem Release prüfen:** `MaxOfflineUpdateUploadBytes`/`OfflineUpdateSafetyMarginBytes` in
+`StockTvBlazor/Services/UpdateService.cs` (Offline-Update-Upload auf der `/setup`-Seite) gegen die
+tatsächliche Größe von `stocktv-rpi.zip` (via `build\rpi\publish-rpi.ps1` neu bauen und Zip-/
+Publish-Ordnergröße vergleichen) und bei Bedarf anpassen, damit die Limits nicht durch App-Wachstum
+zu knapp werden.
+
 ---
 
 ## Testprojekt & Manuelle Tests

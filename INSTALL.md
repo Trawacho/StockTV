@@ -155,7 +155,9 @@ Auf dem Pi selbst steht zusätzlich die Seite `http://<IP>:8080/setup` zur Verf�
 die sich Hostname, Netzwerk-Interfaces (DHCP/Statisch, IP, Gateway, DNS), ein manuelles Update
 ("Auf Update prüfen" / "Update starten") sowie ein Neustart des Pi direkt im Browser bedienen
 lassen — nur auf echten Raspberry Pis sichtbar, es gibt keinen Link dorthin (Route direkt
-aufrufen). Wichtig:
+aufrufen). Hat der Pi keinen Internetzugang, kann dort im Abschnitt "Offline-Update" stattdessen
+das Release-Zip (`stocktv-rpi.zip`, z.B. von [GitHub Releases](https://github.com/Trawacho/StockTV/releases))
+manuell hochgeladen und installiert werden. Wichtig:
 Wenn eine fehlerhafte Netzwerkänderung über diese Seite den Pi vom Netz trennt, bleibt `nmtui`
 per SSH wie oben beschrieben der Rettungsweg.
 
