@@ -89,7 +89,16 @@ curl -L --progress-bar -o "$TMPDIR/$ASSET_NAME" "$DOWNLOAD_URL"
 
 # --- Entpacken ---
 echo "Entpacke..."
+# Exit-Code 1 von unzip bedeutet nur "Warnung, aber fertig entpackt" (z.B. bei Sonderzeichen) -
+# unter "set -e" oben wuerde das faelschlich abbrechen. Nur Exit-Code >1 ist ein echter Fehler.
+set +e
 unzip -q "$TMPDIR/$ASSET_NAME" -d "$TMPDIR/app"
+UNZIP_EXIT=$?
+set -e
+if [ "$UNZIP_EXIT" -gt 1 ]; then
+    echo -e "${RED}Fehler beim Entpacken (unzip Exit-Code $UNZIP_EXIT)${NC}"
+    exit 1
+fi
 
 # --- Erster Start oder Update? ---
 FIRST_INSTALL=false
@@ -195,7 +204,19 @@ TMPDIR=$(mktemp -d -p "$INSTALL_DIR/_update")
 trap 'rm -rf "$TMPDIR"; rm -f "$UPLOAD_ZIP"' EXIT
 
 echo "Entpacke Offline-Update..."
+# "unzip" liefert Exit-Code 1 bereits bei blossen Warnungen (z.B. Backslashes als Pfadtrenner in
+# einem unter Windows per Compress-Archive statt "zip -r" gebauten Zip) - unter "set -e" wuerde das
+# faelschlich das gesamte Update abbrechen, OHNE den Dienst je gestoppt zu haben. Deshalb hier
+# gezielt "set +e" um den unzip-Aufruf: nur Exit-Code >1 (echter Fehler laut unzip-Dokumentation)
+# gilt als fatal.
+set +e
 unzip -q "$UPLOAD_ZIP" -d "$TMPDIR/app"
+UNZIP_EXIT=$?
+set -e
+if [ "$UNZIP_EXIT" -gt 1 ]; then
+    echo "Fehler beim Entpacken (unzip Exit-Code $UNZIP_EXIT)" >&2
+    exit 1
+fi
 
 if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
     systemctl stop "$SERVICE_NAME" 2>/dev/null || true

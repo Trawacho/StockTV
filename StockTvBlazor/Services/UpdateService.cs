@@ -53,8 +53,32 @@ public class UpdateService
 	// und/oder Offline, aus zwei Tabs) sollen sich nicht beide fuer "nicht belegt" halten koennen.
 	private int _offlineUploadInProgressFlag;
 	private int _updateInProgressFlag;
+	private long _updateInProgressSetAtTicks;
 
-	public bool UpdateInProgress => Volatile.Read(ref _updateInProgressFlag) != 0;
+	// Nach erfolgreichem Start bleibt UpdateInProgress bewusst laenger stehen, in Erwartung des
+	// Dienst-Neustarts (siehe RunUpdateUnitAsync). Scheitert das Skript aber NACH dem Start (z.B.
+	// Entpack-Fehler), OHNE den Dienst neu zu starten, wuerde die Sperre sonst fuer immer stehen
+	// bleiben und die komplette Update-UI (online wie offline) dauerhaft blockieren, bis jemand
+	// den Dienst manuell per SSH neu startet - genau das soll dieses Feature ja vermeiden. Deshalb
+	// hier eine Selbstheilung: laenger als erwartet in Progress -> als haengengeblieben behandeln.
+	private static readonly TimeSpan UpdateStuckTimeout = TimeSpan.FromMinutes(3);
+
+	public bool UpdateInProgress
+	{
+		get
+		{
+			if (Volatile.Read(ref _updateInProgressFlag) == 0)
+				return false;
+
+			var elapsedMs = Environment.TickCount64 - Volatile.Read(ref _updateInProgressSetAtTicks);
+			if (elapsedMs <= (long)UpdateStuckTimeout.TotalMilliseconds)
+				return true;
+
+			_logger.LogWarning("UpdateInProgress war laenger als {Timeout} gesetzt - vermutlich haengengebliebenes Update, Sperre wird zurueckgesetzt", UpdateStuckTimeout);
+			Volatile.Write(ref _updateInProgressFlag, 0);
+			return false;
+		}
+	}
 
 	public UpdateService(ILogger<UpdateService> logger, IHttpClientFactory httpClientFactory)
 	{
@@ -301,6 +325,8 @@ public class UpdateService
 		// Update-Ausloesern (z.B. Online-Update aus einem Tab, Offline-Update aus einem anderen).
 		if (Interlocked.CompareExchange(ref _updateInProgressFlag, 1, 0) != 0)
 			return new NetworkOperationResult(false, "Es läuft bereits ein Update.");
+
+		Volatile.Write(ref _updateInProgressSetAtTicks, Environment.TickCount64);
 
 		var psi = new ProcessStartInfo
 		{
