@@ -318,7 +318,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 			default:
 				_logger.LogWarning("Unknown topic: {Topic}", topic);
-				response.Append("unknown topic");
+				response.Append("NACK:unknown-topic");
 				break;
 		}
 

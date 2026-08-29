@@ -32,6 +32,8 @@ public class SettingsService : BackgroundService
 
 	private readonly FileLoggerProvider _fileLoggerProvider;
 
+	private CancellationTokenSource? _saveDebounceCts;
+
 	public bool SettingsPageActive = false;
 
 	public event Action? OnSettingsChanged;
@@ -58,6 +60,8 @@ public class SettingsService : BackgroundService
 
 	public override void Dispose()
 	{
+		_saveDebounceCts?.Cancel();
+		_saveDebounceCts?.Dispose();
 		_saveSettingsQueue.Writer.TryComplete();
 		base.Dispose();
 	}
@@ -279,7 +283,18 @@ public class SettingsService : BackgroundService
 
 	public void RequestSaveSettings()
 	{
-		_saveSettingsQueue.Writer.TryWrite(true);
+		_saveDebounceCts?.Cancel();
+		_saveDebounceCts = new CancellationTokenSource();
+		var cts = _saveDebounceCts;
+
+		_ = Task.Delay(1000, cts.Token).ContinueWith(async t =>
+		{
+			if (!t.IsCanceled)
+			{
+				_saveSettingsQueue.Writer.TryWrite(true);
+			}
+			cts.Dispose();
+		});
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
