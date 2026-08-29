@@ -2,14 +2,22 @@
 
 Dokumentation aller während der Testplanung aufgefundenen Verdachtsfälle (potenzielle Bugs). Jeder Eintrag wird vor der Testschreibung bewertet: Beheben oder als bekanntes Verhalten dokumentieren?
 
-## Testplan-Notiz: Match & ZielBewerb Tests
+## Architektur-Erkenntnis: Unit-Test-Hindernisse
 
-**Match & ZielBewerb gehören NICHT zu Phase 2 (Unit-Tests)**, sondern zu Phase 3 (Integration/E2E):
-- **Grund:** Match ist stark an SettingsService gekoppelt (kein Dependency Injection auf Service-Level)
-- **Unit-Tests würden Mocking benötigen,** aber `SettingsService.CurrentSettings` ist nicht-virtual
-- **Besserer Ansatz:** Phase 3 bUnit-Komponententests (Training/BestOf/Ziel Pages) + Playwright-E2E Tests decken Match/ZielBewerb-Verhalten ab
+**Critical Issue:** `SettingsService` ist nicht testbar (kein Interface, nicht-virtuelle Properties)
+- **Betroffen:** Match, ZielBewerb, MatchService, ZielService, und viele andere Services/Models
+- **Problem:** Moq kann nicht-virtuelle Properties nicht mocken → echte Unit-Tests unmöglich
+- **Auswirkung:** Alle SettingsService-abhängigen Klassen können nur via Integration-Tests (bUnit/E2E) getestet werden
 
-**Phase 2 bleibt:** nur einfache Models ohne komplexe Dependencies (Debounce, Turn, Begegnung)
+**Testplan-Anpassung:**
+- **Phase 2 (Unit-Tests):** NUR einfache Models ohne SettingsService (Debounce, Turn, Begegnung) ✅
+- **Phase 3 (Pure Functions):** Reine Parser/Validierungsfunktionen (GameStateGuard, NetworkConfigService-Parser, Debounce-Logic)
+- **Phase 4+ (Integration-Tests):** Match/ZielBewerb/Services via bUnit-Komponenten + Playwright-E2E
+
+**Zukünftige Refactorings (Post-Release):**
+- SettingsService eine ISettingsService-Interface geben
+- Services mit Dependency Injection refaktorieren
+- Properties zu virtual machen für Test-Mocking
 
 ---
 
