@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BlazorAppTests/BlazorAppTests.csproj" />
+  <Project Path="StockTvBlazor.E2ETests/StockTvBlazor.E2ETests.csproj" />
+  <Project Path="StockTvBlazor.Tests/StockTvBlazor.Tests.csproj" />
+  <Project Path="StockTvBlazor/StockTvBlazor.csproj" />
+</Solution>
