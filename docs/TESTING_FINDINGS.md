@@ -2,6 +2,24 @@
 
 Dokumentation aller während der Testplanung aufgefundenen Verdachtsfälle (potenzielle Bugs). Jeder Eintrag wird vor der Testschreibung bewertet: Beheben oder als bekanntes Verhalten dokumentieren?
 
+## Status Summary (nach Kategorie-A/B-Durchlauf)
+
+| # | Kategorie | Befund | Status | Commit |
+|---|---|---|---|---|
+| 1 | B | ZielBewerb Ziel2 Undo | 🟡 ZURÜCKGESTELLT — später analysieren | — |
+| 2 | A | Match.Serialize Byte-Overflow | ✅ BEHOBEN — Cap bei 255 | `4cd7771` |
+| 3 | B | SettingsService ACK vor Validierung | 🟡 STATUS QUO akzeptiert — wird dokumentiert | — |
+| 4 | A | NetMqResponseService NACK-Konvention | ✅ BEHOBEN — `NACK:unknown-topic` | `e4d4c74` |
+| 5 | A | MatchService.SetTeamNames Parsing | ✅ BEHOBEN — Längenprüfung | `4cd7771` |
+| 6 | B | BestOfViewModel Shadowing | ✅ BEHOBEN — `override` statt `new` | `e4d4c74` |
+| 7 | A | FontService fc-list Timeout | ✅ BEHOBEN — 5s Timeout + Kill | `4cd7771` |
+| 8 | C | MdnsDiscoveryService IP-Änderung | 🟠 GEPARKT — Architektur-Design, out of scope | — |
+| 9 | A | Linux-x64 Zip Pfad-Trenner | ✅ BEHOBEN — Workaround wie RPi | `4cd7771` |
+| 10 | B | BestOfViewModel.GetShellGridStyle | ✅ BEHOBEN — `virtual` in BaseViewModel | `e4d4c74` |
+| 11 | B | SettingsService Deduplizierung | ✅ BEHOBEN — 1s Debounce | `e4d4c74` |
+
+**Bilanz:** 7 behoben, 2 zurückgestellt/status-quo, 1 geparkt | **7 Commits** | Ready für Phase 2 Tests
+
 ---
 
 ## 1. ZielBewerb.DeleteLastVersuch — Ziel2 Rundenwechsel nicht invertiert
@@ -188,11 +206,19 @@ Das ist nicht *falsch* (alle schreiben den gleichen Endzustand), aber ineffizien
 
 ---
 
-## Entscheidungsprozess
+## Entscheidungsprozess (abgeschlossen)
 
-Vor jeder Testschreibung in Phase 2+: Welche Findings sollen behoben werden?
-- **Kategorie A (Beheben):** eindeutige Bugs, die Failures/Crashes verursachen (#2, #5, #7, #9)
-- **Kategorie B (Dokumentieren):** Tests schreiben, die aktuelles Verhalten absichern (#1, #3, #4, #6, #10, #11)
-- **Kategorie C (Parken):** nicht im Testing-Scope (#8, Architektur-Design)
+✅ **Kategorie A (alle behoben):**
+- #2, #5, #7, #9 — eindeutige Bugs mit Crash/Hang-Risiko: behoben
 
-→ Entscheidungen pro Finding erfolgen im Austausch mit dem Entwickler.
+✅ **Kategorie B (Entscheidungen getroffen):**
+- #4 (NACK) — behoben
+- #6, #10 (Shadowing) — behoben (virtual/override)
+- #11 (Deduplizierung) — behoben (1s Debounce)
+- #1 (Ziel2) — zurückgestellt (später analysieren)
+- #3 (ACK vor Validierung) — Status Quo akzeptiert (wird in Tests dokumentiert)
+
+🟠 **Kategorie C (geparkt):**
+- #8 (mDNS) — Architektur-Design, nicht im Testingphase-Scope
+
+→ **Phase 2 kann starten:** Findings sind behoben/dokumentiert, Test-Infrastruktur ready.
