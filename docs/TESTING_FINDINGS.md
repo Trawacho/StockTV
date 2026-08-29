@@ -2,6 +2,17 @@
 
 Dokumentation aller während der Testplanung aufgefundenen Verdachtsfälle (potenzielle Bugs). Jeder Eintrag wird vor der Testschreibung bewertet: Beheben oder als bekanntes Verhalten dokumentieren?
 
+## Testplan-Notiz: Match & ZielBewerb Tests
+
+**Match & ZielBewerb gehören NICHT zu Phase 2 (Unit-Tests)**, sondern zu Phase 3 (Integration/E2E):
+- **Grund:** Match ist stark an SettingsService gekoppelt (kein Dependency Injection auf Service-Level)
+- **Unit-Tests würden Mocking benötigen,** aber `SettingsService.CurrentSettings` ist nicht-virtual
+- **Besserer Ansatz:** Phase 3 bUnit-Komponententests (Training/BestOf/Ziel Pages) + Playwright-E2E Tests decken Match/ZielBewerb-Verhalten ab
+
+**Phase 2 bleibt:** nur einfache Models ohne komplexe Dependencies (Debounce, Turn, Begegnung)
+
+---
+
 ## Status Summary (nach Kategorie-A/B-Durchlauf)
 
 | # | Kategorie | Befund | Status | Commit |
