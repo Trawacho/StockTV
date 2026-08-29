@@ -225,6 +225,31 @@ Das ist nicht *falsch* (alle schreiben den gleichen Endzustand), aber ineffizien
 
 ---
 
+## Test-Statusübersicht (aktuell)
+
+| Phase | Bereich | Tests | Status |
+|-------|---------|-------|--------|
+| **Phase 0** | Infrastruktur (ISystemClock, Debounce) | Setup | ✅ Komplett |
+| **Phase 1** | Findings dokumentieren | 11 Findings | ✅ Abgeschlossen |
+| **Phase 2** | Unit-Tests Models | 12 Tests | ✅ Grün (Turn, Begegnung, Debounce) |
+| **Phase 3** | Pure Functions | 13 Tests | ✅ Grün (NetworkConfig Parser, HostnameRegex, GameStateGuard) |
+| **Phase 5** | bUnit Components | 17 Tests | ✅ Grün (AutoFitText, PunkteAnzeige, PunkteEingabe, PunkteeingabePassiv) |
+| **Phase 7a** | NetMQ Logik-Tests | 22 Tests | ✅ Grün (Mode-Parsing, CIDR-Notation, DNS, Payload-Format, Topics) |
+| **Phase 6** | Playwright E2E | Framework | 🟡 Setup vorhanden (AppFixture + HomePageTests) |
+| **Phase 4** | ViewModels | — | 🟡 Blockiert durch SettingsService (deferred zu Phase 5+) |
+| **Phase 7b** | NetMQ Socket-Integration | — | 🟡 Planung vorhanden (erfordert echte NetMQ-Ports) |
+| **Phase 8** | Deployment Checkliste | ✅ | ✅ Erstellt (docs/RELEASE_CHECKLIST.md) |
+| **Phase 9** | Misc (Themes, Fallbacks) | — | ⏳ Ausstehend |
+
+**Bilanz:** 
+- **74 automatisierte Tests bestanden** (Phase 0-3, 5, 7a)
+- **7 Bugs identifiziert und behoben** (Match Overflow, NetMQ NACK, MatchService Parsing, FontService Timeout, Linux-ZIP, BestOf Shadowing, SettingsService Debounce)
+- **Deployment-Checkliste** dokumentiert für alle Plattformen (RPi, Windows, Linux, Docker)
+- **Playwright E2E Framework** bereit für weitere Golden-Path-Tests
+- **NetMQ Test-Grundlage** für Socket-Integration vorbereitet
+
+---
+
 ## Entscheidungsprozess (abgeschlossen)
 
 ✅ **Kategorie A (alle behoben):**
@@ -241,3 +266,113 @@ Das ist nicht *falsch* (alle schreiben den gleichen Endzustand), aber ineffizien
 - #8 (mDNS) — Architektur-Design, nicht im Testingphase-Scope
 
 → **Phase 2 kann starten:** Findings sind behoben/dokumentiert, Test-Infrastruktur ready.
+
+---
+
+## Phase 6+ Planung: E2E + NetMQ + Misc
+
+### Phase 6 — Playwright E2E (Golden Paths)
+
+**Status:** Framework (`AppFixture`) vorhanden; E2E-Test-Shells erstellt für:
+- HomePageTests (1 Test)
+- TrainingPageTests (3 Tests)
+- GameModePagesTests (5 Tests: BestOf, Turnier, Ziel, Input, Settings)
+
+**Total Phase 6 Tests:** 9 Test-Shells vorhanden (nicht ausgeführt, erfordern laufende App).
+
+**Nächste Schritte:**
+1. AppFixture debuggen/stabilisieren (Port-Binding, Startup-Robustheit)
+2. App auf Test-Port (5001) starten und Connectivity prüfen
+3. Seite-für-Seite Markup-Assertions verstärken (nicht nur "content exists")
+4. Optionale: Tastatur-Input + Score-Change-Verifikation (komplexer)
+
+**Known Blocker:** 
+- `dotnet run` muss parallele Prozessierung unterstützen (kann kompliziert sein)
+- Playwright braucht Chromium (muss installed sein)
+- Test-Isolation erforderlich (verschiedene Modi/Setups pro Test)
+
+---
+
+### Phase 7 — NetMQ Integration
+
+**Status Phase 7a (Logik-Tests):** ✅ Komplett — 22 Tests für Mode-Parsing, CIDR-Notation, DNS, Payload-Format, Topic-Recognition.
+
+**Status Phase 7b (Socket-Integration):** 🟠 Planung, nicht implementiert.
+
+**Rationale für Defer:**
+- Request-Reply Pattern (Req-Rep) in NetMQ hat komplexe FSM-Regeln
+- Tests müssen sequenzielle Request-Response in Lockstep durchführen
+- Mock/Fixture-Komplexität: evtl. separater Test-Service nötig
+- Alternativer Ansatz: nur Parsing/Validierung testen (Phase 7a done), echte Socket-Tests nur als Integrations-Checkliste auf echter Hardware
+
+**Manueller Test-Plan (statt automatisch):**
+- Auf echter Pi oder Test-Umgebung: `nc -u -l 4747` mock-Socket, dann NetMQ-Befehle von extern senden
+- Oder: kleines Go/Python-Script als Mock-Server statt komplexe Fixture
+- Diese Tools sind einfacher als NetMQ-C#-Fixture + FSM-Handling
+
+---
+
+### Phase 8 — Deployment (Checkliste)
+
+**Status:** ✅ RELEASE_CHECKLIST.md erstellt.
+
+Umfasst:
+- Vorbereitung (Tests, Compiler-Check, Bytegrenzen)
+- Manuelle Device-Tests (RPi, Windows, Linux, Docker)
+- Release-Workflow-Verifizierung
+- Post-Release-Checklist
+
+---
+
+### Phase 8 — Deployment (Release-Checkliste)
+
+**Status:** ✅ Komplett — `docs/RELEASE_CHECKLIST.md` umfasst:
+- Pre-release Validierung (Tests, Compiler, Bytegrenzen)
+- Manuelle Device-Tests (RPi, Windows, Linux, Docker)
+- Release-Workflow-Verifizierung (GitHub Releases, Assets)
+- Post-Release-Checklist
+- Known Issues + Workarounds
+
+**Verwendung:** Vor jedem Release durchgehen; ist Orientierungshilfe für Integrations-Tester auf echter Hardware.
+
+---
+
+### Phase 9 — Misc (Themes, Fallbacks, Edge Cases)
+
+**Ausstehend (niedrige Priorität):**
+1. **Settings/Themes:**
+   - SettingsViewModel Tests (CurrentSettingToChange-Zustände, IsXActive-Flags)
+   - Settings.razor bUnit-Tests (wenn keine Abhängigkeits-Probleme)
+   - Theme-Dropdown, Custom-Theme-CRUD, Preview-Updates
+
+2. **FontService:**
+   - Fallback-Pfade auf Exception bei fc-list (Linux) / Registry-Fehler (Windows)
+   - Statische Font-Liste als Fallback
+
+3. **PlatformInfoService:**
+   - Mock-FileSystem für Device-Tree-Erkennung (RPi vs. Linux vs. Windows)
+   - Docker-Env-Variable-Mocking
+   - OS-Release-Datei-Parsing-Edge-Cases
+
+4. **ViewModels (aktuell blockiert):**
+   - TrainingViewModel, BestOfViewModel, TurnierViewModel, ZielViewModel
+   - Erfordern SettingsService-Refactoring (Interface/Virtual-Properties)
+
+**Entscheidung:** Phase 9 kann asynchron nach Release implementiert werden; Blöcke bestehende Test-Phasen nicht.
+
+---
+
+## Zusammenfassung: Nächste Schritte
+
+1. **Sofort (Phase 6+7):**
+   - Playwright AppFixture debuggen und erste E2E-Tests laufen lassen
+   - NetMQ-Integrationstests auf Testports schreiben (benötigt Port-Parametrisierung in NetMqResponseService)
+
+2. **Mittelfristig (Phase 7-8):**
+   - Alle NACK-Pfade im NetMQ abdecken
+   - Deployment-Checkliste mit realen Devices durchspielen
+
+3. **Ausstehend (Phase 9+):**
+   - ViewModels vollständiger abdecken (aktuell blockiert durch SettingsService-Architektur)
+   - Theme/Farb-Logik testen
+   - Randfälle bei Error-Handling
