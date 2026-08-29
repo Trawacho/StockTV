@@ -1,6 +1,10 @@
 using System.Diagnostics;
 using System.Net.Http;
 using Microsoft.Playwright;
+using NetMQ;
+using NetMQ.Sockets;
+using System.Text;
+using System.Text.Json;
 
 namespace StockTvBlazor.E2ETests.Fixtures;
 
@@ -12,7 +16,15 @@ public class AppFixture : IAsyncLifetime
 	public IPage? Page { get; private set; }
 	public IBrowserContext? Context { get; private set; }
 
+	// NetMQ sockets
+	private SubscriberSocket? _publisherSubscriber;
+	private RequestSocket? _netMqRequester;
+	private NetMQPoller? _poller;
+	private Thread? _pollerThread;
+
 	private const string AppUrl = "http://localhost:5001";
+	private const string PublisherUrl = "tcp://127.0.0.1:4748";
+	private const string RequesterUrl = "tcp://127.0.0.1:4747";
 	private const int StartupTimeoutMs = 30000;
 	private const int ReadinessCheckTimeoutMs = 60000;
 
@@ -24,9 +36,13 @@ public class AppFixture : IAsyncLifetime
 		// Wait for app to be ready
 		await WaitForAppReadinessAsync();
 
+		// Initialize NetMQ sockets (give app time to bind)
+		await Task.Delay(1000);
+		InitializeNetMQ();
+
 		// Launch Playwright
 		_playwright = await Playwright.CreateAsync();
-		_browser = await _playwright.Chromium.LaunchAsync(new BrowserLaunchOptions
+		_browser = await _playwright.Chromium.LaunchAsync(new()
 		{
 			Headless = true,
 			Args = new[] { "--disable-gpu", "--no-sandbox" }
@@ -38,6 +54,7 @@ public class AppFixture : IAsyncLifetime
 
 	public async Task DisposeAsync()
 	{
+		// Cleanup Playwright
 		if (Page != null)
 			await Page.CloseAsync();
 
@@ -48,6 +65,20 @@ public class AppFixture : IAsyncLifetime
 			await _browser.CloseAsync();
 
 		_playwright?.Dispose();
+
+		// Cleanup NetMQ
+		try
+		{
+			if (_poller?.IsRunning == true)
+				_poller.StopAsync();
+			_publisherSubscriber?.Dispose();
+			_netMqRequester?.Dispose();
+			_poller?.Dispose();
+
+			if (_pollerThread?.IsAlive == true)
+				_pollerThread.Join(2000);
+		}
+		catch { }
 
 		// Kill the app process
 		if (_appProcess != null)
@@ -126,5 +157,78 @@ public class AppFixture : IAsyncLifetime
 		}
 
 		throw new TimeoutException($"App did not respond within {ReadinessCheckTimeoutMs}ms");
+	}
+
+	private void InitializeNetMQ()
+	{
+		// Publisher subscriber (PUB-SUB, port 4748)
+		_publisherSubscriber = new SubscriberSocket();
+		_publisherSubscriber.Connect(PublisherUrl);
+		_publisherSubscriber.Subscribe(""); // Subscribe to all topics
+
+		// Requester socket (REQ-REP, port 4747)
+		_netMqRequester = new RequestSocket();
+		_netMqRequester.Connect(RequesterUrl);
+
+		// Start poller on background thread
+		_poller = new NetMQPoller { _publisherSubscriber };
+		_pollerThread = new Thread(() => _poller.Run())
+		{
+			IsBackground = true,
+			Name = "E2E-NetMQ-Poller"
+		};
+		_pollerThread.Start();
+	}
+
+	/// <summary>
+	/// Send a NetMQ command and receive response (REQ-REP).
+	/// </summary>
+	public string SendNetMqCommand(string topic, string? payload = null)
+	{
+		if (_netMqRequester == null)
+			throw new InvalidOperationException("NetMQ requester not initialized");
+
+		var message = new NetMQMessage();
+		message.Append(Encoding.UTF8.GetBytes(topic));
+		if (!string.IsNullOrEmpty(payload))
+			message.Append(Encoding.UTF8.GetBytes(payload));
+
+		_netMqRequester.SendMultipartMessage(message);
+
+		// Receive response with timeout
+		if (_netMqRequester.TryReceiveMultipartMessage(TimeSpan.FromSeconds(3), ref message))
+		{
+			if (message.FrameCount > 0)
+				return Encoding.UTF8.GetString(message[0].Buffer);
+		}
+
+		throw new TimeoutException("NetMQ response timeout");
+	}
+
+	/// <summary>
+	/// Receive next broadcast from publisher (non-blocking, timeout 1s).
+	/// </summary>
+	public bool TryReceivePublisherBroadcast(out string topic, out string payload, TimeSpan? timeout = null)
+	{
+		topic = "";
+		payload = "";
+
+		if (_publisherSubscriber == null)
+			return false;
+
+		timeout ??= TimeSpan.FromSeconds(1);
+		var message = new NetMQMessage();
+
+		if (_publisherSubscriber.TryReceiveMultipartMessage(timeout.Value, ref message))
+		{
+			if (message.FrameCount >= 2)
+			{
+				topic = Encoding.UTF8.GetString(message[0].Buffer);
+				payload = Encoding.UTF8.GetString(message[1].Buffer);
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
