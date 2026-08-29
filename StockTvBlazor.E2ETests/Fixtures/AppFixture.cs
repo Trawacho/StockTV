@@ -40,11 +40,13 @@ public class AppFixture : IAsyncLifetime
 		await Task.Delay(1000);
 		InitializeNetMQ();
 
-		// Launch Playwright
+		// Launch Playwright (Headless can be overridden with PLAYWRIGHT_HEADLESS=false env var)
 		_playwright = await Playwright.CreateAsync();
+		bool headless = !string.Equals(Environment.GetEnvironmentVariable("PLAYWRIGHT_HEADLESS"), "false", StringComparison.OrdinalIgnoreCase);
+
 		_browser = await _playwright.Chromium.LaunchAsync(new()
 		{
-			Headless = true,
+			Headless = headless,
 			Args = new[] { "--disable-gpu", "--no-sandbox" }
 		});
 
@@ -66,19 +68,31 @@ public class AppFixture : IAsyncLifetime
 
 		_playwright?.Dispose();
 
-		// Cleanup NetMQ
+		// Cleanup NetMQ (careful with disposal order)
 		try
 		{
+			// Stop poller first, then wait for thread to finish
 			if (_poller?.IsRunning == true)
-				_poller.StopAsync();
-			_publisherSubscriber?.Dispose();
-			_netMqRequester?.Dispose();
-			_poller?.Dispose();
+			{
+				_poller.Stop();
+				await Task.Delay(500);
+			}
 
+			// Wait for poller thread to finish before disposing sockets
 			if (_pollerThread?.IsAlive == true)
 				_pollerThread.Join(2000);
+
+			// Now dispose sockets
+			_publisherSubscriber?.Dispose();
+			_netMqRequester?.Dispose();
+
+			// Finally dispose poller
+			_poller?.Dispose();
 		}
-		catch { }
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"NetMQ cleanup error: {ex.Message}");
+		}
 
 		// Kill the app process
 		if (_appProcess != null)
@@ -98,12 +112,13 @@ public class AppFixture : IAsyncLifetime
 
 	private async Task StartAppAsync()
 	{
-		var projectPath = Path.Combine(
-			Directory.GetCurrentDirectory(),
-			"..", "..", "StockTvBlazor", "StockTvBlazor.csproj");
+		// Find StockTvBlazor.csproj by traversing up from current directory
+		string projectPath = FindProjectPath();
 
 		if (!File.Exists(projectPath))
 			throw new FileNotFoundException($"Project file not found: {projectPath}");
+
+		System.Diagnostics.Debug.WriteLine($"Starting app from: {projectPath}");
 
 		_appProcess = new Process
 		{
@@ -124,15 +139,21 @@ public class AppFixture : IAsyncLifetime
 		};
 
 		_appProcess.Start();
+		System.Diagnostics.Debug.WriteLine($"App process started (PID: {_appProcess.Id})");
 
 		// Give process time to start
-		await Task.Delay(2000);
+		await Task.Delay(3000);
 
 		if (_appProcess.HasExited)
 		{
+			var output = await _appProcess.StandardOutput.ReadToEndAsync();
 			var error = await _appProcess.StandardError.ReadToEndAsync();
-			throw new InvalidOperationException($"App failed to start: {error}");
+			System.Diagnostics.Debug.WriteLine($"App stdout: {output}");
+			System.Diagnostics.Debug.WriteLine($"App stderr: {error}");
+			throw new InvalidOperationException($"App failed to start. Stderr: {error}");
 		}
+
+		System.Diagnostics.Debug.WriteLine("App started successfully, waiting for readiness...");
 	}
 
 	private async Task WaitForAppReadinessAsync()
@@ -159,6 +180,23 @@ public class AppFixture : IAsyncLifetime
 		throw new TimeoutException($"App did not respond within {ReadinessCheckTimeoutMs}ms");
 	}
 
+	private string FindProjectPath()
+	{
+		// Start from current directory and traverse up to find StockTvBlazor.csproj
+		var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+
+		while (current != null)
+		{
+			var projectFile = Path.Combine(current.FullName, "StockTvBlazor", "StockTvBlazor.csproj");
+			if (File.Exists(projectFile))
+				return projectFile;
+
+			current = current.Parent;
+		}
+
+		throw new FileNotFoundException("Could not find StockTvBlazor.csproj in parent directories");
+	}
+
 	private void InitializeNetMQ()
 	{
 		// Publisher subscriber (PUB-SUB, port 4748)
@@ -178,6 +216,26 @@ public class AppFixture : IAsyncLifetime
 			Name = "E2E-NetMQ-Poller"
 		};
 		_pollerThread.Start();
+	}
+
+	/// <summary>
+	/// Debug helper: Take screenshot if page content is empty/suspect.
+	/// </summary>
+	public async Task DebugScreenshotAsync(string testName)
+	{
+		if (Page == null)
+			return;
+
+		try
+		{
+			var screenshotPath = Path.Combine(Path.GetTempPath(), $"e2e-debug-{testName}-{DateTime.Now:yyyyMMdd-HHmmss}.png");
+			await Page.ScreenshotAsync(new() { Path = screenshotPath });
+			System.Diagnostics.Debug.WriteLine($"Screenshot saved: {screenshotPath}");
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Screenshot failed: {ex.Message}");
+		}
 	}
 
 	/// <summary>
@@ -221,10 +279,27 @@ public class AppFixture : IAsyncLifetime
 
 		if (_publisherSubscriber.TryReceiveMultipartMessage(timeout.Value, ref message))
 		{
+			// Publisher sends: [topic] [payload] or sometimes [topic+payload] in single frame
 			if (message.FrameCount >= 2)
 			{
+				// Standard multipart: topic in frame 0, payload in frame 1
 				topic = Encoding.UTF8.GetString(message[0].Buffer);
 				payload = Encoding.UTF8.GetString(message[1].Buffer);
+				return true;
+			}
+			else if (message.FrameCount == 1)
+			{
+				// Single frame: might contain topic\0payload or just payload
+				var fullContent = Encoding.UTF8.GetString(message[0].Buffer);
+				var parts = fullContent.Split('\0');
+				if (parts.Length >= 2)
+				{
+					topic = parts[0];
+					payload = parts[1];
+					return true;
+				}
+				// If no separator, treat entire content as payload
+				payload = fullContent;
 				return true;
 			}
 		}
