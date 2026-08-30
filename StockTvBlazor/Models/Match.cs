@@ -21,7 +21,6 @@ public class Match
 		_logger = logger;
 
 		_games.Add(new Game(_settingsService.CurrentSettings, 1));
-		LoadTurnsFromLocalSettings();
 	}
 
 	public IEnumerable<Game> Games => _games;
@@ -126,25 +125,6 @@ public class Match
 		}
 
 		OnMatchChanged?.Invoke();
-	}
-
-	public async Task SaveTurnsToLocalSettingsAsync()
-	{
-		var allTurns = Games.SelectMany(g => g.Turns).ToList();
-		await _settingsService.SaveTurnsAsync(allTurns);
-	}
-
-	private void LoadTurnsFromLocalSettings()
-	{
-		var s = _settingsService.CurrentSettings;
-
-		var allTurns = s.Game.Kehren;
-
-		foreach (var turn in allTurns)
-		{
-			AddTurn(turn);
-			Reset();
-		}
 	}
 
 	#endregion

@@ -6,5 +6,6 @@
 		public GameSettings Game { get; set; } = new();
 		public UiSettings UI { get; set; } = new();
 		public NetworkSettings Network { get; set; } = new();
+		public RestApiSettings RestApi { get; set; } = new();
 	}
 }

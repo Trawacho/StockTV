@@ -74,10 +74,10 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		switch (value)
 		{
 			case "Enter": ShowSpecialPage(); break;
-			case "*": await AddToGreenAsync(); break;
-			case "-": await DeleteLastTurnAsync(); break;
-			case "/" or "Backspace": await AddToRedAsync(); break;
-			case "+": await ResetAsync(); break;
+			case "*": AddToGreen(); break;
+			case "-": DeleteLastTurn(); break;
+			case "/" or "Backspace": AddToRed(); break;
+			case "+": Reset(); break;
 
 			default:
 				int? input = value switch
@@ -103,9 +103,8 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 
 		OnGlobalRefresh?.Invoke();
 
-		// Training ist freies Spiel ohne Spielzaehlung/Persistierung (siehe CurrentMatch.Reset()
-		// bzw. SaveTurnsToLocalSettingsAsync) - entsprechend soll auch nichts an das zentrale
-		// Verwaltungsprogramm gesendet werden.
+		// Training ist freies Spiel ohne Spielzaehlung (siehe CurrentMatch.Reset()) - entsprechend
+		// soll auch nichts an das zentrale Verwaltungsprogramm gesendet werden.
 		if (s.Game.CurrentModus != GameSettings.Modus.Training)
 			_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
 	}
@@ -123,7 +122,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 			_inputValue = (value <= maxPoints) ? value : -1;
 	}
 
-	private async Task AddToGreenAsync()
+	private void AddToGreen()
 	{
 		if (_inputValue == -1)
 			return;
@@ -133,12 +132,11 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, true);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 	}
 
-	private async Task AddToRedAsync()
+	private void AddToRed()
 	{
 		if (_inputValue == -1)
 			return;
@@ -148,19 +146,17 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, false);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 
 		_inputValue = -1;
 	}
 
-	private async Task ResetAsync(bool force = false)
+	private void Reset(bool force = false)
 	{
 		CurrentMatch.Reset(force);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 		_inputValue = -1;
 	}
 
-	private async Task DeleteLastTurnAsync()
+	private void DeleteLastTurn()
 	{
 		if (_inputValue > 0)
 		{
@@ -169,7 +165,6 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		}
 
 		CurrentMatch.DeleteLastTurn();
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
 	}
 
 	private protected void ShowSpecialPage()

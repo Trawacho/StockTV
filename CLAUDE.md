@@ -58,7 +58,7 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 ## Tech-Stack
 
 - **Framework**: ASP.NET Core 10, Blazor Server (Interactive Server Components)
-- **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS)
+- **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS), REST auf eigenem Kestrel-Host (Swashbuckle)
 - **UI**: Bootstrap, responsive Text **rein per CSS** (Container Queries) über die Komponente `Controls/AutoFitText` + `wwwroot/css/StockTV_AutoFit.css` — **kein eigenes JavaScript**
 - **Deployment**: Docker (Linux/amd64), Raspberry Pi (linux-arm64, Kiosk), Windows Service (`UseWindowsService()` in `Program.cs`), Linux x64 (systemd)
 - **Volumes / Datenpfade**: `./_config:/app/_config`, `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
@@ -70,6 +70,7 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 ```
 StockTV/
 ├── StockTvBlazor/
+│   ├── Api/                    # REST-Schnittstelle: StockTvApiHost, ApiKeyMiddleware, ConfigController
 │   ├── Components/
 │   │   ├── Pages/
 │   │   │   ├── SettingPages/   # Settings, CustomThemePage, ThemePreview, ColorField
@@ -199,8 +200,45 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 | Port | Protokoll      | Zweck |
 |------|---------------|-------|
 | 8080 | HTTP          | Blazor Web UI |
+| 8099 | HTTP          | REST-Schnittstelle (eigener Web-Host, siehe `Api/StockTvApiHost.cs`) |
 | 4747 | NetMQ REP/REQ | Kommandos vom zentralen System |
 | 4748 | NetMQ PUB/SUB | Ergebnis-Broadcasts (bei jeder Eingabe + alle 5 Sek. Alive) |
+
+### REST-Schnittstelle (Port 8099)
+
+Läuft in einem **eigenen** `WebApplication`-Host neben der Blazor-Anzeige, nicht als zweiter
+Listener im selben Host. Grund: in einer `WebApplication` antworten alle Endpunkte auf allen
+Listenern — die API wäre sonst auch über 8080 erreichbar und teilte sich die Middleware-Kette
+der Anzeige (`UseHttpsRedirection`, `UseAntiforgery`, `UseStatusCodePagesWithReExecute`).
+Zusätzlich reißt ein belegter Port 8099 so nicht die Anzeige mit herunter — `StartIfEnabledAsync`
+fängt das ab und gibt `null` zurück, die Anzeige läuft ohne Fernsteuerung weiter.
+
+Muster und Code sind aus **StockTvKiosk** übernommen (`KioskApiHost`, `ApiKeyMiddleware`,
+`ConfigController`, `AppConfig.Secrets`).
+
+**Absicherung:** Jede Anfrage braucht den Header aus `RestApi.ApiKeyHeader` (Standard
+`X-Api-Key`); `/swagger` ist ausgenommen, damit sich die UI überhaupt öffnen lässt. Der Vergleich
+läuft zeitkonstant (`CryptographicOperations.FixedTimeEquals`). Der Schlüssel wird bei **jeder**
+Anfrage neu aus dem Settings-Objekt gelesen — nur dadurch gilt ein gewechselter Schlüssel sofort.
+
+Ist `BindAddress` nicht Loopback und `ApiKey` leer, **startet die Schnittstelle nicht** und
+schreibt den Grund ins Log.
+
+| Endpunkt | Zweck |
+|---|---|
+| `GET /api/v1/config` | Konfigurationsdatei herunterladen (ApiKey darin verschlüsselt) |
+| `POST /api/v1/config/api-key` | Schlüssel wechseln, Body `{ "newKey": "…" }`, min. 8 Zeichen |
+
+`POST /api/v1/config/api-key` schreibt über `SettingsService.SaveSettingsNowAsync()` statt über
+`RequestSaveSettings()` — nur so lässt sich ein gescheitertes Schreiben bemerken und der
+Schlüssel im Arbeitsspeicher zurücknehmen. Sonst gälte im Betrieb ein Schlüssel, der nirgends
+steht, und nach dem nächsten Start käme niemand mehr auf das Gerät.
+
+**Geheimnisse in der Konfigurationsdatei:** `RestApi.ApiKey` trägt einen
+`SecretStringConverter` (`Services/SecretProtector.cs`) und wird mit `enc:`-Präfix AES-256-CBC
+abgelegt. Ein von Hand im Klartext eingetragener Wert wird beim nächsten Speichern verschlüsselt.
+Der Schlüssel ist deterministisch aus einer Konstante abgeleitet — das ist **Verschleierung gegen
+versehentliches Mitlesen, kein Schutz** vor jemandem, der Datei und Programm hat.
 
 **NetMQ-Topics (4747):** `Hello`, `GetResult`, `ResetResult`, `GetSettings`, `SetSettings`, `SetTeamNames` (`"Spielnr:TeamA:TeamB;..."`), `SetTeilnehmer`
 
@@ -290,6 +328,13 @@ Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es g
 | `UI.ActiveThemeId` | GUID | Aktives Theme (per UUID verlinkt) |
 | `UI.CustomThemes` | Array | Benutzerdefinierte Themes mit Farben |
 | `Network.Enabled` | `true/false` | NetMQ-Netzwerk aktivieren |
+| `RestApi.Enabled` | `true/false` | REST-Schnittstelle starten |
+| `RestApi.BindAddress` | IP | `0.0.0.0` = alle Schnittstellen, `127.0.0.1` = nur lokal |
+| `RestApi.Port` | Zahl | TCP-Port (Standard: 8099) |
+| `RestApi.ApiKey` | Text | Pflicht, sobald nicht nur Loopback; verschlüsselt (`enc:`) abgelegt |
+| `RestApi.ApiKeyHeader` | Text | Header mit dem Schlüssel (Standard: `X-Api-Key`) |
+| `RestApi.SwaggerEnabled` | `true/false` | Swagger-UI ausliefern |
+| `RestApi.SwaggerRoute` | Text | Pfad der Swagger-UI (Standard: `swagger`) |
 
 ### Umgebungsvariablen
 

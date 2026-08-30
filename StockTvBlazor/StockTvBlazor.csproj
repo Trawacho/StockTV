@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <Version>1.8.3.0</Version>
+    <!-- Die XML-Kommentare werden von Swagger als Beschreibung der Endpunkte angezeigt.
+         1591 aus: fuer die Blazor- und Settings-Klassen sind sie nicht gefordert. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +20,9 @@
     <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
     <PackageReference Include="NetMQ" Version="4.0.2.2" />
+    <!-- Swagger-UI liegt als eingebettete Ressource im Paket - laeuft damit auch auf einem
+         Pi ohne Internetzugang. -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
 </Project>

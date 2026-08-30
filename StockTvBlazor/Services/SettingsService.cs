@@ -1,6 +1,7 @@
 ﻿using StockTvBlazor.Extensions;
 using StockTvBlazor.Models;
 using StockTvBlazor.Settings;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 
@@ -24,9 +25,9 @@ public class SettingsService : BackgroundService
 
 	private Settings.Settings _settings = null!;
 
-	private readonly string _settingsFileName = "stocktv.config.json";
-
 	private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
+
+	private readonly SemaphoreSlim _saveGate = new(1, 1);
 
 	private readonly ILogger _logger;
 
@@ -63,14 +64,17 @@ public class SettingsService : BackgroundService
 		OnMainWindowUrlChanged?.Invoke();
 	}
 
-	private string _settingsFilePath
+	private string _settingsFilePath => GetSettingsFilePath();
+
+	/// <summary>
+	/// Ablageort der Konfigurationsdatei. Statisch, weil ihn auch der Vorab-Load in
+	/// <c>Program.cs</c> braucht - dort steht der DI-Container noch nicht.
+	/// </summary>
+	public static string GetSettingsFilePath()
 	{
-		get
-		{
-			string appDataPath = AppContext.BaseDirectory;
-			string settingsFolderPath = Path.Combine(appDataPath, "_config");
-			return Path.Combine(settingsFolderPath, _settingsFileName);
-		}
+		string appDataPath = AppContext.BaseDirectory;
+		string settingsFolderPath = Path.Combine(appDataPath, "_config");
+		return Path.Combine(settingsFolderPath, "stocktv.config.json");
 	}
 
 	public SettingsService(
@@ -272,6 +276,15 @@ public class SettingsService : BackgroundService
 			return new Settings.Settings();
 		}
 
+		// Reste eines abgebrochenen Schreibvorgangs (Absturz zwischen Schreiben und Umbenennen)
+		// entfernen - die eigentliche Datei ist davon unberuehrt.
+		var orphanedTemp = _settingsFilePath + ".tmp";
+		if (File.Exists(orphanedTemp))
+		{
+			try { File.Delete(orphanedTemp); }
+			catch (IOException) { /* naechster Start versucht es erneut */ }
+		}
+
 		try
 		{
 			var json = await File.ReadAllTextAsync(_settingsFilePath);
@@ -284,28 +297,88 @@ public class SettingsService : BackgroundService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError("Fehler beim Laden der Config: {Msg}", ex.Message);
+			// Die kaputte Datei beiseitelegen statt sie beim naechsten Speichern zu ueberschreiben:
+			// sonst verschwindet mit ihr unbemerkt der API-Schluessel und die Ursache laesst sich
+			// hinterher nicht mehr nachvollziehen.
+			var brokenPath = _settingsFilePath + ".corrupt";
+			try
+			{
+				File.Move(_settingsFilePath, brokenPath, overwrite: true);
+				_logger.LogError(
+					"Config unlesbar ({Msg}). Die Datei wurde als {Path} gesichert, es gelten " +
+					"Standardwerte - der API-Schluessel muss neu gesetzt werden.", ex.Message, brokenPath);
+			}
+			catch (Exception moveEx)
+			{
+				_logger.LogError("Config unlesbar ({Msg}) und nicht sicherbar ({MoveMsg}). " +
+					"Es gelten Standardwerte.", ex.Message, moveEx.Message);
+			}
+
 			return new Settings.Settings();
 		}
 	}
 
 	private async Task SaveSettingsInternalAsync()
 	{
-		var directory = Path.GetDirectoryName(_settingsFilePath);
+		// Der Schreibvorgang laeuft sonst zweigleisig: die Warteschlange unten und
+		// SaveSettingsNowAsync greifen auf dieselbe Datei zu.
+		await _saveGate.WaitAsync();
 
-		if (!string.IsNullOrEmpty(directory))
-			Directory.CreateDirectory(directory);
+		try
+		{
+			var directory = Path.GetDirectoryName(_settingsFilePath);
 
-		var options = new JsonSerializerOptions { WriteIndented = true };
-		var json = JsonSerializer.Serialize(_settings, options);
+			if (!string.IsNullOrEmpty(directory))
+				Directory.CreateDirectory(directory);
 
-		await File.WriteAllTextAsync(_settingsFilePath, json);
+			var options = new JsonSerializerOptions { WriteIndented = true };
+			var json = JsonSerializer.Serialize(_settings, options);
+
+			// Atomar schreiben: erst vollstaendig in eine Temp-Datei (Write-Through, also an den
+			// Betriebssystem-Cache vorbei), dann umbenennen. File.WriteAllTextAsync kuerzt die
+			// Zieldatei zuerst und schreibt danach - ein Stromausfall dazwischen (Stecker am
+			// TV-Schrank) hinterlaesst eine halbe Datei. LoadSettingsAsync faellt darauf still auf
+			// Standardwerte zurueck: API-Schluessel und Netzwerk-Konfiguration waeren weg, und weil
+			// ein leerer Schluessel mit BindAddress 0.0.0.0 den Start der REST-Schnittstelle
+			// verhindert, ist das Geraet danach aus der Ferne nicht mehr erreichbar.
+			var tempPath = _settingsFilePath + ".tmp";
+			var bytes = Encoding.UTF8.GetBytes(json);
+
+			await using (var stream = new FileStream(
+				tempPath, FileMode.Create, FileAccess.Write, FileShare.None,
+				bufferSize: 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
+			{
+				await stream.WriteAsync(bytes);
+				await stream.FlushAsync();
+			}
+
+			File.Move(tempPath, _settingsFilePath, overwrite: true);
+		}
+		finally
+		{
+			_saveGate.Release();
+		}
 	}
 
 	public void RequestSaveSettings()
 	{
 		_saveSettingsQueue.Writer.TryWrite(true);
 	}
+
+	/// <summary>
+	/// Speichert sofort und meldet Fehler an den Aufrufer weiter, statt sie nur zu
+	/// protokollieren.
+	/// </summary>
+	/// <remarks>
+	/// Gegenstueck zu <see cref="RequestSaveSettings"/>: das reiht nur in die Warteschlange ein
+	/// und der Aufrufer erfaehrt nie, ob geschrieben wurde. Fuer den Wechsel des API-Schluessels
+	/// reicht das nicht - dort muss bei einem Fehler zurueckgenommen werden koennen, sonst
+	/// gaelte im Betrieb ein Schluessel, der nirgends steht, und nach dem naechsten Start kaeme
+	/// niemand mehr auf das Geraet.
+	///
+	/// Fuer den normalen Spielbetrieb weiterhin <see cref="RequestSaveSettings"/> verwenden.
+	/// </remarks>
+	public Task SaveSettingsNowAsync() => SaveSettingsInternalAsync();
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
@@ -352,23 +425,6 @@ public class SettingsService : BackgroundService
 		CurrentSettings.UI.ActivateTheme(id);
 		RequestSaveSettings();
 		NotifyChanged();
-	}
-
-	#endregion
-
-	#region Turns
-
-	public async Task SaveTurnsAsync(List<Turn> turns)
-	{
-		var s = CurrentSettings;
-
-		if (s.Game.CurrentModus == GameSettings.Modus.Training)
-			return;
-
-		s.Game.Kehren.Clear();
-		s.Game.Kehren.AddRange(turns);
-
-		RequestSaveSettings();
 	}
 
 	#endregion

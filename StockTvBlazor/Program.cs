@@ -1,4 +1,5 @@
 ﻿using NetMQ;
+using StockTvBlazor.Api;
 using StockTvBlazor.Components;
 using StockTvBlazor.Components.ViewModels;
 using StockTvBlazor.Networking;
@@ -84,8 +85,16 @@ builder.Services.Configure<HostOptions>(options =>
 
 var app = builder.Build();
 
+// Eigener Web-Host der REST-Schnittstelle; bleibt null, wenn sie abgeschaltet ist oder nicht
+// starten konnte (siehe StockTvApiHost.StartIfEnabledAsync).
+StockTvApiHost? apiHost = null;
+
 app.Lifetime.ApplicationStopping.Register(() =>
 {
+	// Vor dem harten Exit unten sauber beenden, damit der Port wieder frei wird.
+	if (apiHost is not null)
+		apiHost.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
 	Task.Run(async () =>
 	{
 		await Task.Delay(5000);
@@ -106,6 +115,13 @@ using (var scope = app.Services.CreateScope())
 	var zielService = services.GetRequiredService<ZielService>();
 	zielService.InitializeZiel();
 
+	// Erst hier, nach InitializeAsync(): der eigene Web-Host der REST-Schnittstelle braucht die
+	// geladene Konfiguration (Port, BindAddress, ApiKey). Genau deshalb ein zweiter Host und
+	// kein zweiter Listener im Anzeige-Host - dessen Kestrel steht schon vor builder.Build().
+	apiHost = await StockTvApiHost.StartIfEnabledAsync(
+		settingsService.CurrentSettings,
+		app.Services,
+		app.Services.GetRequiredService<ILoggerFactory>());
 }
 
 // WICHTIG: Development richtig behandeln!
