@@ -1,4 +1,6 @@
-﻿namespace StockTvBlazor.Settings;
+﻿using System.Text.Json.Serialization;
+
+namespace StockTvBlazor.Settings;
 
 public class UiSettings
 {
@@ -34,6 +36,7 @@ public class UiSettings
 	/// <summary>
 	/// Alle verfügbaren Themes: Built-in + Custom – einheitlich als ITheme-Liste.
 	/// </summary>
+	[JsonIgnore]
 	public IReadOnlyList<ITheme> AllThemes =>
 	[
 		.. _builtInThemes,
@@ -43,6 +46,7 @@ public class UiSettings
 	/// <summary>
 	/// Das aktuell aktive Theme. Fallback: Hell.
 	/// </summary>
+	[JsonIgnore]
 	public ITheme ActiveTheme =>
 		AllThemes.FirstOrDefault(t => t.Id == ActiveThemeId)
 		?? _builtInThemes[0];
@@ -50,6 +54,7 @@ public class UiSettings
 	/// <summary>
 	/// Die aktuellen Farben basierend auf aktivem Theme und Richtung.
 	/// </summary>
+	[JsonIgnore]
 	public ColorSettings Colors => ActiveTheme.GetColors(CurrentRichtung);
 
 	/// <summary>

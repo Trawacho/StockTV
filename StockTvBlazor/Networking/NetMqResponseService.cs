@@ -5,7 +5,6 @@ using StockTvBlazor.Settings;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Channels;
 
 namespace StockTvBlazor.Networking;
 
@@ -27,7 +26,11 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 	private readonly NetworkConfigService _networkConfigService;
 
-	private readonly Channel<Func<Task>> _actionChannel = Channel.CreateUnbounded<Func<Task>>();
+	private readonly MarketingImageService _marketingImageService;
+
+	// Gemeinsam mit der REST-Schnittstelle, damit Kommandos beider Protokolle serialisiert
+	// ablaufen - MatchService/ZielService sind nicht thread-sicher.
+	private readonly GameCommandQueue _commands;
 
 	public NetMqResponseService(
 		ILogger<NetMqResponseService> logger,
@@ -35,7 +38,9 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		MatchService matchService,
 		ZielService zielService,
 		PlatformInfoService platformInfo,
-		NetworkConfigService networkConfigService)
+		NetworkConfigService networkConfigService,
+		MarketingImageService marketingImageService,
+		GameCommandQueue commands)
 	{
 		_logger = logger;
 		_settingsService = settingsService;
@@ -43,6 +48,8 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		_zielService = zielService;
 		_platformInfo = platformInfo;
 		_networkConfigService = networkConfigService;
+		_marketingImageService = marketingImageService;
+		_commands = commands;
 
 		_repSocket = new ResponseSocket();
 
@@ -123,7 +130,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 			case "ResetResult":
 				_logger.LogInformation("ResetResult requested");
-				_ = _actionChannel.Writer.TryWrite(() =>
+				_commands.Enqueue(() =>
 				{
 					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel
 						|| _settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel2)
@@ -190,7 +197,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 			case "SetSettings":
 				_logger.LogInformation("SetSettings requested");
-				_ = _actionChannel.Writer.TryWrite(() =>
+				_commands.Enqueue(() =>
 				{
 					_settingsService.SetSettings(request[1].ToByteArray());
 					return Task.CompletedTask;
@@ -201,7 +208,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 			case "SetTeamNames":
 				_logger.LogInformation("SetTeamNames requested");
-				_ = _actionChannel.Writer.TryWrite(() =>
+				_commands.Enqueue(() =>
 				{
 					_matchService.SetTeamNames(request[1].ToByteArray());
 					return Task.CompletedTask;
@@ -212,7 +219,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 			case "SetTeilnehmer":
 				_logger.LogInformation("SetTeilnehmer requested");
-				_ = _actionChannel.Writer.TryWrite(() =>
+				_commands.Enqueue(() =>
 				{
 					_zielService.SetTeilnehmer(request[1].ToByteArray());
 					return Task.CompletedTask;
@@ -236,7 +243,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 					break;
 				}
 
-				_ = _actionChannel.Writer.TryWrite(async () =>
+				_commands.Enqueue(async () =>
 				{
 					var netInterfaces = await _networkConfigService.GetInterfacesAsync(CancellationToken.None);
 					var iface = netInterfaces.FirstOrDefault(i => i.Device == cmd!.Device);
@@ -269,7 +276,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				var hostname = Encoding.UTF8.GetString(request[1].ToByteArray()).Trim();
 				if (!NetworkConfigService.HostnameRegex.IsMatch(hostname)) { response.Append("NACK:invalid-hostname"); break; }
 
-				_ = _actionChannel.Writer.TryWrite(async () =>
+				_commands.Enqueue(async () =>
 				{
 					var result = await _networkConfigService.SetHostnameAsync(hostname, CancellationToken.None);
 					if (!result.Success)
@@ -287,7 +294,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				if (!_platformInfo.IsRaspberryPi) { response.Append("NACK:not-a-pi"); break; }
 				if (GameStateGuard.HasRecordedValues(_matchService, _zielService)) { response.Append("NACK:values-present"); break; }
 
-				_ = _actionChannel.Writer.TryWrite(async () =>
+				_commands.Enqueue(async () =>
 				{
 					var result = await _networkConfigService.RebootAsync(CancellationToken.None);
 					if (!result.Success)
@@ -298,23 +305,67 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				break;
 			}
 
+			// Werbebild. Die Zentrale schickt SetImage mit drei Frames: Topic, Bilddaten und
+			// - als einziges Kommando ueberhaupt - einem dritten Frame mit dem Dateinamen
+			// (StockAppV2: SetMarketingImage/ShowMarketing/ClearMarketingImage).
 			case "SetImage":
-				_logger.LogInformation("SetImage requested");
-				// TODO: Implement SetImage functionality
+			{
+				if (request.FrameCount < 2) { response.Append("NACK:invalid-payload"); break; }
+
+				var imageData = request[1].ToByteArray();
+				var fileName = request.FrameCount > 2
+					? Encoding.UTF8.GetString(request[2].ToByteArray())
+					: "marketing";
+
+				_logger.LogInformation("SetImage requested: {File} ({Bytes} Byte)", fileName, imageData.Length);
+
+				// Pruefen im Poller-Thread (billig: Groesse und Signatur), damit die Ablehnung noch
+				// in die Antwort passt. Geschrieben wird ueber den _actionChannel - ein
+				// blockierender Dateizugriff hier legt die gesamte Kommandoannahme stumm.
+				var error = _marketingImageService.Validate(imageData, out var extension);
+				if (error is not null) { response.Append($"NACK:{error}"); break; }
+
+				_commands.Enqueue(
+					() => _marketingImageService.SaveAsync(imageData, fileName, extension!));
+
 				response.Append("ACK");
 				break;
+			}
 
 			case "GoToImage":
+			{
 				_logger.LogInformation("GoToImage requested");
-				// TODO: Implement GoToImage functionality
+
+				if (!_marketingImageService.HasImage) { response.Append("NACK:no-image"); break; }
+
+				_commands.Enqueue(() =>
+				{
+					_settingsService.RequestNavigation("/marketing");
+					return Task.CompletedTask;
+				});
+
 				response.Append("ACK");
 				break;
+			}
 
 			case "ClearImage":
+			{
 				_logger.LogInformation("ClearImage requested");
-				// TODO: Implement ClearImage functionality
+
+				_commands.Enqueue(() =>
+				{
+					_marketingImageService.Clear();
+
+					// Zurueck auf den aktiven Spielmodus - sonst bliebe die Anzeige auf einer
+					// Seite stehen, deren Bild es nicht mehr gibt.
+					_settingsService.RequestNavigation(
+						SettingsService.GetModusUrl(_settingsService.CurrentSettings.Game.CurrentModus));
+					return Task.CompletedTask;
+				});
+
 				response.Append("ACK");
 				break;
+			}
 
 			default:
 				_logger.LogWarning("Unknown topic: {Topic}", topic);
@@ -333,21 +384,13 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 		try
 		{
-			await foreach (var action in _actionChannel.Reader.ReadAllAsync(stoppingToken))
-			{
-				try
-				{
-					await action();
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, "Channel action error");
-				}
-			}
+			// Die Kommandos laufen seit dem Parallelbetrieb in der gemeinsamen GameCommandQueue.
+			// Hier bleibt nur, den Poller am Leben zu halten, bis heruntergefahren wird.
+			await Task.Delay(Timeout.Infinite, stoppingToken);
 		}
 		catch (OperationCanceledException)
 		{
-			_logger.LogInformation("NetMQ action channel stopped by cancellation");
+			_logger.LogInformation("NetMQ service stopped by cancellation");
 		}
 
 		if (_poller.IsRunning)
@@ -365,7 +408,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 
 		_logger.LogInformation("Disposing NetMQ service");
 
-		_actionChannel.Writer.TryComplete();
+
 		if (_poller.IsRunning)
 			_poller.StopAsync();
 		_poller.Dispose();

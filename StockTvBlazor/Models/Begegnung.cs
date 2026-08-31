@@ -13,8 +13,17 @@ public class Begegnung(int spielNummer, string TeamA, string TeamB) : IBegegnung
 	public int Spielnummer { get; set; } = spielNummer;
 
 	private readonly string _mannschaft_A = TeamA;
-	
+
 	private readonly string _mannschaft_B = TeamB;
+
+	/// <summary>
+	/// Die Mannschaften in der Reihenfolge, in der sie gesetzt wurden - ohne die Vertauschung,
+	/// die <see cref="TeamNameLeft"/>/<see cref="TeamNameRight"/> je nach Spielrichtung vornehmen.
+	/// Fuer das Sichern des Spielstands, das die Richtung nicht mit einfrieren darf.
+	/// </summary>
+	public string MannschaftA => _mannschaft_A;
+
+	public string MannschaftB => _mannschaft_B;
 
 	public string TeamNameLeft(bool isColorSchemeRightToLeft)
 	{

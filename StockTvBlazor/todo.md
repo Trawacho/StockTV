@@ -2,19 +2,25 @@
 - [x] Über die Settingspage den Netzwerkstack mDNS, publisher und responseServer neu starten
 - [x] Schriftarten wählbar machen
 - [x] Theme-Settings in der Netzwerkconfig verfügbar machen
-- Marketing Seite implementieren
+- [x] Marketing Seite implementieren (`/marketing`, `Components/Pages/Marketing.razor`)
 - Homepage designen
 - [x] javascript durch css ersetzen
-- NetMQ SetImage Befehl implementieren
-- NetMQ GoToImage Befehl implementieren
-- NetMQ ClearImage Befehl implementieren
+- [x] NetMQ SetImage Befehl implementieren
+- [x] NetMQ GoToImage Befehl implementieren
+- [x] NetMQ ClearImage Befehl implementieren
 - Neuer Spielmodus "Special1" (Kopie von BestOf, Quote 6/9/12=Aus, keine Netzwerkübertragung) — Plan siehe [Special1-Modus-Plan.md](Special1-Modus-Plan.md)
 - [x] Training-Modus: keine Daten per Publisher übertragen (`MatchService.ProcessKeyAsync` published `GetResult` jetzt nur noch, wenn `CurrentModus != Training`; die `GetResult`-Abfrage per NetMQ REQ/REP bleibt bewusst unverändert, da das eine explizite Anfrage des zentralen Systems ist, kein automatischer Broadcast)
 - `UseHttpsRedirection()`/`UseHsts()` aus `Program.cs` entfernen — App bedient nie HTTPS (nur Port 8080 HTTP), erzeugt bei jedem Start nur die sinnlose Warnung "Failed to determine the https port for redirect"
 - [x] `MdnsDiscoveryService`: mDNS nach Pi-Boot-Race dauerhaft unerreichbar (Hotfix `hotfix/mdns-ip-selfheal`, 2026-08-16) — Ursache war tiefer als vermutet: nicht nur die im `ServiceProfile` eingebackene IP war beim Boot-Race auf `127.0.0.1` eingefroren, sondern `MulticastService` trat der mDNS-Multicast-Gruppe (`224.0.0.251`) nie auf dem echten Netzwerk-Interface (`eth0`) bei, wenn dieses beim Start von `ServiceDiscovery` noch keine IP hatte (nur auf `lo`, dauerhaft — die eingebaute periodische Neuerkennung alle 2 Minuten hat das nicht behoben, ein nachträglicher `Mdns.Stop()`/`Start()` auch nicht, nur doppelte Socket-Bindings erzeugt). Fix: `ServiceDiscovery` wird jetzt erst erstellt/gestartet, sobald `IpAdvertisementService.GetAdvertisedIp()` eine echte IP liefert (2s-Retry-Loop vor der Konstruktion), zusätzliches Start-/Fehler-Logging ergänzt. Auf `stocktvPi4` durch drei echte Reboots verifiziert (Boot-Race reproduziert, `eth0` tritt jetzt korrekt bei, externe mDNS-Query beantwortet)
 - [x] `SettingsService`: Erfolgreiches Laden der Config loggen (`LoadSettingsAsync` loggt jetzt bei Erfolg eine Info-Zeile mit BahnNummer/Modus)
-- **Spielstand-Persistierung über alle Modi außer Training kaputt/fehlt — braucht eigenen Service, noch zu diskutieren:**
-  - Die Absicht ist im Code erkennbar: `SettingsService.SaveTurnsAsync()` bricht nur bei `CurrentModus == Training` ab, für BestOf/Turnier soll also persistiert werden (`Match.SaveTurnsToLocalSettingsAsync()`/`LoadTurnsFromLocalSettings()`).
-  - Greift aber nicht: `GameSettings.Kehren` ist mit `[JsonIgnore]` markiert (`Settings/GameSettings.cs`) — landet nie in `stocktv.config.json` (auf `stocktvPi4` verifiziert: kein `"Kehren"`-Feld in der echten Config). Ein Reboot/Absturz mitten in einem BestOf/Turnier-Spiel verliert dadurch den kompletten Spielstand.
-  - Ziel/Ziel2 (`ZielService`/`ZielBewerb`) haben gar keinen Persistierungs-Mechanismus, nicht mal ansatzweise (kein Save, kein Reload beim Start).
-  - Vorgabe für die Lösung: **nicht** über `SettingsService`/`stocktv.config.json` lösen, sondern über einen **eigenen, dedizierten Service** — Design/Ansatz muss noch genauer besprochen werden, bevor das umgesetzt wird
+- [x] **Spielstand-Persistierung über alle Modi außer Training** (Branch `feature/rest-api-security`)
+  - Umgesetzt wie vorgegeben über einen **eigenen, dedizierten Service**: `Services/GameStateStore.cs` + `Services/GameStateFile.cs`, eigene Datei `_config/stocktv.state.json` — nicht über `SettingsService`/`stocktv.config.json`.
+  - Der tote Pfad ist entfernt: `GameSettings.Kehren` (`[JsonIgnore]`), `SettingsService.SaveTurnsAsync()`, `Match.SaveTurnsToLocalSettingsAsync()`/`LoadTurnsFromLocalSettings()`. Das `[JsonIgnore]` stand schon vor dem großen Settings-Refactor (`1a24161`) in `Models/Settings.cs` — die Kehren waren nie in der Datei, das Wiederherstellen lief immer ins Leere, und jede Kehre löste trotzdem einen vollständigen Schreibvorgang aus.
+  - Ziel/Ziel2 sind jetzt mit persistiert, inklusive `Runde1Summe` und `Durchgang` — ohne die beiden fängt ein wiederhergestellter Ziel2-Bewerb die zweite Runde von vorn an.
+  - Gespeichert wird über `OnMatchChanged`/`OnZielBewerbChanged` (verdrahtet in `Program.cs`), damit auch `SetTeamNames`/`SetTeilnehmer`/`ResetResult` von außen erfasst sind. Schreiben über eine `Channel`-Queue und atomar (Temp-Datei + `File.Move`).
+  - Geladen wird nur, wenn `BahnNummer` und `Modus` passen und `SavedAtUtc` jünger als 12 h ist. Ein unlesbarer Spielstand wird kommentarlos verworfen — eine Anzeige, die wegen einer defekten Punktedatei nicht hochkommt, wäre der schlechtere Tausch.
+- [x] **REST-Schnittstelle mit API-Schlüssel** (Branch `feature/rest-api-security`) — eigener Kestrel-Host auf Port 8098, Muster aus StockTvKiosk übernommen (`Api/StockTvApiHost.cs`, `Api/ApiKeyMiddleware.cs`, `Api/ConfigController.cs`). Schlüsselwechsel über `POST /api/v1/config/api-key`, verschlüsselt abgelegt (`Services/SecretProtector.cs`).
+- [x] **Konfiguration auf getrennte Dateien aufgeteilt** — `stocktv.device.json` (Gerät, enthält den Schlüssel, im Spielbetrieb nie geschrieben), `stocktv.config.json` (Betrieb), `stocktv.state.json` (Spielstand). Migration aus der Altdatei läuft einmalig beim Start.
+- [x] **REST-Endpunkte für den Spielbetrieb und SignalR-Hub** (Branch `feature/rest-api-security`) — `Api/GameController.cs`, `ImageController.cs`, `SystemController.cs`, `StockTvHub.cs`. Läuft **parallel** zu NetMQ, bis StockAppV2 umgestellt ist: gemeinsame `GameCommandQueue` (Serialisierung), `GameEventBroadcaster` (Fan-out auf beide Wege), `SubscriberRegistry` (BlockLocalChanges aus beiden Quellen).
+- NetMQ abbauen, sobald StockAppV2 auf REST/SignalR umgestellt ist (NetMQ-Package, Ports 4747/4748, `Networking/NetMq*`)
+- `PUT /api/v1/config` und `POST /api/v1/config/default` (Konfiguration hochladen/zurücksetzen) — durch die Aufteilung jetzt möglich, weil die Gerätedatei im Spielbetrieb unberührt bleibt

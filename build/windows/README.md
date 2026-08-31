@@ -189,6 +189,11 @@ Get-EventLog -LogName Application -Source StockTV -Newest 20
 ## Hinweise
 
 - StockTV läuft auf Port **8080** (HTTP). HTTPS ist nicht konfiguriert.
-- Konfiguration liegt in `C:\StockTV\_config\stocktv.config.json`.
+- Die REST-Schnittstelle auf Port **8098** startet nur, wenn in `stocktv.device.json` ein
+  API-Schlüssel eingetragen ist (oder `BindAddress` auf `127.0.0.1` steht).
+- Konfiguration liegt in `C:\StockTV\_config\` — drei Dateien: `stocktv.device.json` (Gerät,
+  enthält den API-Schlüssel), `stocktv.config.json` (Betrieb) und `stocktv.state.json`
+  (laufender Spielstand). Eine alte Einzeldatei wird beim ersten Start automatisch aufgeteilt.
+  Details in [INSTALL.md](../../INSTALL.md#konfigurationsdateien).
 - Der Dienst startet automatisch mit Windows.
 - `UseWindowsService()` ist in `Program.cs` aktiv — auf Nicht-Windows-Systemen oder bei direktem Start als Konsolen-App hat das keinen Einfluss.

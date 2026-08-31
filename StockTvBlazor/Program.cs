@@ -54,6 +54,13 @@ builder.Services.AddSingleton<FontService>();
 builder.Services.AddSingleton<PlatformInfoService>();
 builder.Services.AddSingleton<NetworkConfigService>();
 builder.Services.AddSingleton<UpdateService>();
+builder.Services.AddSingleton<MarketingImageService>();
+builder.Services.AddSingleton<SubscriberRegistry>();
+builder.Services.AddSingleton<GameEventBroadcaster>();
+builder.Services.AddSingleton<GameCommandQueue>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<GameCommandQueue>());
+builder.Services.AddSingleton<GameStateStore>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<GameStateStore>());
 
 builder.Services.AddHttpClient("GitHub", c =>
 {
@@ -115,6 +122,36 @@ using (var scope = app.Services.CreateScope())
 	var zielService = services.GetRequiredService<ZielService>();
 	zielService.InitializeZiel();
 
+	// Nach dem Laden der Konfiguration: die Gueltigkeitspruefung des Spielstands braucht
+	// Bahnnummer und Modus. Ein nicht passender oder zu alter Stand wird dabei verworfen.
+	var gameStateStore = services.GetRequiredService<GameStateStore>();
+	var savedState = await gameStateStore.LoadAsync(settingsService.CurrentSettings);
+
+	if (savedState is not null)
+	{
+		gameStateStore.RestoreWithoutSaving(() =>
+		{
+			matchService.CurrentMatch.RestoreFrom(savedState.Match);
+			zielService.CurrentZielBewerb.RestoreFrom(savedState.Ziel);
+		});
+	}
+
+	// Erst nach dem Wiederherstellen anmelden, sonst schreibt das Wiederherstellen selbst.
+	gameStateStore.StartAutoSave(() => new GameStateFile
+	{
+		SavedAtUtc = DateTimeOffset.UtcNow,
+		BahnNummer = settingsService.CurrentSettings.General.BahnNummer,
+		Modus = settingsService.CurrentSettings.Game.CurrentModus,
+		Match = matchService.CurrentMatch.CreateSnapshot(),
+		Ziel = zielService.CurrentZielBewerb.CreateSnapshot()
+	});
+
+	// Jede Aenderung an Spielstand oder Zielbewerb sichern. Ueber die Ereignisse der Modelle und
+	// nicht an den einzelnen Eingabestellen: so ist auch erfasst, was von aussen kommt
+	// (SetTeamNames, SetTeilnehmer, ResetResult ueber NetMQ).
+	matchService.CurrentMatch.OnMatchChanged += gameStateStore.RequestSave;
+	zielService.CurrentZielBewerb.OnZielBewerbChanged += gameStateStore.RequestSave;
+
 	// Erst hier, nach InitializeAsync(): der eigene Web-Host der REST-Schnittstelle braucht die
 	// geladene Konfiguration (Port, BindAddress, ApiKey). Genau deshalb ein zweiter Host und
 	// kein zweiter Listener im Anzeige-Host - dessen Kestrel steht schon vor builder.Build().
@@ -143,6 +180,18 @@ app.UseAntiforgery();
 
 app.UseStaticFiles();
 app.MapStaticAssets();
+
+// Liefert das Werbebild aus. Bewusst am Anzeige-Host (8080) und nicht an der REST-Schnittstelle:
+// die Seite /marketing laeuft im Browser des Kiosks, der die API auf 8098 weder erreichen soll
+// noch den API-Schluessel kennt.
+app.MapGet("/marketing/image", (MarketingImageService images) =>
+{
+	var file = images.CurrentFile;
+
+	return file is null
+		? Results.NotFound()
+		: Results.File(file, MarketingImageService.ContentTypeFor(file));
+});
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();

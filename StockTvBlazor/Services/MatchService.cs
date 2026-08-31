@@ -4,11 +4,16 @@ using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Services;
 
-public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService) : IGameInputService
+public class MatchService(
+	SettingsService settingsService,
+	ILogger<MatchService> logger,
+	NetMqPublisherService publisherService,
+	GameEventBroadcaster broadcaster) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 	private readonly ILogger<MatchService> _logger = logger;
 	private readonly NetMqPublisherService _publisherService = publisherService;
+	private readonly GameEventBroadcaster _broadcaster = broadcaster;
 	private Match? _currentMatch;
 
 	public Match CurrentMatch => _currentMatch
@@ -106,7 +111,14 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		// Training ist freies Spiel ohne Spielzaehlung (siehe CurrentMatch.Reset()) - entsprechend
 		// soll auch nichts an das zentrale Verwaltungsprogramm gesendet werden.
 		if (s.Game.CurrentModus != GameSettings.Modus.Training)
+		{
+			// Beide Wege bedienen, solange StockAppV2 noch auf NetMQ hoert.
 			_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
+			_broadcaster.ResultChanged(new Api.ResultDto(
+				Api.GameDtoFactory.Settings(s),
+				Api.GameDtoFactory.Match(CurrentMatch),
+				Ziel: null));
+		}
 	}
 
 	private void AddInput(int value)

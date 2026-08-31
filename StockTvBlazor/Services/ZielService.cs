@@ -3,13 +3,19 @@ using StockTvBlazor.Networking;
 
 namespace StockTvBlazor.Services;
 
-public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService) : IGameInputService
+public class ZielService(
+	SettingsService settingsService,
+	ILogger<ZielService> logger,
+	NetMqPublisherService publisherService,
+	GameEventBroadcaster broadcaster) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 
 	private readonly ILogger<ZielService> _logger = logger;
 
 	private readonly NetMqPublisherService _publisherService = publisherService;
+
+	private readonly GameEventBroadcaster _broadcaster = broadcaster;
 
 	private ZielBewerb? _currentZielBewerb;
 
@@ -111,7 +117,12 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 		}
 
 		OnGlobalRefresh?.Invoke();
+		// Beide Wege bedienen, solange StockAppV2 noch auf NetMQ hoert.
 		_publisherService.Publish("GetResult", CurrentZielBewerb.SerializeJson());
+		_broadcaster.ResultChanged(new Api.ResultDto(
+			Api.GameDtoFactory.Settings(_settingsService.CurrentSettings),
+			Match: null,
+			Api.GameDtoFactory.Ziel(CurrentZielBewerb)));
 	}
 
 	private void AddInput(int value)

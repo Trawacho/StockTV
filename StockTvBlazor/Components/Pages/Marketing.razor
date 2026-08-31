@@ -1,0 +1,17 @@
+@page "/marketing"
+@rendermode InteractiveServer
+
+<PageTitle>Werbung</PageTitle>
+
+@* Vollbild-Werbebild, von der zentralen Verwaltung ueber NetMQ gesetzt (SetImage/GoToImage).
+   Reine Anzeige - hier wird nichts bedient. *@
+<div class="marketing-shell">
+	@if (HasImage)
+	{
+		<img class="marketing-image" src="@ImageUrl" alt="Werbung" />
+	}
+	else
+	{
+		<div class="marketing-empty">Kein Bild hinterlegt</div>
+	}
+</div>

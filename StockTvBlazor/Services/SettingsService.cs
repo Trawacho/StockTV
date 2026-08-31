@@ -25,7 +25,7 @@ public class SettingsService : BackgroundService
 
 	private Settings.Settings _settings = null!;
 
-	private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
+	private readonly Channel<SettingsScope> _saveSettingsQueue = Channel.CreateUnbounded<SettingsScope>();
 
 	private readonly SemaphoreSlim _saveGate = new(1, 1);
 
@@ -54,6 +54,12 @@ public class SettingsService : BackgroundService
 	/// </summary>
 	public event Action? OnMainWindowUrlChanged;
 
+	/// <summary>
+	/// Fordert die Anzeige auf, zu einer Adresse zu wechseln - z.B. auf das Werbebild und wieder
+	/// zurueck (NetMQ <c>GoToImage</c>/<c>ClearImage</c>).
+	/// </summary>
+	public void RequestNavigation(string url) => OnNavigationRequested?.Invoke(url);
+
 	/// <summary>Meldet die im Bedienfenster offene Seite. Mehrfachmeldungen sind unschaedlich.</summary>
 	public void ReportMainWindowUrl(string relativeUrl)
 	{
@@ -62,19 +68,6 @@ public class SettingsService : BackgroundService
 
 		MainWindowUrl = relativeUrl;
 		OnMainWindowUrlChanged?.Invoke();
-	}
-
-	private string _settingsFilePath => GetSettingsFilePath();
-
-	/// <summary>
-	/// Ablageort der Konfigurationsdatei. Statisch, weil ihn auch der Vorab-Load in
-	/// <c>Program.cs</c> braucht - dort steht der DI-Container noch nicht.
-	/// </summary>
-	public static string GetSettingsFilePath()
-	{
-		string appDataPath = AppContext.BaseDirectory;
-		string settingsFolderPath = Path.Combine(appDataPath, "_config");
-		return Path.Combine(settingsFolderPath, "stocktv.config.json");
 	}
 
 	public SettingsService(
@@ -95,10 +88,10 @@ public class SettingsService : BackgroundService
 	{
 		_settings = await LoadSettingsAsync();
 
-		_fileLoggerProvider.Enabled = _settings.General.FileLoggingEnabled;
+		_fileLoggerProvider.Enabled = _settings.Device.FileLoggingEnabled;
 
 		_logger.LogInformation("FileLogging initial: {State}",
-			_settings.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+			_settings.Device.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
 	}
 
 	public Settings.Settings CurrentSettings
@@ -123,12 +116,15 @@ public class SettingsService : BackgroundService
 	{
 		var s = CurrentSettings;
 
-		s.General.FileLoggingEnabled = !s.General.FileLoggingEnabled;
-		_fileLoggerProvider.Enabled = s.General.FileLoggingEnabled;
+		s.Device.FileLoggingEnabled = !s.Device.FileLoggingEnabled;
+		_fileLoggerProvider.Enabled = s.Device.FileLoggingEnabled;
 
 		_logger.LogInformation("FileLogging wurde {State}",
-			s.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+			s.Device.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
 
+		// Eigener Speicheraufruf mit Device-Scope: bis zur Aufteilung hat das ExitSettingsPage
+		// miterledigt, das jetzt nur noch die Betriebs-Konfiguration schreibt.
+		RequestSaveSettings(SettingsScope.Device);
 		NotifyChanged();
 	}
 
@@ -247,8 +243,11 @@ public class SettingsService : BackgroundService
 
 	public void ChangeNetworking()
 	{
-		CurrentSettings.Network.Enabled =
-			!CurrentSettings.Network.Enabled;
+		CurrentSettings.Device.Network.Enabled =
+			!CurrentSettings.Device.Network.Enabled;
+
+		// Wie bei ToggleFileLogging: gehoert in die Geraetedatei, die ExitSettingsPage nicht anfasst.
+		RequestSaveSettings(SettingsScope.Device);
 	}
 
 	#endregion
@@ -268,91 +267,206 @@ public class SettingsService : BackgroundService
 
 	#region Load / Save
 
+	/// <summary>Aufteilung der Konfiguration auf zwei Dateien - siehe <see cref="Settings.Settings"/>.</summary>
+	private static string GetFilePath(SettingsScope scope) => Path.Combine(
+		AppContext.BaseDirectory,
+		"_config",
+		scope == SettingsScope.Device ? "stocktv.device.json" : "stocktv.config.json");
+
+	/// <summary>
+	/// Ablageort der Betriebs-Konfiguration. Statisch, weil ihn auch die REST-Schnittstelle
+	/// braucht, wo der DI-Container nicht zur Verfuegung steht.
+	/// </summary>
+	public static string GetSettingsFilePath() => GetFilePath(SettingsScope.Config);
+
+	/// <summary>Ablageort der Geraete-Konfiguration (enthaelt den API-Schluessel).</summary>
+	public static string GetDeviceFilePath() => GetFilePath(SettingsScope.Device);
+
+	private static readonly JsonSerializerOptions _fileJsonOptions = new() { WriteIndented = true };
+
+	/// <summary>Was in stocktv.config.json steht - der Rest liegt in der Geraetedatei.</summary>
+	private sealed class ConfigFile
+	{
+		public GeneralSettings General { get; set; } = new();
+		public GameSettings Game { get; set; } = new();
+		public UiSettings UI { get; set; } = new();
+	}
+
 	private async Task<Settings.Settings> LoadSettingsAsync()
 	{
-		if (!File.Exists(_settingsFilePath))
+		await MigrateLegacyFileIfNeededAsync();
+
+		var settings = new Settings.Settings();
+
+		settings.Device = await ReadFileAsync<DeviceSettings>(SettingsScope.Device) ?? new DeviceSettings();
+
+		var config = await ReadFileAsync<ConfigFile>(SettingsScope.Config);
+		if (config is not null)
 		{
-			_logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
-			return new Settings.Settings();
+			settings.General = config.General;
+			settings.Game = config.Game;
+			settings.UI = config.UI;
 		}
+
+		_logger.LogInformation(
+			"Konfiguration geladen: BahnNummer={BahnNummer}, Modus={Modus}, RestApi={RestApi}",
+			settings.General.BahnNummer, settings.Game.CurrentModus,
+			settings.Device.RestApi.Enabled ? $"Port {settings.Device.RestApi.Port}" : "aus");
+
+		return settings;
+	}
+
+	/// <summary>
+	/// Liest eine der beiden Dateien. Fehlt sie, gelten Standardwerte; ist sie unlesbar, wird sie
+	/// als <c>.corrupt</c> beiseitegelegt, damit sie nicht beim naechsten Speichern unbemerkt
+	/// ueberschrieben wird - mit ihr verschwaende sonst auch der API-Schluessel.
+	/// </summary>
+	private async Task<T?> ReadFileAsync<T>(SettingsScope scope) where T : class
+	{
+		var path = GetFilePath(scope);
 
 		// Reste eines abgebrochenen Schreibvorgangs (Absturz zwischen Schreiben und Umbenennen)
 		// entfernen - die eigentliche Datei ist davon unberuehrt.
-		var orphanedTemp = _settingsFilePath + ".tmp";
+		var orphanedTemp = path + ".tmp";
 		if (File.Exists(orphanedTemp))
 		{
 			try { File.Delete(orphanedTemp); }
 			catch (IOException) { /* naechster Start versucht es erneut */ }
 		}
 
+		if (!File.Exists(path))
+		{
+			_logger.LogWarning("{File} nicht gefunden, Standardwerte werden verwendet.", Path.GetFileName(path));
+			return null;
+		}
+
 		try
 		{
-			var json = await File.ReadAllTextAsync(_settingsFilePath);
-			var settings = JsonSerializer.Deserialize<Settings.Settings>(json) ?? new Settings.Settings();
-
-			_logger.LogInformation("Config geladen: BahnNummer={BahnNummer}, Modus={Modus}",
-				settings.General.BahnNummer, settings.Game.CurrentModus);
-
-			return settings;
+			var json = await File.ReadAllTextAsync(path);
+			return JsonSerializer.Deserialize<T>(json);
 		}
 		catch (Exception ex)
 		{
-			// Die kaputte Datei beiseitelegen statt sie beim naechsten Speichern zu ueberschreiben:
-			// sonst verschwindet mit ihr unbemerkt der API-Schluessel und die Ursache laesst sich
-			// hinterher nicht mehr nachvollziehen.
-			var brokenPath = _settingsFilePath + ".corrupt";
+			var brokenPath = path + ".corrupt";
 			try
 			{
-				File.Move(_settingsFilePath, brokenPath, overwrite: true);
+				File.Move(path, brokenPath, overwrite: true);
 				_logger.LogError(
-					"Config unlesbar ({Msg}). Die Datei wurde als {Path} gesichert, es gelten " +
-					"Standardwerte - der API-Schluessel muss neu gesetzt werden.", ex.Message, brokenPath);
+					"{File} unlesbar ({Msg}). Die Datei wurde als {Path} gesichert, es gelten " +
+					"Standardwerte.", Path.GetFileName(path), ex.Message, brokenPath);
 			}
 			catch (Exception moveEx)
 			{
-				_logger.LogError("Config unlesbar ({Msg}) und nicht sicherbar ({MoveMsg}). " +
-					"Es gelten Standardwerte.", ex.Message, moveEx.Message);
+				_logger.LogError("{File} unlesbar ({Msg}) und nicht sicherbar ({MoveMsg}). " +
+					"Es gelten Standardwerte.", Path.GetFileName(path), ex.Message, moveEx.Message);
 			}
 
-			return new Settings.Settings();
+			return null;
 		}
 	}
 
-	private async Task SaveSettingsInternalAsync()
+	/// <summary>
+	/// Einmalige Umstellung von der frueheren Einzeldatei auf zwei Dateien. Erkennungsmerkmal ist
+	/// die fehlende Geraetedatei; die Altdatei bleibt als <c>.migrated</c> erhalten.
+	/// </summary>
+	private async Task MigrateLegacyFileIfNeededAsync()
 	{
-		// Der Schreibvorgang laeuft sonst zweigleisig: die Warteschlange unten und
-		// SaveSettingsNowAsync greifen auf dieselbe Datei zu.
+		var devicePath = GetDeviceFilePath();
+		var configPath = GetSettingsFilePath();
+
+		if (File.Exists(devicePath) || !File.Exists(configPath))
+			return;
+
+		try
+		{
+			var json = await File.ReadAllTextAsync(configPath);
+
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+
+			var device = new DeviceSettings();
+
+			// Aeltere Installationen haben weder Network noch RestApi - dann gelten Standardwerte.
+			if (root.TryGetProperty("Network", out var network))
+				device.Network = network.Deserialize<NetworkSettings>() ?? new NetworkSettings();
+
+			if (root.TryGetProperty("RestApi", out var restApi))
+				device.RestApi = restApi.Deserialize<RestApiSettings>() ?? new RestApiSettings();
+
+			// FileLoggingEnabled stand frueher unter General.
+			if (root.TryGetProperty("General", out var general)
+				&& general.TryGetProperty("FileLoggingEnabled", out var fileLogging)
+				&& fileLogging.ValueKind is JsonValueKind.True or JsonValueKind.False)
+			{
+				device.FileLoggingEnabled = fileLogging.GetBoolean();
+			}
+
+			var config = JsonSerializer.Deserialize<ConfigFile>(json) ?? new ConfigFile();
+
+			await WriteFileAsync(devicePath, JsonSerializer.Serialize(device, _fileJsonOptions));
+
+			var backupPath = configPath + ".migrated";
+			File.Copy(configPath, backupPath, overwrite: true);
+			await WriteFileAsync(configPath, JsonSerializer.Serialize(config, _fileJsonOptions));
+
+			_logger.LogWarning(
+				"Konfiguration auf zwei Dateien aufgeteilt: Geraete-Einstellungen stehen jetzt in " +
+				"{Device}. Die bisherige Fassung wurde als {Backup} gesichert.",
+				Path.GetFileName(devicePath), Path.GetFileName(backupPath));
+		}
+		catch (Exception ex)
+		{
+			// Nicht abbrechen: schlaegt die Umstellung fehl, startet die Anwendung mit
+			// Standardwerten fuer das Geraet - die Altdatei bleibt dabei unberuehrt und kann
+			// von Hand aufgeteilt werden.
+			_logger.LogError(ex, "Die Konfiguration konnte nicht auf zwei Dateien aufgeteilt werden.");
+		}
+	}
+
+	/// <summary>
+	/// Schreibt atomar: erst vollstaendig in eine Temp-Datei (Write-Through, also am
+	/// Betriebssystem-Cache vorbei), dann umbenennen.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="File.WriteAllTextAsync(string,string,CancellationToken)"/> kuerzt die Zieldatei
+	/// zuerst und schreibt danach - ein Stromausfall dazwischen (Stecker am TV-Schrank)
+	/// hinterlaesst eine halbe Datei. Beim naechsten Start gaelten dann Standardwerte, und weil
+	/// ein leerer API-Schluessel mit BindAddress 0.0.0.0 den Start der REST-Schnittstelle
+	/// verhindert, waere das Geraet aus der Ferne nicht mehr erreichbar.
+	/// </remarks>
+	private static async Task WriteFileAsync(string path, string json)
+	{
+		var directory = Path.GetDirectoryName(path);
+		if (!string.IsNullOrEmpty(directory))
+			Directory.CreateDirectory(directory);
+
+		var tempPath = path + ".tmp";
+		var bytes = Encoding.UTF8.GetBytes(json);
+
+		await using (var stream = new FileStream(
+			tempPath, FileMode.Create, FileAccess.Write, FileShare.None,
+			bufferSize: 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
+		{
+			await stream.WriteAsync(bytes);
+			await stream.FlushAsync();
+		}
+
+		File.Move(tempPath, path, overwrite: true);
+	}
+
+	private async Task SaveSettingsInternalAsync(SettingsScope scope)
+	{
+		// Beide Schreibwege - die Warteschlange unten und SaveSettingsNowAsync - greifen auf
+		// dieselben Dateien zu.
 		await _saveGate.WaitAsync();
 
 		try
 		{
-			var directory = Path.GetDirectoryName(_settingsFilePath);
+			object payload = scope == SettingsScope.Device
+				? _settings.Device
+				: new ConfigFile { General = _settings.General, Game = _settings.Game, UI = _settings.UI };
 
-			if (!string.IsNullOrEmpty(directory))
-				Directory.CreateDirectory(directory);
-
-			var options = new JsonSerializerOptions { WriteIndented = true };
-			var json = JsonSerializer.Serialize(_settings, options);
-
-			// Atomar schreiben: erst vollstaendig in eine Temp-Datei (Write-Through, also an den
-			// Betriebssystem-Cache vorbei), dann umbenennen. File.WriteAllTextAsync kuerzt die
-			// Zieldatei zuerst und schreibt danach - ein Stromausfall dazwischen (Stecker am
-			// TV-Schrank) hinterlaesst eine halbe Datei. LoadSettingsAsync faellt darauf still auf
-			// Standardwerte zurueck: API-Schluessel und Netzwerk-Konfiguration waeren weg, und weil
-			// ein leerer Schluessel mit BindAddress 0.0.0.0 den Start der REST-Schnittstelle
-			// verhindert, ist das Geraet danach aus der Ferne nicht mehr erreichbar.
-			var tempPath = _settingsFilePath + ".tmp";
-			var bytes = Encoding.UTF8.GetBytes(json);
-
-			await using (var stream = new FileStream(
-				tempPath, FileMode.Create, FileAccess.Write, FileShare.None,
-				bufferSize: 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
-			{
-				await stream.WriteAsync(bytes);
-				await stream.FlushAsync();
-			}
-
-			File.Move(tempPath, _settingsFilePath, overwrite: true);
+			await WriteFileAsync(GetFilePath(scope), JsonSerializer.Serialize(payload, payload.GetType(), _fileJsonOptions));
 		}
 		finally
 		{
@@ -360,9 +474,14 @@ public class SettingsService : BackgroundService
 		}
 	}
 
-	public void RequestSaveSettings()
+	/// <summary>
+	/// Reiht einen Speichervorgang ein. <paramref name="scope"/> entscheidet, welche Datei
+	/// geschrieben wird - ohne diese Unterscheidung wuerde jede Kehre auch die Geraetedatei mit
+	/// dem API-Schluessel neu schreiben.
+	/// </summary>
+	public void RequestSaveSettings(SettingsScope scope = SettingsScope.Config)
 	{
-		_saveSettingsQueue.Writer.TryWrite(true);
+		_saveSettingsQueue.Writer.TryWrite(scope);
 	}
 
 	/// <summary>
@@ -378,20 +497,21 @@ public class SettingsService : BackgroundService
 	///
 	/// Fuer den normalen Spielbetrieb weiterhin <see cref="RequestSaveSettings"/> verwenden.
 	/// </remarks>
-	public Task SaveSettingsNowAsync() => SaveSettingsInternalAsync();
+	public Task SaveSettingsNowAsync(SettingsScope scope = SettingsScope.Config)
+		=> SaveSettingsInternalAsync(scope);
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		await foreach (var _ in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
+		await foreach (var scope in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
 		{
 			try
 			{
-				await SaveSettingsInternalAsync();
-				_logger.LogDebug("Settings gespeichert");
+				await SaveSettingsInternalAsync(scope);
+				_logger.LogDebug("{Scope}-Einstellungen gespeichert", scope);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError("Fehler beim Speichern: {Msg}", ex.Message);
+				_logger.LogError("Fehler beim Speichern ({Scope}): {Msg}", scope, ex.Message);
 			}
 		}
 	}

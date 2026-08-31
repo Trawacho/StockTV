@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Api;
 
@@ -10,18 +11,23 @@ namespace StockTvBlazor.Api;
 [Produces("application/json")]
 public sealed class ConfigController(SettingsService settings, ILogger<ConfigController> logger) : ControllerBase
 {
-	private const string FileName = "stocktv.config.json";
+	private const string FileName = "stocktv.device.json";
 
 	/// <summary>
-	/// Laedt die Konfigurationsdatei herunter, so wie sie auf dem Geraet liegt. Der
-	/// API-Schluessel steht darin verschluesselt.
+	/// Laedt die Geraete-Konfiguration herunter, so wie sie auf dem Geraet liegt: Protokollierung,
+	/// Netzwerk und REST-Schnittstelle. Der API-Schluessel steht darin verschluesselt.
 	/// </summary>
+	/// <remarks>
+	/// Bewusst nur die Geraetedatei und nicht die Betriebs-Konfiguration: Spielstand, Teamnamen
+	/// und Einstellungen des laufenden Bewerbs gehen die Fernwartung nichts an. Sie kommen ueber
+	/// die Spiel-Endpunkte.
+	/// </remarks>
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType<ActionResponse>(StatusCodes.Status404NotFound)]
 	public async Task<IActionResult> Download()
 	{
-		var path = SettingsService.GetSettingsFilePath();
+		var path = SettingsService.GetDeviceFilePath();
 
 		if (!System.IO.File.Exists(path))
 		{
@@ -58,7 +64,7 @@ public sealed class ConfigController(SettingsService settings, ILogger<ConfigCon
 				"Er ist das Einzige, was zwischen dem Netz und dieser Schnittstelle steht.");
 		}
 
-		var restApi = settings.CurrentSettings.RestApi;
+		var restApi = settings.CurrentSettings.Device.RestApi;
 
 		if (string.Equals(newKey, restApi.ApiKey, StringComparison.Ordinal))
 			return Reject("Der neue Schluessel ist der bisherige.");
@@ -73,7 +79,7 @@ public sealed class ConfigController(SettingsService settings, ILogger<ConfigCon
 
 			// Bewusst SaveSettingsNowAsync und nicht RequestSaveSettings: nur so laesst sich ein
 			// gescheitertes Schreiben ueberhaupt bemerken und unten zuruecknehmen.
-			await settings.SaveSettingsNowAsync();
+			await settings.SaveSettingsNowAsync(SettingsScope.Device);
 		}
 		catch (Exception ex)
 		{
@@ -94,7 +100,7 @@ public sealed class ConfigController(SettingsService settings, ILogger<ConfigCon
 		return Ok(new ActionResponse(
 			"Ok",
 			"Der Schluessel gilt ab sofort. Der bisherige ist damit ungueltig.",
-			$"Verschluesselt abgelegt in {SettingsService.GetSettingsFilePath()}"));
+			$"Verschluesselt abgelegt in {SettingsService.GetDeviceFilePath()}"));
 	}
 
 	/// <summary>

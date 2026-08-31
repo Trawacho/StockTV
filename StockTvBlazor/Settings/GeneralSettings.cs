@@ -1,17 +1,18 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace StockTvBlazor.Settings
 {
 	public class GeneralSettings
 	{
-		public bool FileLoggingEnabled { get; set; } = true;
-		
 		[JsonIgnore]
 		public bool BlockLocalChanges { get; set; } = false;
 
 		public int BahnNummer { get; set; } = 1;
 		public int Spielgruppe { get; set; } = 0;
 
+		// Nur-Lesen und damit beim Laden ohnehin verworfen - ohne JsonIgnore stuende der Wert
+		// trotzdem in der Datei und liesse sich dort scheinbar aendern.
+		[JsonIgnore]
 		public int MessageVersion => 1;
 
 		[JsonIgnore]

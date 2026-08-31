@@ -61,7 +61,7 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 - **Netzwerk**: NetMQ (ZeroMQ), Makaretu.Dns (mDNS), REST auf eigenem Kestrel-Host (Swashbuckle)
 - **UI**: Bootstrap, responsive Text **rein per CSS** (Container Queries) über die Komponente `Controls/AutoFitText` + `wwwroot/css/StockTV_AutoFit.css` — **kein eigenes JavaScript**
 - **Deployment**: Docker (Linux/amd64), Raspberry Pi (linux-arm64, Kiosk), Windows Service (`UseWindowsService()` in `Program.cs`), Linux x64 (systemd)
-- **Volumes / Datenpfade**: `./_config:/app/_config`, `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
+- **Volumes / Datenpfade**: `./_config:/app/_config` (drei Dateien, siehe unten), `./_logs:/app/_logs` (relativ zum App-Verzeichnis, auf allen Plattformen gleich)
 
 ---
 
@@ -81,8 +81,9 @@ StockTV/
 │   │   └── Layout/             # MainLayout, ThemeHandler
 │   ├── Models/                 # Game, Match, Turn, Begegnung, ZielBewerb, Debounce
 │   ├── Networking/             # NetMqPublisherService, NetMqResponseService, MdnsDiscoveryService
-│   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
-│   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
+│   ├── Services/               # MatchService, ZielService, SettingsService, GameStateStore,
+│   │                           #   MarketingImageService, FileLogger
+│   ├── Settings/               # Settings, DeviceSettings, GameSettings, UiSettings, ColorSettings, Themes
 │   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
 ├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
@@ -141,6 +142,7 @@ identisch zu Ziel — überall dort, wo `Modus.Ziel` geprüft wird, wird `Modus.
 | `/display2` | Zweite Anzeige (gegenüberliegende Bahnseite), zeigt aktiven Modus gespiegelt als iframe |
 | `/settings` | Einstellungsseite (nur über Geheimtaste erreichbar) |
 | `/themes`   | Theme-Verwaltung (Custom Themes erstellen/bearbeiten) |
+| `/marketing` | Werbebild der zentralen Verwaltung (via NetMQ `GoToImage`) |
 
 **Home im Debug-Modus**: Öffnet automatisch mehrere Tabs (LayoutTest, training, turnier, bestof, input, settings, themes).
 
@@ -200,17 +202,17 @@ Laufen auf dem Poller-Thread → State-Änderungen **immer** über `_actionChann
 | Port | Protokoll      | Zweck |
 |------|---------------|-------|
 | 8080 | HTTP          | Blazor Web UI |
-| 8099 | HTTP          | REST-Schnittstelle (eigener Web-Host, siehe `Api/StockTvApiHost.cs`) |
+| 8098 | HTTP          | REST-Schnittstelle (eigener Web-Host, siehe `Api/StockTvApiHost.cs`) |
 | 4747 | NetMQ REP/REQ | Kommandos vom zentralen System |
 | 4748 | NetMQ PUB/SUB | Ergebnis-Broadcasts (bei jeder Eingabe + alle 5 Sek. Alive) |
 
-### REST-Schnittstelle (Port 8099)
+### REST-Schnittstelle (Port 8098)
 
 Läuft in einem **eigenen** `WebApplication`-Host neben der Blazor-Anzeige, nicht als zweiter
 Listener im selben Host. Grund: in einer `WebApplication` antworten alle Endpunkte auf allen
 Listenern — die API wäre sonst auch über 8080 erreichbar und teilte sich die Middleware-Kette
 der Anzeige (`UseHttpsRedirection`, `UseAntiforgery`, `UseStatusCodePagesWithReExecute`).
-Zusätzlich reißt ein belegter Port 8099 so nicht die Anzeige mit herunter — `StartIfEnabledAsync`
+Zusätzlich reißt ein belegter Port 8098 so nicht die Anzeige mit herunter — `StartIfEnabledAsync`
 fängt das ab und gibt `null` zurück, die Anzeige läuft ohne Fernsteuerung weiter.
 
 Muster und Code sind aus **StockTvKiosk** übernommen (`KioskApiHost`, `ApiKeyMiddleware`,
@@ -224,10 +226,43 @@ Anfrage neu aus dem Settings-Objekt gelesen — nur dadurch gilt ein gewechselte
 Ist `BindAddress` nicht Loopback und `ApiKey` leer, **startet die Schnittstelle nicht** und
 schreibt den Grund ins Log.
 
-| Endpunkt | Zweck |
+| Endpunkt | Ersetzt NetMQ-Topic |
 |---|---|
-| `GET /api/v1/config` | Konfigurationsdatei herunterladen (ApiKey darin verschlüsselt) |
-| `POST /api/v1/config/api-key` | Schlüssel wechseln, Body `{ "newKey": "…" }`, min. 8 Zeichen |
+| `GET /api/v1/hello` · `GET /api/v1/info` | `Hello` · `Alive` |
+| `GET /api/v1/result` · `POST /api/v1/result/reset` | `GetResult` · `ResetResult` |
+| `GET` / `PUT /api/v1/settings` | `GetSettings` / `SetSettings` |
+| `PUT /api/v1/match/teamnames` | `SetTeamNames` |
+| `PUT /api/v1/ziel/teilnehmer` | `SetTeilnehmer` |
+| `GET` / `PUT` / `DELETE /api/v1/image` · `POST /api/v1/image/show` | `SetImage` · `ClearImage` · `GoToImage` |
+| `GET`/`PUT /api/v1/system/hostname` · `/network` · `POST /system/reboot` | die Pi-Kommandos |
+| `GET /api/v1/config` · `POST /api/v1/config/api-key` | *(neu, kein NetMQ-Gegenstück)* |
+
+**SignalR-Hub `/hubs/stocktv`** ersetzt den PUB-Socket 4748: `ResultChanged` (bei jeder Eingabe),
+`Alive` (alle 5 Sek.) und neu `SettingsChanged`. Der .NET-Client übergibt den Schlüssel als
+Kopfzeile (`HttpConnectionOptions.Headers`), die auch beim Aushandeln mitgeht — ein Browser-Client
+bräuchte stattdessen `access_token` als Query-Parameter.
+
+**DTOs** (`Api/GameDtos.cs`): `ResultDto` löst die alte Antwort aus 10 Byte Kopf + angehängtem
+UTF-8-JSON ab. `SettingsUpdateDto.ToLegacyBytes()` übersetzt zurück ins Byte-Paket, damit REST und
+NetMQ **denselben** Pfad in `SettingsService.SetSettings` nehmen — inklusive Theme-Logik und
+Navigation bei Moduswechsel. Die `NACK:`-Zeichenketten werden zu Statuscodes: `not-a-pi` → **412**,
+`values-present` → **409**, Validierungsfehler → **400**.
+
+### Parallelbetrieb NetMQ ↔ REST/SignalR
+
+Beide Protokolle laufen gleichzeitig, bis StockAppV2 umgestellt ist. Drei Bausteine tragen das:
+
+- **`Services/GameCommandQueue.cs`** — alle zustandsändernden Kommandos beider Protokolle laufen
+  serialisiert durch **eine** Warteschlange. `MatchService`/`ZielService` sind nicht thread-sicher,
+  und REST-Aufrufe kommen auf Thread-Pool-Threads. Der frühere private `_actionChannel` des
+  NetMQ-Dienstes ist darin aufgegangen. **Jede neue Schreiboperation gehört hier hinein.**
+- **`Services/GameEventBroadcaster.cs`** — fächert Ergebnisse auf beide Wege auf. Der Hub lebt im
+  DI-Container des API-Hosts und ist im Haupt-Container nicht injizierbar; `StockTvApiHost` hängt
+  sich beim Start an `OnBroadcast`. Ist die Schnittstelle aus, verpufft der Aufruf folgenlos.
+- **`Services/SubscriberRegistry.cs`** — zählt NetMQ- und SignalR-Zuhörer und setzt
+  `BlockLocalChanges`, wenn mindestens einer da ist. Ohne das würden sich beide Quellen
+  gegenseitig überschreiben. Nebenbei behoben: die NetMQ-Seite hat den Schalter bisher pro Frame
+  *umgeschaltet* statt gezählt und kippte bei zwei Abonnenten oder einem Reconnect falsch.
 
 `POST /api/v1/config/api-key` schreibt über `SettingsService.SaveSettingsNowAsync()` statt über
 `RequestSaveSettings()` — nur so lässt sich ein gescheitertes Schreiben bemerken und der
@@ -241,6 +276,20 @@ Der Schlüssel ist deterministisch aus einer Konstante abgeleitet — das ist **
 versehentliches Mitlesen, kein Schutz** vor jemandem, der Datei und Programm hat.
 
 **NetMQ-Topics (4747):** `Hello`, `GetResult`, `ResetResult`, `GetSettings`, `SetSettings`, `SetTeamNames` (`"Spielnr:TeamA:TeamB;..."`), `SetTeilnehmer`
+
+**Sockettyp:** StockTV bindet einen `ResponseSocket`, StockAppV2 verbindet sich mit einem
+`DealerSocket` und stellt ein Leerframe voran — auf der Leitung also `[empty][topic][value][extra?]`.
+Den dritten Frame nutzt als einziges Kommando `SetImage` (Dateiname).
+
+**Werbebild (`Services/MarketingImageService.cs`):** `SetImage` (Frame 2 = Bilddaten, Frame 3 =
+Dateiname), `GoToImage` und `ClearImage` — in StockAppV2 heißen die Aufrufe
+`SetMarketingImage`/`ShowMarketing`/`ClearMarketingImage`. Das Bild wird an der **Signatur** geprüft
+(PNG/JPEG/GIF/BMP/WebP, max. 8 MB), nicht an der Dateiendung — sonst lieferte die Anzeige beliebige
+Bytes als Bild aus. Ablage in `_config/marketing/` (übersteht einen Neustart), Anzeige über die
+Seite `/marketing`, ausgeliefert vom **Anzeige-Host** unter `/marketing/image` (nicht von der
+REST-Schnittstelle: der Kiosk-Browser kennt den API-Schlüssel nicht). Antworten: `ACK`,
+`NACK:no-image`, `NACK:empty-image`, `NACK:image-too-large`, `NACK:unsupported-format`,
+`NACK:invalid-payload`.
 
 **NetMQ-Topics für Raspberry-Pi-Verwaltung (4747, siehe `Services/NetworkConfigService.cs`/`Services/GameStateGuard.cs`):**
 Nur auf echten Raspberry Pis nutzbar (`PlatformInfoService.IsRaspberryPi`) und nur solange keine
@@ -312,14 +361,56 @@ Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es g
 
 ## Konfiguration & Umgebung
 
-### Konfigurationsdatei (`_config/stocktv.config.json`)
+### Aufteilung auf drei Dateien in `_config/`
+
+Sortiert **nicht** nach Inhalt, sondern danach, wer schreibt und wie oft — die Datei, deren
+Verlust am teuersten ist, wird am seltensten geschrieben:
+
+| Datei | Wer schreibt | Wie oft | Verlust bedeutet |
+|---|---|---|---|
+| `stocktv.device.json` | Installateur, REST-API | fast nie | **Gerät aus der Ferne unerreichbar** |
+| `stocktv.config.json` | Bedienung, zentrale Verwaltung | pro Einstellungsänderung | Bahn neu einstellen |
+| `stocktv.state.json` | die App selbst | pro Kehre | laufendes Spiel weg |
+
+**Zuordnungsregel:** Alles, was `SetSettings` aus dem Netz oder die Einstellungsseite ändern
+kann, gehört in `stocktv.config.json` — deshalb steht `BahnNummer` dort, obwohl es nach
+Geräteidentität klingt. Läge sie in der Gerätedatei, würde ein Netzwerkbefehl diese schreiben und
+die Zusage „im Spielbetrieb nie angefasst" wäre hinfällig. Genau diese Zusage macht
+`PUT /api/v1/config` erst möglich.
+
+Speichern läuft über `RequestSaveSettings(SettingsScope)` bzw. `SaveSettingsNowAsync(SettingsScope)`.
+**Ohne den Scope würde jede Kehre auch die Datei mit dem API-Schlüssel neu schreiben.** Die
+Geräte-Umschalter (`ToggleFileLogging`, `ChangeNetworking`) rufen `SettingsScope.Device`
+selbst auf — `ExitSettingsPage` schreibt nur noch die Betriebs-Konfiguration.
+
+**Migration:** Fehlt `stocktv.device.json`, wird die Altdatei einmalig aufgeteilt und als
+`stocktv.config.json.migrated` gesichert (`SettingsService.MigrateLegacyFileIfNeededAsync`).
+
+**Schreiben** ist atomar (Temp-Datei mit Write-Through + `File.Move`). Eine unlesbare
+Konfigurationsdatei wird als `.corrupt` beiseitegelegt; ein unlesbarer **Spielstand** dagegen
+kommentarlos verworfen — eine Anzeige, die wegen einer defekten Punktedatei nicht hochkommt,
+wäre der schlechtere Tausch.
+
+**Spielstand (`Services/GameStateStore.cs` + `GameStateFile.cs`)** enthält Kehren, Begegnungen
+und den kompletten Zielbewerb (inkl. `Runde1Summe` und `Durchgang` — ohne die fängt ein
+wiederhergestellter Ziel2-Bewerb die zweite Runde von vorn an). Geladen wird nur, wenn
+`BahnNummer` und `Modus` zur aktuellen Konfiguration passen und `SavedAtUtc` jünger als 12 h ist
+(deckt einen Turniertag ab). Die Bahn-Prüfung fängt nebenbei ab, dass jemand `_config/` von einer
+anderen Bahn kopiert hat.
+
+Gespeichert wird über die Ereignisse `OnMatchChanged`/`OnZielBewerbChanged` (verdrahtet in
+`Program.cs`), nicht an den einzelnen Eingabestellen — so ist auch erfasst, was von außen kommt
+(`SetTeamNames`, `SetTeilnehmer`, `ResetResult`). Das Schreiben läuft über eine `Channel`-Queue,
+damit es nicht an jeder Punkteingabe hängt. Ist nichts eingegeben, wird die Datei gelöscht statt
+eine leere zu hinterlassen. Beim Wiederherstellen kapselt `RestoreWithoutSaving()` die Ereignisse
+weg, sonst schriebe das Laden sofort wieder.
+
+### Betriebs-Konfiguration (`_config/stocktv.config.json`)
 
 | Sektion | Einstellung | Bedeutung |
 |---------|-------------|-----------|
-| `General.FileLoggingEnabled` | `true/false` | Protokollierung in `_logs/` aktivieren |
 | `General.BahnNummer` | `1–4` | Bahnnummer für mDNS und externe Verwaltung |
 | `General.Spielgruppe` | Zahl | Spielgruppen-ID (extern gesetzt) |
-| `General.MessageVersion` | `1` | Protokoll-Version für NetMQ |
 | `Game.CurrentModus` | `0/1/2/100/101` | Training / BestOf / Turnier / Ziel / Ziel2 |
 | `Game.MaxPunkteProKehre` | Zahl | Max. Punkte je Kehre (Standard: 15) |
 | `Game.MaxKehrenProSpiel` | Zahl | Max. Kehren je Spiel (Standard: 30) |
@@ -327,10 +418,20 @@ Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es g
 | `UI.MidColumnWidth` | Zahl | Breite der Mittelspalte (% oder px) |
 | `UI.ActiveThemeId` | GUID | Aktives Theme (per UUID verlinkt) |
 | `UI.CustomThemes` | Array | Benutzerdefinierte Themes mit Farben |
+
+`MessageVersion` und die abgeleiteten Felder (`UI.AllThemes`, `UI.ActiveTheme`, `UI.Colors`) sind
+`[JsonIgnore]` — reine Getter, die beim Laden ohnehin verworfen wurden und die Datei nur aufgebläht
+haben.
+
+### Geräte-Konfiguration (`_config/stocktv.device.json`)
+
+| Einstellung | Werte | Bedeutung |
+|-------------|-------|-----------|
+| `FileLoggingEnabled` | `true/false` | Protokollierung in `_logs/` aktivieren |
 | `Network.Enabled` | `true/false` | NetMQ-Netzwerk aktivieren |
 | `RestApi.Enabled` | `true/false` | REST-Schnittstelle starten |
 | `RestApi.BindAddress` | IP | `0.0.0.0` = alle Schnittstellen, `127.0.0.1` = nur lokal |
-| `RestApi.Port` | Zahl | TCP-Port (Standard: 8099) |
+| `RestApi.Port` | Zahl | TCP-Port (Standard: 8098) |
 | `RestApi.ApiKey` | Text | Pflicht, sobald nicht nur Loopback; verschlüsselt (`enc:`) abgelegt |
 | `RestApi.ApiKeyHeader` | Text | Header mit dem Schlüssel (Standard: `X-Api-Key`) |
 | `RestApi.SwaggerEnabled` | `true/false` | Swagger-UI ausliefern |
@@ -348,11 +449,11 @@ Die Textskalierung läuft **rein deklarativ per CSS Container Queries** — es g
 
 ## Datenspeicherung & Logging
 
-- **Config**: `_config/stocktv.config.json` (relativ zum App-Verzeichnis, wird beim Start geladen)
+- **Config**: `_config/stocktv.device.json`, `stocktv.config.json`, `stocktv.state.json` (relativ zum App-Verzeichnis, werden beim Start geladen)
 - **Logs**: `_logs/` (JSON-Dateien mit Timestamps, nur wenn `FileLoggingEnabled=true`)
-- **Speicherung**: Via `Channel`-Queue im `SettingsService` — **nie direkt** auf `CurrentSettings` schreiben
+- **Speicherung**: Via `Channel`-Queue im `SettingsService`, immer mit passendem `SettingsScope` — **nie direkt** auf `CurrentSettings` schreiben
 - Im Training-Modus werden Kehren **nicht** persistiert
-- `SaveTurnsAsync()` / `RequestSaveSettings()` nach State-Änderungen aufrufen
+- `RequestSaveSettings(scope)` nach State-Änderungen aufrufen
 - Logging-Level in `appsettings.json`: Microsoft.AspNetCore auf `Warning`, default auf `Information`
 
 ---

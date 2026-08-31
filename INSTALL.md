@@ -23,6 +23,8 @@ Installationsanleitung für Raspberry Pi, Windows und Docker.
   - [Update (Docker)](#update-docker)
   - [Hinweise (Docker)](#hinweise-docker)
 - [Konfiguration nach der Installation](#konfiguration-nach-der-installation)
+  - [Konfigurationsdateien](#konfigurationsdateien)
+  - [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle)
   - [Bahnnummer einstellen](#bahnnummer-einstellen)
   - [Netzwerk-Empfehlungen](#netzwerk-empfehlungen)
   - [Verwendung von Tablets](#verwendung-von-tablets)
@@ -382,7 +384,10 @@ Dienst deinstallieren:
 ### Hinweise (Windows)
 
 - StockTV läuft auf Port **8080** (HTTP). HTTPS ist nicht konfiguriert.
-- Konfiguration liegt in `C:\StockTV\_config\stocktv.config.json`.
+- Die REST-Schnittstelle auf Port **8098** ist ohne eingetragenen Schlüssel deaktiviert — siehe
+  [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle).
+- Konfiguration liegt in `C:\StockTV\_config\` — drei Dateien, siehe
+  [Konfigurationsdateien](#konfigurationsdateien).
 - Der Dienst startet automatisch mit Windows (`UseWindowsService()` in `Program.cs`).
 
 ---
@@ -412,7 +417,7 @@ Alternativ kann eine feste Version verwendet werden, z.B. `ghcr.io/trawacho/stoc
 
 Statt einzelne Ports zu veröffentlichen (`-p ...`), bekommt der Container über ein
 **`macvlan`-Netzwerk** eine eigene IP-Adresse im LAN — wie ein eigenständiges Gerät.
-Dadurch sind automatisch alle Ports (`8080`, `4747`, `4748` und mDNS auf `5353`) direkt
+Dadurch sind automatisch alle Ports (`8080`, `8098`, `4747`, `4748` und mDNS auf `5353`) direkt
 unter dieser IP erreichbar, ohne sie einzeln zu mappen.
 
 1. Docker-Netzwerk einmalig anlegen:
@@ -564,13 +569,72 @@ einem Neuerstellen des Containers.
   [Mehrere Bahnen auf einem Rechner](#mehrere-bahnen-auf-einem-rechner) — dort auch die
   Hinweise zu Tablet-Eingabe und Smart-TV-Anzeige.
 - **Volumes:** `_config` und `_logs` unbedingt als Volumes mounten, sonst gehen Einstellungen
-  und Log-Dateien beim Neuerstellen des Containers verloren.
+  und Log-Dateien beim Neuerstellen des Containers verloren. In `_config` liegen drei Dateien
+  (Gerät, Betrieb, Spielstand) — siehe [Konfigurationsdateien](#konfigurationsdateien). Ein
+  `_config`-Ordner darf **nicht** als Vorlage für einen anderen Container kopiert werden, ohne
+  `stocktv.state.json` daraus zu entfernen.
+- **Ports:** Neben `8080` (Anzeige), `4747`/`4748` (NetMQ) und `5353` (mDNS) belegt StockTV
+  `8098` für die REST-Schnittstelle — die startet allerdings nur mit eingetragenem Schlüssel,
+  siehe [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle).
 - **Bahnnummer:** Wird wie bei den anderen Plattformen über die Einstellungsseite in der
   App gesetzt, siehe [Konfiguration nach der Installation](#konfiguration-nach-der-installation).
 
 ---
 
 ## Konfiguration nach der Installation
+
+### Konfigurationsdateien
+
+Im Ordner `_config` liegen drei Dateien. Sie sind danach getrennt, **wer sie schreibt und wie
+oft** — die Datei mit dem API-Schlüssel wird im Spielbetrieb nie angefasst, damit ein Stromausfall
+mitten im Spiel sie nicht beschädigen kann:
+
+| Datei | Inhalt | Wird geschrieben |
+|---|---|---|
+| `stocktv.device.json` | Protokollierung, Netzwerk, REST-Schnittstelle **inkl. API-Schlüssel** | nur bei Änderung durch Betreuer oder API |
+| `stocktv.config.json` | Bahnnummer, Spielgruppe, Modus, Punkte/Kehren, Anzeige, Themes | bei jeder Einstellungsänderung |
+| `stocktv.state.json` | laufender Spielstand (Kehren, Teamnamen, Zielbewerb) | bei jeder Eingabe |
+
+**Beim ersten Start nach einem Update** wird eine vorhandene alte `stocktv.config.json` automatisch
+aufgeteilt; die bisherige Fassung bleibt als `stocktv.config.json.migrated` liegen. Es ist nichts
+von Hand zu tun.
+
+**Spielstand nach einem Neustart:** Startet das Gerät mitten im Bewerb neu (Stromausfall, Absturz),
+kommt der Spielstand automatisch zurück. Er wird nur geladen, wenn Bahnnummer und Spielmodus
+übereinstimmen und er **jünger als 12 Stunden** ist — ein Stand vom Vortag landet also nicht im
+neuen Turnier. `stocktv.state.json` gehört deshalb **nicht** mitkopiert, wenn ein `_config`-Ordner
+als Vorlage für eine andere Bahn dient.
+
+### Fernsteuerung über die REST-Schnittstelle
+
+Neben der Anzeige auf Port **8080** bietet StockTV eine REST-Schnittstelle auf Port **8098** — mit
+allen Funktionen, die bisher nur über NetMQ erreichbar waren (Spielstand, Einstellungen,
+Teamnamen, Werbebild, Geräteverwaltung), dazu einen Live-Kanal unter `/hubs/stocktv`. Beides läuft
+**parallel zu NetMQ**, die bisherige Anbindung bleibt unverändert nutzbar.
+
+Sie ist **standardmäßig gesperrt**: Ohne eingetragenen Schlüssel startet sie nicht und schreibt
+den Grund ins Protokoll — sonst könnte jeder im Netz das Gerät fernsteuern.
+
+Zum Aktivieren in `_config/stocktv.device.json` einen Schlüssel eintragen (mindestens 8 Zeichen,
+im Klartext — er wird beim nächsten Speichern automatisch verschlüsselt):
+
+```json
+"RestApi": {
+  "Enabled": true,
+  "BindAddress": "0.0.0.0",
+  "Port": 8098,
+  "ApiKey": "HierEinenEigenenSchluesselEintragen",
+  "ApiKeyHeader": "X-Api-Key",
+  "SwaggerEnabled": true,
+  "SwaggerRoute": "swagger"
+}
+```
+
+Danach den Dienst neu starten. Eine Übersicht aller Aufrufe steht dann unter
+`http://<IP>:8098/swagger`. Jeder Aufruf braucht den Schlüssel als Kopfzeile `X-Api-Key`.
+
+Soll die Schnittstelle nur lokal erreichbar sein, `BindAddress` auf `127.0.0.1` setzen — dann
+darf der Schlüssel auch leer bleiben.
 
 ### Bahnnummer einstellen
 

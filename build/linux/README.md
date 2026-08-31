@@ -91,13 +91,13 @@ ls /opt/stocktv/_logs/
 | Architektur | x86_64 (64-bit) |
 | Betriebssystem | Ubuntu 22.04+ / Debian 11+ |
 | Pakete | `libicu-dev`, `libssl3`, `zlib1g` (werden von `install.sh` automatisch installiert) |
-| Port | 8080 (HTTP, eingehend freigeben) |
+| Ports | 8080 (Anzeige), 8098 (REST-Schnittstelle, nur mit Schlüssel aktiv) — eingehend freigeben |
 
 ---
 
 ## Hinweise
 
-- Konfiguration liegt in `/opt/stocktv/_config/stocktv.config.json`
+- Konfiguration liegt in `/opt/stocktv/_config/` — drei Dateien: `stocktv.device.json` (Gerät, enthält den API-Schlüssel), `stocktv.config.json` (Betrieb) und `stocktv.state.json` (laufender Spielstand). Eine alte Einzeldatei wird beim ersten Start automatisch aufgeteilt. Details in [INSTALL.md](../../INSTALL.md#konfigurationsdateien)
 - Logs unter `/opt/stocktv/_logs/`
 - Der Dienst startet automatisch nach einem Neustart
 - Für mehrere Netzwerk-Interfaces (z.B. WLAN + LAN): `Environment=PUBLIC_HOST=<gewünschte-IP>` in der Service-Datei eintragen

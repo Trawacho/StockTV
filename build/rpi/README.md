@@ -87,6 +87,12 @@ sudo STOCKTV_VERSION=v0.1 bash build-image.sh
 - Hostname: `stocktv`
 - Web-UI nach dem Start: `http://<ip>:8080`
 
+**Konfiguration:** `/opt/stocktv/_config/` enthält drei Dateien — `stocktv.device.json` (Gerät,
+enthält den API-Schlüssel der REST-Schnittstelle auf Port 8098), `stocktv.config.json` (Betrieb)
+und `stocktv.state.json` (laufender Spielstand, überlebt einen Neustart bis zu 12 Stunden). Eine
+alte Einzeldatei wird beim ersten Start automatisch aufgeteilt. Details in
+[INSTALL.md](../../INSTALL.md#konfigurationsdateien).
+
 ---
 
 ### [install.sh](install.sh)

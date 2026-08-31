@@ -166,6 +166,45 @@ public class ZielBewerb
 		OnZielBewerbChanged?.Invoke();
 	}
 
+	#region Persistenz (stocktv.state.json)
+
+	/// <summary>Zieht einen Abzug des Zielbewerbs fuer die Ablage auf der Platte.</summary>
+	public ZielState CreateSnapshot() => new()
+	{
+		MassenVorne = [.. _massenVorne],
+		Schiessen = [.. _schiessen],
+		MassenSeite = [.. _massenSeite],
+		Kombinieren = [.. _kombinieren],
+		Spielername = _spielerName ?? string.Empty,
+		Runde1Summe = _runde1Summe,
+		Durchgang = _aktuellerDurchgang
+	};
+
+	/// <summary>
+	/// Stellt einen gesicherten Zielbewerb wieder her. Der Aufrufer hat vorher geprueft, dass er
+	/// zu Bahn, Modus und Zeitfenster passt (siehe <see cref="Services.GameStateStore"/>).
+	/// </summary>
+	/// <remarks>
+	/// <see cref="_runde1Summe"/> und <see cref="_aktuellerDurchgang"/> muessen mit: ohne sie
+	/// faenge ein wiederhergestellter Ziel2-Bewerb die zweite Runde von vorn an und die
+	/// Gesamtsumme fiele um die erste Runde zurueck.
+	/// </remarks>
+	public void RestoreFrom(ZielState state)
+	{
+		_massenVorne.Clear(); _massenVorne.AddRange(state.MassenVorne);
+		_schiessen.Clear(); _schiessen.AddRange(state.Schiessen);
+		_massenSeite.Clear(); _massenSeite.AddRange(state.MassenSeite);
+		_kombinieren.Clear(); _kombinieren.AddRange(state.Kombinieren);
+
+		_spielerName = state.Spielername;
+		_runde1Summe = state.Runde1Summe;
+		_aktuellerDurchgang = state.Durchgang < 1 ? 1 : state.Durchgang;
+
+		OnZielBewerbChanged?.Invoke();
+	}
+
+	#endregion
+
 	internal byte[] SerializeJson()
 	{
 		var values = new List<byte>();

@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi;
 using StockTvBlazor.Services;
 using StockTvBlazor.Settings;
@@ -14,7 +15,7 @@ namespace StockTvBlazor.Api;
 /// alle Endpunkte auf allen Listenern antworten - die Schnittstelle waere sonst auch ueber
 /// Port 8080 erreichbar, also genau die Luecke, die der eigene Port schliessen soll. Ausserdem
 /// teilte sie sich dann die Middleware-Kette der Anzeige (HttpsRedirection, Antiforgery,
-/// StatusCodePagesWithReExecute) und ein belegter Port 8099 wuerde die Anzeige mit
+/// StatusCodePagesWithReExecute) und ein belegter Port 8098 wuerde die Anzeige mit
 /// herunterreissen.
 ///
 /// Die Dienste werden als fertige Instanzen aus dem Haupt-Container uebergeben, nicht neu
@@ -33,7 +34,7 @@ public sealed class StockTvApiHost(WebApplication app, ILogger logger) : IAsyncD
 		ILoggerFactory loggerFactory)
 	{
 		var logger = loggerFactory.CreateLogger("StockTvBlazor.Api");
-		var rest = settings.RestApi;
+		var rest = settings.Device.RestApi;
 
 		if (!rest.Enabled)
 		{
@@ -58,7 +59,7 @@ public sealed class StockTvApiHost(WebApplication app, ILogger logger) : IAsyncD
 				"Die REST-Schnittstelle soll auf {Address} lauschen, aber RestApi > ApiKey ist leer. " +
 				"Ohne Schluessel koennte jeder im Netz das Geraet fernsteuern - die Schnittstelle " +
 				"wird deshalb nicht gestartet. Entweder einen Schluessel in " +
-				"_config/stocktv.config.json eintragen (er wird beim naechsten Speichern " +
+				"_config/stocktv.device.json eintragen (er wird beim naechsten Speichern " +
 				"verschluesselt abgelegt) oder BindAddress auf 127.0.0.1 setzen.",
 				rest.BindAddress);
 			return null;
@@ -89,6 +90,8 @@ public sealed class StockTvApiHost(WebApplication app, ILogger logger) : IAsyncD
 
 		if (rest.SwaggerEnabled)
 		{
+			logger.LogInformation("SignalR-Hub: http://{Address}:{Port}{Path}", rest.BindAddress, rest.Port, HubPath);
+
 			logger.LogInformation("Swagger: http://{Address}:{Port}/{Route}",
 				rest.BindAddress, rest.Port, rest.SwaggerRoute.Trim('/'));
 		}
@@ -104,14 +107,14 @@ public sealed class StockTvApiHost(WebApplication app, ILogger logger) : IAsyncD
 	{
 		var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = [] });
 
-		// Die einzige Konfigurationsquelle ist stocktv.config.json. CreateBuilder bringt von
+		// Die einzige Konfigurationsquelle sind die Dateien in _config. CreateBuilder bringt von
 		// sich aus appsettings.json, Umgebungsvariablen und Kommandozeile mit - ein gesetztes
 		// ASPNETCORE_URLS wuerde hier still gegen RestApi > Port arbeiten.
 		builder.Configuration.Sources.Clear();
 
 		builder.WebHost.ConfigureKestrel(kestrel =>
 		{
-			kestrel.Listen(address, settings.RestApi.Port);
+			kestrel.Listen(address, settings.Device.RestApi.Port);
 
 			// Das Geraet nennt sich nicht selbst in jeder Antwort.
 			kestrel.AddServerHeader = false;
@@ -123,35 +126,50 @@ public sealed class StockTvApiHost(WebApplication app, ILogger logger) : IAsyncD
 
 		// Dieselben Instanzen wie die Anzeige - kein zweiter Spielstand.
 		builder.Services.AddSingleton(settings);
-		builder.Services.AddSingleton(settings.RestApi);
+		builder.Services.AddSingleton(settings.Device.RestApi);
 		builder.Services.AddSingleton(mainServices.GetRequiredService<SettingsService>());
 		builder.Services.AddSingleton(mainServices.GetRequiredService<MatchService>());
 		builder.Services.AddSingleton(mainServices.GetRequiredService<ZielService>());
 		builder.Services.AddSingleton(mainServices.GetRequiredService<PlatformInfoService>());
 		builder.Services.AddSingleton(mainServices.GetRequiredService<NetworkConfigService>());
+		builder.Services.AddSingleton(mainServices.GetRequiredService<MarketingImageService>());
+		builder.Services.AddSingleton(mainServices.GetRequiredService<SubscriberRegistry>());
+		builder.Services.AddSingleton(mainServices.GetRequiredService<GameCommandQueue>());
 
 		builder.Services.AddControllers();
+		builder.Services.AddSignalR();
 
-		if (settings.RestApi.SwaggerEnabled)
-			AddSwagger(builder, settings.RestApi);
+		if (settings.Device.RestApi.SwaggerEnabled)
+			AddSwagger(builder, settings.Device.RestApi);
 
 		var app = builder.Build();
 
-		app.UseMiddleware<ApiKeyMiddleware>(settings.RestApi);
+		app.UseMiddleware<ApiKeyMiddleware>(settings.Device.RestApi);
 
-		if (settings.RestApi.SwaggerEnabled)
+		if (settings.Device.RestApi.SwaggerEnabled)
 		{
 			app.UseSwagger();
 			app.UseSwaggerUI(ui =>
 			{
 				ui.SwaggerEndpoint("/swagger/v1/swagger.json", "StockTV v1");
-				ui.RoutePrefix = settings.RestApi.SwaggerRoute.Trim('/');
+				ui.RoutePrefix = settings.Device.RestApi.SwaggerRoute.Trim('/');
 			});
 		}
 
 		app.MapControllers();
+		app.MapHub<StockTvHub>(HubPath);
+
+		// Der Verteiler lebt im Haupt-Container und kennt den Hub nicht (anderer DI-Container).
+		// Deshalb haengt sich der Hub-Kontext hier ein - siehe GameEventBroadcaster.
+		var hubContext = app.Services.GetRequiredService<IHubContext<StockTvHub>>();
+		mainServices.GetRequiredService<GameEventBroadcaster>().OnBroadcast +=
+			(method, payload) => hubContext.Clients.All.SendAsync(method, payload);
+
 		return app;
 	}
+
+	/// <summary>Adresse des Live-Kanals, den die zentrale Verwaltung abonniert.</summary>
+	public const string HubPath = "/hubs/stocktv";
 
 	private static void AddSwagger(WebApplicationBuilder builder, RestApiSettings rest)
 	{

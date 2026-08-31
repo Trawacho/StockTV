@@ -20,7 +20,7 @@ namespace StockTvBlazor.Settings
 		/// <summary>0.0.0.0 = alle Schnittstellen, 127.0.0.1 = nur lokal.</summary>
 		public string BindAddress { get; set; } = "0.0.0.0";
 
-		public int Port { get; set; } = 8099;
+		public int Port { get; set; } = 8098;
 
 		/// <summary>
 		/// Pflicht, sobald die Schnittstelle ueber Loopback hinaus erreichbar ist - sonst waere
