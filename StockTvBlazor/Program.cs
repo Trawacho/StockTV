@@ -121,12 +121,10 @@ if (app.Environment.IsDevelopment())
 else
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	app.UseHsts();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
