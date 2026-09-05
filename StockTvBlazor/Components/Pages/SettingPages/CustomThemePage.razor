@@ -87,6 +87,26 @@
                     <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" />
                 </div>
 
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <h4 style="margin-top: 0;">Anspiel-Indikator Einstellungen</h4>
+
+                    <div class="field">
+                        <label>
+                            <input type="checkbox" @bind="_editingTheme.ShowFrameOnAnspiel" />
+                            Rahmen statt Sonderzeichen anzeigen
+                        </label>
+                    </div>
+
+                    @if (_editingTheme.ShowFrameOnAnspiel)
+                    {
+                        <div class="field">
+                            <label>Rahmenstärke (px)</label>
+                            <input type="number" min="1" max="10" @bind="_editingTheme.FrameWidthPx"
+                                   style="max-width: 100px;" />
+                        </div>
+                    }
+                </div>
+
                 <div class="preview-section">
                     <h4>Vorschau</h4>
                     <ThemePreview />

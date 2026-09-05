@@ -25,12 +25,12 @@
 
 /* Anspiel-Indikator: farbiger Rahmen um das Team mit Anspiel */
 .teamname-left.team-has-anspiel {
-    border: 3px solid var(--fg-color-teamname-left);
+    border: var(--team-frame-width) solid var(--fg-color-teamname-left);
     box-sizing: border-box;
 }
 
 .teamname-right.team-has-anspiel {
-    border: 3px solid var(--fg-color-teamname-right);
+    border: var(--team-frame-width) solid var(--fg-color-teamname-right);
     box-sizing: border-box;
 }
 
