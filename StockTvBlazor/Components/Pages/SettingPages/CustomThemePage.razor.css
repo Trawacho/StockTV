@@ -142,7 +142,11 @@
     color: #666;
 }
 
-.preview-section h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }
+h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }
+
+.preview-section { margin-top: 2rem; }
+
+.preview-section h4 { margin: 0 0 0.5rem; }
 
 .editor-footer { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
 

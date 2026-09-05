@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using StockTvBlazor.Services;
+using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.Layout;
 
@@ -9,6 +10,16 @@ public partial class ThemeHandler : IDisposable
 
 	private int _updateCounter;
 	private Settings.Settings _settings => _settingsService.CurrentSettings;
+
+	private string GetTeamFrameWidth()
+	{
+		var activeTheme = _settings.UI.ActiveTheme;
+		if (activeTheme is CustomTheme customTheme)
+		{
+			return $"{customTheme.FrameWidthPx}px";
+		}
+		return "3px"; // default
+	}
 
 	protected override void OnInitialized()
 		=> _settingsService.OnSettingsChanged += HandleUpdate;

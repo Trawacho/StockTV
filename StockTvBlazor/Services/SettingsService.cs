@@ -1,5 +1,4 @@
 ﻿using StockTvBlazor.Extensions;
-using StockTvBlazor.Models;
 using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -342,23 +341,6 @@ public class SettingsService : BackgroundService
 		CurrentSettings.UI.ActivateTheme(id);
 		RequestSaveSettings();
 		NotifyChanged();
-	}
-
-	#endregion
-
-	#region Turns
-
-	public async Task SaveTurnsAsync(List<Turn> turns)
-	{
-		var s = CurrentSettings;
-
-		if (s.Game.CurrentModus == GameSettings.Modus.Training)
-			return;
-
-		s.Game.Kehren.Clear();
-		s.Game.Kehren.AddRange(turns);
-
-		RequestSaveSettings();
 	}
 
 	#endregion

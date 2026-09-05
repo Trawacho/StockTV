@@ -9,10 +9,12 @@ public class ZielBewerb
 	public event Action? OnZielBewerbChanged;
 
 	private readonly SettingsService _settingsService;
+	private readonly GameStatePersistenceService _gamePersistence;
 
-	public ZielBewerb(SettingsService settingsService)
+	public ZielBewerb(SettingsService settingsService, GameStatePersistenceService gamePersistence)
 	{
 		_settingsService = settingsService;
+		_gamePersistence = gamePersistence;
 	}
 
 	public int MassenVorneSumme => _massenVorne.Sum();
@@ -147,7 +149,7 @@ public class ZielBewerb
 		return success;
 	}
 
-	public void Reset()
+	private void ClearZielStateInMemory()
 	{
 		_massenVorne.Clear();
 		_schiessen.Clear();
@@ -156,13 +158,71 @@ public class ZielBewerb
 		_spielerName = string.Empty;
 		_runde1Summe = 0;
 		_aktuellerDurchgang = 1;
-
 		OnZielBewerbChanged?.Invoke();
+	}
+
+	public void Reset(bool force = false)
+	{
+		ClearZielStateInMemory();
+
+		if (force)
+		{
+			_gamePersistence.DeleteZielState();
+		}
 	}
 
 	public void AddSpielerName(string spielerName)
 	{
 		_spielerName = spielerName;
+		OnZielBewerbChanged?.Invoke();
+	}
+
+	public async Task SaveZielStateAsync()
+	{
+		var s = _settingsService.CurrentSettings;
+
+		if (s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel &&
+			s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel2)
+			return;
+
+		var state = new GameStatePersistenceService.ZielStateData
+		{
+			Versuche = new Dictionary<string, List<int>>
+			{
+				["MassenVorne"] = new List<int>(_massenVorne),
+				["Schiessen"] = new List<int>(_schiessen),
+				["MassenSeite"] = new List<int>(_massenSeite),
+				["Kombinieren"] = new List<int>(_kombinieren)
+			},
+			Runde = _aktuellerDurchgang,
+			Runde1Summe = _runde1Summe
+		};
+
+		await _gamePersistence.SaveZielStateAsync(state);
+	}
+
+	public async Task LoadZielStateAsync()
+	{
+		var s = _settingsService.CurrentSettings;
+
+		if (s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel &&
+			s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel2)
+			return;
+
+		ClearZielStateInMemory();
+
+		var state = await _gamePersistence.LoadZielStateAsync();
+
+		if (state == null || state.Versuche.Count == 0)
+			return;
+
+		_massenVorne.AddRange(state.Versuche.GetValueOrDefault("MassenVorne", []));
+		_schiessen.AddRange(state.Versuche.GetValueOrDefault("Schiessen", []));
+		_massenSeite.AddRange(state.Versuche.GetValueOrDefault("MassenSeite", []));
+		_kombinieren.AddRange(state.Versuche.GetValueOrDefault("Kombinieren", []));
+		_runde1Summe = state.Runde1Summe;
+		_aktuellerDurchgang = state.Runde;
+
 		OnZielBewerbChanged?.Invoke();
 	}
 

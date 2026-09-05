@@ -1,9 +1,10 @@
 ﻿using StockTvBlazor.Models;
 using StockTvBlazor.Networking;
+using System.Text;
 
 namespace StockTvBlazor.Services;
 
-public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService)
+public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService, GameStatePersistenceService gamePersistence)
 {
 	private readonly SettingsService _settingsService = settingsService;
 
@@ -11,12 +12,14 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 
 	private readonly NetMqPublisherService _publisherService = publisherService;
 
+	private readonly GameStatePersistenceService _gamePersistence = gamePersistence;
+
 	private ZielBewerb? _currentZielBewerb;
 
-
-	public void InitializeZiel()
+	public async Task InitializeZielAsync()
 	{
-		_currentZielBewerb ??= new ZielBewerb(_settingsService);
+		_currentZielBewerb ??= new ZielBewerb(_settingsService, _gamePersistence);
+		await _currentZielBewerb.LoadZielStateAsync();
 		_logger.LogInformation("ZielService wurde initialisiert.");
 	}
 
@@ -25,11 +28,9 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 
 	public void SetTeilnehmer(byte[] name)
 	{
-		var spielerName = System.Text.Encoding.UTF8.GetString(name);
+		var spielerName = Encoding.UTF8.GetString(name);
 		CurrentZielBewerb.AddSpielerName(spielerName);
 	}
-
-
 
 	private int _inputValue;
 
@@ -135,6 +136,7 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 			return;
 
 		CurrentZielBewerb.Reset();
+		await CurrentZielBewerb.SaveZielStateAsync();
 		_inputValue = -1;
 	}
 
@@ -152,6 +154,7 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 			return;
 		}
 
+		await CurrentZielBewerb.SaveZielStateAsync();
 		_inputValue = -1;
 	}
 
@@ -160,7 +163,10 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 		if (_inputValue >= 0)
 			_inputValue = -1;
 		else
+		{
 			CurrentZielBewerb.DeleteLastVersuch();
+			await CurrentZielBewerb.SaveZielStateAsync();
+		}
 	}
 
 	private protected void ShowSpecialPage()
