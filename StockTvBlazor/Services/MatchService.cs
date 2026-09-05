@@ -1,27 +1,30 @@
 ﻿using StockTvBlazor.Models;
 using StockTvBlazor.Networking;
 using StockTvBlazor.Settings;
+using System.Text;
 
 namespace StockTvBlazor.Services;
 
-public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService)
+public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService, GameStatePersistenceService gamePersistence)
 {
 	private readonly SettingsService _settingsService = settingsService;
 	private readonly ILogger<MatchService> _logger = logger;
 	private readonly NetMqPublisherService _publisherService = publisherService;
+	private readonly GameStatePersistenceService _gamePersistence = gamePersistence;
 	private Match? _currentMatch;
 
 	public Match CurrentMatch => _currentMatch
 		?? throw new InvalidOperationException("Match wurde nicht initialisiert. Prüfe Program.cs!");
 
-	public void InitializeMatch()
+	public async Task InitializeMatchAsync()
 	{
-		_currentMatch ??= new Models.Match(_settingsService, _logger);
+		_currentMatch ??= new Models.Match(_settingsService, _logger, _gamePersistence);
+		await _currentMatch.LoadMatchStateAsync();
 	}
 
 	public void SetTeamNames(byte[] teamNamesArray)
 	{
-		var teamNames = System.Text.Encoding.UTF8.GetString(teamNamesArray);
+		var teamNames = Encoding.UTF8.GetString(teamNamesArray);
 		CurrentMatch.ClearBegegnungen();
 		var parts = teamNames.TrimEnd(';').Split(';');
 		foreach (var part in parts)
@@ -104,7 +107,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		OnGlobalRefresh?.Invoke();
 
 		// Training ist freies Spiel ohne Spielzaehlung/Persistierung (siehe CurrentMatch.Reset()
-		// bzw. SaveTurnsToLocalSettingsAsync) - entsprechend soll auch nichts an das zentrale
+		// bzw. SaveMatchStateAsync) - entsprechend soll auch nichts an das zentrale
 		// Verwaltungsprogramm gesendet werden.
 		if (s.Game.CurrentModus != GameSettings.Modus.Training)
 			_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
@@ -133,7 +136,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, true);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
+		await CurrentMatch.SaveMatchStateAsync();
 
 		_inputValue = -1;
 	}
@@ -148,7 +151,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, false);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
+		await CurrentMatch.SaveMatchStateAsync();
 
 		_inputValue = -1;
 	}
@@ -156,7 +159,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 	private async Task ResetAsync(bool force = false)
 	{
 		CurrentMatch.Reset(force);
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
+		await CurrentMatch.SaveMatchStateAsync();
 		_inputValue = -1;
 	}
 
@@ -169,7 +172,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		}
 
 		CurrentMatch.DeleteLastTurn();
-		await CurrentMatch.SaveTurnsToLocalSettingsAsync();
+		await CurrentMatch.SaveMatchStateAsync();
 	}
 
 	private protected void ShowSpecialPage()
