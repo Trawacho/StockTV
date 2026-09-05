@@ -44,6 +44,16 @@ public class CustomTheme : ITheme
 	/// </summary>
 	public ColorSettings Colors { get; set; } = new();
 
+	/// <summary>
+	/// Anspiel-Indikator: Soll der Rahmen statt des Sonderzeichens angezeigt werden?
+	/// </summary>
+	public bool ShowFrameOnAnspiel { get; set; } = false;
+
+	/// <summary>
+	/// Anspiel-Indikator: Rahmenstärke in Pixeln (default: 3px)
+	/// </summary>
+	public int FrameWidthPx { get; set; } = 3;
+
 	public ColorSettings GetColors(UiSettings.Richtung richtung)
 	{
 		if (richtung == UiSettings.Richtung.Links)

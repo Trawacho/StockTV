@@ -7,7 +7,7 @@
 	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-left"><AutoFitText Text="@ViewModel.LeftTeamName" Min="8" Vertical="true" /></div>
+			<div class="teamname teamname-left @ViewModel.GetTeamFrameClass(ViewModel.LeftTeamName)"><AutoFitText Text="@ViewModel.GetCleanTeamName(ViewModel.LeftTeamName)" Min="8" Vertical="true" /></div>
 		}
 
 		<div class="scoreboard-center">
@@ -28,7 +28,7 @@
 
 		@if (TeamNamesAvailable)
 		{
-			<div class="teamname teamname-right"><AutoFitText Text="@ViewModel.RightTeamName" Min="8" Vertical="true" /></div>
+			<div class="teamname teamname-right @ViewModel.GetTeamFrameClass(ViewModel.RightTeamName)"><AutoFitText Text="@ViewModel.GetCleanTeamName(ViewModel.RightTeamName)" Min="8" Vertical="true" /></div>
 		}
 	</div>
 </div>

@@ -17,6 +17,9 @@ public partial class CustomThemePage : IDisposable
 	private bool _disposed;
 	private int _baseThemeValue = -1;
 	private string _selectedFontFamily = "";
+	private bool _showFontSettings = false;
+	private bool _showColorSettings = false;
+	private bool _showAnspielSettings = false;
 
 	protected override void OnInitialized()
 	{
@@ -79,7 +82,9 @@ public partial class CustomThemePage : IDisposable
 			Id = theme.Id,
 			Name = theme.Name,
 			Colors = CopyColors(theme.Colors),
-			BaseTheme = theme.BaseTheme
+			BaseTheme = theme.BaseTheme,
+			ShowFrameOnAnspiel = theme.ShowFrameOnAnspiel,
+			FrameWidthPx = theme.FrameWidthPx
 		};
 		_baseThemeValue = theme.BaseTheme.HasValue ? (int)theme.BaseTheme.Value : -1;
 		_selectedFontFamily = theme.Colors.FontFamily ?? "";
@@ -109,6 +114,24 @@ public partial class CustomThemePage : IDisposable
 		_errorMessage = "";
 		_baseThemeValue = -1;
 		_selectedFontFamily = "";
+		_showFontSettings = false;
+		_showColorSettings = false;
+		_showAnspielSettings = false;
+	}
+
+	private void ToggleFontSettings()
+	{
+		_showFontSettings = !_showFontSettings;
+	}
+
+	private void ToggleColorSettings()
+	{
+		_showColorSettings = !_showColorSettings;
+	}
+
+	private void ToggleAnspielSettings()
+	{
+		_showAnspielSettings = !_showAnspielSettings;
 	}
 
 	private void OnBaseThemeChanged(ChangeEventArgs e)

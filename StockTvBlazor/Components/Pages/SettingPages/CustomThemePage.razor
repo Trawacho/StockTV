@@ -64,18 +64,46 @@
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Schriftart (optional)</label>
-                    <select value="@_selectedFontFamily" @onchange="OnFontFamilyChanged">
-                        <option value="">-- Standard --</option>
-                        @foreach (var font in FontService.GetAvailableFonts())
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button @(_showFontSettings ? "" : "collapsed")" type="button"
+                                    @onclick="ToggleFontSettings" aria-expanded="@(_showFontSettings.ToString().ToLower())"
+                                    aria-controls="fontSettingsCollapse">
+                                Schriftart
+                            </button>
+                        </h2>
+                        @if (_showFontSettings)
                         {
-                            <option value="@font">@font</option>
+                            <div id="fontSettingsCollapse" class="accordion-body">
+                                <div class="field">
+                                    <label>Schriftart (optional)</label>
+                                    <select value="@_selectedFontFamily" @onchange="OnFontFamilyChanged">
+                                        <option value="">-- Standard --</option>
+                                        @foreach (var font in FontService.GetAvailableFonts())
+                                        {
+                                            <option value="@font">@font</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
                         }
-                    </select>
+                    </div>
                 </div>
 
-                <div class="color-grid">
+                <div class="accordion" style="margin-top: 1rem;">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button @(_showColorSettings ? "" : "collapsed")" type="button"
+                                    @onclick="ToggleColorSettings" aria-expanded="@(_showColorSettings.ToString().ToLower())"
+                                    aria-controls="colorSettingsCollapse">
+                                Farben
+                            </button>
+                        </h2>
+                        @if (_showColorSettings)
+                        {
+                            <div id="colorSettingsCollapse" class="accordion-body">
+                                <div class="color-grid">
                     <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
                     <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
                     <ColorField Label="Werte A"     @bind-Value="_editingTheme.Colors.ForegroundA" />
@@ -85,6 +113,42 @@
                     <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" />
                     <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" />
                     <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="accordion" style="margin-top: 1rem;">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button @(_showAnspielSettings ? "" : "collapsed")" type="button"
+                                    @onclick="ToggleAnspielSettings" aria-expanded="@(_showAnspielSettings.ToString().ToLower())"
+                                    aria-controls="anspielSettingsCollapse">
+                                Anspiel-Indikator Einstellungen
+                            </button>
+                        </h2>
+                        @if (_showAnspielSettings)
+                        {
+                            <div id="anspielSettingsCollapse" class="accordion-body">
+                                <div class="field">
+                                    <label>
+                                        <input type="checkbox" @bind="_editingTheme.ShowFrameOnAnspiel" />
+                                        Rahmen statt Sonderzeichen anzeigen
+                                    </label>
+                                </div>
+
+                                @if (_editingTheme.ShowFrameOnAnspiel)
+                                {
+                                    <div class="field">
+                                        <label>Rahmenstärke (px)</label>
+                                        <input type="number" min="1" max="10" @bind="_editingTheme.FrameWidthPx"
+                                               style="max-width: 100px;" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
 
                 <div class="preview-section">
