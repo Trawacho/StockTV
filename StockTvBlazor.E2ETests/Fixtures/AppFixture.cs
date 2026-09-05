@@ -36,8 +36,8 @@ public class AppFixture : IAsyncLifetime
 		// Wait for app to be ready
 		await WaitForAppReadinessAsync();
 
-		// Initialize NetMQ sockets (give app time to bind)
-		await Task.Delay(1000);
+		// Initialize NetMQ sockets (give app more time to bind NetMQ sockets)
+		await Task.Delay(3000);
 		InitializeNetMQ();
 
 		// Launch Playwright (Headless can be overridden with PLAYWRIGHT_HEADLESS=false env var)
@@ -199,23 +199,51 @@ public class AppFixture : IAsyncLifetime
 
 	private void InitializeNetMQ()
 	{
-		// Publisher subscriber (PUB-SUB, port 4748)
-		_publisherSubscriber = new SubscriberSocket();
-		_publisherSubscriber.Connect(PublisherUrl);
-		_publisherSubscriber.Subscribe(""); // Subscribe to all topics
-
-		// Requester socket (REQ-REP, port 4747)
-		_netMqRequester = new RequestSocket();
-		_netMqRequester.Connect(RequesterUrl);
-
-		// Start poller on background thread
-		_poller = new NetMQPoller { _publisherSubscriber };
-		_pollerThread = new Thread(() => _poller.Run())
+		try
 		{
-			IsBackground = true,
-			Name = "E2E-NetMQ-Poller"
-		};
-		_pollerThread.Start();
+			// Publisher subscriber (PUB-SUB, port 4748)
+			_publisherSubscriber = new SubscriberSocket();
+			_publisherSubscriber.Connect(PublisherUrl);
+			_publisherSubscriber.Subscribe(""); // Subscribe to all topics
+			System.Diagnostics.Debug.WriteLine("NetMQ Publisher subscriber connected");
+
+			// Requester socket (REQ-REP, port 4747)
+			_netMqRequester = new RequestSocket();
+			_netMqRequester.Connect(RequesterUrl);
+			System.Diagnostics.Debug.WriteLine("NetMQ Requester socket connected");
+
+			// Start poller on background thread
+			if (_publisherSubscriber != null)
+			{
+				_poller = new NetMQPoller { _publisherSubscriber };
+				_pollerThread = new Thread(() =>
+				{
+					try
+					{
+						_poller.Run();
+					}
+					catch (Exception ex)
+					{
+						System.Diagnostics.Debug.WriteLine($"NetMQ Poller error: {ex.Message}");
+					}
+				})
+				{
+					IsBackground = true,
+					Name = "E2E-NetMQ-Poller"
+				};
+				_pollerThread.Start();
+				System.Diagnostics.Debug.WriteLine("NetMQ Poller started");
+			}
+			else
+			{
+				System.Diagnostics.Debug.WriteLine("ERROR: _publisherSubscriber is null before creating poller!");
+			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"NetMQ initialization error: {ex.Message}\n{ex.StackTrace}");
+			throw;
+		}
 	}
 
 	/// <summary>
@@ -275,35 +303,69 @@ public class AppFixture : IAsyncLifetime
 			return false;
 
 		timeout ??= TimeSpan.FromSeconds(1);
-		var message = new NetMQMessage();
 
-		if (_publisherSubscriber.TryReceiveMultipartMessage(timeout.Value, ref message))
+		try
 		{
-			// Publisher sends: [topic] [payload] or sometimes [topic+payload] in single frame
-			if (message.FrameCount >= 2)
+			var message = new NetMQMessage();
+
+			if (_publisherSubscriber.TryReceiveMultipartMessage(timeout.Value, ref message))
 			{
-				// Standard multipart: topic in frame 0, payload in frame 1
-				topic = Encoding.UTF8.GetString(message[0].Buffer);
-				payload = Encoding.UTF8.GetString(message[1].Buffer);
-				return true;
-			}
-			else if (message.FrameCount == 1)
-			{
-				// Single frame: might contain topic\0payload or just payload
-				var fullContent = Encoding.UTF8.GetString(message[0].Buffer);
-				var parts = fullContent.Split('\0');
-				if (parts.Length >= 2)
+				// Publisher sends: [topic] [payload] or sometimes [topic+payload] in single frame
+				if (message.FrameCount >= 2)
 				{
-					topic = parts[0];
-					payload = parts[1];
+					// Standard multipart: topic in frame 0, payload in frame 1
+					topic = Encoding.UTF8.GetString(message[0].Buffer);
+					payload = Encoding.UTF8.GetString(message[1].Buffer);
 					return true;
 				}
-				// If no separator, treat entire content as payload
-				payload = fullContent;
-				return true;
+				else if (message.FrameCount == 1)
+				{
+					// Single frame: might contain topic\0payload or just payload
+					var fullContent = Encoding.UTF8.GetString(message[0].Buffer);
+					var parts = fullContent.Split('\0');
+					if (parts.Length >= 2)
+					{
+						topic = parts[0];
+						payload = parts[1];
+						return true;
+					}
+					// If no separator, treat entire content as payload
+					payload = fullContent;
+					return true;
+				}
 			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"NetMQ broadcast receive error: {ex.Message}");
+			return false;
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Send NetMQ command with raw byte payload (for SetSettings) and receive full response message.
+	/// </summary>
+	public NetMQMessage SendNetMqRaw(string topic, byte[]? payload = null)
+	{
+		if (_netMqRequester == null)
+			throw new InvalidOperationException("NetMQ requester not initialized");
+
+		var message = new NetMQMessage();
+		message.Append(Encoding.UTF8.GetBytes(topic));
+		if (payload != null && payload.Length > 0)
+			message.Append(payload);
+
+		_netMqRequester.SendMultipartMessage(message);
+
+		// Receive response with timeout
+		var response = new NetMQMessage();
+		if (_netMqRequester.TryReceiveMultipartMessage(TimeSpan.FromSeconds(3), ref response))
+		{
+			return response;
+		}
+
+		throw new TimeoutException("NetMQ response timeout");
 	}
 }
