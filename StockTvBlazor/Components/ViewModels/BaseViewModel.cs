@@ -123,4 +123,33 @@ public abstract class BaseViewModel : IDisposable
 	}
 
 	#endregion
+
+	#region Team Frame (Anspiel-Indikator)
+
+	/// <summary>
+	/// Prüft ob der Teamname mit >> oder << markiert ist (Anspiel-Indikator)
+	/// </summary>
+	public bool HasAnspiel(string teamName)
+	{
+		return !string.IsNullOrEmpty(teamName) && (teamName.Contains("»") || teamName.Contains("«"));
+	}
+
+	/// <summary>
+	/// Gibt die CSS-Klasse für den Teamrahmen zurück, wenn Anspiel vorhanden
+	/// </summary>
+	public string GetTeamFrameClass(string teamName)
+	{
+		return HasAnspiel(teamName) ? "team-has-anspiel" : "";
+	}
+
+	/// <summary>
+	/// Gibt den bereinigten Teamnamen zurück (ohne >> oder <<)
+	/// </summary>
+	public string GetCleanTeamName(string teamName)
+	{
+		if (string.IsNullOrEmpty(teamName)) return teamName;
+		return teamName.Replace("»", "").Replace("«", "").Trim();
+	}
+
+	#endregion
 }
