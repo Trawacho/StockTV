@@ -51,6 +51,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
+builder.Services.AddSingleton<GameStatePersistenceService>();
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
 builder.Services.AddSingleton<FontService>();
@@ -105,10 +106,10 @@ using (var scope = app.Services.CreateScope())
 	await settingsService.InitializeAsync();
 
 	var matchService = services.GetRequiredService<MatchService>();
-	matchService.InitializeMatch();
+	await matchService.InitializeMatchAsync();
 
 	var zielService = services.GetRequiredService<ZielService>();
-	zielService.InitializeZiel();
+	await zielService.InitializeZielAsync();
 
 }
 

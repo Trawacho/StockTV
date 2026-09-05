@@ -15,13 +15,15 @@ public class Match
 
 	private readonly ILogger<MatchService> _logger;
 
-	public Match(SettingsService settingsService, ILogger<MatchService> logger)
+	private readonly GameStatePersistenceService _gamePersistence;
+
+	public Match(SettingsService settingsService, ILogger<MatchService> logger, GameStatePersistenceService gamePersistence)
 	{
 		_settingsService = settingsService;
 		_logger = logger;
+		_gamePersistence = gamePersistence;
 
 		_games.Add(new Game(_settingsService.CurrentSettings, 1));
-		LoadTurnsFromLocalSettings();
 	}
 
 	public IEnumerable<Game> Games => _games;
@@ -98,17 +100,23 @@ public class Match
 		OnMatchChanged?.Invoke();
 	}
 
+	private void ClearMatchStateInMemory()
+	{
+		var s = _settingsService.CurrentSettings;
+		ClearBegegnungen();
+		_games.Clear();
+		_games.Add(new Game(s, 1));
+		OnMatchChanged?.Invoke();
+	}
+
 	public void Reset(bool force = false)
 	{
 		var s = _settingsService.CurrentSettings;
 
 		if (force)
 		{
-			ClearBegegnungen();
-			_games.Clear();
-			_games.Add(new Game(s, 1));
-
-			OnMatchChanged?.Invoke();
+			ClearMatchStateInMemory();
+			_gamePersistence.DeleteMatchState();
 			return;
 		}
 
@@ -128,18 +136,32 @@ public class Match
 		OnMatchChanged?.Invoke();
 	}
 
-	public async Task SaveTurnsToLocalSettingsAsync()
-	{
-		var allTurns = Games.SelectMany(g => g.Turns).ToList();
-		await _settingsService.SaveTurnsAsync(allTurns);
-	}
-
-	private void LoadTurnsFromLocalSettings()
+	public async Task SaveMatchStateAsync()
 	{
 		var s = _settingsService.CurrentSettings;
 
-		var allTurns = s.Game.Kehren;
+		if (s.Game.CurrentModus == GameSettings.Modus.Training)
+			return;
 
+		var allTurns = Games.SelectMany(g => g.Turns).ToList();
+		await _gamePersistence.SaveMatchStateAsync(allTurns);
+	}
+
+	public async Task LoadMatchStateAsync()
+	{
+		var s = _settingsService.CurrentSettings;
+
+		if (s.Game.CurrentModus == GameSettings.Modus.Training)
+			return;
+
+		ClearMatchStateInMemory();
+
+		var allTurns = await _gamePersistence.LoadMatchStateAsync();
+
+		if (allTurns == null || allTurns.Count == 0)
+			return;
+
+		_logger.LogInformation("Loaded {Count} turns from match-state.json", allTurns.Count);
 		foreach (var turn in allTurns)
 		{
 			AddTurn(turn);
