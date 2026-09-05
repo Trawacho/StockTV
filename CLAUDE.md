@@ -51,6 +51,12 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 
 **Wichtig:** [INSTALL.md](INSTALL.md) enthält die vollständige Endanwender-Installationsanleitung (Raspberry Pi + Windows), Inhalte sind dort bewusst ausformuliert statt nur verlinkt. Bei Änderungen an `build/rpi/install.sh` oder `build/windows/install-service.ps1` (Parameter, Ablauf) muss `INSTALL.md` entsprechend aktualisiert werden.
 
+**Kritisch für Raspberry Pi:** `build/rpi/install.sh` und `build/rpi/build-image.sh` müssen **immer synchron** bleiben. Beide erstellen identische Dateien (sudoers-Regeln, Verwaltungs-Skripte). Bei jeder Änderung an einem der Skripte **MUSS** die andere Datei ebenfalls geprüft und angepasst werden:
+- Änderungen an `/etc/sudoers.d/stocktv`
+- Änderungen an `/usr/local/sbin/stocktv-*.sh` (Hostname-, Update-, Offline-Update-Skripte)
+- Paketabhängigkeiten (z.B. network-manager, curl, etc.)
+Vergessene Synchronisierung führt dazu, dass Image-Builds (GitHub Release) wichtige Dateien enthalten, die install.sh liefert – das Image funktioniert nicht auf der Setup-Seite.
+
 ---
 
 ## Tech-Stack
