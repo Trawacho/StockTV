@@ -79,6 +79,16 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 			int validTurnsCount = 0;
 			while (validTurnsCount < maxKehrenProSpiel)
 			{
+				//wenn currentTurn > 1 und kleiner maxKehrenProSpiel, dann "+" drücken
+				// es darf keine Auswirkung auf die Anzeigen haben, da es nur nach der letzten Kehre wirksam ist
+				if (validTurnsCount > 0 && validTurnsCount < maxKehrenProSpiel)
+				{
+					await Fixture.Page.Keyboard.PressAsync("+");
+					await Task.Delay(500);
+					Log(CurrentPhase, $"  + Taste '+' gedrückt (vor der letzten Kehre)");
+				}
+
+
 				int val;
 
 				if (validTurnsCount < maxKehrenProSpiel - 2)
