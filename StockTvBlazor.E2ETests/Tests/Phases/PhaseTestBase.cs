@@ -115,10 +115,23 @@ public abstract class PhaseTestBase
 
 		confirmKey ??= GetConfirmKey();
 
+		Log(CurrentPhase, $"Eingabe: {value}, Bestätigungskey: {confirmKey}");
+
+		char? previousChar = null;
 		foreach (char c in value)
 		{
+			// Wenn gleiches Zeichen wie zuvor: längere Verzögerung für Debounce (VOR dem Tastendruck!)
+			if (previousChar != null && c == previousChar)
+			{
+				await Task.Delay(DEBOUNCE_DELAY_MS);
+			}
+
 			await Fixture.Page.Keyboard.PressAsync(c.ToString());
+
+			// Nach jedem Tastendruck warten, damit die UI aktualisiert wird
 			await Task.Delay(200);
+
+			previousChar = c;
 		}
 
 		// Validate that the input value is visible in the display field before sending confirm key

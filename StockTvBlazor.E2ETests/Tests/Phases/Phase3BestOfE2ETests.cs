@@ -15,7 +15,8 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 
 	public async Task Phase3_BestOf_3Spiele()
 	{
-		LogPhaseStart("Phase 3", "BestOf 3 Spiele");
+		CurrentPhase = "Phase 3";
+		LogPhaseStart(CurrentPhase, "BestOf 3 Spiele");
 		Assert.NotNull(Fixture.Page);
 
 		// Konstanten für Test-Parameter
@@ -23,31 +24,69 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 		const int maxKehrenProSpiel = 6;
 		const int numberOfGames = 3;
 
+		// Team-Namen dynamisch generieren
+		var teamNamesMap = new Dictionary<int, (string left, string right)>();
+		for (int i = 1; i <= numberOfGames; i++)
+		{
+			teamNamesMap[i] = ($"TeamA{i}", $"TeamB{i}");
+		}
+
 		var currentSettings = await GetCurrentSettings();
 		var bestofSettings = GameplayScriptHelpers.BuildSettingsBytes(
-			currentSettings, modus: 1, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel);
+			currentSettings, modus: 1, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel, richtung: 1);
 		await SendSettings(bestofSettings);
-		await Task.Delay(1500);
-
-		Fixture.SendNetMqCommand("ResetResult");
-		await Task.Delay(1500);
-
-		// Team-Namen dynamisch generieren
-		var teamNamesPayload = string.Join(";", Enumerable.Range(1, numberOfGames).Select(i => $"{i}:TeamX:TeamY"));
-		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
-		await Task.Delay(1500);
+		Log(CurrentPhase, $"Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
+		await Task.Delay(500);
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/bestof");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 		await Task.Delay(2000);
 
+		Fixture.ClearPublisherMessages();
+		Fixture.SendNetMqCommand("ResetResult");
+		Log(CurrentPhase, "ResetResult gesendet");
+		await Task.Delay(500);
+
+		// An NetMQ senden (Format: "Spielnr:TeamA:TeamB;...")
+		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
+			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
+
+		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
+
+		Log(CurrentPhase, $"Team-Namen gesetzt ({numberOfGames} Begegnungen)");
+		Log(CurrentPhase, "Navigiert zu /bestof");
+
+		var allGames = new Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)>();
+
 		for (int game = 1; game <= numberOfGames; game++)
 		{
-			var gameTurns = new List<int>();
+			Log(CurrentPhase, $"▶ Starte Spiel {game}/{numberOfGames}");
+			// Erwartete Teamnamen aus Variable abrufen
+			var (expectedTeamLeft, expectedTeamRight) = teamNamesMap[game];
+
+			// Validiere Teamnamen beim Spiel-Start
+			await ValidateDisplayAsync(
+				expectedTeamLeft: expectedTeamLeft,
+				expectedTeamRight: expectedTeamRight,
+				expectedGameNumber: game,
+				expectedTurnNumber: 0);
+
+			Log(CurrentPhase, $"  ✓ Team-Namen korrekt: {expectedTeamLeft} vs {expectedTeamRight}");
+
+			var turnsLeft = new List<int>();
+			var turnsRight = new List<int>();
 
 			int validTurnsCount = 0;
 			while (validTurnsCount < maxKehrenProSpiel)
 			{
+				// Teste '+' Taste vor jedem Turn (außer erstem/letztem) - sollte keine Auswirkung haben
+				if (validTurnsCount > 0 && validTurnsCount < maxKehrenProSpiel)
+				{
+					await Fixture.Page.Keyboard.PressAsync("+");
+					await Task.Delay(500);
+					Log(CurrentPhase, $"  + Taste '+' gedrückt (vor der letzten Kehre)");
+				}
+
 				int val;
 
 				if (validTurnsCount < maxKehrenProSpiel - 2)
@@ -58,8 +97,21 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 				{
 					// Ungültigen Wert testen und verwerfen
 					int invalidVal = Rng.Next(maxPunkteProKehre + 1, maxPunkteProKehre + 5);
-					await EnterAndConfirm(invalidVal.ToString(), GetConfirmKey());
-					await Task.Delay(DEBOUNCE_DELAY_MS);
+					var invalidResult = await EnterAndConfirm(invalidVal.ToString(), expectedDisplay: "");
+					Log(CurrentPhase, $"  !!! Ungueltiger Wert {invalidVal} gesendet und verworfen");
+					await Task.Delay(500);
+
+					// Validiere dass die Anzeige unverändert ist (der ungültige Wert wurde verworfen)
+					await ValidateDisplayAsync(
+						expectedTurnsLeft: turnsLeft,
+						expectedTurnsRight: turnsRight,
+						expectedTeamLeft: expectedTeamLeft,
+						expectedTeamRight: expectedTeamRight,
+						expectedGameNumber: game,
+						expectedTurnNumber: validTurnsCount);
+
+					allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
+					await ValidateNetMqPublisherCompleteStateAsync(allGames);
 
 					// Danach einen gültigen Wert senden
 					val = Rng.Next(0, maxPunkteProKehre + 1);
@@ -69,58 +121,89 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 					val = Rng.Next(0, maxPunkteProKehre + 1);
 				}
 
-				await EnterAndConfirm(val.ToString());
-				await Task.Delay(DEBOUNCE_DELAY_MS);
+				var result = await EnterAndConfirm(val.ToString());
+				await Task.Delay(500);
 
-				gameTurns.Add(val);
+				TrackTurn(result, val, turnsLeft, turnsRight);
+				string side = result.IsLeftSide ? "Links (*)" : "Rechts (/)";
+				Log(CurrentPhase, $"  Turn {validTurnsCount + 1}/{maxKehrenProSpiel}: Wert {val} fuer {side} eingegeben");
+
+				// Validiere die Anzeige nach jedem Entry
+				await ValidateDisplayAsync(
+					expectedTurnsLeft: turnsLeft,
+					expectedTurnsRight: turnsRight,
+					expectedTeamLeft: expectedTeamLeft,
+					expectedTeamRight: expectedTeamRight,
+					expectedGameNumber: game,
+					expectedTurnNumber: validTurnsCount + 1);
+
+				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
+				await ValidateNetMqPublisherCompleteStateAsync(allGames);
+
 				validTurnsCount++;
-
-				var payload = GetLatestGetResultPayload();
-				if (payload != null)
-				{
-					var games = GameplayScriptHelpers.StripPrefixAndParseGames(payload);
-					if (games != null && games.Count > 0)
-					{
-						var currentGame = games.FirstOrDefault(g => g.GameNumber == game);
-						if (currentGame != null && currentGame.Turns.Count != gameTurns.Count)
-						{
-							System.Diagnostics.Debug.WriteLine($"BestOf turn mismatch: expected {gameTurns.Count}, got {currentGame.Turns.Count}");
-						}
-					}
-				}
 			}
 
-			if (gameTurns.Count > 0)
+			Log(CurrentPhase, $"  ✓ Spiel {game}/{numberOfGames}: Schleife beendet mit {maxKehrenProSpiel} Kehren");
+
+			// Test: Letzte Kehre löschen und neue hinzufügen
+			if (validTurnsCount > 0)
 			{
+				// Lösche das letzte Paar (Wert + 0) von beiden Seiten
+				if (turnsLeft.Count > 0)
+					turnsLeft.RemoveAt(turnsLeft.Count - 1);
+				if (turnsRight.Count > 0)
+					turnsRight.RemoveAt(turnsRight.Count - 1);
+
 				await Fixture.Page.Keyboard.PressAsync("-");
 				await Task.Delay(DEBOUNCE_DELAY_MS);
-				gameTurns.RemoveAt(gameTurns.Count - 1);
+				Log(CurrentPhase, $"  - Last turn removed");
+				await Task.Delay(500);
 
-				int val = Rng.Next(0, 7);
-				await EnterAndConfirm(val.ToString());
-				await Task.Delay(DEBOUNCE_DELAY_MS);
-				gameTurns.Add(val);
+				// Validiere nach dem Löschen
+				await ValidateDisplayAsync(
+					expectedTurnsLeft: turnsLeft,
+					expectedTurnsRight: turnsRight,
+					expectedTeamLeft: expectedTeamLeft,
+					expectedTeamRight: expectedTeamRight,
+					expectedGameNumber: game,
+					expectedTurnNumber: validTurnsCount - 1);
 
-				var payload = GetLatestGetResultPayload();
-				if (payload != null)
-				{
-					var games = GameplayScriptHelpers.StripPrefixAndParseGames(payload);
-				}
+				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
+				await ValidateNetMqPublisherCompleteStateAsync(allGames);
+
+				int val = Rng.Next(0, maxPunkteProKehre + 1);
+				var addResult = await EnterAndConfirm(val.ToString());
+				await Task.Delay(500);
+
+				TrackTurn(addResult, val, turnsLeft, turnsRight);
+				string addSide = addResult.IsLeftSide ? "Links" : "Rechts";
+				Log(CurrentPhase, $"  + New turn added ({addSide}): {val}");
+
+				// Validiere die Anzeige nach dem Add
+				await ValidateDisplayAsync(
+					expectedTurnsLeft: turnsLeft,
+					expectedTurnsRight: turnsRight,
+					expectedTeamLeft: expectedTeamLeft,
+					expectedTeamRight: expectedTeamRight,
+					expectedGameNumber: game,
+					expectedTurnNumber: validTurnsCount);
+
+				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
+				await ValidateNetMqPublisherCompleteStateAsync(allGames);
 			}
 
 			await Fixture.Page.Keyboard.PressAsync("+");
-			await Task.Delay(DEBOUNCE_DELAY_MS);
-
-			var matchPointsLeft = await Fixture.Page.Locator(".score-cell.left-match-points").TextContentAsync();
-			Assert.NotNull(matchPointsLeft);
+			await Task.Delay(500);
+			Log(CurrentPhase, $"  ✓ Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
 		}
 
-		Fixture.SendNetMqCommand("ResetResult");
-		var trainingSettings = GameplayScriptHelpers.BuildSettingsBytes(
-			await GetCurrentSettings(), modus: 0);
-		await SendSettings(trainingSettings);
+		// Im nächsten Spiel (das nicht existiert) sollten keine Team-Namen angezeigt werden
+		int expectedNextGame = numberOfGames + 1;
+		await ValidateDisplayAsync(
+			expectedGameNumber: expectedNextGame);
 
+		Fixture.SendNetMqCommand("ResetResult");
 		await Task.Delay(1000);
-		LogPhaseEnd("Phase 3");
+		LogPhaseEnd(CurrentPhase);
 	}
 }
