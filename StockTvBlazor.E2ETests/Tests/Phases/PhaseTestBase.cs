@@ -152,6 +152,29 @@ public abstract class PhaseTestBase
 	}
 
 	/// <summary>
+	/// Trägt einen Kehren-Wert in die Listen turnsLeft und turnsRight ein, basierend auf der bestätigten Seite.
+	/// Wenn Links bestätigt wurde, wird der Wert zu turnsLeft und 0 zu turnsRight hinzugefügt.
+	/// Wenn Rechts bestätigt wurde, wird 0 zu turnsLeft und der Wert zu turnsRight hinzugefügt.
+	/// </summary>
+	/// <param name="result">Das Ergebnis der Eingabe (welche Seite bestätigt wurde)</param>
+	/// <param name="value">Der eingegebene Wert</param>
+	/// <param name="turnsLeft">Liste der Werte auf der linken Seite</param>
+	/// <param name="turnsRight">Liste der Werte auf der rechten Seite</param>
+	protected void TrackTurn(EntryResult result, int value, List<int> turnsLeft, List<int> turnsRight)
+	{
+		if (result.IsLeftSide)
+		{
+			turnsLeft.Add(value);
+			turnsRight.Add(0);
+		}
+		else
+		{
+			turnsLeft.Add(0);
+			turnsRight.Add(value);
+		}
+	}
+
+	/// <summary>
 	/// Validiert dass der komplette NetMQ GetResult-Payload alle erwarteten Spiele mit ihren Turns und Summen enthält.
 	/// Prüft jeden Spieldatensatz einzeln und loggt die Ergebnisse.
 	/// </summary>
@@ -303,25 +326,30 @@ public abstract class PhaseTestBase
 
 		// Validate Header (Game Number and Turn Number)
 		// Hinweis: Header wird angezeigt, sobald im ersten Spiel eine Kehre eingegeben wird, und bleibt dann sichtbar
-		if (expectedGameNumber.HasValue && expectedGameNumber > 1 && (expectedTurnNumber == null || expectedTurnNumber > 0))
+		if (expectedGameNumber.HasValue && (expectedTurnNumber == null || expectedTurnNumber > 0))
 		{
 			var headerText = await Fixture.Page.Locator(".score-row.header-text").TextContentAsync();
 			Assert.NotNull(headerText);
 			Assert.NotEmpty(headerText);
 
+			// Im Training wird nur Bahn + Kehre angezeigt, im Turnier Spiel + Kehre
+			// GameplayScriptHelpers.ParseHeaderSpielUndKehre() gibt (0, kehre) zurück wenn "Spiel" nicht vorhanden ist
 			var (displayedGameNumber, displayedTurnNumber) = GameplayScriptHelpers.ParseHeaderSpielUndKehre(headerText);
 
-			if (expectedGameNumber.HasValue)
+			if (expectedGameNumber.HasValue && expectedGameNumber > 1)
 			{
 				Assert.Equal(expectedGameNumber.Value, displayedGameNumber);
+				Log(CurrentPhase, $"✓ Header korrekt: Spiel {displayedGameNumber}, Kehre {displayedTurnNumber}", "✓");
 			}
-
-			if (expectedTurnNumber.HasValue)
+			else if (expectedGameNumber == 1)
 			{
-				Assert.Equal(expectedTurnNumber.Value, displayedTurnNumber);
+				// Im Training: nur Kehre validieren
+				if (expectedTurnNumber.HasValue)
+				{
+					Assert.Equal(expectedTurnNumber.Value, displayedTurnNumber);
+				}
+				Log(CurrentPhase, $"✓ Header korrekt: Kehre {displayedTurnNumber}", "✓");
 			}
-
-			Log(CurrentPhase, $"✓ Header korrekt: Spiel {displayedGameNumber}, Kehre {displayedTurnNumber}", "✓");
 		}
 	}
 }

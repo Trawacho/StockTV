@@ -116,20 +116,9 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				var result = await EnterAndConfirm(val.ToString());
 				await Task.Delay(500);
 
-				// Track the turns for validation based on which side was confirmed
-				// Wenn eine Seite einen Wert bekommt, bekommt die andere Seite 0
-				if (result.IsLeftSide)
-				{
-					turnsLeft.Add(val);
-					turnsRight.Add(0);
-					Log(CurrentPhase, $"  Turn {validTurnsCount + 1}/{maxKehrenProSpiel}: Wert {val} fuer Links (*) eingegeben");
-				}
-				else
-				{
-					turnsLeft.Add(0);
-					turnsRight.Add(val);
-					Log(CurrentPhase, $"  Turn {validTurnsCount + 1}/{maxKehrenProSpiel}: Wert {val} fuer Rechts (/) eingegeben");
-				}
+				TrackTurn(result, val, turnsLeft, turnsRight);
+				string side = result.IsLeftSide ? "Links (*)" : "Rechts (/)";
+				Log(CurrentPhase, $"  Turn {validTurnsCount + 1}/{maxKehrenProSpiel}: Wert {val} fuer {side} eingegeben");
 
 				// Validiere die Anzeige nach jedem Entry
 				await ValidateDisplayAsync(
@@ -178,19 +167,9 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				var addResult = await EnterAndConfirm(val.ToString());
 				await Task.Delay(500);
 
-				// Füge wieder ein Paar hinzu: Wert auf einer Seite, 0 auf der anderen
-				if (addResult.IsLeftSide)
-				{
-					turnsLeft.Add(val);
-					turnsRight.Add(0);
-					Log(CurrentPhase, $"  + New turn added (Links): {val}");
-				}
-				else
-				{
-					turnsLeft.Add(0);
-					turnsRight.Add(val);
-					Log(CurrentPhase, $"  + New turn added (Rechts): {val}");
-				}
+				TrackTurn(addResult, val, turnsLeft, turnsRight);
+				string addSide = addResult.IsLeftSide ? "Links" : "Rechts";
+				Log(CurrentPhase, $"  + New turn added ({addSide}): {val}");
 
 				// Validiere die Anzeige nach dem Add
 				await ValidateDisplayAsync(
