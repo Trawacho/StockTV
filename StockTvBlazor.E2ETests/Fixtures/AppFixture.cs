@@ -21,6 +21,7 @@ public class AppFixture : IAsyncLifetime
 	private RequestSocket? _netMqRequester;
 	private NetMQPoller? _poller;
 	private Thread? _pollerThread;
+	private PublisherSubscriberMessageQueue? _publisherMessageQueue;
 
 	private const string AppUrl = "http://localhost:5001";
 	private const string PublisherUrl = "tcp://127.0.0.1:4748";
@@ -71,6 +72,9 @@ public class AppFixture : IAsyncLifetime
 		// Cleanup NetMQ (careful with disposal order)
 		try
 		{
+			// Clear message queue
+			_publisherMessageQueue?.Clear();
+
 			// Stop poller first, then wait for thread to finish
 			if (_poller?.IsRunning == true)
 			{
@@ -201,6 +205,10 @@ public class AppFixture : IAsyncLifetime
 	{
 		try
 		{
+			// Initialize message queue
+			_publisherMessageQueue = new PublisherSubscriberMessageQueue();
+			System.Diagnostics.Debug.WriteLine("NetMQ message queue initialized");
+
 			// Publisher subscriber (PUB-SUB, port 4748)
 			_publisherSubscriber = new SubscriberSocket();
 			_publisherSubscriber.Connect(PublisherUrl);
@@ -215,7 +223,63 @@ public class AppFixture : IAsyncLifetime
 			// Start poller on background thread
 			if (_publisherSubscriber != null)
 			{
-				_poller = new NetMQPoller { _publisherSubscriber };
+				_poller = new NetMQPoller();
+
+				// Register receive handler to record messages
+				_publisherSubscriber.ReceiveReady += (sender, args) =>
+				{
+					try
+					{
+						var message = new NetMQMessage();
+						if (args.Socket.TryReceiveMultipartMessage(TimeSpan.FromMilliseconds(100), ref message))
+						{
+							var topic = "";
+							var payload = "";
+							var frameCount = message.FrameCount;
+
+							if (message.FrameCount >= 2)
+							{
+								// Standard multipart: topic in frame 0, payload in frame 1
+								topic = Encoding.UTF8.GetString(message[0].Buffer);
+								payload = Encoding.UTF8.GetString(message[1].Buffer);
+							}
+							else if (message.FrameCount == 1)
+							{
+								// Single frame: might contain topic\0payload or just payload
+								var fullContent = Encoding.UTF8.GetString(message[0].Buffer);
+								var parts = fullContent.Split('\0');
+								if (parts.Length >= 2)
+								{
+									topic = parts[0];
+									payload = parts[1];
+								}
+								else
+								{
+									payload = fullContent;
+								}
+							}
+
+							// Record message in queue
+							if (_publisherMessageQueue != null)
+							{
+								_publisherMessageQueue.Enqueue(new PublisherSubscriberMessage
+								{
+									Topic = topic,
+									Payload = payload,
+									Timestamp = DateTime.UtcNow,
+									NetMqFrameCount = frameCount	
+								});
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						System.Diagnostics.Debug.WriteLine($"NetMQ message receive error: {ex.Message}");
+					}
+				};
+
+				_poller.Add(_publisherSubscriber);
+
 				_pollerThread = new Thread(() =>
 				{
 					try
@@ -291,58 +355,6 @@ public class AppFixture : IAsyncLifetime
 		throw new TimeoutException("NetMQ response timeout");
 	}
 
-	/// <summary>
-	/// Receive next broadcast from publisher (non-blocking, timeout 1s).
-	/// </summary>
-	public bool TryReceivePublisherBroadcast(out string topic, out string payload, TimeSpan? timeout = null)
-	{
-		topic = "";
-		payload = "";
-
-		if (_publisherSubscriber == null)
-			return false;
-
-		timeout ??= TimeSpan.FromSeconds(1);
-
-		try
-		{
-			var message = new NetMQMessage();
-
-			if (_publisherSubscriber.TryReceiveMultipartMessage(timeout.Value, ref message))
-			{
-				// Publisher sends: [topic] [payload] or sometimes [topic+payload] in single frame
-				if (message.FrameCount >= 2)
-				{
-					// Standard multipart: topic in frame 0, payload in frame 1
-					topic = Encoding.UTF8.GetString(message[0].Buffer);
-					payload = Encoding.UTF8.GetString(message[1].Buffer);
-					return true;
-				}
-				else if (message.FrameCount == 1)
-				{
-					// Single frame: might contain topic\0payload or just payload
-					var fullContent = Encoding.UTF8.GetString(message[0].Buffer);
-					var parts = fullContent.Split('\0');
-					if (parts.Length >= 2)
-					{
-						topic = parts[0];
-						payload = parts[1];
-						return true;
-					}
-					// If no separator, treat entire content as payload
-					payload = fullContent;
-					return true;
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"NetMQ broadcast receive error: {ex.Message}");
-			return false;
-		}
-
-		return false;
-	}
 
 	/// <summary>
 	/// Send NetMQ command with raw byte payload (for SetSettings) and receive full response message.
@@ -367,5 +379,49 @@ public class AppFixture : IAsyncLifetime
 		}
 
 		throw new TimeoutException("NetMQ response timeout");
+	}
+
+	/// <summary>
+	/// Get all recorded Publisher-Subscriber messages with the specified topic. GetResult or Alive messages can be retrieved this way.
+	/// </summary>
+	public IReadOnlyList<PublisherSubscriberMessage> GetPublisherMessagesByTopic(string topic)
+	{
+		if (_publisherMessageQueue == null)
+			throw new InvalidOperationException("Publisher message queue not initialized");
+
+		return _publisherMessageQueue.GetMessagesByTopic(topic);
+	}
+
+	/// <summary>
+	/// Get all recorded Publisher-Subscriber messages.
+	/// </summary>
+	public IReadOnlyList<PublisherSubscriberMessage> GetAllPublisherMessages()
+	{
+		if (_publisherMessageQueue == null)
+			throw new InvalidOperationException("Publisher message queue not initialized");
+
+		return _publisherMessageQueue.GetAllMessages();
+	}
+
+	/// <summary>
+	/// Clear all recorded Publisher-Subscriber messages.
+	/// </summary>
+	public void ClearPublisherMessages()
+	{
+		if (_publisherMessageQueue == null)
+			throw new InvalidOperationException("Publisher message queue not initialized");
+
+		_publisherMessageQueue.Clear();
+	}
+
+	/// <summary>
+	/// Get the number of messages currently recorded in the Publisher-Subscriber queue.
+	/// </summary>
+	public int GetPublisherMessageCount()
+	{
+		if (_publisherMessageQueue == null)
+			throw new InvalidOperationException("Publisher message queue not initialized");
+
+		return _publisherMessageQueue.Count;
 	}
 }

@@ -16,7 +16,8 @@ public static class GameplayScriptHelpers
 		byte[] currentSettings,
 		byte? modus = null,
 		byte? maxPunkteProKehre = null,
-		byte? maxKehrenProSpiel = null)
+		byte? maxKehrenProSpiel = null,
+		byte? richtung = null)
 	{
 		if (currentSettings.Length < 10)
 			throw new ArgumentException("currentSettings must be at least 10 bytes");
@@ -27,6 +28,7 @@ public static class GameplayScriptHelpers
 		// Field positions: [0]=BahnNummer, [1]=Spielgruppe, [2]=Modus, [3]=Richtung, [4]=Theme,
 		//                  [5]=MaxPunkteProKehre, [6]=MaxKehrenProSpiel, [7]=MidColumnWidth, [8]=MessageVersion, [9]=reserved
 		if (modus.HasValue) result[2] = modus.Value;
+		if (richtung.HasValue) result[3] = richtung.Value;
 		if (maxPunkteProKehre.HasValue) result[5] = maxPunkteProKehre.Value;
 		if (maxKehrenProSpiel.HasValue) result[6] = maxKehrenProSpiel.Value;
 
@@ -41,6 +43,9 @@ public static class GameplayScriptHelpers
 		if (payload.Length < 10)
 			return null;
 
+		//var settingsPartBytes = Encoding.UTF8.GetBytes(payload.Substring(0, 10));
+		//Console.WriteLine($"[GameplayScriptHelpers] Stripped settings prefix: {string.Join(" - ", settingsPartBytes)}");
+		
 		var jsonPart = payload.Substring(10);
 		try
 		{

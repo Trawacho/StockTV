@@ -1,14 +1,14 @@
-using Bunit;
+﻿using Bunit;
 using StockTvBlazor.Components.Controls;
 
 namespace StockTvBlazor.Tests.Components;
 
-public class PunkteEingabeTests : TestContext
+public class PunkteEingabeTests : BunitContext
 {
 	[Fact]
 	public void PunkteEingabe_Renders()
 	{
-		var cut = RenderComponent<PunkteEingabe>();
+		var cut = Render<PunkteEingabe>();
 
 		Assert.NotNull(cut.Markup);
 		Assert.Contains("punkte-eingabe", cut.Markup);
@@ -17,7 +17,7 @@ public class PunkteEingabeTests : TestContext
 	[Fact]
 	public void PunkteEingabe_HasInputElement()
 	{
-		var cut = RenderComponent<PunkteEingabe>();
+		var cut = Render<PunkteEingabe>();
 
 		Assert.Contains("punkteInput", cut.Markup);
 		Assert.Contains("punkte-input", cut.Markup);
@@ -26,7 +26,7 @@ public class PunkteEingabeTests : TestContext
 	[Fact]
 	public void PunkteEingabe_RendersHelpText()
 	{
-		var cut = RenderComponent<PunkteEingabe>();
+		var cut = Render<PunkteEingabe>();
 
 		Assert.Contains("Zahl eingeben", cut.Markup);
 	}
@@ -34,7 +34,7 @@ public class PunkteEingabeTests : TestContext
 	[Fact]
 	public void PunkteEingabe_HasTableStructure()
 	{
-		var cut = RenderComponent<PunkteEingabe>();
+		var cut = Render<PunkteEingabe>();
 
 		Assert.Contains("punkte-table", cut.Markup);
 		Assert.Contains("punkte-links", cut.Markup);

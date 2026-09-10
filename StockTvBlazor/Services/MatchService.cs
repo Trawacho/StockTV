@@ -124,7 +124,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		if (newValue <= maxPoints)
 			_inputValue = newValue;
 		else
-			_inputValue = (value <= maxPoints) ? value : -1;
+			_inputValue =  -1;
 	}
 
 	private async Task AddToGreenAsync()
