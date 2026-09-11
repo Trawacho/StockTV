@@ -365,4 +365,72 @@ public abstract class PhaseTestBase
 			}
 		}
 	}
+
+	/// <summary>
+	/// Validiert die kumulativen Punkte nach einem Spiel in BestOf-Modi.
+	/// Nach Spielende zeigen .left-points und .right-points die Summe ALLER bisherigen Spiele.
+	/// </summary>
+	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
+	/// <param name="allGames">Dictionary mit allen Spielen bis zu gameNumber</param>
+	protected async Task ValidateGameSummaryAsync(
+		int gameNumber,
+		Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)> allGames)
+	{
+		if (Fixture.Page == null)
+			return;
+
+		var displayLeftPoints = await Fixture.Page.Locator(".left-points").TextContentAsync();
+		var displayRightPoints = await Fixture.Page.Locator(".right-points").TextContentAsync();
+
+		// Berechne kumulative Summe aller Spiele bis gameNumber
+		int cumulativeSumLeft = 0;
+		int cumulativeSumRight = 0;
+
+		for (int i = 1; i <= gameNumber; i++)
+		{
+			if (allGames.ContainsKey(i))
+			{
+				cumulativeSumLeft += allGames[i].turnsLeft.Sum();
+				cumulativeSumRight += allGames[i].turnsRight.Sum();
+			}
+		}
+
+		int.TryParse(displayLeftPoints?.Trim() ?? "0", out int sumLeft);
+		int.TryParse(displayRightPoints?.Trim() ?? "0", out int sumRight);
+
+		Assert.Equal(cumulativeSumLeft, sumLeft);
+		Assert.Equal(cumulativeSumRight, sumRight);
+
+		Log(CurrentPhase, $"✓ Spiel {gameNumber} Kumulative Punkte: Links {sumLeft} | Rechts {sumRight}", "✓");
+	}
+
+	/// <summary>
+	/// Validiert die Match Points (Spielpunkte) für BestOf und ähnliche Modi.
+	/// Gibt aus, wie viele Match Points jede Seite hat.
+	/// </summary>
+	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
+	/// <param name="teamLeft">Team-Name links</param>
+	/// <param name="teamRight">Team-Name rechts</param>
+	protected async Task ValidateMatchPointsAsync(int gameNumber, string? teamLeft = null, string? teamRight = null)
+	{
+		if (Fixture.Page == null)
+			return;
+
+		var matchPointsLeft = await Fixture.Page.Locator(".score-cell.left-match-points").TextContentAsync();
+		var matchPointsRight = await Fixture.Page.Locator(".score-cell.right-match-points").TextContentAsync();
+
+		Assert.NotNull(matchPointsLeft);
+		Assert.NotNull(matchPointsRight);
+
+		int.TryParse(matchPointsLeft.Trim(), out int pointsLeft);
+		int.TryParse(matchPointsRight.Trim(), out int pointsRight);
+
+		var teamInfo = "";
+		if (!string.IsNullOrEmpty(teamLeft) && !string.IsNullOrEmpty(teamRight))
+		{
+			teamInfo = $" ({teamLeft} vs {teamRight})";
+		}
+
+		Log(CurrentPhase, $"✓ Match Points nach Spiel {gameNumber}: Links {pointsLeft} | Rechts {pointsRight}{teamInfo}", "✓");
+	}
 }

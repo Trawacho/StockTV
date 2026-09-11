@@ -195,6 +195,9 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 			await Fixture.Page.Keyboard.PressAsync("+");
 			await Task.Delay(500);
 			Log(CurrentPhase, $"  ✓ Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
+			await ValidateGameSummaryAsync(game, allGames);
+			await ValidateMatchPointsAsync(game, expectedTeamLeft, expectedTeamRight);
+			
 		}
 
 		// Im nächsten Spiel (das nicht existiert) sollten keine Team-Namen angezeigt werden
