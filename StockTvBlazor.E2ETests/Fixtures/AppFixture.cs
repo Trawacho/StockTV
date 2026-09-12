@@ -445,4 +445,67 @@ public class AppFixture : IAsyncLifetime
 
 		return _publisherMessageQueue.Count;
 	}
+
+	/// <summary>
+	/// Liest die Settings-Datei (stocktv.config.json) vom Server.
+	/// Die Datei wird von der App in AppContext.BaseDirectory/_config/ erstellt,
+	/// was bei "dotnet run" das bin/Debug/net*/ Verzeichnis ist.
+	/// </summary>
+	public async Task<string> ReadSettingsFileAsync()
+	{
+		try
+		{
+			// Finde das StockTvBlazor-Projektverzeichnis
+			var projectPath = FindProjectPath();
+			var projectDir = Path.GetDirectoryName(projectPath)
+				?? throw new InvalidOperationException("Could not determine project directory from project path");
+
+			// Die Datei liegt in bin/Debug/net*/_config/ oder bin/Release/net*/_config/
+			// Suche gezielt in den Debug/Release Ordnern statt überall
+			var binDir = Path.Combine(projectDir, "bin");
+			if (!Directory.Exists(binDir))
+				throw new DirectoryNotFoundException($"bin directory not found at {binDir}");
+
+			// Suche nach _config Ordnern unter bin
+			var configDirs = new DirectoryInfo(binDir).GetDirectories("_config", SearchOption.AllDirectories);
+			if (configDirs.Length == 0)
+				throw new DirectoryNotFoundException($"No _config directories found in {binDir}");
+
+			// Finde die neueste stocktv.config.json
+			var settingsFiles = configDirs
+				.Select(d => new FileInfo(Path.Combine(d.FullName, "stocktv.config.json")))
+				.Where(f => f.Exists)
+				.OrderByDescending(f => f.LastWriteTimeUtc)
+				.ToList();
+
+			if (settingsFiles.Count == 0)
+				throw new FileNotFoundException($"Settings file not found in any _config directory under {binDir}");
+
+			var settingsFile = settingsFiles.First();
+			var settingsPath = settingsFile.FullName;
+			System.Diagnostics.Debug.WriteLine($"Found settings file at: {settingsPath}");
+			System.Diagnostics.Debug.WriteLine($"Settings file modified: {settingsFile.LastWriteTimeUtc:yyyy-MM-dd HH:mm:ss.fff}");
+
+			// Lese die Datei mit Retry-Logik (falls die App gerade schreibt)
+			const int maxRetries = 5;
+			for (int i = 0; i < maxRetries; i++)
+			{
+				try
+				{
+					return await File.ReadAllTextAsync(settingsPath);
+				}
+				catch (IOException) when (i < maxRetries - 1)
+				{
+					await Task.Delay(200);
+				}
+			}
+
+			throw new InvalidOperationException($"Could not read settings file after {maxRetries} retries");
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Error reading settings file: {ex.Message}");
+			throw;
+		}
+	}
 }

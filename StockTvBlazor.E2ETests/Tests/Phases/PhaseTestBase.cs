@@ -104,11 +104,13 @@ public abstract class PhaseTestBase
 	/// <param name="maxPunkteProKehre">Maximale Punkte pro Kehre</param>
 	/// <param name="maxKehrenProSpiel">Maximale Kehren pro Spiel</param>
 	/// <param name="richtung">Spielrichtung (0=Links, 1=Rechts), optional</param>
+	/// <param name="validatePersistence">Wenn true, wird auch validiert dass die Settings-Datei auf dem Server persistiert wurde</param>
 	protected async Task ConfigureAndValidateSettings(
 		int modus,
 		int maxPunkteProKehre,
 		int maxKehrenProSpiel,
-		int? richtung = null)
+		int? richtung = null,
+		bool validatePersistence = true)
 	{
 		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
 		var currentSettings = await GetCurrentSettings();
@@ -124,10 +126,15 @@ public abstract class PhaseTestBase
 			(richtung.HasValue ? $", Richtung={richtung}" : "") + "...");
 		await SendSettings(newSettings);
 
-		Log(CurrentPhase, $"Validiere Settings...");
+		Log(CurrentPhase, $"Validiere Settings in-memory...");
 		var appliedSettings = await GetCurrentSettings();
 		Assert.Equal(newSettings, appliedSettings);
 		Log(CurrentPhase, $"✓ Settings validiert und angewendet");
+
+		if (validatePersistence)
+		{
+			await ValidateSettingsPersistenceAsync(modus, maxPunkteProKehre, maxKehrenProSpiel, richtung);
+		}
 	}
 
 	/// <summary>
@@ -142,6 +149,101 @@ public abstract class PhaseTestBase
 		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
 		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
 		Log(CurrentPhase, $"✓ Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)");
+	}
+
+	/// <summary>
+	/// Validiert dass die Settings-Datei auf dem Server mit den erwarteten Werten persistiert wurde.
+	/// Liest die Datei _config/stocktv.config.json und vergleicht die Werte.
+	/// </summary>
+	protected async Task ValidateSettingsPersistenceAsync(
+		int expectedModus,
+		int expectedMaxPunkteProKehre,
+		int expectedMaxKehrenProSpiel,
+		int? expectedRichtung = null)
+	{
+		Log(CurrentPhase, $"Validiere Settings-Persistierung auf dem Server...");
+
+		// Die SettingsService nutzt ein Debounce von 500ms + asynchrones Speichern
+		// Warte längere Zeit, um sicherzustellen dass alles geschrieben ist
+		Log(CurrentPhase, $"Warte auf asynchrone Persistierung...");
+		await Task.Delay(3000);
+
+		try
+		{
+			// Versuche mehrmals zu lesen, falls die Datei noch nicht aktualisiert wurde
+			string fileContent = "";
+			int fileModus = -1;
+			const int maxRetries = 6;
+
+			for (int attempt = 1; attempt <= maxRetries; attempt++)
+			{
+				fileContent = await Fixture.ReadSettingsFileAsync();
+
+				using var jsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
+				var root = jsonDoc.RootElement;
+				var gameObj = root.GetProperty("Game");
+
+				fileModus = gameObj.GetProperty("CurrentModus").GetInt32();
+
+				// Wenn der Modus korrekt ist, sind wir fertig
+				if (fileModus == expectedModus)
+				{
+					Log(CurrentPhase, $"Settings-Datei gelesen (Versuch {attempt}, {fileContent.Length} bytes)");
+					break;
+				}
+
+				// Modus stimmt nicht, warte und versuche nochmal
+				if (attempt < maxRetries)
+				{
+					Log(CurrentPhase, $"⚠ Modus in Datei ist noch {fileModus}, erwartet {expectedModus}, warte und versuche nochmal... (Versuch {attempt}/{maxRetries})");
+					await Task.Delay(500);
+				}
+				else
+				{
+					// Letzter Versuch fehlgeschlagen
+					Log(CurrentPhase, $"✗ Datei wurde nach {maxRetries} Versuchen nicht aktualisiert. Noch immer Modus {fileModus}");
+				}
+			}
+
+			// Parse die finale Version der Datei
+			using var finalJsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
+			var finalRoot = finalJsonDoc.RootElement;
+			var finalGameObj = finalRoot.GetProperty("Game");
+			var finalUiObj = finalRoot.GetProperty("UI");
+
+			int fileMaxPunkte = finalGameObj.GetProperty("MaxPunkteProKehre").GetInt32();
+			int fileMaxKehren = finalGameObj.GetProperty("MaxKehrenProSpiel").GetInt32();
+			int fileRichtung = finalUiObj.GetProperty("CurrentRichtung").GetInt32();
+
+			// Validiere Modus
+			Assert.Equal(expectedModus, fileModus);
+			Log(CurrentPhase, $"✓ Modus in Datei persistiert: {fileModus}");
+
+			// Validiere MaxPunkteProKehre
+			Assert.Equal(expectedMaxPunkteProKehre, fileMaxPunkte);
+			Log(CurrentPhase, $"✓ MaxPunkteProKehre in Datei persistiert: {fileMaxPunkte}");
+
+			// Validiere MaxKehrenProSpiel
+			Assert.Equal(expectedMaxKehrenProSpiel, fileMaxKehren);
+			Log(CurrentPhase, $"✓ MaxKehrenProSpiel in Datei persistiert: {fileMaxKehren}");
+
+			// Validiere Richtung wenn angegeben
+			if (expectedRichtung.HasValue)
+			{
+				Assert.Equal(expectedRichtung.Value, fileRichtung);
+				Log(CurrentPhase, $"✓ Richtung in Datei persistiert: {fileRichtung}");
+			}
+		}
+		catch (FileNotFoundException ex)
+		{
+			Log(CurrentPhase, $"✗ Settings-Datei nicht gefunden: {ex.Message}", "!");
+			throw;
+		}
+		catch (System.Text.Json.JsonException ex)
+		{
+			Log(CurrentPhase, $"✗ Settings-Datei konnte nicht geparst werden: {ex.Message}", "!");
+			throw;
+		}
 	}
 
 	protected class EntryResult

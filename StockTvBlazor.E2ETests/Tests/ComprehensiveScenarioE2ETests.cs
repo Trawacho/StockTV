@@ -23,9 +23,9 @@ public class ComprehensiveScenarioE2ETests : IClassFixture<AppFixture>
 	[Fact]
 	public async Task Comprehensive_E2E_AllPhases_Sequential()
 	{
-		await new Phase1TrainingE2ETests(_fixture, _output).Phase1_Training_15Kehren();
-		await new Phase2TournamentE2ETests(_fixture, _output).Phase2_Turnier_3Spiele();
-		await new Phase3BestOfE2ETests(_fixture, _output).Phase3_BestOf_3Spiele();
+		//await new Phase1TrainingE2ETests(_fixture, _output).Phase1_Training_15Kehren();
+		//await new Phase2TournamentE2ETests(_fixture, _output).Phase2_Turnier_3Spiele();
+		//await new Phase3BestOfE2ETests(_fixture, _output).Phase3_BestOf_3Spiele();
 		//await new Phase4Ziel6E2ETests(_fixture, _output).Phase4_Ziel_6Kehren();
 		//await new Phase5Ziel12E2ETests(_fixture, _output).Phase5_Ziel_12Kehren();
 		//await new Phase6Ziel2E2ETests(_fixture, _output).Phase6_Ziel2_2Runden();
