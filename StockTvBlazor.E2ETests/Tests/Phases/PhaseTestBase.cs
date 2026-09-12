@@ -77,7 +77,7 @@ public abstract class PhaseTestBase
 	protected async Task SendSettings(byte[] settingsBytes)
 	{
 		Fixture.SendNetMqRaw("SetSettings", settingsBytes);
-		await Task.Delay(DEBOUNCE_DELAY_MS);
+		await Task.Delay(500);
 	}
 
 	/// <summary>
@@ -86,7 +86,55 @@ public abstract class PhaseTestBase
 	protected async Task SendResetResult()
 	{
 		Fixture.SendNetMqCommand("ResetResult");
-		await Task.Delay(DEBOUNCE_DELAY_MS);
+		await Task.Delay(500);
+	}
+
+	/// <summary>
+	/// Lädt die aktuellen Settings, baut neue Settings mit den angegebenen Parametern,
+	/// sendet sie an die App und validiert dass sie korrekt übernommen wurden.
+	/// </summary>
+	/// <param name="modus">Der Spielmodus (0=Training, 1=BestOf, 2=Turnier, 100=Ziel, 101=Ziel2)</param>
+	/// <param name="maxPunkteProKehre">Maximale Punkte pro Kehre</param>
+	/// <param name="maxKehrenProSpiel">Maximale Kehren pro Spiel</param>
+	/// <param name="richtung">Spielrichtung (0=Links, 1=Rechts), optional</param>
+	protected async Task ConfigureAndValidateSettings(
+		int modus,
+		int maxPunkteProKehre,
+		int maxKehrenProSpiel,
+		int? richtung = null)
+	{
+		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
+		var currentSettings = await GetCurrentSettings();
+
+		var newSettings = GameplayScriptHelpers.BuildSettingsBytes(
+			currentSettings,
+			modus: modus,
+			maxPunkteProKehre: maxPunkteProKehre,
+			maxKehrenProSpiel: maxKehrenProSpiel,
+			richtung: richtung);
+
+		Log(CurrentPhase, $"Sende Settings (Modus={modus}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})" +
+			(richtung.HasValue ? $", Richtung={richtung}" : "") + "...");
+		await SendSettings(newSettings);
+
+		Log(CurrentPhase, $"Validiere Settings...");
+		var appliedSettings = await GetCurrentSettings();
+		Assert.Equal(newSettings, appliedSettings);
+		Log(CurrentPhase, $"✓ Settings validiert und angewendet");
+	}
+
+	/// <summary>
+	/// Sendet Team-Namen an die App über NetMQ im Format "Spielnr:TeamA:TeamB;..."
+	/// </summary>
+	/// <param name="teamNamesMap">Dictionary mit Spiel-Nummer als Key und (TeamLeft, TeamRight) als Value</param>
+	protected void SendTeamNames(Dictionary<int, (string left, string right)> teamNamesMap)
+	{
+		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
+			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
+
+		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
+		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
+		Log(CurrentPhase, $"✓ Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)");
 	}
 
 	protected class EntryResult

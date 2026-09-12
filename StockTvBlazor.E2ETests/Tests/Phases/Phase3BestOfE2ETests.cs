@@ -32,22 +32,16 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 		}
 
 		Log(CurrentPhase, $"Test-Parameter: MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Spiele={numberOfGames}");
-		Log(CurrentPhase, "$Lade aktuelle Settings vom Server...");
-		var currentSettings = await GetCurrentSettings();
-		var bestofSettings = GameplayScriptHelpers.BuildSettingsBytes(
-			currentSettings, modus: 1, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel, richtung: 1);
-		Log(CurrentPhase, $"Sende Settings an Server mit modus={1}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1...");
-		await SendSettings(bestofSettings);
-		Log(CurrentPhase, $"Lade Settings vom Server zur Validierung...");
-		var appliedSettings = await GetCurrentSettings();
-		Assert.Equal(bestofSettings, appliedSettings);
-		Log(CurrentPhase, $"Applied Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
+		await ConfigureAndValidateSettings(
+			modus: 1,
+			maxPunkteProKehre: maxPunkteProKehre,
+			maxKehrenProSpiel: maxKehrenProSpiel,
+			richtung: 1);
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/bestof");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 		await Task.Delay(1500);
 		Log(CurrentPhase, "Navigiert zu /bestof");
-
 
 		Fixture.ClearPublisherMessages();
 
@@ -55,13 +49,7 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 		Fixture.SendNetMqCommand("ResetResult");
 		Log(CurrentPhase, "ResetResult gesendet");
 
-		// An NetMQ senden (Format: "Spielnr:TeamA:TeamB;...")
-		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
-			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
-
-		Log(CurrentPhase, $"Sende Team-Namen an Server...");
-		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
-		Log(CurrentPhase, $"Team-Namen gesetzt ({numberOfGames} Begegnungen)");
+		SendTeamNames(teamNamesMap);
 
 		var allGames = new Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)>();
 

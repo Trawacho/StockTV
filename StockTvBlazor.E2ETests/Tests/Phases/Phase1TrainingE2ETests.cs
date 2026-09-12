@@ -27,27 +27,19 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 		Assert.NotNull(Fixture.Page);
 
 		Log(CurrentPhase, $"Starte Training mit {numberOfValidTurns} gültigen Kehren und {numberOfAdditionalTurns} zusätzlichen Kehren (MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})");
-		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
-		var currentSettings = await GetCurrentSettings();
-		var trainingSettings = GameplayScriptHelpers.BuildSettingsBytes(
-			currentSettings, modus: 0, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel);
-		Log(CurrentPhase, $"Sende Settings an Server mit modus={0}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}...");
-		await SendSettings(trainingSettings);
-
-		//Prüfe, ob settings auf dem Server korrekt übernommen wurden
-		Log(CurrentPhase, $"Lade Settings vom Server zur Validierung...");
-		var appliedSettings = await GetCurrentSettings();
-		Assert.Equal(trainingSettings, appliedSettings);
-		Log(CurrentPhase, $"Applied Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
-
-		Log(CurrentPhase, "Sende ResetResult an Server...");
-		Fixture.SendNetMqCommand("ResetResult");
-		
+		await ConfigureAndValidateSettings(
+			modus: 0,
+			maxPunkteProKehre: maxPunkteProKehre,
+			maxKehrenProSpiel: maxKehrenProSpiel);
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/training");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 		await Task.Delay(1500);
 		Log(CurrentPhase, "Navigiert zu /training");
+
+		Log(CurrentPhase, "Sende ResetResult an Server...");
+		Fixture.SendNetMqCommand("ResetResult");
+		Log(CurrentPhase, "ResetResult gesendet");
 
 		var pageContent = await Fixture.Page.ContentAsync();
 		Assert.NotEmpty(pageContent);

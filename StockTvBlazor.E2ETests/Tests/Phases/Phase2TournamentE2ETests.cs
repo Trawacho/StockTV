@@ -32,18 +32,11 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 		}
 
 		Log(CurrentPhase, $"Starte Turnier mit {numberOfGames} Begegnungen (MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})");
-		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
-		var currentSettings = await GetCurrentSettings();
-		var turnierSettings = GameplayScriptHelpers.BuildSettingsBytes(
-			currentSettings, modus: 2, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel, richtung: 1);
-		
-		Log(CurrentPhase, $"Sende Settings an Server mit modus={2}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}...");
-		await SendSettings(turnierSettings);
-
-		Log(CurrentPhase, $"Lade Settings vom Server zur Validierung...");
-		var appliedSettings = await GetCurrentSettings();
-		Assert.Equal(turnierSettings, appliedSettings);
-		Log(CurrentPhase, $"Applied Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
+		await ConfigureAndValidateSettings(
+			modus: 2,
+			maxPunkteProKehre: maxPunkteProKehre,
+			maxKehrenProSpiel: maxKehrenProSpiel,
+			richtung: 1);
 
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/turnier");
@@ -52,18 +45,12 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 		Log(CurrentPhase, "Navigiert zu /turnier");
 
 		Fixture.ClearPublisherMessages();
+
 		Log(CurrentPhase, "Sende ResetResult an Server...");
 		Fixture.SendNetMqCommand("ResetResult");
 		Log(CurrentPhase, "ResetResult gesendet");
 
-		// An NetMQ senden (Format: "Spielnr:TeamA:TeamB;...")
-		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
-			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
-
-		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
-		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
-
-		Log(CurrentPhase, $"Team-Namen gesetzt ({numberOfGames} Begegnungen)");
+		SendTeamNames(teamNamesMap);
 
 		var allGames = new Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)>();
 
