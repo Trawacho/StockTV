@@ -12,11 +12,17 @@ public class TestLogWriter : IDisposable
 	private StreamWriter? _fileWriter;
 	private readonly string _logFilePath;
 	private readonly object _lock = new();
+	private readonly DateTime _startTime = DateTime.Now;
+	private int _phaseCount;
+	private int _successCount;
+	private int _warningCount;
 
 	public TestLogWriter(ITestOutputHelper output, string? logDirectory = null)
 	{
 		_output = output;
-		_logDirectory = logDirectory ?? Path.Combine(Path.GetTempPath(), "stocktv-e2e-logs");
+		_logDirectory = logDirectory ?? Path.Combine(
+			AppContext.BaseDirectory,
+			"..", "..", "..", "TestResults");
 		_logFilePath = Path.Combine(_logDirectory, $"e2e-test-{DateTime.Now:yyyyMMdd-HHmmss}.log");
 
 		// Ensure log directory exists
@@ -42,11 +48,18 @@ public class TestLogWriter : IDisposable
 	public void WriteLn(string phase, string message, string symbol = "✓")
 	{
 		var line = $"[{DateTime.Now:HH:mm:ss.fff}] {phase,-8} | {symbol} {message}";
+
+		if (symbol == "✓")
+			_successCount++;
+		else if (symbol == "⚠")
+			_warningCount++;
+
 		WriteLine(line);
 	}
 
 	public void WritePhaseStart(string phase, string description)
 	{
+		_phaseCount++;
 		WriteLine("");
 		WriteLine("═══════════════════════════════════════════════════════");
 		WriteLine($"  {phase}: {description}");
@@ -65,13 +78,20 @@ public class TestLogWriter : IDisposable
 		{
 			try
 			{
-				_output.WriteLine(message);
+				try
+				{
+					_output.WriteLine(message);
+				}
+				catch
+				{
+					// ITestOutputHelper might not be active after test ends
+				}
 				_fileWriter?.WriteLine(message);
-				Console.WriteLine(message);
+				//Console.WriteLine(message);
 			}
 			catch (Exception ex)
 			{
-				_output.WriteLine($"[ERROR] Failed to write log: {ex.Message}");
+				Console.WriteLine($"[ERROR] Failed to write log: {ex.Message}");
 			}
 		}
 	}
@@ -84,15 +104,29 @@ public class TestLogWriter : IDisposable
 			{
 				if (_fileWriter != null)
 				{
-					WriteLine($"Log ended at {DateTime.Now:O}");
+					// Write summary directly to file (don't use WriteLine to avoid ITestOutputHelper issues)
+					var duration = DateTime.Now - _startTime;
+					_fileWriter.WriteLine("");
+					_fileWriter.WriteLine("═══════════════════════════════════════════════════════");
+					_fileWriter.WriteLine("  TEST SUMMARY");
+					_fileWriter.WriteLine("═══════════════════════════════════════════════════════");
+					_fileWriter.WriteLine($"Phases:         {_phaseCount}");
+					_fileWriter.WriteLine($"Success Checks: {_successCount}");
+					_fileWriter.WriteLine($"Warnings:       {_warningCount}");
+					_fileWriter.WriteLine($"Duration:       {duration.TotalSeconds:F2}s");
+					_fileWriter.WriteLine($"Log File:       {_logFilePath}");
+					_fileWriter.WriteLine("═══════════════════════════════════════════════════════");
+					_fileWriter.WriteLine($"Log ended at {DateTime.Now:O}");
+
 					_fileWriter.Flush();
 					_fileWriter.Dispose();
-					_output.WriteLine($"✓ Log file saved to: {_logFilePath}");
+
+					Console.WriteLine($"✓ Log file saved to: {_logFilePath}");
 				}
 			}
 			catch (Exception ex)
 			{
-				_output.WriteLine($"Error closing log file: {ex.Message}");
+				Console.WriteLine($"Error closing log file: {ex.Message}");
 			}
 		}
 	}

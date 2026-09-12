@@ -11,7 +11,6 @@ public abstract class PhaseTestBase
 	protected readonly AppFixture Fixture;
 	protected readonly Random Rng = new Random(1337);
 	protected readonly ITestOutputHelper Output;
-	protected TestLogWriter? Logger;
 	protected const int DEBOUNCE_DELAY_MS = 1100;
 	protected string CurrentPhase { get; set; } = "Test";
 
@@ -19,6 +18,8 @@ public abstract class PhaseTestBase
 	{
 		Fixture = fixture;
 		Output = output;
+		// Initialisiere den Logger einmalig pro Test-Run in der Fixture
+		Fixture.InitializeLogger(output);
 	}
 
 	/// <summary>
@@ -29,8 +30,7 @@ public abstract class PhaseTestBase
 	/// <param name="symbol">Das anzuzeigende Symbol (Standard: "✓")</param>
 	protected void Log(string phase, string message, string symbol = "✓")
 	{
-		Logger ??= new TestLogWriter(Output);
-		Logger.WriteLn(phase, message, symbol);
+		Fixture.Logger?.WriteLn(phase, message, symbol);
 	}
 
 	/// <summary>
@@ -40,8 +40,7 @@ public abstract class PhaseTestBase
 	/// <param name="description">Eine Beschreibung was die Phase testet</param>
 	protected void LogPhaseStart(string phase, string description)
 	{
-		Logger ??= new TestLogWriter(Output);
-		Logger.WritePhaseStart(phase, description);
+		Fixture.Logger?.WritePhaseStart(phase, description);
 	}
 
 	/// <summary>
@@ -50,8 +49,7 @@ public abstract class PhaseTestBase
 	/// <param name="phase">Der Name der Phase die beendet wird</param>
 	protected void LogPhaseEnd(string phase)
 	{
-		Logger ??= new TestLogWriter(Output);
-		Logger.WritePhaseEnd(phase);
+		Fixture.Logger?.WritePhaseEnd(phase);
 	}
 
 	/// <summary>
@@ -120,7 +118,7 @@ public abstract class PhaseTestBase
 		char? previousChar = null;
 		foreach (char c in value)
 		{
-			// Wenn gleiches Zeichen wie zuvor: längere Verzögerung für Debounce (VOR dem Tastendruck!)
+			// Wenn gleiches Zeichen wie zuvor: Debounce einhalten (VOR dem Tastendruck!)
 			if (previousChar != null && c == previousChar)
 			{
 				await Task.Delay(DEBOUNCE_DELAY_MS);
@@ -143,6 +141,20 @@ public abstract class PhaseTestBase
 		await Task.Delay(200);
 
 		return new EntryResult { Value = value, ConfirmKey = confirmKey };
+	}
+
+	/// <summary>
+	/// Drückt eine einzelne Taste und wartet auf die UI-Aktualisierung.
+	/// </summary>
+	/// <param name="key">Die zu drückende Taste (z.B. "+", "-", "Enter", "*", "/")</param>
+	/// <param name="logMessage">Optionale Log-Nachricht (wird vor dem Tastendruck geloggt)</param>
+	protected async Task PressKeyAsync(string key, string? logMessage = null)
+	{
+		if (!string.IsNullOrEmpty(logMessage))
+			Log(CurrentPhase, logMessage);
+
+		await Fixture.Page?.Keyboard.PressAsync(key);
+		await Task.Delay(200);
 	}
 
 	/// <summary>
@@ -210,6 +222,7 @@ public abstract class PhaseTestBase
 		}
 
 		// Validiere dass alle erwarteten Spiele im Payload enthalten sind
+		Log(CurrentPhase, $"Validierung des NetMQ GetResult-Payloads...");
 		Assert.Equal(expectedGames.Count, games.Count);
 
 		foreach (var expectedGame in expectedGames)
@@ -273,6 +286,8 @@ public abstract class PhaseTestBase
 		int? expectedGameNumber = null,
 		int? expectedTurnNumber = null)
 	{
+		Log(CurrentPhase, $"Validierung der Anzeige: Links={string.Join("-", expectedTurnsLeft ?? new List<int>())}, Rechts={string.Join("-", expectedTurnsRight ?? new List<int>())}, TeamLinks={expectedTeamLeft}, TeamRechts={expectedTeamRight}, Spiel={expectedGameNumber}, Kehre={expectedTurnNumber}");
+		
 		if (Fixture.Page == null)
 			return;
 

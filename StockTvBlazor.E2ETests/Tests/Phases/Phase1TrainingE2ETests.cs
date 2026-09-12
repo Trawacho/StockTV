@@ -26,23 +26,27 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 		LogPhaseStart(CurrentPhase, $"Training {maxKehrenProSpiel} Kehren");
 		Assert.NotNull(Fixture.Page);
 
+		Log(CurrentPhase, $"Starte Training mit {numberOfValidTurns} gültigen Kehren und {numberOfAdditionalTurns} zusätzlichen Kehren (MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})");
+		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
 		var currentSettings = await GetCurrentSettings();
 		var trainingSettings = GameplayScriptHelpers.BuildSettingsBytes(
 			currentSettings, modus: 0, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel);
+		Log(CurrentPhase, $"Sende Settings an Server mit modus={0}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}...");
 		await SendSettings(trainingSettings);
-		Log(CurrentPhase, $"Settings: Training, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}");
 
 		//Prüfe, ob settings auf dem Server korrekt übernommen wurden
+		Log(CurrentPhase, $"Lade Settings vom Server zur Validierung...");
 		var appliedSettings = await GetCurrentSettings();
 		Assert.Equal(trainingSettings, appliedSettings);
+		Log(CurrentPhase, $"Applied Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
 
-
+		Log(CurrentPhase, "Sende ResetResult an Server...");
 		Fixture.SendNetMqCommand("ResetResult");
-		Log(CurrentPhase, "ResetResult gesendet");
+		
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/training");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-		await Task.Delay(2000);
+		await Task.Delay(1500);
 		Log(CurrentPhase, "Navigiert zu /training");
 
 		var pageContent = await Fixture.Page.ContentAsync();
@@ -69,11 +73,10 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 		{
 			int val = Rng.Next(0, maxPunkteProKehre + 1);
 			var result = await EnterAndConfirm(val.ToString());
-			await Task.Delay(500);
 
 			TrackTurn(result, val, turnsLeft, turnsRight);
 			string side = result.IsLeftSide ? "Links" : "Rechts";
-			Log(CurrentPhase, $"Turn {turn + 1}/{numberOfValidTurns}: {val} Punkte ({side})", "✓");
+			Log(CurrentPhase, $"Kehre {turn + 1}/{numberOfValidTurns}: {val} Punkte ({side})", "✓");
 
 			// Validiere die Anzeige nach jedem Turn
 			await ValidateDisplayAsync(
@@ -87,9 +90,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 			// Reset durchführen (nur 1x, gesichert durch resetHasOccurred Flag)
 			if (!resetHasOccurred && turn + 1 == resetAtTurn)
 			{
-				Log(CurrentPhase, $"Reset bei Kehre {turnCountSinceReset} mit Taste '+'", "⚠");
-				await Fixture.Page.Keyboard.PressAsync("+");
-				await Task.Delay(500);
+				await PressKeyAsync("+", $"Reset bei Kehre {turnCountSinceReset} mit Taste '+'");
 
 				// Alles wird zurückgesetzt
 				turnsLeft.Clear();
@@ -97,14 +98,13 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 				turnCountSinceReset = 0;
 				resetHasOccurred = true;
 
-				Log(CurrentPhase, "Spiel wurde zurückgesetzt, beginne neues Spiel", "✓");
+				Log(CurrentPhase, "Spiel wurde zurückgesetzt, beginne neues Trainingsspiel", "✓");
 			}
 		}
 
 		// Test: Ungültiger Wert (> maxPunkteProKehre) sollte verworfen werden
 		Log(CurrentPhase, $"Teste Grenzwert: {invalidValue} > {maxPunkteProKehre} (sollte verworfen werden)", "⚠");
 		await EnterAndConfirm(invalidValue.ToString(), "*", expectedDisplay: "");
-		await Task.Delay(500);
 
 		// Validiere dass die Anzeige unverändert ist (der ungültige Wert wurde verworfen)
 		await ValidateDisplayAsync(
@@ -115,14 +115,12 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 		Log(CurrentPhase, "Grenzwert-Test bestätigt: Wert > Max verworfen", "✓");
 
 		// Test: Delete (-)
-		Log(CurrentPhase, "Teste Delete (-): Lösche letzte Kehre", "⚠");
 		if (turnsLeft.Count > 0)
 			turnsLeft.RemoveAt(turnsLeft.Count - 1);
 		if (turnsRight.Count > 0)
 			turnsRight.RemoveAt(turnsRight.Count - 1);
 
-		await Fixture.Page.Keyboard.PressAsync("-");
-		await Task.Delay(500);
+		await PressKeyAsync("-", "Teste Delete (-): Lösche letzte Kehre");
 
 		turnCountSinceReset--;
 
@@ -140,7 +138,6 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 		{
 			int val = Rng.Next(0, maxPunkteProKehre + 1);
 			var result = await EnterAndConfirm(val.ToString());
-			await Task.Delay(500);
 
 			TrackTurn(result, val, turnsLeft, turnsRight);
 			string addSide = result.IsLeftSide ? "Links" : "Rechts";
@@ -156,8 +153,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 			turnCountSinceReset++;
 		}
 
-		await Fixture.Page.Keyboard.PressAsync("+");
-		Log(CurrentPhase, "Spiel mit '+' bestätigt", "✓");
+		await PressKeyAsync("+", "Spiel mit '+' bestätigt");
 
 		LogPhaseEnd(CurrentPhase);
 	}

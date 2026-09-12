@@ -31,30 +31,39 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 			teamNamesMap[i] = ($"TeamA{i}", $"TeamB{i}");
 		}
 
+		Log(CurrentPhase, $"Starte Turnier mit {numberOfGames} Begegnungen (MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})");
+		Log(CurrentPhase, $"Lade aktuelle Settings vom Server...");
 		var currentSettings = await GetCurrentSettings();
 		var turnierSettings = GameplayScriptHelpers.BuildSettingsBytes(
 			currentSettings, modus: 2, maxPunkteProKehre: maxPunkteProKehre, maxKehrenProSpiel: maxKehrenProSpiel, richtung: 1);
+		
+		Log(CurrentPhase, $"Sende Settings an Server mit modus={2}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}...");
 		await SendSettings(turnierSettings);
-		Log(CurrentPhase, $"Settings: Turnier, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
-		await Task.Delay(500);
+
+		Log(CurrentPhase, $"Lade Settings vom Server zur Validierung...");
+		var appliedSettings = await GetCurrentSettings();
+		Assert.Equal(turnierSettings, appliedSettings);
+		Log(CurrentPhase, $"Applied Settings: BestOf, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Richtung=1");
+
 
 		await Fixture.Page.GotoAsync("http://localhost:5001/turnier");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-		await Task.Delay(2000);
+		await Task.Delay(1500);
+		Log(CurrentPhase, "Navigiert zu /turnier");
 
 		Fixture.ClearPublisherMessages();
+		Log(CurrentPhase, "Sende ResetResult an Server...");
 		Fixture.SendNetMqCommand("ResetResult");
 		Log(CurrentPhase, "ResetResult gesendet");
-		await Task.Delay(500);
 
 		// An NetMQ senden (Format: "Spielnr:TeamA:TeamB;...")
 		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
 			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
 
+		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
 		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
 
 		Log(CurrentPhase, $"Team-Namen gesetzt ({numberOfGames} Begegnungen)");
-		Log(CurrentPhase, "Navigiert zu /turnier");
 
 		var allGames = new Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)>();
 
@@ -83,9 +92,7 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				// es darf keine Auswirkung auf die Anzeigen haben, da es nur nach der letzten Kehre wirksam ist
 				if (validTurnsCount > 0 && validTurnsCount < maxKehrenProSpiel)
 				{
-					await Fixture.Page.Keyboard.PressAsync("+");
-					await Task.Delay(500);
-					Log(CurrentPhase, $"  + Taste '+' gedrückt (vor der letzten Kehre)");
+					await PressKeyAsync("+", $"Taste '+' gedrückt (vor der letzten Kehre)");
 				}
 
 
@@ -101,7 +108,7 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 					int invalidVal = Rng.Next(maxPunkteProKehre + 1, maxPunkteProKehre + 5);
 					var invalidResult = await EnterAndConfirm(invalidVal.ToString(), expectedDisplay: "");
 					Log(CurrentPhase, $"  !!! Ungueltiger Wert {invalidVal} gesendet und verworfen");
-					await Task.Delay(500);
+					
 
 					// Validiere dass die Anzeige unverändert ist (der ungültige Wert wurde verworfen)
 					await ValidateDisplayAsync(
@@ -124,7 +131,6 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				}
 
 				var result = await EnterAndConfirm(val.ToString());
-				await Task.Delay(500);
 
 				TrackTurn(result, val, turnsLeft, turnsRight);
 				string side = result.IsLeftSide ? "Links (*)" : "Rechts (/)";
@@ -156,10 +162,7 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				if (turnsRight.Count > 0)
 					turnsRight.RemoveAt(turnsRight.Count - 1);
 
-				await Fixture.Page.Keyboard.PressAsync("-");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
-				Log(CurrentPhase, $"  - Last turn removed");
-				await Task.Delay(500);
+				await PressKeyAsync("-", "Last turn removed");
 
 				// Validiere nach dem Löschen
 				await ValidateDisplayAsync(
@@ -175,7 +178,6 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 
 				int val = Rng.Next(0, maxPunkteProKehre + 1);
 				var addResult = await EnterAndConfirm(val.ToString());
-				await Task.Delay(500);
 
 				TrackTurn(addResult, val, turnsLeft, turnsRight);
 				string addSide = addResult.IsLeftSide ? "Links" : "Rechts";
@@ -194,9 +196,7 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 				await ValidateNetMqPublisherCompleteStateAsync(allGames);
 			}
 
-			await Fixture.Page.Keyboard.PressAsync("+");
-			await Task.Delay(500);
-			Log(CurrentPhase, $"  ✓ Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
+			await PressKeyAsync("+", $"✓ Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
 		}
 
 		// Im nächsten Spiel (das nicht existiert) sollten keine Team-Namen angezeigt werden
@@ -207,8 +207,8 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 			expectedTeamLeft: null,
 			expectedTeamRight: null);
 
+		Log(CurrentPhase, $"Sende ResetResult an Server nach Abschluss aller Spiele...");
 		Fixture.SendNetMqCommand("ResetResult");
-		await Task.Delay(1000);
 		LogPhaseEnd(CurrentPhase);
 	}
 }

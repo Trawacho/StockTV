@@ -5,6 +5,8 @@ using NetMQ;
 using NetMQ.Sockets;
 using System.Text;
 using System.Text.Json;
+using Xunit.Abstractions;
+using StockTvBlazor.E2ETests.Helpers;
 
 namespace StockTvBlazor.E2ETests.Fixtures;
 
@@ -15,6 +17,7 @@ public class AppFixture : IAsyncLifetime
 	private IPlaywright? _playwright;
 	public IPage? Page { get; private set; }
 	public IBrowserContext? Context { get; private set; }
+	public TestLogWriter? Logger { get; private set; }
 
 	// NetMQ sockets
 	private SubscriberSocket? _publisherSubscriber;
@@ -22,6 +25,8 @@ public class AppFixture : IAsyncLifetime
 	private NetMQPoller? _poller;
 	private Thread? _pollerThread;
 	private PublisherSubscriberMessageQueue? _publisherMessageQueue;
+
+	private ITestOutputHelper? _testOutput;
 
 	private const string AppUrl = "http://localhost:5001";
 	private const string PublisherUrl = "tcp://127.0.0.1:4748";
@@ -55,8 +60,24 @@ public class AppFixture : IAsyncLifetime
 		Page = await Context.NewPageAsync();
 	}
 
+	/// <summary>
+	/// Initialisiert den Test-Logger mit der xUnit ITestOutputHelper.
+	/// Wird von der Test-Klasse aufgerufen, um den Logger einmalig pro Test-Run zu erstellen.
+	/// </summary>
+	public void InitializeLogger(ITestOutputHelper testOutput)
+	{
+		if (_testOutput == null)
+		{
+			_testOutput = testOutput;
+			Logger = new TestLogWriter(testOutput);
+		}
+	}
+
 	public async Task DisposeAsync()
 	{
+		// Cleanup Logger
+		Logger?.Dispose();
+
 		// Cleanup Playwright
 		if (Page != null)
 			await Page.CloseAsync();
