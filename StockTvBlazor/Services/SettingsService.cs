@@ -1,4 +1,4 @@
-﻿using StockTvBlazor.Extensions;
+using StockTvBlazor.Extensions;
 using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
