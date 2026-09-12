@@ -1,4 +1,4 @@
-﻿using StockTvBlazor.Extensions;
+using StockTvBlazor.Extensions;
 using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -31,6 +31,8 @@ public class SettingsService : BackgroundService
 
 	private readonly FileLoggerProvider _fileLoggerProvider;
 
+	private CancellationTokenSource? _saveDebounceCts;
+
 	public bool SettingsPageActive = false;
 
 	public event Action? OnSettingsChanged;
@@ -57,6 +59,28 @@ public class SettingsService : BackgroundService
 
 	public override void Dispose()
 	{
+		try
+		{
+			// Wenn noch eine Debounce läuft, stop sie
+			_saveDebounceCts?.Cancel();
+		}
+		catch (ObjectDisposedException)
+		{
+			// CTS wurde bereits disposed
+		}
+
+		try
+		{
+			// Speichere alle ausstehenden Änderungen synchron vor dem Shutdown
+			_logger.LogInformation("Saving settings during shutdown");
+			SaveSettingsInternalAsync().GetAwaiter().GetResult();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error saving settings during shutdown");
+		}
+
+		_saveDebounceCts?.Dispose();
 		_saveSettingsQueue.Writer.TryComplete();
 		base.Dispose();
 	}
@@ -278,7 +302,77 @@ public class SettingsService : BackgroundService
 
 	public void RequestSaveSettings()
 	{
-		_saveSettingsQueue.Writer.TryWrite(true);
+		var oldCts = _saveDebounceCts;
+		_saveDebounceCts = new CancellationTokenSource();
+		var newCts = _saveDebounceCts;
+
+		_logger.LogDebug("Settings save debounced (waiting 1s)");
+
+		_ = DebouncedSaveAsync(newCts, oldCts);
+	}
+
+	private async Task DebouncedSaveAsync(CancellationTokenSource newCts, CancellationTokenSource? oldCts)
+	{
+		try
+		{
+			// Cancle alte Debounce
+			try
+			{
+				oldCts?.Cancel();
+			}
+			catch (ObjectDisposedException)
+			{
+				// Alte CTS wurde bereits disposed, ignorieren
+			}
+
+			// Warte auf Debounce-Timeout
+			await Task.Delay(1000, newCts.Token);
+
+			// Prüfe ob diese CTS noch aktuell ist (nicht durch neue Änderung cancelled)
+			if (newCts == _saveDebounceCts)
+			{
+				_logger.LogDebug("Debounce timeout reached, triggering settings save");
+				try
+				{
+					await _saveSettingsQueue.Writer.WriteAsync(true);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Failed to write settings save request to queue");
+				}
+			}
+			else
+			{
+				_logger.LogDebug("Debounce cancelled by newer save request");
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			_logger.LogDebug("Settings save debounce cancelled (new save requested)");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error in settings save debounce");
+		}
+		finally
+		{
+			// Dispose neue CTS nur wenn sie noch aktuell ist
+			if (newCts == _saveDebounceCts)
+			{
+				try
+				{
+					newCts.Dispose();
+				}
+				catch { }
+			}
+
+			// Dispose alte CTS
+			try
+			{
+				oldCts?.Dispose();
+			}
+			catch { }
+		}
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
