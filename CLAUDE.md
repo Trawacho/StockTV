@@ -372,7 +372,7 @@ NetMQ läuft auf eigenem `Poller`-Thread. Bei State-Änderungen von außen (z.B.
 
 ## Tests
 
-**⚠️ Jede Änderung an der App muss mit Tests geprüft werden — vor dem Merge.**
+**⚠️ Jede Änderung an der App muss mit Tests geprüft werden — vor dem Merge. Alle Tests müssen grün sein.**
 
 ### Unit Tests (`StockTvBlazor.Tests/`)
 Isolierte Tests für Komponenten, Modelle, Services und Netzwerk-Logik. Prüfen Funktionalität einzelner Bausteine (AutoFitText-Rendering, Punkte-Eingabe/Anzeige, Begegnung-Logik, NetMQ-Responses, etc.).
@@ -383,6 +383,8 @@ dotnet test StockTvBlazor.Tests/
 
 ### E2E Tests (`StockTvBlazor.E2ETests/`)
 Integrationstest für alle Spielmodi (Training, Turnier, BestOf, Ziel, Ziel2) und Settings-Persistierung. Simulieren echte Benutzerszenarien mit Blazor-Komponenten und NetMQ-Nachrichten. Tests laufen sequenziell und sind voneinander abhängig.
+
+**Dokumentation:** Siehe [StockTvBlazor.E2ETests/README.md](StockTvBlazor.E2ETests/README.md) für vollständige Test-Beschreibungen. **Jeder neue Test muss dort dokumentiert sein mit Ablauf, Konfiguration und Validierungspunkten.**
 
 ```powershell
 dotnet test StockTvBlazor.E2ETests/
