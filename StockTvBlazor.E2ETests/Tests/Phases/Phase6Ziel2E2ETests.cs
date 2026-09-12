@@ -14,105 +14,205 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 	{
 	}
 
-	[Fact(Skip = "WIP: UI timeout issues with Ziel2 mode")]
+	[Fact]
 	public async Task Phase6_Ziel2_2Runden()
 	{
-		LogPhaseStart("Phase 6", "Ziel2 2 Runden");
+		CurrentPhase = "Phase 6";
+		LogPhaseStart(CurrentPhase, "Ziel2 2 Runden (6 Kehren pro Disziplin)");
 		Assert.NotNull(Fixture.Page);
 
-		var currentSettings = await GetCurrentSettings();
-		var ziel2Settings = GameplayScriptHelpers.BuildSettingsBytes(
-			currentSettings, modus: 101, maxKehrenProSpiel: 6);
-		await SendSettings(ziel2Settings);
-		await Task.Delay(1500);
+		// Konstanten
+		const int maxKehrenProSpiel = 6;
+		const int maxVersucheProRunde = 4 * maxKehrenProSpiel;  // 24 per round
+		const int maxVersucheDisplay = 2 * maxVersucheProRunde;  // 48 for display
 
-		Fixture.SendNetMqCommand("ResetResult");
-		await Task.Delay(1500);
+		// Konfiguriere Ziel2-Modus (modus 101)
+		Log(CurrentPhase, $"Starte Ziel2 mit 2 Runden à {maxKehrenProSpiel} Versuchen pro Disziplin");
+		await ConfigureAndValidateSettings(
+			modus: 101,
+			maxPunkteProKehre: 10,
+			maxKehrenProSpiel: maxKehrenProSpiel,
+			validatePersistence: true);
 
+		// Navigate to Ziel page
 		await Fixture.Page.GotoAsync("http://localhost:5001/ziel");
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-		await Task.Delay(2000);
+		await Task.Delay(1500);
+		Log(CurrentPhase, "Navigiert zu /ziel");
+
+		Fixture.ClearPublisherMessages();
+
+		Log(CurrentPhase, "Sende ResetResult an Server...");
+		Fixture.SendNetMqCommand("ResetResult");
+		await Task.Delay(500);
+
+		// Set player name via NetMQ
+		string spielername = "TestSpieler_Phase6";
+		SetZielTeilnehmer(spielername);
+		await Task.Delay(500);
 
 		var validValuesPerDisziplin = new[]
 		{
-			new[] { 0, 2, 4, 6, 8, 10 },
-			new[] { 0, 2, 5, 10 },
-			new[] { 0, 2, 4, 6, 8, 10 },
-			new[] { 0, 2, 4, 6, 8, 10 }
+			new[] { 0, 2, 4, 6, 8, 10 },  // MassenVorne
+			new[] { 0, 2, 5, 10 },         // Schiessen
+			new[] { 0, 2, 4, 6, 8, 10 },  // MassenSeite
+			new[] { 0, 2, 4, 6, 8, 10 }   // Kombinieren
 		};
 
-		// Round 1: 4*6=24 attempts
+		string[] disziplinNamen = { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" };
+
+		// Validate player name is displayed
+		await ValidateZielSpielernameAsync(spielername);
+
+		int totalVersucheCount = 0;
+		int currentRound = 1;
+		var disziplinSummen = new Dictionary<string, int>
+		{
+			["MassenVorne"] = 0,
+			["Schiessen"] = 0,
+			["MassenSeite"] = 0,
+			["Kombinieren"] = 0
+		};
+
+		// RUNDE 1
+		Log(CurrentPhase, "=== RUNDE 1 ===");
+
 		for (int disziplin = 0; disziplin < 4; disziplin++)
 		{
 			var validValues = validValuesPerDisziplin[disziplin];
-			for (int attempt = 0; attempt < 6; attempt++)
+			Log(CurrentPhase, $"▶ Runde {currentRound}, Disziplin {disziplin + 1}/4: {disziplinNamen[disziplin]}");
+
+			int versucheInDisziplin = 0;
+
+			while (versucheInDisziplin < maxKehrenProSpiel)
 			{
 				int value;
-				if (attempt < 4)
+
+				// Invalid value on 5. attempt
+				if (versucheInDisziplin == maxKehrenProSpiel - 2)
 				{
-					value = validValues[Rng.Next(validValues.Length)];
-				}
-				else if (attempt == 4)
-				{
-					int[] allValues = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15 };
+					int[] allValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15];
 					value = allValues.FirstOrDefault(v => !validValues.Contains(v));
+
+					bool wasAccepted = await EnterAndConfirmZielAsync(value.ToString());
+					Assert.False(wasAccepted, "Invalid value should be rejected");
+					Log(CurrentPhase, $"  ✓ Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt");
+
+					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
+
+					value = validValues[Rng.Next(validValues.Length)];
 				}
 				else
 				{
 					value = validValues[Rng.Next(validValues.Length)];
 				}
 
-				await EnterAndConfirm(value.ToString(), "*");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
+				bool wasAccepted2 = await EnterAndConfirmZielAsync(value.ToString());
+				Assert.True(wasAccepted2, "Valid value should be accepted");
+
+				totalVersucheCount++;
+				versucheInDisziplin++;
+				disziplinSummen[disziplinNamen[disziplin]] += value;
+
+				if (versucheInDisziplin % 2 == 0)
+				{
+					Log(CurrentPhase, $"  Versuch {versucheInDisziplin}/{maxKehrenProSpiel}: {value} ({totalVersucheCount}/{maxVersucheDisplay})");
+					// Validate NetMQ less frequently
+					await ValidateZielNetMqPublisherAsync(totalVersucheCount, disziplinSummen);
+				}
+
+				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
+				await Task.Delay(250);
 			}
 
-			if (Rng.Next(2) == 0)
-			{
-				await Fixture.Page.Keyboard.PressAsync("-");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
-				int value = validValues[Rng.Next(validValues.Length)];
-				await EnterAndConfirm(value.ToString(), "*");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
-			}
+			Log(CurrentPhase, $"  ✓ Runde {currentRound} Disziplin {disziplin + 1} fertig");
 		}
 
-		// Round 2: 24 more
+		Log(CurrentPhase, $"✓ Runde 1 abgeschlossen: {totalVersucheCount}/{maxVersucheProRunde} Versuche");
+		await Task.Delay(1000);  // Pause for automatic round transition
+
+		// RUNDE 2 - Reset sums for new round
+		Log(CurrentPhase, "=== RUNDE 2 (nach automatischem Reset) ===");
+		currentRound = 2;
+		// Reset discipline sums for round 2 (they get cleared in ZielBewerb.AddVersuch when transitioning to round 2)
+		disziplinSummen["MassenVorne"] = 0;
+		disziplinSummen["Schiessen"] = 0;
+		disziplinSummen["MassenSeite"] = 0;
+		disziplinSummen["Kombinieren"] = 0;
+
 		for (int disziplin = 0; disziplin < 4; disziplin++)
 		{
 			var validValues = validValuesPerDisziplin[disziplin];
-			for (int attempt = 0; attempt < 6; attempt++)
+			Log(CurrentPhase, $"▶ Runde {currentRound}, Disziplin {disziplin + 1}/4: {disziplinNamen[disziplin]}");
+
+			int versucheInDisziplin = 0;
+
+			while (versucheInDisziplin < maxKehrenProSpiel)
 			{
 				int value;
-				if (attempt < 4)
+
+				// Invalid value on 5. attempt
+				if (versucheInDisziplin == maxKehrenProSpiel - 2)
 				{
-					value = validValues[Rng.Next(validValues.Length)];
-				}
-				else if (attempt == 4)
-				{
-					int[] allValues = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15 };
+					int[] allValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15];
 					value = allValues.FirstOrDefault(v => !validValues.Contains(v));
+
+					bool wasAccepted = await EnterAndConfirmZielAsync(value.ToString());
+					Assert.False(wasAccepted, "Invalid value should be rejected");
+					Log(CurrentPhase, $"  ✓ Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt");
+
+					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
+
+					value = validValues[Rng.Next(validValues.Length)];
 				}
 				else
 				{
 					value = validValues[Rng.Next(validValues.Length)];
 				}
 
-				await EnterAndConfirm(value.ToString(), "*");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
+				bool wasAccepted2 = await EnterAndConfirmZielAsync(value.ToString());
+				Assert.True(wasAccepted2, "Valid value should be accepted");
+
+				totalVersucheCount++;
+				versucheInDisziplin++;
+
+				if (versucheInDisziplin % 2 == 0)
+				{
+					Log(CurrentPhase, $"  Versuch {versucheInDisziplin}/{maxKehrenProSpiel}: {value} ({totalVersucheCount}/{maxVersucheDisplay})");
+				}
+
+				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
+				await Task.Delay(250);
 			}
 
-			if (Rng.Next(2) == 0)
+			// Test delete on last discipline of round 2
+			if (disziplin == 3)
 			{
-				await Fixture.Page.Keyboard.PressAsync("-");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
-				int value = validValues[Rng.Next(validValues.Length)];
-				await EnterAndConfirm(value.ToString(), "*");
-				await Task.Delay(DEBOUNCE_DELAY_MS);
+				Log(CurrentPhase, $"  ✓ Teste Löschen auf letzter Disziplin");
+
+				await DeleteZielAttemptAsync();
+				totalVersucheCount--;
+				versucheInDisziplin--;
+
+				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
+
+				int val = validValues[Rng.Next(validValues.Length)];
+				bool wasAccepted3 = await EnterAndConfirmZielAsync(val.ToString());
+				Assert.True(wasAccepted3, "Replacement value should be accepted");
+
+				totalVersucheCount++;
+				versucheInDisziplin++;
+
+				Log(CurrentPhase, $"  ✓ Neuer Wert hinzugefügt: {val}");
+				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
 			}
+
+			Log(CurrentPhase, $"  ✓ Runde {currentRound} Disziplin {disziplin + 1} fertig");
 		}
 
-		var content = await Fixture.Page.ContentAsync();
-		Assert.NotEmpty(content);
-		LogPhaseEnd("Phase 6");
+		Log(CurrentPhase, $"✓ Phase 6 abgeschlossen: {totalVersucheCount}/{maxVersucheDisplay} Versuche (2 Runden)");
+
+		Fixture.SendNetMqCommand("ResetResult");
+		LogPhaseEnd(CurrentPhase);
 	}
 }
