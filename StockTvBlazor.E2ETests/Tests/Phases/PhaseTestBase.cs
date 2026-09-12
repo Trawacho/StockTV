@@ -9,7 +9,7 @@ namespace StockTvBlazor.E2ETests.Tests.Phases;
 public abstract class PhaseTestBase
 {
 	protected readonly AppFixture Fixture;
-	protected readonly Random Rng = new Random(1337);
+	protected Random Rng;
 	protected readonly ITestOutputHelper Output;
 	protected const int DEBOUNCE_DELAY_MS = 1100;
 	protected string CurrentPhase { get; set; } = "Test";
@@ -20,6 +20,13 @@ public abstract class PhaseTestBase
 		Output = output;
 		// Initialisiere den Logger einmalig pro Test-Run in der Fixture
 		Fixture.InitializeLogger(output);
+
+		// Generiere einen zufälligen Seed für bessere Test-Variabilität
+		int seed = new Random().Next();
+		Rng = new Random(seed);
+
+		// Schreibe den Seed ins Log für Reproduzierbarkeit bei Fehlern
+		Log("Setup", $"Random Seed für diesen Testlauf: {seed}");
 	}
 
 	/// <summary>
