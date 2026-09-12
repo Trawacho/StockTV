@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
+[Collection("E2E Sequential")]
 public class Phase1TrainingE2ETests : PhaseTestBase
 {
 	public Phase1TrainingE2ETests(AppFixture fixture, ITestOutputHelper output)
@@ -13,6 +14,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 	{
 	}
 
+	[Fact]
 	public async Task Phase1_Training_15Kehren()
 	{
 

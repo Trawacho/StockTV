@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
+[Collection("E2E Sequential")]
 public class Phase2TournamentE2ETests : PhaseTestBase
 {
 	public Phase2TournamentE2ETests(AppFixture fixture, ITestOutputHelper output)
@@ -13,6 +14,7 @@ public class Phase2TournamentE2ETests : PhaseTestBase
 	{
 	}
 
+	[Fact]
 	public async Task Phase2_Turnier_3Spiele()
 	{
 		CurrentPhase = "Phase 2";

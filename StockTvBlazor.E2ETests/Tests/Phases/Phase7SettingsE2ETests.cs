@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
+[Collection("E2E Sequential")]
 public class Phase7SettingsE2ETests : PhaseTestBase
 {
 	public Phase7SettingsE2ETests(AppFixture fixture, ITestOutputHelper output)
@@ -13,6 +14,7 @@ public class Phase7SettingsE2ETests : PhaseTestBase
 	{
 	}
 
+	[Fact]
 	public async Task Phase7_Settings_Navigation()
 	{
 		LogPhaseStart("Phase 7", "Settings & Navigation");

@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
+[Collection("E2E Sequential")]
 public class Phase4Ziel6E2ETests : PhaseTestBase
 {
 	public Phase4Ziel6E2ETests(AppFixture fixture, ITestOutputHelper output)
@@ -13,6 +14,7 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 	{
 	}
 
+	[Fact(Skip = "WIP: Ziel mode requires dedicated input helpers")]
 	public async Task Phase4_Ziel_6Kehren()
 	{
 		LogPhaseStart("Phase 4", "Ziel 6 Kehren/Disziplin");
