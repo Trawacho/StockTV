@@ -64,17 +64,17 @@ public abstract class PhaseTestBase
 	/// Falls die Abfrage fehlschlägt, werden Standardeinstellungen zurückgegeben.
 	/// </summary>
 	/// <returns>Ein 10-Byte-Array mit den aktuellen Einstellungen</returns>
-	protected async Task<byte[]> GetCurrentSettings()
+	protected Task<byte[]> GetCurrentSettings()
 	{
 		try
 		{
 			var response = Fixture.SendNetMqRaw("GetSettings");
 			if (response.FrameCount >= 2)
-				return response[1].ToByteArray();
+				return Task.FromResult(response[1].ToByteArray());
 		}
 		catch { }
 
-		return new byte[] { 1, 0, 0, 0, 0, 10, 6, 50, 1, 0 };
+		return Task.FromResult(new byte[] { 1, 0, 0, 0, 0, 10, 6, 50, 1, 0 });
 	}
 
 	/// <summary>
@@ -208,7 +208,10 @@ public abstract class PhaseTestBase
 		if (!string.IsNullOrEmpty(logMessage))
 			Log(CurrentPhase, logMessage);
 
-		await Fixture.Page?.Keyboard.PressAsync(key);
+		if (Fixture.Page == null)
+			return;
+
+		await Fixture.Page.Keyboard.PressAsync(key);
 		await Task.Delay(200);
 	}
 
