@@ -115,10 +115,10 @@ public abstract class PhaseTestBase
 
 		var newSettings = GameplayScriptHelpers.BuildSettingsBytes(
 			currentSettings,
-			modus: modus,
-			maxPunkteProKehre: maxPunkteProKehre,
-			maxKehrenProSpiel: maxKehrenProSpiel,
-			richtung: richtung);
+			modus: (byte)modus,
+			maxPunkteProKehre: (byte)maxPunkteProKehre,
+			maxKehrenProSpiel: (byte)maxKehrenProSpiel,
+			richtung: richtung.HasValue ? (byte?)richtung.Value : null);
 
 		Log(CurrentPhase, $"Sende Settings (Modus={modus}, MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel})" +
 			(richtung.HasValue ? $", Richtung={richtung}" : "") + "...");
