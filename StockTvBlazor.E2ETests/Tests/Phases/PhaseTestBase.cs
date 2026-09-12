@@ -29,6 +29,8 @@ public abstract class PhaseTestBase
 		Log("Setup", $"Random Seed für diesen Testlauf: {seed}");
 	}
 
+	#region CORE SETUP & LOGGING
+
 	/// <summary>
 	/// Schreibt eine Lognachricht mit Phasenbeschreibung und optionalem Symbol.
 	/// </summary>
@@ -58,6 +60,10 @@ public abstract class PhaseTestBase
 	{
 		Fixture.Logger?.WritePhaseEnd(phase);
 	}
+
+	#endregion CORE SETUP & LOGGING
+
+	#region SETTINGS & CONFIGURATION
 
 	/// <summary>
 	/// Holt die aktuellen Einstellungen vom NetMQ ReP-Socket.
@@ -135,20 +141,6 @@ public abstract class PhaseTestBase
 		{
 			await ValidateSettingsPersistenceAsync(modus, maxPunkteProKehre, maxKehrenProSpiel, richtung);
 		}
-	}
-
-	/// <summary>
-	/// Sendet Team-Namen an die App über NetMQ im Format "Spielnr:TeamA:TeamB;..."
-	/// </summary>
-	/// <param name="teamNamesMap">Dictionary mit Spiel-Nummer als Key und (TeamLeft, TeamRight) als Value</param>
-	protected void SendTeamNames(Dictionary<int, (string left, string right)> teamNamesMap)
-	{
-		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
-			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
-
-		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
-		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
-		Log(CurrentPhase, $"✓ Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)");
 	}
 
 	/// <summary>
@@ -246,6 +238,24 @@ public abstract class PhaseTestBase
 		}
 	}
 
+	#endregion SETTINGS & CONFIGURATION
+
+	#region TOURNAMENT HELPERS
+
+	/// <summary>
+	/// Sendet Team-Namen an die App über NetMQ im Format "Spielnr:TeamA:TeamB;..."
+	/// </summary>
+	/// <param name="teamNamesMap">Dictionary mit Spiel-Nummer als Key und (TeamLeft, TeamRight) als Value</param>
+	protected void SendTeamNames(Dictionary<int, (string left, string right)> teamNamesMap)
+	{
+		var teamNamesPayload = string.Join(";", teamNamesMap.Select(kvp =>
+			$"{kvp.Key}:{kvp.Value.left}:{kvp.Value.right}"));
+
+		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
+		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
+		Log(CurrentPhase, $"✓ Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)");
+	}
+
 	protected class EntryResult
 	{
 		public string Value { get; set; } = "";
@@ -318,16 +328,6 @@ public abstract class PhaseTestBase
 	}
 
 	/// <summary>
-	/// Holt das neueste GetResult-Payload vom NetMQ Publisher.
-	/// </summary>
-	/// <returns>Das Payload als String, oder null wenn keine GetResult-Nachrichten vorhanden sind</returns>
-	protected string? GetLatestGetResultPayload()
-	{
-		var messages = Fixture.GetPublisherMessagesByTopic("GetResult");
-		return messages.Count > 0 ? messages.Last().Payload : null;
-	}
-
-	/// <summary>
 	/// Gibt einen zufälligen Bestätigungskey zurück: entweder "*" (Links/Grün) oder "/" (Rechts/Rot).
 	/// </summary>
 	/// <returns>Entweder "*" oder "/"</returns>
@@ -357,6 +357,88 @@ public abstract class PhaseTestBase
 			turnsLeft.Add(0);
 			turnsRight.Add(value);
 		}
+	}
+
+	/// <summary>
+	/// Validiert die kumulativen Punkte nach einem Spiel in BestOf-Modi.
+	/// Nach Spielende zeigen .left-points und .right-points die Summe ALLER bisherigen Spiele.
+	/// </summary>
+	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
+	/// <param name="allGames">Dictionary mit allen Spielen bis zu gameNumber</param>
+	protected async Task ValidateGameSummaryAsync(
+		int gameNumber,
+		Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)> allGames)
+	{
+		if (Fixture.Page == null)
+			return;
+
+		var displayLeftPoints = await Fixture.Page.Locator(".left-points").TextContentAsync();
+		var displayRightPoints = await Fixture.Page.Locator(".right-points").TextContentAsync();
+
+		// Berechne kumulative Summe aller Spiele bis gameNumber
+		int cumulativeSumLeft = 0;
+		int cumulativeSumRight = 0;
+
+		for (int i = 1; i <= gameNumber; i++)
+		{
+			if (allGames.TryGetValue(i, out var game))
+			{
+				cumulativeSumLeft += game.turnsLeft.Sum();
+				cumulativeSumRight += game.turnsRight.Sum();
+			}
+		}
+
+		_ = int.TryParse(displayLeftPoints?.Trim() ?? "0", out int sumLeft);
+		_ = int.TryParse(displayRightPoints?.Trim() ?? "0", out int sumRight);
+
+		Assert.Equal(cumulativeSumLeft, sumLeft);
+		Assert.Equal(cumulativeSumRight, sumRight);
+
+		Log(CurrentPhase, $"✓ Spiel {gameNumber} Kumulative Punkte: Links {sumLeft} | Rechts {sumRight}", "✓");
+	}
+
+	/// <summary>
+	/// Validiert die Match Points (Spielpunkte) für BestOf und ähnliche Modi.
+	/// Gibt aus, wie viele Match Points jede Seite hat.
+	/// </summary>
+	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
+	/// <param name="teamLeft">Team-Name links</param>
+	/// <param name="teamRight">Team-Name rechts</param>
+	protected async Task ValidateMatchPointsAsync(int gameNumber, string? teamLeft = null, string? teamRight = null)
+	{
+		if (Fixture.Page == null)
+			return;
+
+		var matchPointsLeft = await Fixture.Page.Locator(".score-cell.left-match-points").TextContentAsync();
+		var matchPointsRight = await Fixture.Page.Locator(".score-cell.right-match-points").TextContentAsync();
+
+		Assert.NotNull(matchPointsLeft);
+		Assert.NotNull(matchPointsRight);
+
+		_ = int.TryParse(matchPointsLeft.Trim(), out int pointsLeft);
+		_ = int.TryParse(matchPointsRight.Trim(), out int pointsRight);
+
+		var teamInfo = "";
+		if (!string.IsNullOrEmpty(teamLeft) && !string.IsNullOrEmpty(teamRight))
+		{
+			teamInfo = $" ({teamLeft} vs {teamRight})";
+		}
+
+		Log(CurrentPhase, $"✓ Match Points nach Spiel {gameNumber}: Links {pointsLeft} | Rechts {pointsRight}{teamInfo}", "✓");
+	}
+
+	#endregion TOURNAMENT HELPERS
+
+	#region NETMQ HELPERS
+
+	/// <summary>
+	/// Holt das neueste GetResult-Payload vom NetMQ Publisher.
+	/// </summary>
+	/// <returns>Das Payload als String, oder null wenn keine GetResult-Nachrichten vorhanden sind</returns>
+	protected string? GetLatestGetResultPayload()
+	{
+		var messages = Fixture.GetPublisherMessagesByTopic("GetResult");
+		return messages.Count > 0 ? messages[^1].Payload : null;
 	}
 
 	/// <summary>
@@ -421,6 +503,10 @@ public abstract class PhaseTestBase
 		}
 	}
 
+	#endregion NETMQ HELPERS
+
+	#region DISPLAY VALIDATION
+
 	/// <summary>
 	/// Validiert alle UI-Elemente der Spielanzeige gegen die erwarteten Werte:
 	/// - Kehren und deren Summen (Links und Rechts)
@@ -447,7 +533,7 @@ public abstract class PhaseTestBase
 		int? expectedTurnNumber = null)
 	{
 		Log(CurrentPhase, $"Validierung der Anzeige: Links={string.Join("-", expectedTurnsLeft ?? new List<int>())}, Rechts={string.Join("-", expectedTurnsRight ?? new List<int>())}, TeamLinks={expectedTeamLeft}, TeamRechts={expectedTeamRight}, Spiel={expectedGameNumber}, Kehre={expectedTurnNumber}");
-		
+
 		if (Fixture.Page == null)
 			return;
 
@@ -542,70 +628,226 @@ public abstract class PhaseTestBase
 	}
 
 	/// <summary>
-	/// Validiert die kumulativen Punkte nach einem Spiel in BestOf-Modi.
-	/// Nach Spielende zeigen .left-points und .right-points die Summe ALLER bisherigen Spiele.
+	/// Validates Ziel mode UI display elements:
+	/// - AnzahlVersuche (attempts counter with format "X/Y")
+	/// - GesamtText (header "Gesamt:")
+	/// - GesamtPunkteText (total points sum)
+	/// - SummeDerVersuche (sums per discipline with format "A - B - C - D")
+	/// - LastValue / InputValue (previous/current input)
 	/// </summary>
-	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
-	/// <param name="allGames">Dictionary mit allen Spielen bis zu gameNumber</param>
-	protected async Task ValidateGameSummaryAsync(
-		int gameNumber,
-		Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)> allGames)
+	protected async Task ValidateDisplayZielAsync(
+		int expectedAttemptNumber,
+		int maxAttemptsDisplay,
+		bool checkInvalidOverlay = false)
 	{
 		if (Fixture.Page == null)
 			return;
 
-		var displayLeftPoints = await Fixture.Page.Locator(".left-points").TextContentAsync();
-		var displayRightPoints = await Fixture.Page.Locator(".right-points").TextContentAsync();
+		Log(CurrentPhase, $"Validiere Ziel Display: Versuch {expectedAttemptNumber}/{maxAttemptsDisplay}");
 
-		// Berechne kumulative Summe aller Spiele bis gameNumber
-		int cumulativeSumLeft = 0;
-		int cumulativeSumRight = 0;
-
-		for (int i = 1; i <= gameNumber; i++)
+		try
 		{
-			if (allGames.ContainsKey(i))
+			// Validate AnzahlVersuche counter (e.g., "5/24")
+			var anzahlText = await Fixture.Page.Locator(".ziel-versuche").TextContentAsync();
+			Assert.NotNull(anzahlText);
+			Assert.Contains(expectedAttemptNumber.ToString(), anzahlText);
+			Assert.Contains(maxAttemptsDisplay.ToString(), anzahlText);
+
+			// Validate GesamtText header
+			var gesamtHeader = await Fixture.Page.Locator(".ziel-gesamt").TextContentAsync();
+			Assert.NotNull(gesamtHeader);
+			Assert.Contains("Gesamt", gesamtHeader ?? "");
+
+			// Validate GesamtPunkteText (should be a number)
+			var gesamtPunkte = await Fixture.Page.Locator(".ziel-col-c").TextContentAsync();
+			Assert.NotNull(gesamtPunkte);
+			Assert.True(int.TryParse(gesamtPunkte?.Trim() ?? "", out _),
+				$"GesamtPunkte should be numeric, got: {gesamtPunkte}");
+
+			// Validate SummeDerVersuche (format: "0 - 2 - 4 - 6" or similar)
+			var summen = await Fixture.Page.Locator(".ziel-summe").TextContentAsync();
+			Assert.NotNull(summen);
+			// Should contain dashes separating the 4 discipline sums
+			var parts = summen?.Split('-');
+			Assert.True(parts?.Length >= 3, $"SummeDerVersuche should have 4 sums separated by '-', got: {summen}");
+
+			if (checkInvalidOverlay)
 			{
-				cumulativeSumLeft += allGames[i].turnsLeft.Sum();
-				cumulativeSumRight += allGames[i].turnsRight.Sum();
+				var overlay = await Fixture.Page.Locator(".ziel-overlay.show").IsVisibleAsync();
+				Assert.True(overlay, "Invalid overlay should be visible");
+				Log(CurrentPhase, $"  ✓ Invalid overlay validiert");
 			}
+
+			Log(CurrentPhase, $"  ✓ Display validiert: {anzahlText?.Trim()} | Summen: {summen?.Trim()}");
+		}
+		catch (Exception ex)
+		{
+			Log(CurrentPhase, $"  ✗ Display-Validierung fehlgeschlagen: {ex.Message}", "!");
+			throw;
+		}
+	}
+
+	#endregion DISPLAY VALIDATION
+
+	#region ZIEL HELPERS
+
+	/// <summary>
+	/// Enters a value in Ziel mode and validates success or invalid input overlay.
+	/// Returns true if value was accepted, false if invalid (overlay shown).
+	/// </summary>
+	protected async Task<bool> EnterAndConfirmZielAsync(string value)
+	{
+		if (Fixture.Page == null)
+			return false;
+
+		Log(CurrentPhase, $"Ziel Eingabe: {value}");
+
+		// Enter digits
+		char? previousChar = null;
+		foreach (char c in value)
+		{
+			if (previousChar != null && c == previousChar)
+			{
+				await Task.Delay(DEBOUNCE_DELAY_MS);
+			}
+
+			await Fixture.Page.Keyboard.PressAsync(c.ToString());
+			await Task.Delay(200);
+
+			previousChar = c;
 		}
 
-		int.TryParse(displayLeftPoints?.Trim() ?? "0", out int sumLeft);
-		int.TryParse(displayRightPoints?.Trim() ?? "0", out int sumRight);
+		// Confirm with "/" (Rot) — Ziel accepts either * or /
+		await Fixture.Page.Keyboard.PressAsync("/");
+		await Task.Delay(200);
 
-		Assert.Equal(cumulativeSumLeft, sumLeft);
-		Assert.Equal(cumulativeSumRight, sumRight);
+		// Check if invalid overlay appeared
+		var overlay = await Fixture.Page.Locator(".ziel-overlay.show").IsVisibleAsync();
+		if (overlay)
+		{
+			Log(CurrentPhase, $"  → Wert {value} ungültig (overlay sichtbar)");
+			// Wait for overlay to disappear
+			await Task.Delay(1600);
+			return false;
+		}
 
-		Log(CurrentPhase, $"✓ Spiel {gameNumber} Kumulative Punkte: Links {sumLeft} | Rechts {sumRight}", "✓");
+		Log(CurrentPhase, $"  ✓ Wert {value} akzeptiert");
+		return true;
 	}
 
 	/// <summary>
-	/// Validiert die Match Points (Spielpunkte) für BestOf und ähnliche Modi.
-	/// Gibt aus, wie viele Match Points jede Seite hat.
+	/// Gets current attempt counter text from Ziel display (e.g., "5/24").
 	/// </summary>
-	/// <param name="gameNumber">Die Spiel-Nummer die gerade beendet wurde</param>
-	/// <param name="teamLeft">Team-Name links</param>
-	/// <param name="teamRight">Team-Name rechts</param>
-	protected async Task ValidateMatchPointsAsync(int gameNumber, string? teamLeft = null, string? teamRight = null)
+	protected async Task<string> GetZielAttemptCounterAsync()
+	{
+		if (Fixture.Page == null)
+			return "";
+
+		var anzahlText = await Fixture.Page.Locator(".ziel-versuche").TextContentAsync();
+		return anzahlText?.Trim() ?? "";
+	}
+
+	/// <summary>
+	/// Deletes last Ziel attempt with "-" key.
+	/// </summary>
+	protected async Task DeleteZielAttemptAsync()
 	{
 		if (Fixture.Page == null)
 			return;
 
-		var matchPointsLeft = await Fixture.Page.Locator(".score-cell.left-match-points").TextContentAsync();
-		var matchPointsRight = await Fixture.Page.Locator(".score-cell.right-match-points").TextContentAsync();
+		Log(CurrentPhase, "Lösche letzten Versuch (Taste -)");
+		await PressKeyAsync("-");
+		await Task.Delay(500);
+	}
 
-		Assert.NotNull(matchPointsLeft);
-		Assert.NotNull(matchPointsRight);
+	/// <summary>
+	/// Sets participant name via NetMQ SetTeilnehmer command.
+	/// </summary>
+	protected void SetZielTeilnehmer(string spielername)
+	{
+		Log(CurrentPhase, $"Sende Spielername via NetMQ: '{spielername}'");
+		var nameBytes = System.Text.Encoding.UTF8.GetBytes(spielername);
+		Fixture.SendNetMqRaw("SetTeilnehmer", nameBytes);
+		Log(CurrentPhase, $"✓ Spielername gesetzt");
+	}
 
-		int.TryParse(matchPointsLeft.Trim(), out int pointsLeft);
-		int.TryParse(matchPointsRight.Trim(), out int pointsRight);
+	/// <summary>
+	/// Validates Ziel player name (Spielername) is displayed on the page.
+	/// </summary>
+	protected async Task ValidateZielSpielernameAsync(string expectedName)
+	{
+		if (Fixture.Page == null)
+			return;
 
-		var teamInfo = "";
-		if (!string.IsNullOrEmpty(teamLeft) && !string.IsNullOrEmpty(teamRight))
+		Log(CurrentPhase, $"Validiere Spielername auf UI: '{expectedName}'");
+
+		var spielernameElement = await Fixture.Page.Locator(".ziel-spielername").TextContentAsync();
+		Assert.NotNull(spielernameElement);
+		Assert.Contains(expectedName, spielernameElement?.Trim() ?? "");
+
+		Log(CurrentPhase, $"✓ Spielername validiert: {spielernameElement?.Trim()}");
+	}
+
+	/// <summary>
+	/// Gets the latest GetResult payload from Ziel mode and parses it.
+	/// Returns parsed Ziel attempt counts per discipline.
+	/// </summary>
+	protected async Task ValidateZielNetMqPublisherAsync(
+		int expectedAttemptCount,
+		Dictionary<string, int> expectedDisziplinSummen)
+	{
+		Log(CurrentPhase, $"Validiere Ziel NetMQ Publisher (Versuch {expectedAttemptCount})");
+
+		var payload = GetLatestGetResultPayload();
+		if (string.IsNullOrEmpty(payload))
 		{
-			teamInfo = $" ({teamLeft} vs {teamRight})";
+			Log(CurrentPhase, "⚠ Kein GetResult-Payload vom NetMQ Publisher erhalten", "!");
+			return;
 		}
 
-		Log(CurrentPhase, $"✓ Match Points nach Spiel {gameNumber}: Links {pointsLeft} | Rechts {pointsRight}{teamInfo}", "✓");
+		// For Ziel mode, the payload contains settings (10 bytes) + JSON with discipline data
+		if (payload.Length < 10)
+		{
+			Log(CurrentPhase, "⚠ Payload zu kurz für Settings+JSON", "!");
+			return;
+		}
+
+		try
+		{
+			var jsonPart = payload[10..];
+			using var jsonDoc = System.Text.Json.JsonDocument.Parse(jsonPart);
+			var root = jsonDoc.RootElement;
+
+			// Parse Ziel mode disciplines: MassenVorne, Schiessen, MassenSeite, Kombinieren
+			foreach (var property in root.EnumerateObject())
+			{
+				if (property.Value.TryGetProperty("Versuche", out var versuche) &&
+					versuche.ValueKind == System.Text.Json.JsonValueKind.Array)
+				{
+					var count = versuche.GetArrayLength();
+					var disziplinName = property.Name;
+
+					if (expectedDisziplinSummen.ContainsKey(disziplinName))
+					{
+						int sum = 0;
+						foreach (var versuch in versuche.EnumerateArray())
+						{
+							sum += versuch.GetInt32();
+						}
+
+						Assert.Equal(expectedDisziplinSummen[disziplinName], sum);
+						Log(CurrentPhase, $"  ✓ Disziplin {disziplinName}: {count} Versuche, Summe={sum}");
+					}
+				}
+			}
+
+			Log(CurrentPhase, $"✓ NetMQ GetResult validiert");
+		}
+		catch (Exception ex)
+		{
+			Log(CurrentPhase, $"⚠ Fehler beim Parsen von GetResult: {ex.Message}", "!");
+		}
 	}
+
+	#endregion ZIEL HELPERS
 }

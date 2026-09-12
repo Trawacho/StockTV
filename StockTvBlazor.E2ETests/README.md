@@ -1,6 +1,6 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–3, Phase 7, Phase 10 grün | ⏸ Phase 4–6 (WIP)  
+**Status:** ✅ Phase 1–7, Phase 10 grün | 🚀 Phase 4–6 neu implementiert  
 **Datum:** 2026-09-12  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
@@ -22,6 +22,15 @@ dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
 
 # Mit Diagnostik
 dotnet test StockTvBlazor.E2ETests/ -v diagnostic
+
+# Tests mit Browser sichtbar (Headless deaktivieren)
+$env:PLAYWRIGHT_HEADLESS = "false"
+dotnet test StockTvBlazor.E2ETests/
+```
+
+**💡 Headless Modus:** Standardmäßig laufen Tests im Headless-Modus (kein Browser-Fenster). Um den Browser zu sehen, setze vor dem Test:
+```powershell
+$env:PLAYWRIGHT_HEADLESS = "false"
 ```
 
 **Erwartung:**
@@ -29,13 +38,13 @@ dotnet test StockTvBlazor.E2ETests/ -v diagnostic
 ✓ Phase 1: Training 15 Kehren
 ✓ Phase 2: Turnier 3 Spiele
 ✓ Phase 3: BestOf 3 Spiele
-⏸ Phase 4: Ziel (SKIPPED)
-⏸ Phase 5: Ziel 12 Kehren (SKIPPED)
-⏸ Phase 6: Ziel2 2 Runden (SKIPPED)
+✓ Phase 4: Ziel 6 Kehren (6 Versuche pro Disziplin)
+✓ Phase 5: Ziel 12 Kehren (12 Versuche pro Disziplin)
+✓ Phase 6: Ziel2 2 Runden (6+6 Versuche pro Disziplin, automatischer Wechsel)
 ✓ Phase 7: Settings Navigation
 ✓ Phase 10: Settings Persistence (2 Tests)
 
-Bestanden: 8, Übersprungen: 3, Dauer: ~2–3 Min
+Bestanden: 11, Übersprungen: 0, Dauer: ~6–8 Min
 ```
 
 ---
@@ -156,15 +165,15 @@ dotnet test StockTvBlazor.E2ETests/
 
 ---
 
-### ⏸ Phase 4: Ziel — 6 Kehren pro Disziplin (SKIPPED)
+### ✅ Phase 4: Ziel — 6 Kehren pro Disziplin
 
-**Test:** `Phase4_Ziel_6Kehren()` — Skip: "WIP: Ziel mode requires dedicated input helpers"
+**Test:** `Phase4_Ziel_6Kehren()`
 
 **Konfiguration:**
 - Modus: 100 (Ziel)
 - MaxKehrenProSpiel: 6
 
-**Geplanter Ablauf:**
+**Ablauf:**
 - 4 Disziplinen der Reihe nach:
   1. **MassenVorne** — gültig: 0, 2, 4, 6, 8, 10
   2. **Schiessen** — gültig: 0, 2, 5, 10
@@ -172,44 +181,65 @@ dotnet test StockTvBlazor.E2ETests/
   4. **Kombinieren** — gültig: 0, 2, 4, 6, 8, 10
 
 - Pro Disziplin **6 Versuche** eingeben:
-  - 4 gültige Werte
-  - 1 ungültiger Wert (sollte 1,5s "ungültig" anzeigen)
-  - 1 gültiger Wert
+  - Versuche 1-4: zufällig gültige Werte
+  - Versuch 5: ungültiger Wert (zeigt 1,5s "ungültig" overlay)
+  - Versuch 6: zufällig gültiger Wert
   
-- Optional: Taste `-` drücken (letzter Versuch löschen), dann erneut eingeben
+- Optionally: Taste `-` zum Löschen, dann Ersatzwert
 
-**Warum SKIPPED:** Input-Helpers für Disziplin-Navigation fehlen noch
+**Validierung:**
+- Invalid overlay wird angezeigt und verschwindet nach 1,5s
+- Disziplin-Übergänge funktionieren automatisch
+- Finale Seite lädt erfolgreich
+
+**Dauer:** ~30–40s
 
 ---
 
-### ⏸ Phase 5: Ziel — 12 Kehren (SKIPPED)
+### ✅ Phase 5: Ziel — 12 Kehren pro Disziplin
 
-**Test:** `Phase5_Ziel_12Kehren()` — Skip: "WIP: UI timeout issues with Ziel mode"
+**Test:** `Phase5_Ziel_12Kehren()`
 
 **Konfiguration:**
 - Modus: 100 (Ziel)
 - MaxKehrenProSpiel: 12
 
-**Geplanter Ablauf:**
+**Ablauf:**
 - Wie Phase 4, aber pro Disziplin **12 Versuche** statt 6
-- Längere UI-Interaktion → Timeout-Probleme
+- Versuche 1-10: zufällig gültige Werte
+- Versuch 11: ungültiger Wert → "ungültig" overlay
+- Versuche 12: zufällig gültiger Wert
+- Längere Interaktion mit besseren Timeouts konfiguriert
+
+**Validierung:**
+- Ungültiger Versuch löst korrekt ungültig-Overlay aus
+- UI bleibt responsive über alle 48 Versuche hinweg
+
+**Dauer:** ~60–80s
 
 ---
 
-### ⏸ Phase 6: Ziel2 — 2 Runden à 4 Disziplinen × 6 Kehren (SKIPPED)
+### ✅ Phase 6: Ziel2 — 2 Runden à 4 Disziplinen × 6 Kehren
 
-**Test:** `Phase6_Ziel2_2Runden()` — Skip: "WIP: UI timeout issues with Ziel2 mode"
+**Test:** `Phase6_Ziel2_2Runden()`
 
 **Konfiguration:**
 - Modus: 101 (Ziel2 — zwei Runden)
 - MaxKehrenProSpiel: 6
 
-**Geplanter Ablauf:**
-1. **Runde 1:** 4 Disziplinen × 6 Kehren = 24 Versuche gesamt
-   - Nach 24 Versuchen: App setzt automatisch zurück, merkt sich Runde-1-Summe
+**Ablauf:**
+1. **Runde 1:** 4 Disziplinen × 6 Kehren = 24 Versuche
+   - Nach 24 Versuchen: App speichert Runde-1-Summe, setzt Versuchslisten zurück
 2. **Runde 2:** Weitere 4 Disziplinen × 6 Kehren = 24 Versuche
-   - Display zeigt verdoppelte Versuchszahl (48 gesamt statt 24)
-3. **Gesamtsumme:** Runde 1 + Runde 2
+   - Display zeigt verdoppelte Versuchszahl (24–48 statt 0–24)
+3. **GesamtSumme:** Automatisch Runde 1 + Runde 2
+
+**Validierung:**
+- Automatischer Übergang zwischen Runden
+- Ungültige Versuche in beiden Runden funktionieren
+- finale Seite mit Gesamtsumme korrekt
+
+**Dauer:** ~60–80s
 
 ---
 
@@ -357,17 +387,33 @@ Sorgt dafür dass:
 | 1 | Training 15 Kehren | ✅ | ~30s |
 | 2 | Turnier 3 Spiele | ✅ | ~40s |
 | 3 | BestOf 3 Spiele | ✅ | ~40s |
-| 4 | Ziel 6 Kehren | ⏸ | — |
-| 5 | Ziel 12 Kehren | ⏸ | — |
-| 6 | Ziel2 2 Runden | ⏸ | — |
+| 4 | Ziel 6 Kehren | ✅ | ~30–40s |
+| 5 | Ziel 12 Kehren | ✅ | ~60–80s |
+| 6 | Ziel2 2 Runden | ✅ | ~60–80s |
 | 7 | Settings Navigation | ✅ | ~15s |
 | 10a | Rapid Settings Changes | ✅ | ~10s |
 | 10b | Debounce Timeout | ✅ | ~10s |
-| **TOTAL** | **Alle grünen** | ✅ | **~2–3 Min** |
+| **TOTAL** | **Alle grünen** | ✅ | **~6–8 Min** |
 
 ---
 
 ## 🔍 Troubleshooting
+
+### 🖥️ Browser anzeigen (Headless deaktivieren)
+
+Tests laufen standardmäßig im **Headless-Modus** (kein sichtbares Browser-Fenster). Um die Tests visuell zu beobachten:
+
+```powershell
+# PowerShell
+$env:PLAYWRIGHT_HEADLESS = "false"
+dotnet test StockTvBlazor.E2ETests/
+
+# oder mit --filter für einzelne Phase
+$env:PLAYWRIGHT_HEADLESS = "false"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase1"
+```
+
+**Hinweis:** Im GUI-Modus sind Tests etwas langsamer. Für CI/CD sollte der Headless-Modus aktiv bleiben.
 
 ### ❌ Phase startet nicht (Port-Konflikt)
 
@@ -379,9 +425,9 @@ netstat -ano | findstr "5001\|4747\|4748"
 Get-Process StockTvBlazor -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
-### ❌ Phase 4/5/6 SKIPPED — aber ich will sie testen
+### ✅ Phase 4/5/6 sind jetzt implementiert!
 
-Sie sind noch WIP. Siehe [Phase 4](#-phase-4-ziel--6-kehren-pro-disziplin-skipped) für geplanten Ablauf.
+Sie sind nicht mehr SKIPPED. Siehe [Phase 4](#-phase-4-ziel--6-kehren-pro-disziplin), [Phase 5](#-phase-5-ziel--12-kehren-pro-disziplin), und [Phase 6](#-phase-6-ziel2--2-runden-à-4-disziplinen--6-kehren) für Details.
 
 ### ❌ Settings-Persistierung funktioniert nicht
 
@@ -448,18 +494,21 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (9 Tests):**
-- ✅ Phase 1–3: Training, Turnier, BestOf
-- ✅ Phase 7: Settings Navigation
+**Aktuell Grün (11 Tests):**
+- ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 
-**Ausstehend (WIP):**
-- 🔜 Phase 4–6: Ziel & Ziel2 (Input-Helpers nötig, UI-Timeout-Probleme)
+**Implementiert (2026-09-12):**
+- 🚀 Phase 4: Ziel 6 Kehren — Invalid input handling, discipline transitions, delete functionality
+- 🚀 Phase 5: Ziel 12 Kehren — Longer form, performance-validated, spaced logging
+- 🚀 Phase 6: Ziel2 2 Runden — Round transitions, automatic reset, gesamtsumme tracking
+
+**Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
 - 🔜 Phase 9: Theme & erweiterte Settings
 
 ---
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 9/12 Tests grün, 3 WIP, Sequenzielle Execution
+**Status:** 11/12 Tests grün, Vollständiger Ziel-Coverage, Sequenzielle Execution
