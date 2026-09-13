@@ -146,6 +146,7 @@ public abstract class PhaseTestBase
 	/// <summary>
 	/// Validiert dass die Settings-Datei auf dem Server mit den erwarteten Werten persistiert wurde.
 	/// Liest die Datei _config/stocktv.config.json und vergleicht die Werte.
+	/// Wartet auf den erwarteten Content für alle vier Settings-Werte.
 	/// </summary>
 	protected async Task ValidateSettingsPersistenceAsync(
 		int expectedModus,
@@ -155,86 +156,51 @@ public abstract class PhaseTestBase
 	{
 		Log(CurrentPhase, $"Validiere Settings-Persistierung auf dem Server...");
 
-		// Die SettingsService nutzt ein Debounce von 500ms + asynchrones Speichern
-		// Warte längere Zeit, um sicherzustellen dass alles geschrieben ist
-		Log(CurrentPhase, $"Warte auf asynchrone Persistierung...");
-		//await Task.Delay(3000);
-
-		try
+		var fileContent = await Fixture.ReadLocalFileAsync("stocktv.config.json", json =>
 		{
-			// Versuche mehrmals zu lesen, falls die Datei noch nicht aktualisiert wurde
-			string fileContent = "";
-			int fileModus = -1;
-			const int maxRetries = 6;
-
-			for (int attempt = 1; attempt <= maxRetries; attempt++)
+			try
 			{
-				fileContent = await Fixture.ReadLocalFileAsync("stocktv.config.json");
-
-				using var jsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
-				var root = jsonDoc.RootElement;
+				using var doc = System.Text.Json.JsonDocument.Parse(json);
+				var root = doc.RootElement;
 				var gameObj = root.GetProperty("Game");
+				var uiObj = root.GetProperty("UI");
 
-				fileModus = gameObj.GetProperty("CurrentModus").GetInt32();
+				if (gameObj.GetProperty("CurrentModus").GetInt32() != expectedModus) return false;
+				if (gameObj.GetProperty("MaxPunkteProKehre").GetInt32() != expectedMaxPunkteProKehre) return false;
+				if (gameObj.GetProperty("MaxKehrenProSpiel").GetInt32() != expectedMaxKehrenProSpiel) return false;
+				if (expectedRichtung.HasValue && uiObj.GetProperty("CurrentRichtung").GetInt32() != expectedRichtung.Value) return false;
 
-				// Wenn der Modus korrekt ist, sind wir fertig
-				if (fileModus == expectedModus)
-				{
-					Log(CurrentPhase, $"Settings-Datei gelesen (Versuch {attempt}, {fileContent.Length} bytes)");
-					break;
-				}
-
-				// Modus stimmt nicht, warte und versuche nochmal
-				if (attempt < maxRetries)
-				{
-					Log(CurrentPhase, $"Modus in Datei ist noch {fileModus}, erwartet {expectedModus}, warte und versuche nochmal... (Versuch {attempt}/{maxRetries})", LogSymbol.Warning);
-					await Task.Delay(500);
-				}
-				else
-				{
-					// Letzter Versuch fehlgeschlagen
-					Log(CurrentPhase, $"Datei wurde nach {maxRetries} Versuchen nicht aktualisiert. Noch immer Modus {fileModus}", LogSymbol.Error);
-				}
+				return true;
 			}
-
-			// Parse die finale Version der Datei
-			using var finalJsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
-			var finalRoot = finalJsonDoc.RootElement;
-			var finalGameObj = finalRoot.GetProperty("Game");
-			var finalUiObj = finalRoot.GetProperty("UI");
-
-			int fileMaxPunkte = finalGameObj.GetProperty("MaxPunkteProKehre").GetInt32();
-			int fileMaxKehren = finalGameObj.GetProperty("MaxKehrenProSpiel").GetInt32();
-			int fileRichtung = finalUiObj.GetProperty("CurrentRichtung").GetInt32();
-
-			// Validiere Modus
-			Assert.Equal(expectedModus, fileModus);
-			Log(CurrentPhase, $"Modus in Datei persistiert: {fileModus}", LogSymbol.Check);
-
-			// Validiere MaxPunkteProKehre
-			Assert.Equal(expectedMaxPunkteProKehre, fileMaxPunkte);
-			Log(CurrentPhase, $"MaxPunkteProKehre in Datei persistiert: {fileMaxPunkte}", LogSymbol.Check);
-
-			// Validiere MaxKehrenProSpiel
-			Assert.Equal(expectedMaxKehrenProSpiel, fileMaxKehren);
-			Log(CurrentPhase, $"MaxKehrenProSpiel in Datei persistiert: {fileMaxKehren}", LogSymbol.Check);
-
-			// Validiere Richtung wenn angegeben
-			if (expectedRichtung.HasValue)
+			catch (Exception)
 			{
-				Assert.Equal(expectedRichtung.Value, fileRichtung);
-				Log(CurrentPhase, $"Richtung in Datei persistiert: {fileRichtung}", LogSymbol.Check);
+				return false;
 			}
-		}
-		catch (FileNotFoundException ex)
+		});
+
+		using var finalJsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
+		var finalRoot = finalJsonDoc.RootElement;
+		var finalGameObj = finalRoot.GetProperty("Game");
+		var finalUiObj = finalRoot.GetProperty("UI");
+
+		int fileModus = finalGameObj.GetProperty("CurrentModus").GetInt32();
+		int fileMaxPunkte = finalGameObj.GetProperty("MaxPunkteProKehre").GetInt32();
+		int fileMaxKehren = finalGameObj.GetProperty("MaxKehrenProSpiel").GetInt32();
+		int fileRichtung = finalUiObj.GetProperty("CurrentRichtung").GetInt32();
+
+		Assert.Equal(expectedModus, fileModus);
+		Log(CurrentPhase, $"Modus in Datei persistiert: {fileModus}", LogSymbol.Check);
+
+		Assert.Equal(expectedMaxPunkteProKehre, fileMaxPunkte);
+		Log(CurrentPhase, $"MaxPunkteProKehre in Datei persistiert: {fileMaxPunkte}", LogSymbol.Check);
+
+		Assert.Equal(expectedMaxKehrenProSpiel, fileMaxKehren);
+		Log(CurrentPhase, $"MaxKehrenProSpiel in Datei persistiert: {fileMaxKehren}", LogSymbol.Check);
+
+		if (expectedRichtung.HasValue)
 		{
-			Log(CurrentPhase, $"Settings-Datei nicht gefunden: {ex.Message}", LogSymbol.Error);
-			throw;
-		}
-		catch (System.Text.Json.JsonException ex)
-		{
-			Log(CurrentPhase, $"Settings-Datei konnte nicht geparst werden: {ex.Message}", LogSymbol.Error);
-			throw;
+			Assert.Equal(expectedRichtung.Value, fileRichtung);
+			Log(CurrentPhase, $"Richtung in Datei persistiert: {fileRichtung}", LogSymbol.Check);
 		}
 	}
 
