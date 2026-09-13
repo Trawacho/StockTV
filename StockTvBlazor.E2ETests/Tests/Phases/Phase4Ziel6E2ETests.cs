@@ -69,6 +69,13 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 			["MassenSeite"] = 0,
 			["Kombinieren"] = 0
 		};
+		var disziplinVersuche = new Dictionary<string, List<int>>
+		{
+			["MassenVorne"] = new List<int>(),
+			["Schiessen"] = new List<int>(),
+			["MassenSeite"] = new List<int>(),
+			["Kombinieren"] = new List<int>()
+		};
 
 		for (int disziplin = 0; disziplin < 4; disziplin++)
 		{
@@ -110,6 +117,7 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 				totalVersucheCount++;
 				versucheInDisziplin++;
 				disziplinSummen[disziplinNamen[disziplin]] += value;
+				disziplinVersuche[disziplinNamen[disziplin]].Add(value);
 
 				Log(CurrentPhase, $"  Versuch {versucheInDisziplin}/{maxKehrenProSpiel}: Wert {value} akzeptiert");
 
@@ -132,6 +140,11 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 				totalVersucheCount--;
 				versucheInDisziplin--;
 
+				// Remove from tracking lists
+				var lastValue = disziplinVersuche[disziplinNamen[disziplin]].Last();
+				disziplinVersuche[disziplinNamen[disziplin]].RemoveAt(disziplinVersuche[disziplinNamen[disziplin]].Count - 1);
+				disziplinSummen[disziplinNamen[disziplin]] -= lastValue;
+
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
 
 				// Add new one
@@ -141,6 +154,8 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 
 				totalVersucheCount++;
 				versucheInDisziplin++;
+				disziplinSummen[disziplinNamen[disziplin]] += val;
+				disziplinVersuche[disziplinNamen[disziplin]].Add(val);
 
 				Log(CurrentPhase, $"Neuer Wert hinzugefügt: {val}", LogSymbol.Check);
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
@@ -150,6 +165,9 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 		}
 
 		Log(CurrentPhase, $"Phase 4 abgeschlossen: {totalVersucheCount}/{maxVersucheGesamt} Versuche", LogSymbol.Check);
+
+		// Validate ziel-state.json persistence
+		await ValidateZielStatePersistenceAsync(disziplinVersuche, expectedRunde: 1, expectedRunde1Summe: 0);
 
 		Fixture.SendNetMqCommand("ResetResult");
 		LogPhaseEnd(CurrentPhase);

@@ -860,5 +860,119 @@ public abstract class PhaseTestBase
 		}
 	}
 
+	/// <summary>
+	/// Validates that Ziel state is correctly persisted in ziel-state.json file.
+	/// Checks all 4 discipline values match exactly and metadata (Runde, Runde1Summe) is correct.
+	/// Waits for the expected attempt count and round to appear (handles async write delays).
+	/// </summary>
+	protected async Task ValidateZielStatePersistenceAsync(
+		Dictionary<string, List<int>> expectedVersucheByDisziplin,
+		int expectedRunde = 1,
+		int expectedRunde1Summe = 0)
+	{
+		int totalExpectedAttempts = expectedVersucheByDisziplin.Values.Sum(v => v.Count);
+
+		Log(CurrentPhase, "Validierung der ziel-state.json Persistierung...");
+
+		var zielStateJson = await Fixture.ReadLocalFileAsync("ziel-state.json", json =>
+		{
+			try
+			{
+				using var doc = System.Text.Json.JsonDocument.Parse(json);
+				var root = doc.RootElement;
+
+				// Check if Versuche exists and has correct total count
+				if (!root.TryGetProperty("Versuche", out var versuche))
+					return false;
+
+				int totalCount = 0;
+				foreach (var disziplin in versuche.EnumerateObject())
+				{
+					if (disziplin.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+					{
+						totalCount += disziplin.Value.GetArrayLength();
+					}
+				}
+
+				// Check if Runde matches expected
+				if (!root.TryGetProperty("Runde", out var runde) || runde.GetInt32() != expectedRunde)
+					return false;
+
+				return totalCount == totalExpectedAttempts;
+			}
+			catch (System.Text.Json.JsonException)
+			{
+				return false;
+			}
+		});
+
+		using var jsonDoc = System.Text.Json.JsonDocument.Parse(zielStateJson);
+		var rootElement = jsonDoc.RootElement;
+
+		if (!rootElement.TryGetProperty("Versuche", out var versucheElement))
+		{
+			Log(CurrentPhase, "'Versuche' nicht gefunden in ziel-state.json", LogSymbol.Warning);
+			Assert.Fail("Versuche object not found in ziel-state.json");
+			return;
+		}
+
+		// Validate each discipline's values
+		var disciplineNames = new[] { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" };
+		foreach (var diszName in disciplineNames)
+		{
+			if (!versucheElement.TryGetProperty(diszName, out var versucheArray))
+			{
+				Log(CurrentPhase, $"Disziplin {diszName} nicht in ziel-state.json gefunden", LogSymbol.Warning);
+				Assert.Fail($"Discipline {diszName} not found in ziel-state.json");
+				continue;
+			}
+
+			Assert.True(versucheArray.ValueKind == System.Text.Json.JsonValueKind.Array,
+				$"Expected {diszName} to be an array");
+
+			var expectedList = expectedVersucheByDisziplin[diszName];
+			int actualCount = versucheArray.GetArrayLength();
+
+			Assert.Equal(expectedList.Count, actualCount);
+
+			for (int i = 0; i < actualCount; i++)
+			{
+				int actualValue = versucheArray[i].GetInt32();
+				int expectedValue = expectedList[i];
+				Assert.Equal(expectedValue, actualValue);
+			}
+
+			Log(CurrentPhase,
+				$"{diszName}: {actualCount} Versuche, Werte=[{string.Join("-", expectedList)}]",
+				LogSymbol.Check);
+		}
+
+		// Validate Runde
+		if (!rootElement.TryGetProperty("Runde", out var rundeElement))
+		{
+			Log(CurrentPhase, "'Runde' nicht gefunden in ziel-state.json", LogSymbol.Warning);
+		}
+		else
+		{
+			int actualRunde = rundeElement.GetInt32();
+			Assert.Equal(expectedRunde, actualRunde);
+			Log(CurrentPhase, $"Runde in Datei persistiert: {actualRunde}", LogSymbol.Check);
+		}
+
+		// Validate Runde1Summe
+		if (!rootElement.TryGetProperty("Runde1Summe", out var runde1SummeElement))
+		{
+			Log(CurrentPhase, "'Runde1Summe' nicht gefunden in ziel-state.json", LogSymbol.Warning);
+		}
+		else
+		{
+			int actualRunde1Summe = runde1SummeElement.GetInt32();
+			Assert.Equal(expectedRunde1Summe, actualRunde1Summe);
+			Log(CurrentPhase, $"Runde1Summe in Datei persistiert: {actualRunde1Summe}", LogSymbol.Check);
+		}
+
+		Log(CurrentPhase, $"ziel-state.json validiert: {totalExpectedAttempts} Versuche über alle Disziplinen", LogSymbol.Check);
+	}
+
 	#endregion ZIEL HELPERS
 }

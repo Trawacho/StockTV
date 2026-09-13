@@ -73,6 +73,14 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 			["MassenSeite"] = 0,
 			["Kombinieren"] = 0
 		};
+		var disziplinVersuche = new Dictionary<string, List<int>>
+		{
+			["MassenVorne"] = new List<int>(),
+			["Schiessen"] = new List<int>(),
+			["MassenSeite"] = new List<int>(),
+			["Kombinieren"] = new List<int>()
+		};
+		int runde1Summe = 0;
 
 		// RUNDE 1
 		Log(CurrentPhase, "=== RUNDE 1 ===");
@@ -113,6 +121,7 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 				totalVersucheCount++;
 				versucheInDisziplin++;
 				disziplinSummen[disziplinNamen[disziplin]] += value;
+				disziplinVersuche[disziplinNamen[disziplin]].Add(value);
 
 				if (versucheInDisziplin % 2 == 0)
 				{
@@ -129,9 +138,14 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 		}
 
 		Log(CurrentPhase, $"Runde 1 abgeschlossen: {totalVersucheCount}/{maxVersucheProRunde} Versuche", LogSymbol.Check);
+
+		// Validate Runde 1 before transition
+		runde1Summe = disziplinSummen.Values.Sum();
+		await ValidateZielStatePersistenceAsync(disziplinVersuche, expectedRunde: 1, expectedRunde1Summe: 0);
+
 		await Task.Delay(1000);  // Pause for automatic round transition
 
-		// RUNDE 2 - Reset sums for new round
+		// RUNDE 2 - Reset sums and attempts for new round
 		Log(CurrentPhase, "=== RUNDE 2 (nach automatischem Reset) ===");
 		currentRound = 2;
 		// Reset discipline sums for round 2 (they get cleared in ZielBewerb.AddVersuch when transitioning to round 2)
@@ -139,6 +153,11 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 		disziplinSummen["Schiessen"] = 0;
 		disziplinSummen["MassenSeite"] = 0;
 		disziplinSummen["Kombinieren"] = 0;
+		// Reset attempt lists for round 2
+		disziplinVersuche["MassenVorne"] = new List<int>();
+		disziplinVersuche["Schiessen"] = new List<int>();
+		disziplinVersuche["MassenSeite"] = new List<int>();
+		disziplinVersuche["Kombinieren"] = new List<int>();
 
 		for (int disziplin = 0; disziplin < 4; disziplin++)
 		{
@@ -175,6 +194,8 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 
 				totalVersucheCount++;
 				versucheInDisziplin++;
+				disziplinSummen[disziplinNamen[disziplin]] += value;
+				disziplinVersuche[disziplinNamen[disziplin]].Add(value);
 
 				if (versucheInDisziplin % 2 == 0)
 				{
@@ -194,6 +215,11 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 				totalVersucheCount--;
 				versucheInDisziplin--;
 
+				// Remove from tracking lists
+				var lastValue = disziplinVersuche[disziplinNamen[disziplin]].Last();
+				disziplinVersuche[disziplinNamen[disziplin]].RemoveAt(disziplinVersuche[disziplinNamen[disziplin]].Count - 1);
+				disziplinSummen[disziplinNamen[disziplin]] -= lastValue;
+
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
 
 				int val = validValues[Rng.Next(validValues.Length)];
@@ -202,6 +228,8 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 
 				totalVersucheCount++;
 				versucheInDisziplin++;
+				disziplinSummen[disziplinNamen[disziplin]] += val;
+				disziplinVersuche[disziplinNamen[disziplin]].Add(val);
 
 				Log(CurrentPhase, $"Neuer Wert hinzugefügt: {val}", LogSymbol.Check);
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
@@ -211,6 +239,9 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 		}
 
 		Log(CurrentPhase, $"Phase 6 abgeschlossen: {totalVersucheCount}/{maxVersucheDisplay} Versuche (2 Runden)", LogSymbol.Check);
+
+		// Validate Runde 2 persistence
+		await ValidateZielStatePersistenceAsync(disziplinVersuche, expectedRunde: 2, expectedRunde1Summe: runde1Summe);
 
 		Fixture.SendNetMqCommand("ResetResult");
 		LogPhaseEnd(CurrentPhase);
