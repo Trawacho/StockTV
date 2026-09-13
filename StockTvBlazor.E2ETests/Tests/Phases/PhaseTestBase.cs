@@ -21,12 +21,9 @@ public abstract class PhaseTestBase
 		// Initialisiere den Logger einmalig pro Test-Run in der Fixture
 		Fixture.InitializeLogger(output);
 
-		// Generiere einen zufälligen Seed für bessere Test-Variabilität
-		int seed = new Random().Next();
+		// Nutze den globalen Seed für alle Tests in diesem Lauf
+		int seed = Fixture.GetRandomSeed();
 		Rng = new Random(seed);
-
-		// Schreibe den Seed ins Log für Reproduzierbarkeit bei Fehlern
-		Log("Setup", $"Random Seed für diesen Testlauf: {seed}");
 	}
 
 	#region CORE SETUP & LOGGING

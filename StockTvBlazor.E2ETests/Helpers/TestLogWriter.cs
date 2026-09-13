@@ -25,10 +25,12 @@ public class TestLogWriter : IDisposable
 	private int _phaseCount;
 	private int _successCount;
 	private int _warningCount;
+	private readonly int _randomSeed;
 
-	public TestLogWriter(ITestOutputHelper output, string? logDirectory = null)
+	public TestLogWriter(ITestOutputHelper output, int randomSeed, string? logDirectory = null)
 	{
 		_output = output;
+		_randomSeed = randomSeed;
 		_logDirectory = logDirectory ?? Path.Combine(
 			AppContext.BaseDirectory,
 			"..", "..", "..", "TestResults");
@@ -45,6 +47,8 @@ public class TestLogWriter : IDisposable
 			};
 			WriteLine($"Log started at {DateTime.Now:O}");
 			WriteLine($"Log file: {_logFilePath}");
+			WriteLine($"Random Seed für diesen Testlauf: {_randomSeed}");
+			WriteLine("");
 		}
 		catch (Exception ex)
 		{

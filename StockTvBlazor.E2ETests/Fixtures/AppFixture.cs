@@ -28,6 +28,10 @@ public class AppFixture : IAsyncLifetime
 
 	private ITestOutputHelper? _testOutput;
 
+	// Global random seed für alle Tests in diesem Lauf
+	private static int? _globalRandomSeed;
+	private static readonly object _seedLock = new();
+
 	private const string AppUrl = "http://localhost:5001";
 	private const string PublisherUrl = "tcp://127.0.0.1:4748";
 	private const string RequesterUrl = "tcp://127.0.0.1:4747";
@@ -61,15 +65,33 @@ public class AppFixture : IAsyncLifetime
 	}
 
 	/// <summary>
+	/// Gibt den globalen Random-Seed für diesen Test-Lauf zurück.
+	/// Wird einmalig beim ersten Aufruf generiert und dann für alle Tests wiederverwendet.
+	/// </summary>
+	public int GetRandomSeed()
+	{
+		lock (_seedLock)
+		{
+			if (_globalRandomSeed == null)
+			{
+				_globalRandomSeed = new Random().Next();
+			}
+			return _globalRandomSeed.Value;
+		}
+	}
+
+	/// <summary>
 	/// Initialisiert den Test-Logger mit der xUnit ITestOutputHelper.
 	/// Wird von der Test-Klasse aufgerufen, um den Logger einmalig pro Test-Run zu erstellen.
+	/// Generiert auch den globalen Random-Seed wenn nötig.
 	/// </summary>
 	public void InitializeLogger(ITestOutputHelper testOutput)
 	{
 		if (_testOutput == null)
 		{
 			_testOutput = testOutput;
-			Logger = new TestLogWriter(testOutput);
+			int randomSeed = GetRandomSeed();
+			Logger = new TestLogWriter(testOutput, randomSeed);
 		}
 	}
 

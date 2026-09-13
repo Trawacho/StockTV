@@ -1,7 +1,7 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 10 grün | 🚀 Phase 4–6 neu implementiert  
-**Datum:** 2026-09-12  
+**Status:** ✅ Phase 1–7, Phase 10 grün | 🚀 Phase 4–6 vollständig implementiert  
+**Datum:** 2026-09-13  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
 
@@ -12,7 +12,7 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (nur grüne Phase 1–3, 7, 10; Phase 4–6 übersprungen)
+# Alle Tests (11 Tests: Phase 1–7, Phase 10 grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
@@ -320,6 +320,10 @@ dotnet test StockTvBlazor.E2ETests/
 
 **Log-Format:**
 ```
+Log started at 2026-09-13T19:00:00.000...
+Log file: C:\...\TestResults\e2e-test-20260913-190000.log
+Random Seed für diesen Testlauf: 1234567890
+
 [HH:mm:ss.fff] PHASE    | ✓ Nachricht
 ═══════════════════════════════════════════════════════
   Phase 1: Training 15 Kehren
@@ -347,13 +351,7 @@ Alle Phase-Tests erben von `PhaseTestBase` mit:
 - `GetCurrentSettings()` — Aktuelle Settings abrufen
 - `SendResetResult()` — Spiel zurücksetzen
 - `DEBOUNCE_DELAY_MS = 1100` — Standard Debounce für Settings
-- `Random Rng` — Zufällige Wert-Generierung mit Seed
-
-**Random Seed Logging:**
-```
-[HH:mm:ss.fff] Setup   | ✓ Random Seed für diesen Testlauf: 1234567890
-```
-→ Ermöglicht Reproduzierbarkeit bei Fehlern
+- `Random Rng` — Zufällige Wert-Generierung mit globalem Seed (pro Testlauf identisch)
 
 ### AppFixture — App, Browser, NetMQ Management
 
@@ -425,9 +423,9 @@ netstat -ano | findstr "5001\|4747\|4748"
 Get-Process StockTvBlazor -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
-### ✅ Phase 4/5/6 sind jetzt implementiert!
+### ✅ Phase 4/5/6 sind vollständig implementiert
 
-Sie sind nicht mehr SKIPPED. Siehe [Phase 4](#-phase-4-ziel--6-kehren-pro-disziplin), [Phase 5](#-phase-5-ziel--12-kehren-pro-disziplin), und [Phase 6](#-phase-6-ziel2--2-runden-à-4-disziplinen--6-kehren) für Details.
+Alle drei Phasen sind grün und in Produktion. Siehe [Phase 4](#-phase-4-ziel--6-kehren-pro-disziplin), [Phase 5](#-phase-5-ziel--12-kehren-pro-disziplin), und [Phase 6](#-phase-6-ziel2--2-runden-à-4-disziplinen--6-kehren) für Details.
 
 ### ❌ Settings-Persistierung funktioniert nicht
 
@@ -480,9 +478,9 @@ StockTvBlazor.E2ETests/
 │       ├── Phase1TrainingE2ETests.cs
 │       ├── Phase2TournamentE2ETests.cs
 │       ├── Phase3BestOfE2ETests.cs
-│       ├── Phase4Ziel6E2ETests.cs (SKIPPED)
-│       ├── Phase5Ziel12E2ETests.cs (SKIPPED)
-│       ├── Phase6Ziel2E2ETests.cs (SKIPPED)
+│       ├── Phase4Ziel6E2ETests.cs
+│       ├── Phase5Ziel12E2ETests.cs
+│       ├── Phase6Ziel2E2ETests.cs
 │       ├── Phase7SettingsE2ETests.cs
 │       └── Phase10SettingsPersistenceE2ETests.cs (2 Tests)
 ├── TestResults/
@@ -498,10 +496,11 @@ StockTvBlazor.E2ETests/
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 
-**Implementiert (2026-09-12):**
-- 🚀 Phase 4: Ziel 6 Kehren — Invalid input handling, discipline transitions, delete functionality
-- 🚀 Phase 5: Ziel 12 Kehren — Longer form, performance-validated, spaced logging
-- 🚀 Phase 6: Ziel2 2 Runden — Round transitions, automatic reset, gesamtsumme tracking
+**Implementiert (2026-09-13):**
+- 🚀 Centralized Random Seed — Ein eindeutiger Seed pro Testlauf, einmalig geloggt
+- ✅ Phase 4: Ziel 6 Kehren — Invalid input handling, discipline transitions, delete functionality
+- ✅ Phase 5: Ziel 12 Kehren — Longer form, performance-validated, spaced logging
+- ✅ Phase 6: Ziel2 2 Runden — Round transitions, automatic reset, gesamtsumme tracking
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
@@ -509,6 +508,6 @@ StockTvBlazor.E2ETests/
 
 ---
 
-**Version:** 2.1  
+**Version:** 2.2  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 11/12 Tests grün, Vollständiger Ziel-Coverage, Sequenzielle Execution
+**Status:** 11/11 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
