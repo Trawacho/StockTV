@@ -12,6 +12,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 	private readonly NetMqPublisherService _publisherService = publisherService;
 	private readonly GameStatePersistenceService _gamePersistence = gamePersistence;
 	private Match? _currentMatch;
+	private CancellationTokenSource? _saveMatchDebounceCts;
 
 	public Match CurrentMatch => _currentMatch
 		?? throw new InvalidOperationException("Match wurde nicht initialisiert. Prüfe Program.cs!");
@@ -152,7 +153,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, false);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveMatchStateAsync();
+		RequestSaveMatchState();
 
 		_inputValue = -1;
 	}
@@ -160,7 +161,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 	private async Task ResetAsync(bool force = false)
 	{
 		CurrentMatch.Reset(force);
-		await CurrentMatch.SaveMatchStateAsync();
+		RequestSaveMatchState();
 		_inputValue = -1;
 	}
 
@@ -173,7 +174,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		}
 
 		CurrentMatch.DeleteLastTurn();
-		await CurrentMatch.SaveMatchStateAsync();
+		RequestSaveMatchState();
 	}
 
 	private protected void ShowSpecialPage()
@@ -190,6 +191,47 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		else if (_inputValue == 10)
 		{
 			// TODO: Marketing
+		}
+	}
+
+	/// <summary>
+	/// Requests match state to be saved with debounce.
+	/// Multiple rapid requests are coalesced into a single save operation.
+	/// </summary>
+	public void RequestSaveMatchState()
+	{
+		var oldCts = _saveMatchDebounceCts;
+		_saveMatchDebounceCts = new CancellationTokenSource();
+		var newCts = _saveMatchDebounceCts;
+
+		_logger.LogDebug("Match state save debounced (waiting 500ms)");
+
+		_ = DebouncedSaveMatchAsync(newCts, oldCts);
+	}
+
+	private async Task DebouncedSaveMatchAsync(CancellationTokenSource newCts, CancellationTokenSource? oldCts)
+	{
+		try
+		{
+			// Cancel previous debounce if it's still pending
+			oldCts?.Cancel();
+
+			// Wait for debounce timeout or cancellation
+			await Task.Delay(500, newCts.Token);
+
+			// Save the match state
+			await _currentMatch!.SaveMatchStateAsync();
+
+			_logger.LogDebug("Match state saved after debounce");
+		}
+		catch (OperationCanceledException)
+		{
+			// Debounce was cancelled because a new save was requested
+			_logger.LogDebug("Match state save debounce cancelled (new save requested)");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error saving match state");
 		}
 	}
 }

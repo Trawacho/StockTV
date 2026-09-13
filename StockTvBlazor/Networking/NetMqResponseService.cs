@@ -127,7 +127,7 @@ public class NetMqResponseService : BackgroundService, IDisposable
 				{
 					if (_settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel
 						|| _settingsService.CurrentSettings.Game.CurrentModus == GameSettings.Modus.Ziel2)
-						_zielService.CurrentZielBewerb.Reset();
+						_zielService.CurrentZielBewerb.Reset(true);
 					else
 						_matchService.CurrentMatch.Reset(true);
 					return Task.CompletedTask;
@@ -444,3 +444,4 @@ public class NetMqResponseService : BackgroundService, IDisposable
 		return true;
 	}
 }
+
