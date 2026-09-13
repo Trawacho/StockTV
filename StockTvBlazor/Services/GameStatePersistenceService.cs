@@ -62,13 +62,13 @@ public class GameStatePersistenceService(ILogger<GameStatePersistenceService> lo
 
 			var data = new MatchStateData { Turns = turns };
 			var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+			_logger.LogDebug("Schreibe match-state.json ({Count} Kehren) nach: {Path}", turns.Count, _matchStateFilePath);
 			await File.WriteAllTextAsync(_matchStateFilePath, json);
 
-			_logger.LogDebug("match-state.json gespeichert mit {Count} Kehren", turns.Count);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Fehler beim Speichern von match-state.json");
+			_logger.LogError(ex, "Fehler beim Speichern von match-state.json unter: {Path}", _matchStateFilePath);
 		}
 	}
 
@@ -76,15 +76,19 @@ public class GameStatePersistenceService(ILogger<GameStatePersistenceService> lo
 	{
 		try
 		{
+			_logger.LogDebug("Versuche match-state.json zu löschen unter: {Path}", _matchStateFilePath);
 			if (File.Exists(_matchStateFilePath))
 			{
 				File.Delete(_matchStateFilePath);
-				_logger.LogDebug("match-state.json gelöscht");
+			}
+			else
+			{
+				_logger.LogWarning("match-state.json nicht gefunden unter: {Path}", _matchStateFilePath);
 			}
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Fehler beim Löschen von match-state.json");
+			_logger.LogError(ex, "Fehler beim Löschen von match-state.json unter: {Path}", _matchStateFilePath);
 		}
 	}
 
