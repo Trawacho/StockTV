@@ -36,8 +36,8 @@ public abstract class PhaseTestBase
 	/// </summary>
 	/// <param name="phase">Die aktuelle Testphase</param>
 	/// <param name="message">Die Lognachricht</param>
-	/// <param name="symbol">Das anzuzeigende Symbol (Standard: "✓")</param>
-	protected void Log(string phase, string message, string symbol = "✓")
+	/// <param name="symbol">Das anzuzeigende Symbol (Standard: None)</param>
+	protected void Log(string phase, string message, LogSymbol symbol = LogSymbol.None)
 	{
 		Fixture.Logger?.WriteLn(phase, message, symbol);
 	}
@@ -135,7 +135,7 @@ public abstract class PhaseTestBase
 		Log(CurrentPhase, $"Validiere Settings in-memory...");
 		var appliedSettings = await GetCurrentSettings();
 		Assert.Equal(newSettings, appliedSettings);
-		Log(CurrentPhase, $"✓ Settings validiert und angewendet");
+		Log(CurrentPhase, $"Settings validiert und angewendet", LogSymbol.Check);
 
 		if (validatePersistence)
 		{
@@ -158,7 +158,7 @@ public abstract class PhaseTestBase
 		// Die SettingsService nutzt ein Debounce von 500ms + asynchrones Speichern
 		// Warte längere Zeit, um sicherzustellen dass alles geschrieben ist
 		Log(CurrentPhase, $"Warte auf asynchrone Persistierung...");
-		await Task.Delay(3000);
+		//await Task.Delay(3000);
 
 		try
 		{
@@ -169,7 +169,7 @@ public abstract class PhaseTestBase
 
 			for (int attempt = 1; attempt <= maxRetries; attempt++)
 			{
-				fileContent = await Fixture.ReadSettingsFileAsync();
+				fileContent = await Fixture.ReadLocalFileAsync("stocktv.config.json");
 
 				using var jsonDoc = System.Text.Json.JsonDocument.Parse(fileContent);
 				var root = jsonDoc.RootElement;
@@ -187,13 +187,13 @@ public abstract class PhaseTestBase
 				// Modus stimmt nicht, warte und versuche nochmal
 				if (attempt < maxRetries)
 				{
-					Log(CurrentPhase, $"⚠ Modus in Datei ist noch {fileModus}, erwartet {expectedModus}, warte und versuche nochmal... (Versuch {attempt}/{maxRetries})");
+					Log(CurrentPhase, $"Modus in Datei ist noch {fileModus}, erwartet {expectedModus}, warte und versuche nochmal... (Versuch {attempt}/{maxRetries})", LogSymbol.Warning);
 					await Task.Delay(500);
 				}
 				else
 				{
 					// Letzter Versuch fehlgeschlagen
-					Log(CurrentPhase, $"✗ Datei wurde nach {maxRetries} Versuchen nicht aktualisiert. Noch immer Modus {fileModus}");
+					Log(CurrentPhase, $"Datei wurde nach {maxRetries} Versuchen nicht aktualisiert. Noch immer Modus {fileModus}", LogSymbol.Error);
 				}
 			}
 
@@ -209,31 +209,31 @@ public abstract class PhaseTestBase
 
 			// Validiere Modus
 			Assert.Equal(expectedModus, fileModus);
-			Log(CurrentPhase, $"✓ Modus in Datei persistiert: {fileModus}");
+			Log(CurrentPhase, $"Modus in Datei persistiert: {fileModus}", LogSymbol.Check);
 
 			// Validiere MaxPunkteProKehre
 			Assert.Equal(expectedMaxPunkteProKehre, fileMaxPunkte);
-			Log(CurrentPhase, $"✓ MaxPunkteProKehre in Datei persistiert: {fileMaxPunkte}");
+			Log(CurrentPhase, $"MaxPunkteProKehre in Datei persistiert: {fileMaxPunkte}", LogSymbol.Check);
 
 			// Validiere MaxKehrenProSpiel
 			Assert.Equal(expectedMaxKehrenProSpiel, fileMaxKehren);
-			Log(CurrentPhase, $"✓ MaxKehrenProSpiel in Datei persistiert: {fileMaxKehren}");
+			Log(CurrentPhase, $"MaxKehrenProSpiel in Datei persistiert: {fileMaxKehren}", LogSymbol.Check);
 
 			// Validiere Richtung wenn angegeben
 			if (expectedRichtung.HasValue)
 			{
 				Assert.Equal(expectedRichtung.Value, fileRichtung);
-				Log(CurrentPhase, $"✓ Richtung in Datei persistiert: {fileRichtung}");
+				Log(CurrentPhase, $"Richtung in Datei persistiert: {fileRichtung}", LogSymbol.Check);
 			}
 		}
 		catch (FileNotFoundException ex)
 		{
-			Log(CurrentPhase, $"✗ Settings-Datei nicht gefunden: {ex.Message}", "!");
+			Log(CurrentPhase, $"Settings-Datei nicht gefunden: {ex.Message}", LogSymbol.Error);
 			throw;
 		}
 		catch (System.Text.Json.JsonException ex)
 		{
-			Log(CurrentPhase, $"✗ Settings-Datei konnte nicht geparst werden: {ex.Message}", "!");
+			Log(CurrentPhase, $"Settings-Datei konnte nicht geparst werden: {ex.Message}", LogSymbol.Error);
 			throw;
 		}
 	}
@@ -253,7 +253,7 @@ public abstract class PhaseTestBase
 
 		Log(CurrentPhase, $"Sende Team-Namen an Server: {teamNamesPayload}");
 		Fixture.SendNetMqCommand("SetTeamNames", teamNamesPayload);
-		Log(CurrentPhase, $"✓ Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)");
+		Log(CurrentPhase, $"Team-Namen gesetzt ({teamNamesMap.Count} Begegnungen)", LogSymbol.Check);
 	}
 
 	protected class EntryResult
@@ -278,7 +278,7 @@ public abstract class PhaseTestBase
 		if (Fixture.Page == null)
 			return new EntryResult { Value = value, ConfirmKey = confirmKey ?? "" };
 
-		confirmKey ??= GetConfirmKey();
+		confirmKey ??= Rng.Next(2) == 0 ? "*" : "/";
 
 		Log(CurrentPhase, $"Eingabe: {value}, Bestätigungskey: {confirmKey}");
 
@@ -325,15 +325,6 @@ public abstract class PhaseTestBase
 
 		await Fixture.Page.Keyboard.PressAsync(key);
 		await Task.Delay(200);
-	}
-
-	/// <summary>
-	/// Gibt einen zufälligen Bestätigungskey zurück: entweder "*" (Links/Grün) oder "/" (Rechts/Rot).
-	/// </summary>
-	/// <returns>Entweder "*" oder "/"</returns>
-	protected string GetConfirmKey()
-	{
-		return Rng.Next(2) == 0 ? "*" : "/";
 	}
 
 	/// <summary>
@@ -394,7 +385,7 @@ public abstract class PhaseTestBase
 		Assert.Equal(cumulativeSumLeft, sumLeft);
 		Assert.Equal(cumulativeSumRight, sumRight);
 
-		Log(CurrentPhase, $"✓ Spiel {gameNumber} Kumulative Punkte: Links {sumLeft} | Rechts {sumRight}", "✓");
+		Log(CurrentPhase, $"Spiel {gameNumber} Kumulative Punkte: Links {sumLeft} | Rechts {sumRight}", LogSymbol.Check);
 	}
 
 	/// <summary>
@@ -424,7 +415,64 @@ public abstract class PhaseTestBase
 			teamInfo = $" ({teamLeft} vs {teamRight})";
 		}
 
-		Log(CurrentPhase, $"✓ Match Points nach Spiel {gameNumber}: Links {pointsLeft} | Rechts {pointsRight}{teamInfo}", "✓");
+		Log(CurrentPhase, $"Match Points nach Spiel {gameNumber}: Links {pointsLeft} | Rechts {pointsRight}{teamInfo}", LogSymbol.Check);
+	}
+
+	/// <summary>
+	/// Validates that match state is correctly persisted in match-state.json file.
+	/// Checks that all turns match expected values and count.
+	/// Waits for the expected turn count to appear (handles async write delays).
+	/// </summary>
+	protected async Task ValidateMatchStatePersistenceAsync(
+		Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)> allGames)
+	{
+		int totalExpectedTurns = allGames.Values.Sum(g => g.turnsLeft.Count);
+		var lastGame = allGames.OrderBy(x => x.Key).Last();
+		var (expectedTurnsLeft, expectedTurnsRight) = lastGame.Value;
+		int currentGameTurns = expectedTurnsLeft.Count;
+
+		Log(CurrentPhase, "Validierung der match-state.json Persistierung...");
+
+		var matchStateJson = await Fixture.ReadLocalFileAsync("match-state.json", json =>
+		{
+			try
+			{
+				using var doc = System.Text.Json.JsonDocument.Parse(json);
+				return doc.RootElement.TryGetProperty("Turns", out var turns)
+					&& turns.ValueKind == System.Text.Json.JsonValueKind.Array
+					&& turns.GetArrayLength() == totalExpectedTurns;
+			}
+			catch (System.Text.Json.JsonException)
+			{
+				return false;
+			}
+		});
+
+		using var jsonDoc = System.Text.Json.JsonDocument.Parse(matchStateJson);
+		var root = jsonDoc.RootElement;
+
+		if (!root.TryGetProperty("Turns", out var turnsArray) || turnsArray.ValueKind != System.Text.Json.JsonValueKind.Array)
+		{
+			Log(CurrentPhase, $"'Turns' Array nicht gefunden in match-state.json", LogSymbol.Warning);
+			Assert.Fail("Turns array not found in match-state.json");
+			return;
+		}
+
+		int actualTurnCount = turnsArray.GetArrayLength();
+		Assert.Equal(totalExpectedTurns, actualTurnCount);
+
+		int startIndex = actualTurnCount - currentGameTurns;
+		for (int i = 0; i < currentGameTurns; i++)
+		{
+			var turn = turnsArray[startIndex + i];
+			int pointsLeft = turn.GetProperty("PointsLeft").GetInt32();
+			int pointsRight = turn.GetProperty("PointsRight").GetInt32();
+
+			Assert.Equal(expectedTurnsLeft[i], pointsLeft);
+			Assert.Equal(expectedTurnsRight[i], pointsRight);
+		}
+
+		Log(CurrentPhase, $"match-state.json validiert: {actualTurnCount} Kehren korrekt persistiert", LogSymbol.Check);
 	}
 
 	#endregion TOURNAMENT HELPERS
@@ -452,14 +500,14 @@ public abstract class PhaseTestBase
 		var payload = GetLatestGetResultPayload();
 		if (string.IsNullOrEmpty(payload))
 		{
-			Log(CurrentPhase, "⚠ Kein GetResult-Payload vom NetMQ Publisher erhalten", "!");
+			Log(CurrentPhase, "Kein GetResult-Payload vom NetMQ Publisher erhalten", LogSymbol.Warning);
 			return;
 		}
 
 		var games = GameplayScriptHelpers.StripPrefixAndParseGames(payload);
 		if (games == null)
 		{
-			Log(CurrentPhase, "⚠ GetResult-Payload konnte nicht geparst werden", "!");
+			Log(CurrentPhase, "GetResult-Payload konnte nicht geparst werden", LogSymbol.Warning);
 			return;
 		}
 
@@ -498,8 +546,8 @@ public abstract class PhaseTestBase
 			Assert.Equal(expectedSumRight, sumRight);
 
 			Log(CurrentPhase,
-				$"✓ NetMQ Spiel {gameNumber}: Links {broadcastLeftStr}={sumLeft} | Rechts {broadcastRightStr}={sumRight}",
-				"✓");
+				$"NetMQ Spiel {gameNumber}: Links {broadcastLeftStr}={sumLeft} | Rechts {broadcastRightStr}={sumRight}",
+				LogSymbol.Check);
 		}
 	}
 
@@ -569,7 +617,7 @@ public abstract class PhaseTestBase
 			Assert.Equal(expectedLeftSum, displayedLeftSum);
 			Assert.Equal(expectedRightSum, displayedRightSum);
 
-			Log(CurrentPhase, $"✓ Kehren + Summen korrekt: Links {expectedLeftStr}={expectedLeftSum} | Rechts {expectedRightStr}={expectedRightSum}", "✓");
+			Log(CurrentPhase, $"Kehren + Summen korrekt: Links {expectedLeftStr}={expectedLeftSum} | Rechts {expectedRightStr}={expectedRightSum}", LogSymbol.Check);
 		}
 
 		// Validate Team Names
@@ -591,11 +639,11 @@ public abstract class PhaseTestBase
 			Assert.Equal(expectedTeamLeft, displayedLeft?.Trim() ?? "");
 			Assert.Equal(expectedTeamRight, displayedRight?.Trim() ?? "");
 
-			Log(CurrentPhase, $"✓ Team-Namen korrekt: {expectedTeamLeft} vs {expectedTeamRight}", "✓");
+			Log(CurrentPhase, $"Team-Namen korrekt: {expectedTeamLeft} vs {expectedTeamRight}", LogSymbol.Check);
 		}
 		else if (!hasExpectedTeams && !hasDisplayedTeams)
 		{
-			Log(CurrentPhase, $"✓ Keine Team-Namen angezeigt (korrekt)", "✓");
+			Log(CurrentPhase, $"Keine Team-Namen angezeigt (korrekt)", LogSymbol.Check);
 		}
 
 		// Validate Header (Game Number and Turn Number)
@@ -613,7 +661,7 @@ public abstract class PhaseTestBase
 			if (expectedGameNumber.HasValue && expectedGameNumber > 1)
 			{
 				Assert.Equal(expectedGameNumber.Value, displayedGameNumber);
-				Log(CurrentPhase, $"✓ Header korrekt: Spiel {displayedGameNumber}, Kehre {displayedTurnNumber}", "✓");
+				Log(CurrentPhase, $"Header korrekt: Spiel {displayedGameNumber}, Kehre {displayedTurnNumber}", LogSymbol.Check);
 			}
 			else if (expectedGameNumber == 1)
 			{
@@ -622,7 +670,7 @@ public abstract class PhaseTestBase
 				{
 					Assert.Equal(expectedTurnNumber.Value, displayedTurnNumber);
 				}
-				Log(CurrentPhase, $"✓ Header korrekt: Kehre {displayedTurnNumber}", "✓");
+				Log(CurrentPhase, $"Header korrekt: Kehre {displayedTurnNumber}", LogSymbol.Check);
 			}
 		}
 	}
@@ -675,14 +723,14 @@ public abstract class PhaseTestBase
 			{
 				var overlay = await Fixture.Page.Locator(".ziel-overlay.show").IsVisibleAsync();
 				Assert.True(overlay, "Invalid overlay should be visible");
-				Log(CurrentPhase, $"  ✓ Invalid overlay validiert");
+				Log(CurrentPhase, $"Invalid overlay validiert", LogSymbol.Check);
 			}
 
-			Log(CurrentPhase, $"  ✓ Display validiert: {anzahlText?.Trim()} | Summen: {summen?.Trim()}");
+			Log(CurrentPhase, $"Display validiert: {anzahlText?.Trim()} | Summen: {summen?.Trim()}", LogSymbol.Check);
 		}
 		catch (Exception ex)
 		{
-			Log(CurrentPhase, $"  ✗ Display-Validierung fehlgeschlagen: {ex.Message}", "!");
+			Log(CurrentPhase, $"Display-Validierung fehlgeschlagen: {ex.Message}", LogSymbol.Error);
 			throw;
 		}
 	}
@@ -725,13 +773,13 @@ public abstract class PhaseTestBase
 		var overlay = await Fixture.Page.Locator(".ziel-overlay.show").IsVisibleAsync();
 		if (overlay)
 		{
-			Log(CurrentPhase, $"  → Wert {value} ungültig (overlay sichtbar)");
+			Log(CurrentPhase, $"Wert {value} ungültig (overlay sichtbar)", LogSymbol.Info);
 			// Wait for overlay to disappear
 			await Task.Delay(1600);
 			return false;
 		}
 
-		Log(CurrentPhase, $"  ✓ Wert {value} akzeptiert");
+		Log(CurrentPhase, $"Wert {value} akzeptiert", LogSymbol.Check);
 		return true;
 	}
 
@@ -768,7 +816,7 @@ public abstract class PhaseTestBase
 		Log(CurrentPhase, $"Sende Spielername via NetMQ: '{spielername}'");
 		var nameBytes = System.Text.Encoding.UTF8.GetBytes(spielername);
 		Fixture.SendNetMqRaw("SetTeilnehmer", nameBytes);
-		Log(CurrentPhase, $"✓ Spielername gesetzt");
+		Log(CurrentPhase, $"Spielername gesetzt", LogSymbol.Check);
 	}
 
 	/// <summary>
@@ -785,7 +833,7 @@ public abstract class PhaseTestBase
 		Assert.NotNull(spielernameElement);
 		Assert.Contains(expectedName, spielernameElement?.Trim() ?? "");
 
-		Log(CurrentPhase, $"✓ Spielername validiert: {spielernameElement?.Trim()}");
+		Log(CurrentPhase, $"Spielername validiert: {spielernameElement?.Trim()}", LogSymbol.Check);
 	}
 
 	/// <summary>
@@ -801,14 +849,14 @@ public abstract class PhaseTestBase
 		var payload = GetLatestGetResultPayload();
 		if (string.IsNullOrEmpty(payload))
 		{
-			Log(CurrentPhase, "⚠ Kein GetResult-Payload vom NetMQ Publisher erhalten", "!");
+			Log(CurrentPhase, "Kein GetResult-Payload vom NetMQ Publisher erhalten", LogSymbol.Warning);
 			return;
 		}
 
 		// For Ziel mode, the payload contains settings (10 bytes) + JSON with discipline data
 		if (payload.Length < 10)
 		{
-			Log(CurrentPhase, "⚠ Payload zu kurz für Settings+JSON", "!");
+			Log(CurrentPhase, "Payload zu kurz für Settings+JSON", LogSymbol.Warning);
 			return;
 		}
 
@@ -836,16 +884,16 @@ public abstract class PhaseTestBase
 						}
 
 						Assert.Equal(expectedDisziplinSummen[disziplinName], sum);
-						Log(CurrentPhase, $"  ✓ Disziplin {disziplinName}: {count} Versuche, Summe={sum}");
+						Log(CurrentPhase, $"Disziplin {disziplinName}: {count} Versuche, Summe={sum}", LogSymbol.Check);
 					}
 				}
 			}
 
-			Log(CurrentPhase, $"✓ NetMQ GetResult validiert");
+			Log(CurrentPhase, $"NetMQ GetResult validiert", LogSymbol.Check);
 		}
 		catch (Exception ex)
 		{
-			Log(CurrentPhase, $"⚠ Fehler beim Parsen von GetResult: {ex.Message}", "!");
+			Log(CurrentPhase, $"Fehler beim Parsen von GetResult: {ex.Message}", LogSymbol.Warning);
 		}
 	}
 

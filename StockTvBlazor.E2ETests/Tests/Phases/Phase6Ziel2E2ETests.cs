@@ -96,7 +96,7 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 
 					bool wasAccepted = await EnterAndConfirmZielAsync(value.ToString());
 					Assert.False(wasAccepted, "Invalid value should be rejected");
-					Log(CurrentPhase, $"  ✓ Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt");
+					Log(CurrentPhase, $"Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt", LogSymbol.Check);
 
 					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
 
@@ -125,10 +125,10 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 				await Task.Delay(250);
 			}
 
-			Log(CurrentPhase, $"  ✓ Runde {currentRound} Disziplin {disziplin + 1} fertig");
+			Log(CurrentPhase, $"Runde {currentRound} Disziplin {disziplin + 1} fertig", LogSymbol.Check);
 		}
 
-		Log(CurrentPhase, $"✓ Runde 1 abgeschlossen: {totalVersucheCount}/{maxVersucheProRunde} Versuche");
+		Log(CurrentPhase, $"Runde 1 abgeschlossen: {totalVersucheCount}/{maxVersucheProRunde} Versuche", LogSymbol.Check);
 		await Task.Delay(1000);  // Pause for automatic round transition
 
 		// RUNDE 2 - Reset sums for new round
@@ -159,7 +159,7 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 
 					bool wasAccepted = await EnterAndConfirmZielAsync(value.ToString());
 					Assert.False(wasAccepted, "Invalid value should be rejected");
-					Log(CurrentPhase, $"  ✓ Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt");
+					Log(CurrentPhase, $"Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt", LogSymbol.Check);
 
 					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
 
@@ -188,7 +188,7 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 			// Test delete on last discipline of round 2
 			if (disziplin == 3)
 			{
-				Log(CurrentPhase, $"  ✓ Teste Löschen auf letzter Disziplin");
+				Log(CurrentPhase, "Teste Löschen auf letzter Disziplin", LogSymbol.Check);
 
 				await DeleteZielAttemptAsync();
 				totalVersucheCount--;
@@ -203,14 +203,14 @@ public class Phase6Ziel2E2ETests : PhaseTestBase
 				totalVersucheCount++;
 				versucheInDisziplin++;
 
-				Log(CurrentPhase, $"  ✓ Neuer Wert hinzugefügt: {val}");
+				Log(CurrentPhase, $"Neuer Wert hinzugefügt: {val}", LogSymbol.Check);
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheDisplay);
 			}
 
-			Log(CurrentPhase, $"  ✓ Runde {currentRound} Disziplin {disziplin + 1} fertig");
+			Log(CurrentPhase, $"Runde {currentRound} Disziplin {disziplin + 1} fertig", LogSymbol.Check);
 		}
 
-		Log(CurrentPhase, $"✓ Phase 6 abgeschlossen: {totalVersucheCount}/{maxVersucheDisplay} Versuche (2 Runden)");
+		Log(CurrentPhase, $"Phase 6 abgeschlossen: {totalVersucheCount}/{maxVersucheDisplay} Versuche (2 Runden)", LogSymbol.Check);
 
 		Fixture.SendNetMqCommand("ResetResult");
 		LogPhaseEnd(CurrentPhase);

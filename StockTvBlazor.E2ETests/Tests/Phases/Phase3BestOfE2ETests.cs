@@ -26,13 +26,6 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 		const int maxKehrenProSpiel = 6;
 		const int numberOfGames = 3;
 
-		// Team-Namen dynamisch generieren
-		var teamNamesMap = new Dictionary<int, (string left, string right)>();
-		for (int i = 1; i <= numberOfGames; i++)
-		{
-			teamNamesMap[i] = ($"TeamA{i}", $"TeamB{i}");
-		}
-
 		Log(CurrentPhase, $"Test-Parameter: MaxPunkte={maxPunkteProKehre}, MaxKehren={maxKehrenProSpiel}, Spiele={numberOfGames}");
 		await ConfigureAndValidateSettings(
 			modus: 1,
@@ -51,6 +44,12 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 		Fixture.SendNetMqCommand("ResetResult");
 		Log(CurrentPhase, "ResetResult gesendet");
 
+		// Team-Namen dynamisch generieren
+		var teamNamesMap = new Dictionary<int, (string left, string right)>();
+		for (int i = 1; i <= numberOfGames; i++)
+		{
+			teamNamesMap[i] = ($"TeamA{i}", $"TeamB{i}");
+		}
 		SendTeamNames(teamNamesMap);
 
 		var allGames = new Dictionary<int, (List<int> turnsLeft, List<int> turnsRight)>();
@@ -91,7 +90,7 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 					// Ungültigen Wert testen und verwerfen
 					int invalidVal = Rng.Next(maxPunkteProKehre + 1, maxPunkteProKehre + 5);
 					var invalidResult = await EnterAndConfirm(invalidVal.ToString(), expectedDisplay: "");
-					Log(CurrentPhase, $"  !!! Ungueltiger Wert {invalidVal} gesendet und verworfen");
+					Log(CurrentPhase, $"Ungueltiger Wert {invalidVal} gesendet und verworfen");
 
 					// Validiere dass die Anzeige unverändert ist (der ungültige Wert wurde verworfen)
 					await ValidateDisplayAsync(
@@ -104,6 +103,7 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 
 					allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
 					await ValidateNetMqPublisherCompleteStateAsync(allGames);
+					await ValidateMatchStatePersistenceAsync(allGames);
 
 					// Danach einen gültigen Wert senden
 					val = Rng.Next(0, maxPunkteProKehre + 1);
@@ -130,11 +130,12 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 
 				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
 				await ValidateNetMqPublisherCompleteStateAsync(allGames);
+				await ValidateMatchStatePersistenceAsync(allGames);
 
 				validTurnsCount++;
 			}
 
-			Log(CurrentPhase, $"  ✓ Spiel {game}/{numberOfGames}: Schleife beendet mit {maxKehrenProSpiel} Kehren");
+			Log(CurrentPhase, $"Spiel {game}/{numberOfGames}: Schleife beendet mit {maxKehrenProSpiel} Kehren", LogSymbol.Check);
 
 			// Test: Letzte Kehre löschen und neue hinzufügen
 			if (validTurnsCount > 0)
@@ -158,13 +159,14 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 
 				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
 				await ValidateNetMqPublisherCompleteStateAsync(allGames);
+				await ValidateMatchStatePersistenceAsync(allGames);
 
 				int val = Rng.Next(0, maxPunkteProKehre + 1);
 				var addResult = await EnterAndConfirm(val.ToString());
 
 				TrackTurn(addResult, val, turnsLeft, turnsRight);
 				string addSide = addResult.IsLeftSide ? "Links" : "Rechts";
-				Log(CurrentPhase, $"  + New turn added ({addSide}): {val}");
+				Log(CurrentPhase, $"New turn added ({addSide}): {val}");
 
 				// Validiere die Anzeige nach dem Add
 				await ValidateDisplayAsync(
@@ -177,9 +179,10 @@ public class Phase3BestOfE2ETests : PhaseTestBase
 
 				allGames[game] = (new List<int>(turnsLeft), new List<int>(turnsRight));
 				await ValidateNetMqPublisherCompleteStateAsync(allGames);
+				await ValidateMatchStatePersistenceAsync(allGames);
 			}
 
-			await PressKeyAsync("+", $"✓ Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
+			await PressKeyAsync("+", $"Spiel {game}/{numberOfGames} abgeschlossen mit Taste '+'");
 			await ValidateGameSummaryAsync(game, allGames);
 			await ValidateMatchPointsAsync(game, expectedTeamLeft, expectedTeamRight);
 			

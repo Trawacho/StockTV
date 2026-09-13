@@ -3,6 +3,15 @@ using Xunit.Abstractions;
 
 namespace StockTvBlazor.E2ETests.Helpers;
 
+public enum LogSymbol
+{
+	None,
+	Check,
+	Info,
+	Warning,
+	Error
+}
+
 /// <summary>
 /// Writes test logs to both xUnit ITestOutputHelper and a file simultaneously.
 /// </summary>
@@ -45,17 +54,39 @@ public class TestLogWriter : IDisposable
 
 	private readonly string _logDirectory;
 
-	public void WriteLn(string phase, string message, string symbol = "✓")
+	public void WriteLn(string phase, string message, LogSymbol symbol = LogSymbol.None)
 	{
-		var line = $"[{DateTime.Now:HH:mm:ss.fff}] {phase,-8} | {symbol} {message}";
+		var symbolChar = GetSymbolChar(symbol);
+		string line;
 
-		if (symbol == "✓")
+		if (string.IsNullOrEmpty(symbolChar))
+		{
+			// Keine Symbol: konsistent 2 Spaces nach Pipe
+			line = $"[{DateTime.Now:HH:mm:ss.fff}] {phase,-8} | {message}";
+		}
+		else
+		{
+			// Mit Symbol: Symbol + 1 Space nach Pipe
+			line = $"[{DateTime.Now:HH:mm:ss.fff}] {phase,-8} | {symbolChar} {message}";
+		}
+
+		if (symbol == LogSymbol.Check)
 			_successCount++;
-		else if (symbol == "⚠")
+		else if (symbol == LogSymbol.Warning)
 			_warningCount++;
 
 		WriteLine(line);
 	}
+
+	private string GetSymbolChar(LogSymbol symbol) => symbol switch
+	{
+		LogSymbol.None => "",
+		LogSymbol.Check => "✓",
+		LogSymbol.Info => "→",
+		LogSymbol.Warning => "!",
+		LogSymbol.Error => "✗",
+		_ => ""
+	};
 
 	public void WritePhaseStart(string phase, string description)
 	{

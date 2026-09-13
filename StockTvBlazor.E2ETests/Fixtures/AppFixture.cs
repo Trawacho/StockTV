@@ -447,11 +447,13 @@ public class AppFixture : IAsyncLifetime
 	}
 
 	/// <summary>
-	/// Liest die Settings-Datei (stocktv.config.json) vom Server.
-	/// Die Datei wird von der App in AppContext.BaseDirectory/_config/ erstellt,
-	/// was bei "dotnet run" das bin/Debug/net*/ Verzeichnis ist.
+	/// Liest eine lokale Datei aus dem App-Verzeichnis (_config/).
+	/// Wartet bis zu 3 Sekunden (15 × 200ms), falls die Datei noch nicht von der App erzeugt wurde.
 	/// </summary>
-	public async Task<string> ReadSettingsFileAsync()
+	/// <param name="filename">Der Name der zu lesenden Datei (z.B. "stocktv.config.json")</param>
+	/// <returns>Der Inhalt der Datei als String</returns>
+	/// <exception cref="FileNotFoundException">Wenn die Datei nach 3 Sekunden nicht vorhanden ist</exception>
+	public async Task<string> ReadLocalFileAsync(string filename)
 	{
 		try
 		{
@@ -460,31 +462,50 @@ public class AppFixture : IAsyncLifetime
 			var projectDir = Path.GetDirectoryName(projectPath)
 				?? throw new InvalidOperationException("Could not determine project directory from project path");
 
-			// Die Datei liegt in bin/Debug/net*/_config/ oder bin/Release/net*/_config/
-			// Suche gezielt in den Debug/Release Ordnern statt überall
 			var binDir = Path.Combine(projectDir, "bin");
 			if (!Directory.Exists(binDir))
 				throw new DirectoryNotFoundException($"bin directory not found at {binDir}");
 
-			// Suche nach _config Ordnern unter bin
-			var configDirs = new DirectoryInfo(binDir).GetDirectories("_config", SearchOption.AllDirectories);
-			if (configDirs.Length == 0)
-				throw new DirectoryNotFoundException($"No _config directories found in {binDir}");
+			// Warte bis zu 3 Sekunden (15x 200ms), bis die Datei von der App erzeugt wird
+			const int maxWaitAttempts = 15;
+			const int delayMs = 200;
+			FileInfo? file = null;
 
-			// Finde die neueste stocktv.config.json
-			var settingsFiles = configDirs
-				.Select(d => new FileInfo(Path.Combine(d.FullName, "stocktv.config.json")))
-				.Where(f => f.Exists)
-				.OrderByDescending(f => f.LastWriteTimeUtc)
-				.ToList();
+			for (int attempt = 0; attempt < maxWaitAttempts; attempt++)
+			{
+				var configDirs = new DirectoryInfo(binDir).GetDirectories("_config", SearchOption.AllDirectories);
+				if (configDirs.Length == 0)
+				{
+					if (attempt == maxWaitAttempts - 1)
+						throw new DirectoryNotFoundException($"No _config directories found in {binDir}");
+					await Task.Delay(delayMs);
+					continue;
+				}
 
-			if (settingsFiles.Count == 0)
-				throw new FileNotFoundException($"Settings file not found in any _config directory under {binDir}");
+				// Suche die neueste Datei
+				var files = configDirs
+					.Select(d => new FileInfo(Path.Combine(d.FullName, filename)))
+					.Where(f => f.Exists)
+					.OrderByDescending(f => f.LastWriteTimeUtc)
+					.ToList();
 
-			var settingsFile = settingsFiles.First();
-			var settingsPath = settingsFile.FullName;
-			System.Diagnostics.Debug.WriteLine($"Found settings file at: {settingsPath}");
-			System.Diagnostics.Debug.WriteLine($"Settings file modified: {settingsFile.LastWriteTimeUtc:yyyy-MM-dd HH:mm:ss.fff}");
+				if (files.Count > 0)
+				{
+					file = files.First();
+					break;  // Datei gefunden, aus Warteschleife raus
+				}
+
+				// Datei noch nicht da, warte und versuche erneut
+				if (attempt < maxWaitAttempts - 1)
+					await Task.Delay(delayMs);
+			}
+
+			if (file == null)
+				throw new FileNotFoundException($"File {filename} not found in any _config directory under {binDir} after {maxWaitAttempts * delayMs}ms");
+
+			var filePath = file.FullName;
+			System.Diagnostics.Debug.WriteLine($"Found {filename} at: {filePath}");
+			System.Diagnostics.Debug.WriteLine($"File modified: {file.LastWriteTimeUtc:yyyy-MM-dd HH:mm:ss.fff}");
 
 			// Lese die Datei mit Retry-Logik (falls die App gerade schreibt)
 			const int maxRetries = 5;
@@ -492,7 +513,7 @@ public class AppFixture : IAsyncLifetime
 			{
 				try
 				{
-					return await File.ReadAllTextAsync(settingsPath);
+					return await File.ReadAllTextAsync(filePath);
 				}
 				catch (IOException) when (i < maxRetries - 1)
 				{
@@ -500,12 +521,36 @@ public class AppFixture : IAsyncLifetime
 				}
 			}
 
-			throw new InvalidOperationException($"Could not read settings file after {maxRetries} retries");
+			throw new InvalidOperationException($"Could not read {filename} after {maxRetries} retries");
 		}
 		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine($"Error reading settings file: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"Error reading {filename}: {ex.Message}");
 			throw;
 		}
 	}
+
+	/// <summary>
+	/// Liest eine lokale Datei und wartet darauf, dass der Inhalt ein bestimmtes Kriterium erfüllt.
+	/// Nützlich, um auf asynchrone Schreibvorgänge zu warten, wenn die Datei bereits existiert,
+	/// aber der neue Inhalt noch nicht vollständig geschrieben wurde.
+	/// </summary>
+	/// <param name="filename">Der Name der zu lesenden Datei</param>
+	/// <param name="isReady">Prädikat, das prüft ob der Inhalt die erwarteten Daten enthält</param>
+	/// <param name="maxAttempts">Max. Anzahl von Lese-Versuchen (default 20)</param>
+	/// <param name="delayMs">Verzögerung zwischen Versuchen in Millisekunden (default 150)</param>
+	/// <returns>Der Datei-Inhalt sobald isReady erfüllt ist, oder der letzte gelesene Stand</returns>
+	public async Task<string> ReadLocalFileAsync(string filename, Func<string, bool> isReady,
+		int maxAttempts = 20, int delayMs = 150)
+	{
+		string content = await ReadLocalFileAsync(filename);
+		for (int attempt = 1; attempt < maxAttempts && !isReady(content); attempt++)
+		{
+			await Task.Delay(delayMs);
+			content = await ReadLocalFileAsync(filename);
+		}
+		return content;
+	}
+
+
 }

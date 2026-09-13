@@ -70,7 +70,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 
 			TrackTurn(result, val, turnsLeft, turnsRight);
 			string side = result.IsLeftSide ? "Links" : "Rechts";
-			Log(CurrentPhase, $"Kehre {turn + 1}/{numberOfValidTurns}: {val} Punkte ({side})", "✓");
+			Log(CurrentPhase, $"Kehre {turn + 1}/{numberOfValidTurns}: {val} Punkte ({side})", LogSymbol.Check);
 
 			// Validiere die Anzeige nach jedem Turn
 			await ValidateDisplayAsync(
@@ -92,12 +92,12 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 				turnCountSinceReset = 0;
 				resetHasOccurred = true;
 
-				Log(CurrentPhase, "Spiel wurde zurückgesetzt, beginne neues Trainingsspiel", "✓");
+				Log(CurrentPhase, "Spiel wurde zurückgesetzt, beginne neues Trainingsspiel", LogSymbol.Check);
 			}
 		}
 
 		// Test: Ungültiger Wert (> maxPunkteProKehre) sollte verworfen werden
-		Log(CurrentPhase, $"Teste Grenzwert: {invalidValue} > {maxPunkteProKehre} (sollte verworfen werden)", "⚠");
+		Log(CurrentPhase, $"Teste Grenzwert: {invalidValue} > {maxPunkteProKehre} (sollte verworfen werden)", LogSymbol.Warning);
 		await EnterAndConfirm(invalidValue.ToString(), "*", expectedDisplay: "");
 
 		// Validiere dass die Anzeige unverändert ist (der ungültige Wert wurde verworfen)
@@ -106,7 +106,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 			expectedTurnsRight: turnsRight,
 			expectedGameNumber: 1,
 			expectedTurnNumber: turnCountSinceReset);
-		Log(CurrentPhase, "Grenzwert-Test bestätigt: Wert > Max verworfen", "✓");
+		Log(CurrentPhase, "Grenzwert-Test bestätigt: Wert > Max verworfen", LogSymbol.Check);
 
 		// Test: Delete (-)
 		if (turnsLeft.Count > 0)
@@ -124,7 +124,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 			expectedTurnsRight: turnsRight,
 			expectedGameNumber: 1,
 			expectedTurnNumber: turnCountSinceReset);
-		Log(CurrentPhase, $"Delete Test: Kehre gelöscht, {turnCountSinceReset} übrig", "✓");
+		Log(CurrentPhase, $"Delete Test: Kehre gelöscht, {turnCountSinceReset} übrig", LogSymbol.Check);
 
 		// Ergänze weitere Kehren
 		Log(CurrentPhase, $"Ergänze {numberOfAdditionalTurns} weitere Kehren...");
@@ -135,7 +135,7 @@ public class Phase1TrainingE2ETests : PhaseTestBase
 
 			TrackTurn(result, val, turnsLeft, turnsRight);
 			string addSide = result.IsLeftSide ? "Links" : "Rechts";
-			Log(CurrentPhase, $"Zusatz-Turn {turn + 1}/{numberOfAdditionalTurns}: {val} ({addSide})", "✓");
+			Log(CurrentPhase, $"Zusatz-Turn {turn + 1}/{numberOfAdditionalTurns}: {val} ({addSide})", LogSymbol.Check);
 
 			// Validiere die Anzeige nach jedem Turn (vor dem Inkrementieren wie in der Hauptschleife)
 			await ValidateDisplayAsync(

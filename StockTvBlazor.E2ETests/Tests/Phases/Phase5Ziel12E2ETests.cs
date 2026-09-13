@@ -43,12 +43,10 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 
 		Log(CurrentPhase, "Sende ResetResult an Server...");
 		Fixture.SendNetMqCommand("ResetResult");
-		await Task.Delay(500);
 
 		// Set player name via NetMQ
 		string spielername = "TestSpieler_Phase5";
 		SetZielTeilnehmer(spielername);
-		await Task.Delay(500);
 
 		var validValuesPerDisziplin = new[]
 		{
@@ -92,7 +90,7 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 
 					bool wasAccepted = await EnterAndConfirmZielAsync(value.ToString());
 					Assert.False(wasAccepted, "Invalid value should be rejected");
-					Log(CurrentPhase, $"  ✓ Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt");
+					Log(CurrentPhase, $"Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt", LogSymbol.Check);
 
 					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
 
@@ -127,7 +125,7 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 			// Test delete on last discipline only
 			if (disziplin == 3)
 			{
-				Log(CurrentPhase, $"  ✓ Teste Löschen auf letzter Disziplin (Taste -)");
+				Log(CurrentPhase, "Teste Löschen auf letzter Disziplin (Taste -)", LogSymbol.Check);
 
 				await DeleteZielAttemptAsync();
 				totalVersucheCount--;
@@ -143,14 +141,14 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 				totalVersucheCount++;
 				versucheInDisziplin++;
 
-				Log(CurrentPhase, $"  ✓ Neuer Wert hinzugefügt: {val}");
+				Log(CurrentPhase, $"Neuer Wert hinzugefügt: {val}", LogSymbol.Check);
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
 			}
 
-			Log(CurrentPhase, $"  ✓ Disziplin {disziplin + 1}/4 abgeschlossen ({maxKehrenProSpiel} Versuche)");
+			Log(CurrentPhase, $"Disziplin {disziplin + 1}/4 abgeschlossen ({maxKehrenProSpiel} Versuche)", LogSymbol.Check);
 		}
 
-		Log(CurrentPhase, $"✓ Phase 5 abgeschlossen: {totalVersucheCount}/{maxVersucheGesamt} Versuche");
+		Log(CurrentPhase, $"Phase 5 abgeschlossen: {totalVersucheCount}/{maxVersucheGesamt} Versuche", LogSymbol.Check);
 
 		Fixture.SendNetMqCommand("ResetResult");
 		LogPhaseEnd(CurrentPhase);
