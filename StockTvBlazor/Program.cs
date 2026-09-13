@@ -49,6 +49,7 @@ builder.Services.AddRazorComponents()
 	// UpdateService.MaxOfflineUpdateUploadBytes uebereinstimmen.
 	.AddHubOptions(o => o.MaximumReceiveMessageSize = StockTvBlazor.Services.UpdateService.MaxOfflineUpdateUploadBytes);
 
+builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<GameStatePersistenceService>();

@@ -68,15 +68,15 @@ public abstract class BaseViewModel : IDisposable
 
 	public int RightPointsSum => _isDemoMode ? DemoData.RightPointsSum : CurrentMatch.CurrentGame.RightPointsSum;
 
-	public string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
+	public virtual string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
 
-	public string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
+	public virtual string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
 
 	#endregion
 
 	#region Layout
 
-	public string GetShellGridStyle()
+	public virtual string GetShellGridStyle()
 	{
 		if (!TeamNamesAvailable)
 			return "grid-template-columns: 100%;";
@@ -85,8 +85,8 @@ public abstract class BaseViewModel : IDisposable
 		var mid = s.UI.MidColumnWidth;
 		var side = (100 - mid) / 2.0;
 
-		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
-                                          {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%
+                                          {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%
                                           {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
 

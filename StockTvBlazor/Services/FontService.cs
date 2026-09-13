@@ -220,7 +220,18 @@ public class FontService
 				}
 			}
 
-			process.WaitForExit();
+			if (!process.WaitForExit(5000))
+			{
+				_logger.LogWarning("fc-list process did not exit within 5 seconds, killing it");
+				try
+				{
+					process.Kill();
+				}
+				catch (Exception ex)
+				{
+					_logger.LogWarning(ex, "Failed to kill fc-list process");
+				}
+			}
 		}
 		catch (Exception ex)
 		{

@@ -30,8 +30,9 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var parts = teamNames.TrimEnd(';').Split(';');
 		foreach (var part in parts)
 		{
+			if (string.IsNullOrWhiteSpace(part)) continue;
 			var begegnung = part.Split(':');
-			if (int.TryParse(begegnung[0], out int spielnummer))
+			if (begegnung.Length >= 3 && int.TryParse(begegnung[0], out int spielnummer))
 			{
 				CurrentMatch.AddBegegnung(new Models.Begegnung(spielnummer, begegnung[1], begegnung[2]));
 			}
@@ -124,7 +125,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		if (newValue <= maxPoints)
 			_inputValue = newValue;
 		else
-			_inputValue = (value <= maxPoints) ? value : -1;
+			_inputValue =  -1;
 	}
 
 	private async Task AddToGreenAsync()

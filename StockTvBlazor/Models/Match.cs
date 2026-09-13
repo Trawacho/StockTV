@@ -181,8 +181,8 @@ public class Match
 
 		foreach (Game g in Games)
 		{
-			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsLeft)));
-			values.Add(Convert.ToByte(g.Turns.Sum(t => t.PointsRight)));
+			values.Add(Convert.ToByte(Math.Min(g.Turns.Sum(t => t.PointsLeft), 255)));
+			values.Add(Convert.ToByte(Math.Min(g.Turns.Sum(t => t.PointsRight), 255)));
 		}
 
 		return [.. values];

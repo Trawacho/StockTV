@@ -87,7 +87,6 @@ StockTV/
 │   ├── Services/               # MatchService, ZielService, SettingsService, FileLogger
 │   ├── Settings/               # Settings, GameSettings, UiSettings, ColorSettings, Themes
 │   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
-├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
 │   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh
 │   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1
@@ -371,6 +370,33 @@ NetMQ läuft auf eigenem `Poller`-Thread. Bei State-Änderungen von außen (z.B.
 
 ---
 
+## Tests
+
+**⚠️ Jede Änderung an der App muss mit Tests geprüft werden — vor dem Merge. Alle Tests müssen grün sein.**
+
+### Unit Tests (`StockTvBlazor.Tests/`)
+Isolierte Tests für Komponenten, Modelle, Services und Netzwerk-Logik. Prüfen Funktionalität einzelner Bausteine (AutoFitText-Rendering, Punkte-Eingabe/Anzeige, Begegnung-Logik, NetMQ-Responses, etc.).
+
+```powershell
+dotnet test StockTvBlazor.Tests/
+```
+
+### E2E Tests (`StockTvBlazor.E2ETests/`)
+Integrationstest für alle Spielmodi (Training, Turnier, BestOf, Ziel, Ziel2) und Settings-Persistierung. Simulieren echte Benutzerszenarien mit Blazor-Komponenten und NetMQ-Nachrichten. Tests laufen sequenziell und sind voneinander abhängig.
+
+**Dokumentation:** Siehe [StockTvBlazor.E2ETests/README.md](StockTvBlazor.E2ETests/README.md) für vollständige Test-Beschreibungen. **Jeder neue Test muss dort dokumentiert sein mit Ablauf, Konfiguration und Validierungspunkten.**
+
+```powershell
+dotnet test StockTvBlazor.E2ETests/
+```
+
+**Alle Tests ausführen:**
+```powershell
+dotnet test
+```
+
+---
+
 ## Git Workflow
 
 Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für vollständige Anleitung. Kurz zusammengefasst:
@@ -396,11 +422,3 @@ tatsächliche Größe von `stocktv-rpi.zip` (via `build\rpi\publish-rpi.ps1` neu
 Publish-Ordnergröße vergleichen) und bei Bedarf anpassen, damit die Limits nicht durch App-Wachstum
 zu knapp werden.
 
----
-
-## Testprojekt & Manuelle Tests
-
-`BlazorAppTests/` ist ein **interaktives Testprojekt**, keine automatisierte Test-Suite:
-- Dient zum **manuellen Testen** von Komponenten in Isolation (`LayoutTest`, `HomeCards`, usw.)
-- Im Debug-Modus öffnet die Home-Seite automatisch alle Test-Tabs
-- **Nicht** für xUnit / Automatisierung gedacht (würde zu viele Blazor-Komplexitäten mitschleppen)
