@@ -283,7 +283,7 @@ dotnet test StockTvBlazor.E2ETests/
 3. Validiere dass nur **Änderung #3 (Turnier)** persistiert wurde
 
 **Validierung:**
-- `ValidateSettingsPersistenceAsync()` mit Retry-Logik (6 Versuche)
+- `ValidateSettingsPersistenceAsync()` wartet bis alle 4 Settings-Werte stimmen
 - Erwartet: Modus=2, MaxPunkteProKehre=10, MaxKehrenProSpiel=6
 - Debounce-Timeout: 1000ms (siehe `DEBOUNCE_DELAY_MS = 1100` in PhaseTestBase)
 
@@ -305,7 +305,7 @@ dotnet test StockTvBlazor.E2ETests/
 
 **Validierung:**
 - Settings-Datei wird aktualisiert
-- `ValidateSettingsPersistenceAsync()` prüft mit Retry-Logik
+- `ValidateSettingsPersistenceAsync()` wartet auf korrekte Werte (Modus, MaxPunkte, MaxKehren)
 - Nach ~1100ms sollte die Persistierung abgeschlossen sein
 
 ---

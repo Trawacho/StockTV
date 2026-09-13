@@ -87,7 +87,7 @@ public class Phase10SettingsPersistenceE2ETests : PhaseTestBase
 			var newSettings = GameplayScriptHelpers.BuildSettingsBytes(currentBytes, modus: 1, maxPunkteProKehre: 10, maxKehrenProSpiel: 6);
 			await SendSettings(newSettings);
 
-			// ValidateSettingsPersistenceAsync hat eingebaute Retry-Logik (6 Versuche)
+			// ValidateSettingsPersistenceAsync wartet bis alle erwarteten Werte persistiert sind
 			await ValidateSettingsPersistenceAsync(expectedModus: 1, expectedMaxPunkteProKehre: 10, expectedMaxKehrenProSpiel: 6);
 			Log(CurrentPhase, "Settings nach Timeout persistiert", LogSymbol.Check);
 		}
@@ -124,7 +124,7 @@ public class Phase10SettingsPersistenceE2ETests : PhaseTestBase
 			var settings2 = GameplayScriptHelpers.BuildSettingsBytes(settings0, modus: 2, maxPunkteProKehre: 10, maxKehrenProSpiel: 6);
 			await SendSettings(settings2);
 
-			// ValidateSettingsPersistenceAsync wartet selbst auf die Persistierung
+			// ValidateSettingsPersistenceAsync wartet auf alle erwarteten Werte
 			await ValidateSettingsPersistenceAsync(expectedModus: 2, expectedMaxPunkteProKehre: 10, expectedMaxKehrenProSpiel: 6);
 			Log(CurrentPhase, "Debounce wurde korrekt zurückgesetzt", LogSymbol.Check);
 		}
