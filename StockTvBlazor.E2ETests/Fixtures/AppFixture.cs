@@ -574,5 +574,57 @@ public class AppFixture : IAsyncLifetime
 		return content;
 	}
 
+	/// <summary>
+	/// Wartet darauf, dass eine lokale Datei gelöscht wird.
+	/// Nützlich für die Validierung von asynchronem Löschen, z.B. wenn ResetResult die State-Datei löscht.
+	/// </summary>
+	/// <param name="filename">Der Name der zu überwachenden Datei (z.B. "ziel-state.json")</param>
+	/// <param name="maxWaitMs">Maximale Wartezeit in Millisekunden (default 3000)</param>
+	/// <returns>true wenn die Datei gelöscht wurde, false wenn Timeout erreicht</returns>
+	public async Task<bool> WaitForLocalFileDeletedAsync(string filename, int maxWaitMs = 3000)
+	{
+		try
+		{
+			var projectPath = FindProjectPath();
+			var projectDir = Path.GetDirectoryName(projectPath)
+				?? throw new InvalidOperationException("Could not determine project directory from project path");
+
+			var binDir = Path.Combine(projectDir, "bin");
+			if (!Directory.Exists(binDir))
+				return false;
+
+			const int delayMs = 200;
+			int maxAttempts = Math.Max(1, maxWaitMs / delayMs);
+
+			for (int attempt = 0; attempt < maxAttempts; attempt++)
+			{
+				var configDirs = new DirectoryInfo(binDir).GetDirectories("_config", SearchOption.AllDirectories);
+				if (configDirs.Length == 0)
+				{
+					if (attempt == maxAttempts - 1)
+						return true;  // Kein _config Dir = Datei gelöscht
+					await Task.Delay(delayMs);
+					continue;
+				}
+
+				// Prüfe ob Datei in einem der _config Dir existiert
+				var fileExists = configDirs.Any(d => File.Exists(Path.Combine(d.FullName, filename)));
+
+				if (!fileExists)
+					return true;  // Datei nicht gefunden = erfolgreich gelöscht
+
+				if (attempt < maxAttempts - 1)
+					await Task.Delay(delayMs);
+			}
+
+			return false;  // Timeout: Datei existiert immer noch
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Error waiting for {filename} deletion: {ex.Message}");
+			return false;
+		}
+	}
+
 
 }

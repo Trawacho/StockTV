@@ -192,6 +192,7 @@ dotnet test StockTvBlazor.E2ETests/
 - Disziplin-Übergänge funktionieren automatisch
 - Finale Seite lädt erfolgreich
 - `ziel-state.json` Persistierung: Alle Versuche pro Disziplin korrekt gespeichert
+- `ResetResult` NetMQ-Kommando: `ziel-state.json` wird korrekt gelöscht
 
 **Dauer:** ~30–40s
 

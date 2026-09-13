@@ -169,7 +169,14 @@ public class Phase4Ziel6E2ETests : PhaseTestBase
 		// Validate ziel-state.json persistence
 		await ValidateZielStatePersistenceAsync(disziplinVersuche, expectedRunde: 1, expectedRunde1Summe: 0);
 
+		Log(CurrentPhase, "Teste ResetResult: ziel-state.json sollte gelöscht werden...");
 		Fixture.SendNetMqCommand("ResetResult");
+
+		// Validate that ziel-state.json is deleted after ResetResult
+		bool deleted = await Fixture.WaitForLocalFileDeletedAsync("ziel-state.json");
+		Assert.True(deleted, "ziel-state.json sollte nach ResetResult gelöscht sein");
+		Log(CurrentPhase, "ziel-state.json wurde korrekt gelöscht nach ResetResult", LogSymbol.Check);
+
 		LogPhaseEnd(CurrentPhase);
 	}
 }
