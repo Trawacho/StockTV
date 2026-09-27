@@ -8,7 +8,7 @@
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
-    font-weight: 400;
+    font-weight: var(--fontweight-teamname, 400);
     line-height: 1;
 }
 
@@ -63,7 +63,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 700;
+    font-weight: var(--fontweight-header-row, 700);
     line-height: 1;
 }
 
@@ -77,8 +77,23 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-weight: 700;
     line-height: 1;
+}
+
+/* font-weight bewusst nicht auf .score-cell selbst (siehe CellFontWeightSettings):
+   die drei Bedeutungsgruppen unten sind je eigene Settings, Links/Rechts bleiben gemeinsam. */
+.left-point-sum,
+.right-point-sum {
+    font-weight: var(--fontweight-points-sum, 700);
+}
+
+.left-points,
+.right-points {
+    font-weight: var(--fontweight-current-points, 700);
+}
+
+.input-value {
+    font-weight: var(--fontweight-input-value, 700);
 }
 
 .score-bottom-grid {

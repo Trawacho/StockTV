@@ -1,6 +1,6 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 9, Phase 10 grün | 🚀 Phase 4–6, Phase 9 vollständig implementiert  
+**Status:** ✅ Phase 1–7, Phase 9, Phase 10, Phase 11 grün | 🚀 Phase 4–6, Phase 9, Phase 11 vollständig implementiert  
 **Datum:** 2026-09-15  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
@@ -12,7 +12,7 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (16 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10 grün)
+# Alle Tests (22 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests) grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
@@ -20,6 +20,7 @@ dotnet test StockTvBlazor.E2ETests/ --filter "Phase1"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase7"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase9"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase11"
 
 # Mit Diagnostik
 dotnet test StockTvBlazor.E2ETests/ -v diagnostic
@@ -45,8 +46,9 @@ $env:PLAYWRIGHT_HEADLESS = "false"
 ✓ Phase 7: Settings Navigation
 ✓ Phase 9: Theme Layout Editor (5 Tests)
 ✓ Phase 10: Settings Persistence (2 Tests)
+✓ Phase 11: Schriftstärke der Zellen (6 Tests)
 
-Bestanden: 16, Übersprungen: 0, Dauer: ~8–10 Min
+Bestanden: 22, Übersprungen: 0, Dauer: ~9–11 Min
 ```
 
 ---
@@ -415,6 +417,88 @@ dotnet test StockTvBlazor.E2ETests/
 
 ---
 
+### ✅ Phase 11: Schriftstärke der Zellen — Font-Weight-Editor
+
+**Tests:** 6 Tests für `FontWeightEditor` auf `/themes` → Tab "Schriftstärke"
+
+Analog zu Phase 9 (Tabellenstruktur), aber für `font-weight` statt Zeilen-/Spaltenmaße: 14 zuvor
+hartkodierte CSS-Werte (`.teamname`, `.score-top-row`, `.left-point-sum`/`.right-point-sum`,
+`.left-points`/`.right-points`, `.input-value`, `.seperator`, BestOf-Matchpunkte,
+`.ziel-spielername` sowie die 6 Ziel-Werte-Zellen) sind jetzt per Dropdown (100–900, CSS-
+Standardstufen) editierbar. Feld-Lookup nutzt von Anfang an Exact-Match auf den Label-Textknoten
+(`label/text()[normalize-space()='...']`), um die in Phase 9 gefundene Substring-Kollisionsgefahr
+(z.B. "Gesamt" vs. "Gesamtpunkte") von vornherein auszuschließen.
+
+#### Test 1: `Phase11_DefaultValuesDisplayCorrectly()`
+
+**Szenario:** Alle 14 Dropdowns zeigen nach Reset ihre Default-Werte.
+
+**Ablauf:**
+1. Navigiere zu `/themes`, Tab "Schriftstärke"
+2. Reset, dann alle 14 Felder auslesen und gegen ihre bekannten Defaults prüfen (400/700/700/700/
+   700/600/200/600/500/500/500/500/500/500)
+
+**Dauer:** ~3–5s
+
+#### Test 2: `Phase11_ValueChange_PersistsToConfigFile()`
+
+**Szenario:** Wert-Änderung wird nach Debounce in `stocktv.config.json` persistiert.
+
+**Ablauf:**
+1. "Summe" (ZielSummeWeight) auf 900 setzen
+2. Debounce abwarten, `UI.CellFontWeight.ZielSummeWeight == 900` in der Config-Datei prüfen
+3. Cleanup: zurück auf 500
+
+**Dauer:** ~5–7s
+
+#### Test 3: `Phase11_ResetAllValues_RestoresDefaultsInUiAndFile()`
+
+**Szenario:** Button "Alle Werte zurücksetzen" stellt alle Defaults in UI und Datei wieder her.
+
+**Ablauf:**
+1. Zwei Felder aus unterschiedlichen Bereichen ändern (Team-Namen, Ziel-Summe)
+2. Reset klicken, UI + `stocktv.config.json` auf Default-Werte prüfen
+
+**Dauer:** ~5–7s
+
+#### Test 4: `Phase11_ZielFields_IndependentlyEditable()`
+
+**Szenario:** Regressionstest — die 6 Ziel-Werte-Zellen teilten sich vorher eine gemeinsame
+`.ziel-cell`-Regel; jetzt muss eine Änderung an einem Feld die anderen 5 unberührt lassen.
+
+**Ablauf:**
+1. Nur "Summe" auf 900 ändern
+2. Prüfen, dass Versuche/Gesamt/Letzter Wert/Ziel-Eingabe/Gesamtpunkte/Spielername unverändert
+   bei ihren Defaults bleiben
+
+**Dauer:** ~5–7s
+
+#### Test 5: `Phase11_ScoreCellFields_IndependentlyEditable()`
+
+**Szenario:** Analoger Regressionstest für Training/Turnier/BestOf — Punkte-Summe, aktuelle
+Kehre-Punkte und Eingabe teilten sich vorher `.score-cell`.
+
+**Ablauf:**
+1. Nur "Eingabe (Tippbuffer)" auf 100 ändern
+2. Prüfen, dass Punkte-Summe und Aktuelle Kehre-Punkte unverändert bei 700 bleiben
+
+**Dauer:** ~5–7s
+
+#### Test 6: `Phase11_FontWeightAppliesToRenderedCell()`
+
+**Szenario:** Absicherung über die reine Settings-Persistierung hinaus — die CSS-Variable muss
+tatsächlich visuell auf der echten Seite ankommen, nicht nur im Setting gespeichert werden.
+
+**Ablauf:**
+1. "Summe" auf 900 setzen
+2. Zu `/ziel` navigieren, computed `font-weight` von `.ziel-summe` per `getComputedStyle()`
+   auslesen und gegen "900" prüfen
+3. Cleanup: zurück zu `/themes`, Reset
+
+**Dauer:** ~5–7s
+
+---
+
 ## 🏗️ Zentrale Logging & Infrastruktur
 
 ### TestLogWriter — Duale Protokollierung
@@ -603,24 +687,26 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (16 Tests):**
+**Aktuell Grün (22 Tests):**
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 9: Theme Layout Editor (5 Tests) — Default values, sum warnings, persistence, reset, group hints
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
+- ✅ Phase 11: Schriftstärke der Zellen (6 Tests) — Default values, persistence, reset, Ziel-/Score-Cell-Unabhängigkeit, gerenderte Zelle
 
-**Implementiert (2026-09-15):**
-- 🚀 Phase 9: Theme & Tabellenstruktur — TableLayoutEditor E2E Tests (5 Szenarien)
-  - Default-Werte-Display (Regression-Test für `@bind-value` Bug)
-  - Live Summen-Warnung (erscheint/verschwindet)
+**Implementiert (2026-09-27):**
+- 🚀 Phase 11: Schriftstärke der Zellen — FontWeightEditor E2E Tests (6 Szenarien)
+  - Default-Werte-Display
   - Persistierung nach Debounce-Timeout
   - Reset-Button-Funktionalität
-  - UX-Hinweise für Zeilen vs. Spalten
+  - Unabhängigkeit der 6 Ziel-Werte-Zellen (vormals gemeinsame `.ziel-cell`-Regel)
+  - Unabhängigkeit der 3 Training/Turnier/BestOf-Punkte-Zellen (vormals gemeinsame `.score-cell`-Regel)
+  - End-to-End-Rendering-Check (computed `font-weight` auf der echten Seite)
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
 
 ---
 
-**Version:** 2.2  
+**Version:** 2.3  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 11/11 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
+**Status:** 22/22 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution

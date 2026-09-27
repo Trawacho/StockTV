@@ -447,6 +447,28 @@ public class SettingsService : BackgroundService
 
 	#endregion
 
+	#region Cell Font Weight
+
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.CellFontWeight.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Table Layout.
+	/// </summary>
+	public void NotifyCellFontWeightChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetCellFontWeight()
+	{
+		CurrentSettings.UI.CellFontWeight = new CellFontWeightSettings();
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
 	#region Networking (Byte Array)
 
 	public byte[] GetSettings()

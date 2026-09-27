@@ -29,6 +29,7 @@ public partial class CustomThemePage : IDisposable
 
 	private void ShowThemesTab() => SetTab("themes");
 	private void ShowLayoutTab() => SetTab("layout");
+	private void ShowFontWeightTab() => SetTab("fontweight");
 
 	protected override void OnInitialized()
 	{

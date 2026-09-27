@@ -3,7 +3,7 @@
 
 <PageTitle>Zielbewerb</PageTitle>
 
-<div class="ziel-main-grid page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none; @ViewModel.GetTableLayoutCssVariables()" @ref="inputRef">
+<div class="ziel-main-grid page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none; @ViewModel.GetTableLayoutCssVariables() @ViewModel.GetCellFontWeightCssVariables()" @ref="inputRef">
 
 	@if (ViewModel.IsSpielernameAvailable)
 	{

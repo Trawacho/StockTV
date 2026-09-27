@@ -9,7 +9,7 @@
     .bestof-mid-grid .left-match-points,
     .bestof-mid-grid .right-match-points {
         align-items: flex-end;
-        font-weight: 200;
+        font-weight: var(--fontweight-bestof-matchpoints, 200);
         padding-bottom: 2.5rem;
     }
 

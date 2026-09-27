@@ -76,4 +76,6 @@ public class ZielViewModel : IDisposable
 	public bool InvalidInput => !_isDemoMode && _zielService.InvalidInput;
 
 	public string GetTableLayoutCssVariables() => _settingsService.CurrentSettings.UI.TableLayout.ToCssVariables();
+
+	public string GetCellFontWeightCssVariables() => _settingsService.CurrentSettings.UI.CellFontWeight.ToCssVariables();
 }
