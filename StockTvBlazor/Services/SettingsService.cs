@@ -469,6 +469,21 @@ public class SettingsService : BackgroundService
 
 	#endregion
 
+	#region Font Family
+
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.FontFamily (global, unabhängig vom
+	/// aktiven Theme). Die Editor-Komponente bindet direkt auf die Settings-Property und ruft
+	/// diese Methode danach auf (@bind:after), analog zum Save-Aufruf bei Cell Font Weight.
+	/// </summary>
+	public void NotifyFontFamilyChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
 	#region Networking (Byte Array)
 
 	public byte[] GetSettings()

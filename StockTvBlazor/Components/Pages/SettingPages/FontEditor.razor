@@ -1,0 +1,90 @@
+<div class="layout-editor">
+    <div class="layout-editor-header">
+        <button class="btn-cancel" @onclick="ResetAll">Alle Werte zurücksetzen</button>
+    </div>
+
+    <div class="accordion">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("schriftart") ? "" : "collapsed")" type="button" @onclick="ToggleSchriftartGroup">
+                    Schriftart (Experimentell)
+                </button>
+            </h2>
+            @if (ShowGroup("schriftart"))
+            {
+                <div class="accordion-body font-weight-section">
+                    <div class="font-weight-field">
+                        <label>Schriftart (optional)</label>
+                        <select value="@SettingsService.CurrentSettings.UI.FontFamily" @onchange="OnFontFamilyChanged">
+                            <option value="">-- Standard --</option>
+                            @foreach (var font in FontService.GetAvailableFonts())
+                            {
+                                <option value="@font">@font</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("teamkopf") ? "" : "collapsed")" type="button" @onclick="ToggleTeamKopfGroup">
+                    Team &amp; Kopfzeile
+                </button>
+            </h2>
+            @if (ShowGroup("teamkopf"))
+            {
+                <div class="accordion-body font-weight-section">
+                    <FontWeightField Label="Team-Namen (Turnier / BestOf)" DefaultValue="400" @bind-Value="Weights.TeamNameWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Kopfzeile (Training / Turnier / BestOf)" DefaultValue="700" @bind-Value="Weights.HeaderRowWeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("scorecell") ? "" : "collapsed")" type="button" @onclick="ToggleScoreCellGroup">
+                    Training / Turnier / BestOf — Punkte-Zellen
+                </button>
+            </h2>
+            @if (ShowGroup("scorecell"))
+            {
+                <div class="accordion-body font-weight-section">
+                    <FontWeightField Label="Punkte-Summe (Spielstand)" DefaultValue="700" @bind-Value="Weights.PointsSumWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Aktuelle Kehre-Punkte" DefaultValue="700" @bind-Value="Weights.CurrentPointsWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Eingabe (Tippbuffer)" DefaultValue="700" @bind-Value="Weights.InputValueWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Trenner ':'" DefaultValue="600" @bind-Value="Weights.SeparatorWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Matchpunkte (BestOf)" DefaultValue="200" @bind-Value="Weights.BestOfMatchPointsWeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("ziel") ? "" : "collapsed")" type="button" @onclick="ToggleZielGroup">
+                    Ziel — Werte-Zellen
+                </button>
+            </h2>
+            @if (ShowGroup("ziel"))
+            {
+                <div class="accordion-body font-weight-section">
+                    <FontWeightField Label="Spielername" DefaultValue="600" @bind-Value="Weights.ZielSpielernameWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Versuche" DefaultValue="500" @bind-Value="Weights.ZielVersucheWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Gesamt" DefaultValue="500" @bind-Value="Weights.ZielGesamtWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Letzter Wert" DefaultValue="500" @bind-Value="Weights.ZielLetzterWertWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Ziel-Eingabe" DefaultValue="500" @bind-Value="Weights.ZielEingabeWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Gesamtpunkte" DefaultValue="500" @bind-Value="Weights.ZielGesamtpunkteWeight" @bind-Value:after="NotifyChanged" />
+                    <FontWeightField Label="Summe" DefaultValue="500" @bind-Value="Weights.ZielSummeWeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <div class="preview-section">
+        <h4>Vorschau</h4>
+        <ThemePreview />
+    </div>
+</div>

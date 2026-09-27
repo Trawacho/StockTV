@@ -16,10 +16,13 @@
 .tp-wrapper {
     position: relative;
     width: 65%;
+    min-width: 200px;
+    max-width: 100%;
     aspect-ratio: 16 / 9;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid #444;
+    resize: horizontal; /* Ziehgriff unten rechts; Höhe folgt automatisch via aspect-ratio */
 }
 
 .tp-wrapper iframe {

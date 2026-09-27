@@ -26,15 +26,23 @@
     font-weight: 600;
 }
 
+.page-root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* fest statt vererbtem %, analog .page-fullscreen */
+}
+
 .theme-page {
     display: flex;
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0; /* verhindert, dass der Flex-Item über den Container hinauswächst */
     font-family: 'Segoe UI', sans-serif;
 }
 
 .theme-sidebar {
     width: 260px;
     min-width: 200px;
+    min-height: 0; /* erlaubt .theme-list (flex:1) korrekt zu scrollen statt zu überlaufen */
     border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
@@ -106,7 +114,7 @@
 .btn-icon:hover { background: #ddd; }
 .btn-delete:hover { background: #fdd; }
 
-.theme-editor { flex: 1; padding: 1.5rem; overflow-y: auto; }
+.theme-editor { flex: 1; padding: 1.5rem 1.5rem 2rem; overflow-y: auto; }
 
 .editor-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem; }
 .editor-header h3 { margin: 0; font-size: 1.2rem; }

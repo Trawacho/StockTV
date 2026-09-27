@@ -11,7 +11,7 @@
         --fg-color-ziel-gesamt: @_settings.UI.Colors.ZielSummeGesamt;
         --fg-color-ziel-einzel: @_settings.UI.Colors.ZielSummeEinzel;
         --fg-color-ziel-spielername: @_settings.UI.Colors.ZielSpielername;
-        --font-family: @(!string.IsNullOrEmpty(_settings.UI.Colors.FontFamily) ? $"\"{_settings.UI.Colors.FontFamily}\"" : "inherit");
+        --font-family: @(!string.IsNullOrEmpty(_settings.UI.FontFamily) ? $"\"{_settings.UI.FontFamily}\"" : "inherit");
         --team-frame-width: @GetTeamFrameWidth();
     }
 </style>

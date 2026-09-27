@@ -19,6 +19,7 @@ public class UiSettings
 	public int MidColumnWidth { get; set; } = 90;
 	public TableLayoutSettings TableLayout { get; set; } = new();
 	public CellFontWeightSettings CellFontWeight { get; set; } = new();
+	public string FontFamily { get; set; } = "";
 
 	public Guid? ActiveThemeId { get; set; }
 	public List<CustomTheme> CustomThemes { get; set; } = new();

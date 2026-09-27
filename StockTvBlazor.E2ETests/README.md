@@ -1,6 +1,6 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 9, Phase 10, Phase 11 grün | 🚀 Phase 4–6, Phase 9, Phase 11 vollständig implementiert  
+**Status:** ✅ Phase 1–7, Phase 9, Phase 10, Phase 11, Phase 12 grün | 🚀 Phase 4–6, Phase 9, Phase 11, Phase 12 vollständig implementiert  
 **Datum:** 2026-09-15  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
@@ -12,7 +12,7 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (22 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests) grün)
+# Alle Tests (26 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests), Phase 12 (4 Tests) grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
@@ -21,6 +21,7 @@ dotnet test StockTvBlazor.E2ETests/ --filter "Phase7"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase9"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase11"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase12"
 
 # Mit Diagnostik
 dotnet test StockTvBlazor.E2ETests/ -v diagnostic
@@ -47,8 +48,9 @@ $env:PLAYWRIGHT_HEADLESS = "false"
 ✓ Phase 9: Theme Layout Editor (5 Tests)
 ✓ Phase 10: Settings Persistence (2 Tests)
 ✓ Phase 11: Schriftstärke der Zellen (6 Tests)
+✓ Phase 12: Themes-Seite Live-Edit (4 Tests)
 
-Bestanden: 22, Übersprungen: 0, Dauer: ~9–11 Min
+Bestanden: 26, Übersprungen: 0, Dauer: ~9–11 Min
 ```
 
 ---
@@ -417,9 +419,9 @@ dotnet test StockTvBlazor.E2ETests/
 
 ---
 
-### ✅ Phase 11: Schriftstärke der Zellen — Font-Weight-Editor
+### ✅ Phase 11: Schriftstärke der Zellen — Font-Editor
 
-**Tests:** 6 Tests für `FontWeightEditor` auf `/themes` → Tab "Schriftstärke"
+**Tests:** 6 Tests für `FontEditor` auf `/themes` → Tab "Schrift"
 
 Analog zu Phase 9 (Tabellenstruktur), aber für `font-weight` statt Zeilen-/Spaltenmaße: 14 zuvor
 hartkodierte CSS-Werte (`.teamname`, `.score-top-row`, `.left-point-sum`/`.right-point-sum`,
@@ -434,7 +436,7 @@ Standardstufen) editierbar. Feld-Lookup nutzt von Anfang an Exact-Match auf den 
 **Szenario:** Alle 14 Dropdowns zeigen nach Reset ihre Default-Werte.
 
 **Ablauf:**
-1. Navigiere zu `/themes`, Tab "Schriftstärke"
+1. Navigiere zu `/themes`, Tab "Schrift"
 2. Reset, dann alle 14 Felder auslesen und gegen ihre bekannten Defaults prüfen (400/700/700/700/
    700/600/200/600/500/500/500/500/500/500)
 
@@ -496,6 +498,72 @@ tatsächlich visuell auf der echten Seite ankommen, nicht nur im Setting gespeic
 3. Cleanup: zurück zu `/themes`, Reset
 
 **Dauer:** ~5–7s
+
+---
+
+### ✅ Phase 12: Themes-Seite Live-Edit — Live-Apply, Footer, Schrift-Standort, Scroll-Fix
+
+**Tests:** 4 Tests für `CustomThemePage` auf `/themes` → Tab "Themes" (+ Tab "Schrift")
+
+Deckt die Überarbeitung der Themes-Seite ab: Farb-/Feld-Änderungen an einem bestehenden Theme
+werden jetzt sofort (ohne Klick auf "Speichern") persistiert — "Speichern" dient nur noch dem
+Anlegen neuer Themes; der Footer (Abbrechen/Speichern) ist dementsprechend nur noch beim Anlegen
+sichtbar; die Schriftart-Auswahl ist aus dem "Themes"-Tab in den "Schrift"-Tab gewandert und
+global (nicht mehr pro Theme); ein Scroll-Fix stellt sicher, dass der Speichern-Button auch bei
+kleinem Fenster erreichbar bleibt.
+
+#### Test 1: `Phase12_LiveApply_ColorChangeOnExistingThemePersistsWithoutSave()`
+
+**Szenario:** Eine Farbänderung an einem bereits gespeicherten Theme wird ohne Klick auf
+"Speichern" nach Debounce persistiert.
+
+**Ablauf:**
+1. Neues Theme anlegen + speichern (macht es zu einem "bestehenden" Theme)
+2. "Farben"-Accordion öffnen, "Hintergrund" auf einen neuen Hex-Wert ändern — **kein** Speichern-Klick
+3. Debounce abwarten, `stocktv.config.json` prüfen: der neue Farbwert ist persistiert
+4. Cleanup: Test-Theme löschen
+
+**Validierung:** Name ist nicht eindeutig — es genügt, dass irgendein Eintrag mit dem Testnamen die
+neue Farbe zeigt (robust gegenüber eventuellen Karteileichen aus früheren Läufen).
+
+**Dauer:** ~4–6s
+
+#### Test 2: `Phase12_Footer_HiddenForExistingTheme_VisibleForNewTheme()`
+
+**Szenario:** Der Footer (Abbrechen/Speichern) ist nur beim Anlegen eines neuen Themes sichtbar.
+
+**Ablauf:**
+1. "+ Neu" klicken → `.editor-footer` ist sichtbar (1 Treffer)
+2. "Speichern" klicken → `.editor-footer` ist verschwunden (0 Treffer)
+3. Cleanup: Test-Theme löschen
+
+**Dauer:** ~2–3s
+
+#### Test 3: `Phase12_FontFamilyDropdown_OnlyInSchriftTab()`
+
+**Szenario:** Die Schriftart-Auswahl existiert nur noch im "Schrift"-Tab, nicht mehr im
+"Themes"-Tab.
+
+**Ablauf:**
+1. Auf dem "Themes"-Tab: Label "Schriftart (optional)" → 0 Treffer
+2. Auf dem "Schrift"-Tab: Label "Schriftart (optional)" → 1 Treffer
+
+**Dauer:** ~2–3s
+
+#### Test 4: `Phase12_SmallViewport_SaveButtonReachableViaScroll()`
+
+**Szenario:** Regressionstest für den Scroll-Bug — bei kleinem Viewport (800×450) muss der
+Speichern-Button beim Anlegen eines neuen Themes per Scroll erreichbar/klickbar bleiben.
+
+**Ablauf:**
+1. Viewport auf 800×450 verkleinern
+2. "+ Neu" klicken, "Speichern" klicken — Playwright scrollt beim Klick automatisch in den
+   sichtbaren Bereich; schlägt der Scroll fehl, läuft der Klick in ein Timeout
+3. Cleanup: Test-Theme löschen, Viewport zurücksetzen
+
+**Validierung:** Klick war erfolgreich (kein Timeout) → Footer verschwunden (Theme gespeichert).
+
+**Dauer:** ~2–3s
 
 ---
 
@@ -687,26 +755,32 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (22 Tests):**
+**Aktuell Grün (26 Tests):**
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 9: Theme Layout Editor (5 Tests) — Default values, sum warnings, persistence, reset, group hints
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 - ✅ Phase 11: Schriftstärke der Zellen (6 Tests) — Default values, persistence, reset, Ziel-/Score-Cell-Unabhängigkeit, gerenderte Zelle
+- ✅ Phase 12: Themes-Seite Live-Edit (4 Tests) — Live-Apply, Footer-Sichtbarkeit, Schriftart-Standort, Scroll-Fix
 
 **Implementiert (2026-09-27):**
-- 🚀 Phase 11: Schriftstärke der Zellen — FontWeightEditor E2E Tests (6 Szenarien)
+- 🚀 Phase 11: Schriftstärke der Zellen — FontEditor E2E Tests (6 Szenarien)
   - Default-Werte-Display
   - Persistierung nach Debounce-Timeout
   - Reset-Button-Funktionalität
   - Unabhängigkeit der 6 Ziel-Werte-Zellen (vormals gemeinsame `.ziel-cell`-Regel)
   - Unabhängigkeit der 3 Training/Turnier/BestOf-Punkte-Zellen (vormals gemeinsame `.score-cell`-Regel)
   - End-to-End-Rendering-Check (computed `font-weight` auf der echten Seite)
+- 🚀 Phase 12: Themes-Seite Live-Edit E2E Tests (4 Szenarien)
+  - Live-Apply: Farbänderung an bestehendem Theme ohne Speichern-Klick persistiert
+  - Footer nur beim Anlegen eines neuen Themes sichtbar
+  - Schriftart-Auswahl nur noch im Schrift-Tab (global statt pro Theme)
+  - Scroll-Fix: Speichern-Button bei kleinem Viewport erreichbar
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
 
 ---
 
-**Version:** 2.3  
+**Version:** 2.4  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 22/22 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
+**Status:** 26/26 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution

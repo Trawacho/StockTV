@@ -19,7 +19,7 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 	#region PRIVATE HELPERS
 
 	/// <summary>
-	/// Navigates to /themes and clicks the "Schriftstärke" tab.
+	/// Navigates to /themes and clicks the "Schrift" tab.
 	/// </summary>
 	private async Task NavigateToFontWeightTabAsync()
 	{
@@ -31,10 +31,30 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 		await Fixture.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 		await Task.Delay(500);
 
-		Log(CurrentPhase, "Klicke auf Tab 'Schriftstärke'");
-		var tabButton = Fixture.Page.Locator(".tab-btn", new() { HasTextString = "Schriftstärke" });
+		Log(CurrentPhase, "Klicke auf Tab 'Schrift'");
+		var tabButton = Fixture.Page.Locator(".tab-btn", new() { HasTextString = "Schrift" });
 		await tabButton.ClickAsync();
 		await Task.Delay(500);
+	}
+
+	/// <summary>
+	/// Opens an accordion group in the Schrift-Tab if it's currently collapsed. All groups except
+	/// "Schriftart" start collapsed, mirroring TableLayoutEditor's accordion pattern.
+	/// </summary>
+	private async Task OpenAccordionGroupAsync(string groupLabel)
+	{
+		if (Fixture.Page == null)
+			return;
+
+		var button = Fixture.Page.Locator(".accordion-button", new() { HasTextString = groupLabel });
+		var isCollapsed = await button.EvaluateAsync<bool>("el => el.classList.contains('collapsed')");
+
+		if (isCollapsed)
+		{
+			Log(CurrentPhase, $"Öffne Accordion-Gruppe: {groupLabel}");
+			await button.ClickAsync();
+			await Task.Delay(300);
+		}
 	}
 
 	/// <summary>
@@ -139,6 +159,10 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 			await ClickResetAllButtonAsync();
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
+			await OpenAccordionGroupAsync("Team & Kopfzeile");
+			await OpenAccordionGroupAsync("Training / Turnier / BestOf — Punkte-Zellen");
+			await OpenAccordionGroupAsync("Ziel — Werte-Zellen");
+
 			foreach (var (label, defaultValue) in AllFields)
 			{
 				await AssertFontWeightValueAsync(label, defaultValue);
@@ -169,6 +193,7 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 			await ClickResetAllButtonAsync();
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
+			await OpenAccordionGroupAsync("Ziel — Werte-Zellen");
 			await SelectFontWeightAsync("Summe", "900");
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
@@ -225,6 +250,8 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 		{
 			await NavigateToFontWeightTabAsync();
 
+			await OpenAccordionGroupAsync("Team & Kopfzeile");
+			await OpenAccordionGroupAsync("Ziel — Werte-Zellen");
 			await SelectFontWeightAsync("Team-Namen (Turnier / BestOf)", "900");
 			await SelectFontWeightAsync("Summe", "100");
 
@@ -287,6 +314,7 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 			await ClickResetAllButtonAsync();
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
+			await OpenAccordionGroupAsync("Ziel — Werte-Zellen");
 			await SelectFontWeightAsync("Summe", "900");
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
@@ -333,6 +361,7 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 			await ClickResetAllButtonAsync();
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
+			await OpenAccordionGroupAsync("Training / Turnier / BestOf — Punkte-Zellen");
 			await SelectFontWeightAsync("Eingabe (Tippbuffer)", "100");
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
@@ -376,6 +405,7 @@ public class Phase11FontWeightE2ETests : PhaseTestBase
 			await ClickResetAllButtonAsync();
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 
+			await OpenAccordionGroupAsync("Ziel — Werte-Zellen");
 			await SelectFontWeightAsync("Summe", "900");
 			await Task.Delay(DEBOUNCE_DELAY_MS);
 

@@ -8,16 +8,6 @@
     margin-bottom: 1rem;
 }
 
-.font-weight-section {
-    margin-bottom: 1.5rem;
-}
-
-.font-weight-section h4 {
-    font-size: 0.95rem;
-    color: #333;
-    margin: 0 0 0.6rem;
-}
-
 .font-weight-field {
     display: inline-flex;
     flex-direction: column;
