@@ -90,6 +90,14 @@ public abstract class BaseViewModel : IDisposable
                                           {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
 
+	/// <summary>
+	/// CSS-Custom-Properties für alle editierbaren Zeilen-/Spaltenwerte aus
+	/// UI.TableLayout, an einen Wrapper-Div gehängt und per var() in den .css-Dateien
+	/// konsumiert. Enthält absichtlich alle Variablen für alle Modi — ungenutzte
+	/// Variablen auf einer Seite sind harmlos.
+	/// </summary>
+	public string GetTableLayoutCssVariables() => _settingsService.CurrentSettings.UI.TableLayout.ToCssVariables();
+
 	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
 
 	public string LeftTeamName

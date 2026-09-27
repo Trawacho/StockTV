@@ -7,7 +7,7 @@
 .ziel-main-grid {
     color: var(--fg-color);
     display: grid;
-    grid-template-rows: 10% 90%; /* Spielername (auto) + Block (Rest) */
+    grid-template-rows: var(--layout-ziel-name-row-height, 10%) var(--layout-ziel-block-row-height, 90%); /* Spielername (auto) + Block (Rest) */
 }
 
     /* Wenn kein Spielername vorhanden: Block füllt alles */
@@ -40,7 +40,7 @@
 
 .ziel-block {
     display: grid;
-    grid-template-rows: 20% 60% 20%;
+    grid-template-rows: var(--layout-ziel-block-top-height, 20%) var(--layout-ziel-block-mid-height, 60%) var(--layout-ziel-block-bottom-height, 20%);
     height: 100%;
     width: 100%;
 }
@@ -62,7 +62,7 @@
    ============================================================ */
 
 .ziel-row-top {
-    grid-template-columns: 70% 30%;
+    grid-template-columns: var(--layout-ziel-row-top-versuche-width, 70%) var(--layout-ziel-row-top-gesamt-width, 30%);
 }
 
 .ziel-cell.ziel-versuche {
@@ -81,7 +81,7 @@
    ============================================================ */
 
 .ziel-row-mid {
-    grid-template-columns: 35% 35% 30%;
+    grid-template-columns: var(--layout-ziel-row-mid-a-width, 35%) var(--layout-ziel-row-mid-b-width, 35%) var(--layout-ziel-row-mid-c-width, 30%);
 }
 
 /* Farben über die globalen CSS-Vars — identisch zu Training/Turnier */

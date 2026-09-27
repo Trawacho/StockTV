@@ -20,6 +20,15 @@ public partial class CustomThemePage : IDisposable
 	private bool _showFontSettings = false;
 	private bool _showColorSettings = false;
 	private bool _showAnspielSettings = false;
+	private string _activeTab = "themes";
+
+	private void SetTab(string tab)
+	{
+		_activeTab = tab;
+	}
+
+	private void ShowThemesTab() => SetTab("themes");
+	private void ShowLayoutTab() => SetTab("layout");
 
 	protected override void OnInitialized()
 	{

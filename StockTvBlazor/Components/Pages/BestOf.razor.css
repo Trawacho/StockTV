@@ -2,7 +2,7 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 32% 15% 6% 15% 32%;
+    grid-template-columns: var(--layout-bestof-left-width, 32%) var(--layout-bestof-left-match-width, 15%) var(--layout-bestof-sep-width, 6%) var(--layout-bestof-right-match-width, 15%) var(--layout-bestof-right-width, 32%);
     align-items: stretch;
 }
 

@@ -424,6 +424,29 @@ public class SettingsService : BackgroundService
 
 	#endregion
 
+	#region Table Layout
+
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.TableLayout bzw. UI.MidColumnWidth.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Custom Themes.
+	/// </summary>
+	public void NotifyTableLayoutChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetTableLayout()
+	{
+		CurrentSettings.UI.TableLayout = new TableLayoutSettings();
+		CurrentSettings.UI.MidColumnWidth = 90;
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
 	#region Networking (Byte Array)
 
 	public byte[] GetSettings()
