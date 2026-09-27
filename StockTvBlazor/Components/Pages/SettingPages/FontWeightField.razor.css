@@ -1,0 +1,38 @@
+.font-weight-field {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0 1rem 1rem 0;
+    min-width: 160px;
+}
+
+.font-weight-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.info-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    text-align: center;
+    border-radius: 50%;
+    background: #ddd;
+    color: #555;
+    font-size: 0.7rem;
+    font-style: normal;
+    cursor: default;
+}
+
+.font-weight-field select {
+    width: 160px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}

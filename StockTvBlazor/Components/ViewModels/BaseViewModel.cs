@@ -98,6 +98,12 @@ public abstract class BaseViewModel : IDisposable
 	/// </summary>
 	public string GetTableLayoutCssVariables() => _settingsService.CurrentSettings.UI.TableLayout.ToCssVariables();
 
+	/// <summary>
+	/// CSS-Custom-Properties für alle editierbaren Schriftstärken aus UI.CellFontWeight,
+	/// analog zu GetTableLayoutCssVariables().
+	/// </summary>
+	public string GetCellFontWeightCssVariables() => _settingsService.CurrentSettings.UI.CellFontWeight.ToCssVariables();
+
 	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
 
 	public string LeftTeamName
