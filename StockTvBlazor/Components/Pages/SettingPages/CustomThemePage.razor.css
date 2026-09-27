@@ -1,12 +1,48 @@
+.page-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.tab-btn:hover {
+    color: #222;
+}
+
+.tab-btn.active {
+    color: #0066cc;
+    border-bottom-color: #0066cc;
+    font-weight: 600;
+}
+
+.page-root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* fest statt vererbtem %, analog .page-fullscreen */
+}
+
 .theme-page {
     display: flex;
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0; /* verhindert, dass der Flex-Item über den Container hinauswächst */
     font-family: 'Segoe UI', sans-serif;
 }
 
 .theme-sidebar {
     width: 260px;
     min-width: 200px;
+    min-height: 0; /* erlaubt .theme-list (flex:1) korrekt zu scrollen statt zu überlaufen */
     border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
@@ -78,7 +114,7 @@
 .btn-icon:hover { background: #ddd; }
 .btn-delete:hover { background: #fdd; }
 
-.theme-editor { flex: 1; padding: 1.5rem; overflow-y: auto; }
+.theme-editor { flex: 1; padding: 1.5rem 1.5rem 2rem; overflow-y: auto; }
 
 .editor-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem; }
 .editor-header h3 { margin: 0; font-size: 1.2rem; }
@@ -142,7 +178,11 @@
     color: #666;
 }
 
-.preview-section h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }
+h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: #555; }
+
+.preview-section { margin-top: 2rem; }
+
+.preview-section h4 { margin: 0 0 0.5rem; }
 
 .editor-footer { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
 

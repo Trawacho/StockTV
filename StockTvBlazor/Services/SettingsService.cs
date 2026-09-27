@@ -1,5 +1,4 @@
-﻿using StockTvBlazor.Extensions;
-using StockTvBlazor.Models;
+using StockTvBlazor.Extensions;
 using StockTvBlazor.Settings;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -32,6 +31,8 @@ public class SettingsService : BackgroundService
 
 	private readonly FileLoggerProvider _fileLoggerProvider;
 
+	private CancellationTokenSource? _saveDebounceCts;
+
 	public bool SettingsPageActive = false;
 
 	public event Action? OnSettingsChanged;
@@ -58,6 +59,28 @@ public class SettingsService : BackgroundService
 
 	public override void Dispose()
 	{
+		try
+		{
+			// Wenn noch eine Debounce läuft, stop sie
+			_saveDebounceCts?.Cancel();
+		}
+		catch (ObjectDisposedException)
+		{
+			// CTS wurde bereits disposed
+		}
+
+		try
+		{
+			// Speichere alle ausstehenden Änderungen synchron vor dem Shutdown
+			_logger.LogInformation("Saving settings during shutdown");
+			SaveSettingsInternalAsync().GetAwaiter().GetResult();
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error saving settings during shutdown");
+		}
+
+		_saveDebounceCts?.Dispose();
 		_saveSettingsQueue.Writer.TryComplete();
 		base.Dispose();
 	}
@@ -123,6 +146,31 @@ public class SettingsService : BackgroundService
 		}
 
 		s.Game.CurrentModus = newModus;
+	}
+
+	/// <summary>
+	/// Schaltet den Modus wie ChangeModus() weiter, löst aber zusätzlich OnSettingsChanged aus —
+	/// für den Modus-Schnellwechsel auf der Input-Seite (dort läuft kein ProcessKeyAsync-Aufruf,
+	/// der das sonst übernehmen würde).
+	/// </summary>
+	public void CycleModus(bool forward)
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		ChangeModus(forward);
+		NotifyChanged();
+	}
+
+	/// <summary>
+	/// Übernimmt den aktuell (per CycleModus) gewählten Modus: speichert und navigiert zur
+	/// zugehörigen Seite — analog zu ExitSettingsPage(), aber ohne SettingsPageActive zu berühren.
+	/// </summary>
+	public void ConfirmModusSelection()
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		RequestSaveSettings();
+		OnNavigationRequested?.Invoke(GetModusUrl(CurrentSettings.Game.CurrentModus));
 	}
 
 	public void ChangeTheme(bool forward)
@@ -279,7 +327,77 @@ public class SettingsService : BackgroundService
 
 	public void RequestSaveSettings()
 	{
-		_saveSettingsQueue.Writer.TryWrite(true);
+		var oldCts = _saveDebounceCts;
+		_saveDebounceCts = new CancellationTokenSource();
+		var newCts = _saveDebounceCts;
+
+		_logger.LogDebug("Settings save debounced (waiting 1s)");
+
+		_ = DebouncedSaveAsync(newCts, oldCts);
+	}
+
+	private async Task DebouncedSaveAsync(CancellationTokenSource newCts, CancellationTokenSource? oldCts)
+	{
+		try
+		{
+			// Cancle alte Debounce
+			try
+			{
+				oldCts?.Cancel();
+			}
+			catch (ObjectDisposedException)
+			{
+				// Alte CTS wurde bereits disposed, ignorieren
+			}
+
+			// Warte auf Debounce-Timeout
+			await Task.Delay(1000, newCts.Token);
+
+			// Prüfe ob diese CTS noch aktuell ist (nicht durch neue Änderung cancelled)
+			if (newCts == _saveDebounceCts)
+			{
+				_logger.LogDebug("Debounce timeout reached, triggering settings save");
+				try
+				{
+					await _saveSettingsQueue.Writer.WriteAsync(true);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Failed to write settings save request to queue");
+				}
+			}
+			else
+			{
+				_logger.LogDebug("Debounce cancelled by newer save request");
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			_logger.LogDebug("Settings save debounce cancelled (new save requested)");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error in settings save debounce");
+		}
+		finally
+		{
+			// Dispose neue CTS nur wenn sie noch aktuell ist
+			if (newCts == _saveDebounceCts)
+			{
+				try
+				{
+					newCts.Dispose();
+				}
+				catch { }
+			}
+
+			// Dispose alte CTS
+			try
+			{
+				oldCts?.Dispose();
+			}
+			catch { }
+		}
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -331,19 +449,62 @@ public class SettingsService : BackgroundService
 
 	#endregion
 
-	#region Turns
+	#region Table Layout
 
-	public async Task SaveTurnsAsync(List<Turn> turns)
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.TableLayout bzw. UI.MidColumnWidth.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Custom Themes.
+	/// </summary>
+	public void NotifyTableLayoutChanged()
 	{
-		var s = CurrentSettings;
-
-		if (s.Game.CurrentModus == GameSettings.Modus.Training)
-			return;
-
-		s.Game.Kehren.Clear();
-		s.Game.Kehren.AddRange(turns);
-
 		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetTableLayout()
+	{
+		CurrentSettings.UI.TableLayout = new TableLayoutSettings();
+		CurrentSettings.UI.MidColumnWidth = 90;
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Cell Font Weight
+
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.CellFontWeight.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Table Layout.
+	/// </summary>
+	public void NotifyCellFontWeightChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetCellFontWeight()
+	{
+		CurrentSettings.UI.CellFontWeight = new CellFontWeightSettings();
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Font Family
+
+	/// <summary>
+	/// Persistiert und published eine Änderung an UI.FontFamily (global, unabhängig vom
+	/// aktiven Theme). Die Editor-Komponente bindet direkt auf die Settings-Property und ruft
+	/// diese Methode danach auf (@bind:after), analog zum Save-Aufruf bei Cell Font Weight.
+	/// </summary>
+	public void NotifyFontFamilyChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
 	}
 
 	#endregion

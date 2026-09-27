@@ -60,7 +60,30 @@ if (Test-Path $ZipFile) {
     Remove-Item $ZipFile -Force
 }
 
-Compress-Archive -Path "$OutputDir\*" -DestinationPath $ZipFile
+# Bewusst weder Compress-Archive noch ZipFile.CreateFromDirectory: beide bauen Zip-Eintragsnamen
+# unter Windows intern ueber den lokalen Pfadtrenner "\" statt der von der ZIP-Spec verlangten "/"
+# (bekannter PowerShell-/​.NET-Bug) - Linux "unzip" quittiert das mit einer Warnung (im schlimmsten
+# Fall mit Abbruch, siehe install.sh). Deshalb hier jeden Eintrag manuell mit erzwungenem "/"
+# anlegen, genau wie es "zip -r" im echten Release-Workflow (release.yml) ohnehin tut.
+Add-Type -AssemblyName System.IO.Compression
+$zipStream = [System.IO.File]::Open($ZipFile, [System.IO.FileMode]::Create)
+$archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    Get-ChildItem -Path $OutputDir -Recurse -File | ForEach-Object {
+        $relativePath = $_.FullName.Substring($OutputDir.Length + 1).Replace([System.IO.Path]::DirectorySeparatorChar, '/')
+        $entry = $archive.CreateEntry($relativePath, [System.IO.Compression.CompressionLevel]::Optimal)
+        $entryStream = $entry.Open()
+        try {
+            $fileStream = [System.IO.File]::OpenRead($_.FullName)
+            try { $fileStream.CopyTo($entryStream) } finally { $fileStream.Dispose() }
+        } finally {
+            $entryStream.Dispose()
+        }
+    }
+} finally {
+    $archive.Dispose()
+    $zipStream.Dispose()
+}
 
 Write-Host "`nPublish: $OutputDir"
 Write-Host "Release:  $ZipFile"

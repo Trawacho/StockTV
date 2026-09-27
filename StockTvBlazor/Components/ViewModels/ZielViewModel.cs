@@ -16,6 +16,7 @@ public class ZielViewModel : IDisposable
 		_currentBewerb = _zielService.CurrentZielBewerb;
 		_currentBewerb.OnZielBewerbChanged += HandleZielBewerbChanged;
 		_zielService.OnGlobalRefresh += HandleZielBewerbChanged;
+		_settingsService.OnSettingsChanged += HandleZielBewerbChanged;
 	}
 
 	public void Dispose()
@@ -24,6 +25,7 @@ public class ZielViewModel : IDisposable
 		_disposed = true;
 		_currentBewerb.OnZielBewerbChanged -= HandleZielBewerbChanged;
 		_zielService.OnGlobalRefresh -= HandleZielBewerbChanged;
+		_settingsService.OnSettingsChanged -= HandleZielBewerbChanged;
 	}
 
 	private void HandleZielBewerbChanged() => OnViewModelChanged?.Invoke();
@@ -72,4 +74,8 @@ public class ZielViewModel : IDisposable
 		: string.Empty);
 
 	public bool InvalidInput => !_isDemoMode && _zielService.InvalidInput;
+
+	public string GetTableLayoutCssVariables() => _settingsService.CurrentSettings.UI.TableLayout.ToCssVariables();
+
+	public string GetCellFontWeightCssVariables() => _settingsService.CurrentSettings.UI.CellFontWeight.ToCssVariables();
 }

@@ -34,15 +34,32 @@
 }
 
 /* ===================================================
-   KEYPAD PANEL – GRID BASIERT
+   KEYPAD PANEL – AEUSSERER CONTAINER (stapelt keypad-grid
+   + optional team-name-editor untereinander)
 =================================================== */
 .keypad-panel {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1vh, 12px);
+    padding: clamp(6px, 1.5vh, 16px);
+    background: #222;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* ===================================================
+   KEYPAD GRID – Display + Numpad + Farbtasten.
+   Bewusst eigener, starrer Block mit fester Hoehe (siehe Orientation-Regeln
+   unten) und flex-shrink:0: so bleibt das Numpad IMMER gleich gross, auch
+   wenn der Team-Editor darunter angehaengt wird - ein zusaetzlicher
+   Grid-Track wuerde sonst die "1fr"-Zeilen (Numpad/Farbtasten) stauchen.
+=================================================== */
+.keypad-grid {
     display: grid;
     /* 1 Zeile Display + 7 Button-Reihen (ALLE gleich hoch) */
     grid-template-rows: auto repeat(7, 1fr);
     gap: clamp(6px, 1vh, 12px);
-    padding: clamp(6px, 1.5vh, 16px);
-    background: #222;
+    flex: 0 0 auto;
     min-height: 0;
     min-width: 0;
 }
@@ -66,9 +83,14 @@
         flex: 0 0 30%;
         max-width: 30%;
         min-width: 260px; /* Touch-sicher */
-        height: clamp(420px, 80vh, 700px);
         max-height: 80vh;
         align-self: flex-start;
+        overflow-y: auto;
+    }
+
+    .keypad-grid {
+        height: clamp(420px, 80vh, 700px);
+        flex-shrink: 0;
     }
 }
 
@@ -85,8 +107,13 @@
     /* Keypad hat Priorität */
     .keypad-panel {
         flex: 0 0 auto;
-        height: clamp(320px, 55vh, 65vh);
         max-height: 65vh;
+        overflow-y: auto;
+    }
+
+    .keypad-grid {
+        height: clamp(320px, 55vh, 65vh);
+        flex-shrink: 0;
     }
 
 
@@ -114,6 +141,27 @@
     height: 100%;
     user-select: none;
     -webkit-user-select: none;
+}
+
+.display.clickable {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.display.clickable.pressing::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 179, 0, 0.35);
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: modus-edit-press-fill 5s linear forwards; /* Dauer = ModusEditHoldDuration */
+}
+
+@keyframes modus-edit-press-fill {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
 }
 
 /* ===================================================
@@ -177,6 +225,12 @@
         background-color: #444;
     }
 
+.team-icon {
+    width: clamp(20px, 4vh, 32px);
+    height: clamp(20px, 4vh, 32px);
+    pointer-events: none;
+}
+
 /* ===================================================
    FARBTASTEN
 =================================================== */
@@ -216,4 +270,57 @@
 
 .btn-yellow:focus:not(:active) {
     background-color: #ffd600 !important;
+}
+
+/* ===================================================
+   TEAMNAMEN-EDITOR (BestOf)
+=================================================== */
+/* .keypad-panel scrollt bereits standardmaessig (siehe Orientation-Regeln oben) und
+   .keypad-grid ist starr (flex-shrink:0) - der Editor wird hier einfach als zweites Flex-Kind
+   angehaengt, ohne dass das Numpad davon beeinflusst wird. */
+.team-name-editor {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1vh, 10px);
+    padding-top: clamp(6px, 1vh, 10px);
+}
+
+.team-name-field {
+    display: flex;
+    gap: clamp(6px, 1vh, 10px);
+}
+
+.team-name-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(0.85rem, 2vh, 1.3rem);
+    padding: clamp(6px, 1vh, 10px);
+    border-radius: 4px;
+    border: 5px solid;
+    background: #fff;
+    color: #000;
+}
+
+.team-name-input-left {
+    border-color: var(--fg-left, #d32f2f);
+}
+
+.team-name-input-right {
+    border-color: var(--fg-right, #388e3c);
+}
+
+.team-name-clear {
+    flex: 0 0 auto;
+    width: clamp(32px, 6vh, 44px);
+    font-size: clamp(0.9rem, 2vh, 1.2rem);
+    border: none;
+    border-radius: 4px;
+    background: #444;
+    color: white;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.team-name-save {
+    height: clamp(40px, 7vh, 56px);
 }

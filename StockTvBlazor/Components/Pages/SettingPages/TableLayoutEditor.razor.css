@@ -1,0 +1,90 @@
+.layout-editor {
+    padding: 0.5rem 0;
+}
+
+.layout-editor-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.layout-group {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.layout-field {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0 1rem 1rem 0;
+    min-width: 160px;
+}
+
+.layout-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.info-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    text-align: center;
+    border-radius: 50%;
+    background: #ddd;
+    color: #555;
+    font-size: 0.7rem;
+    font-style: normal;
+    cursor: default;
+}
+
+.layout-field input[type="number"] {
+    width: 100px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.btn-cancel {
+    background: #eee;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-cancel:hover {
+    background: #ddd;
+}
+
+.preview-section {
+    margin-top: 2rem;
+}
+
+.preview-section h4 {
+    margin: 0 0 0.5rem;
+}
+
+.group-kind {
+    flex-basis: 100%;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.6rem;
+}
+
+.sum-warning {
+    flex-basis: 100%;
+    font-size: 0.85rem;
+    color: #c00;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}

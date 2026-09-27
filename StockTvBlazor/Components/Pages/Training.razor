@@ -3,7 +3,7 @@
 
 <PageTitle>Training</PageTitle>
 
-<div class="page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none;" @ref="inputRef">
+<div class="page-fullscreen" @onkeydown="HandleGlobalKeyDown" tabindex="0" style="outline:none; @ViewModel.GetTableLayoutCssVariables() @ViewModel.GetCellFontWeightCssVariables()" @ref="inputRef">
 
 	<div class="scoreboard-shell" style="@ViewModel.GetShellGridStyle()">
 		

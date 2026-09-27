@@ -2,14 +2,14 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 32% 15% 6% 15% 32%;
+    grid-template-columns: var(--layout-bestof-left-width, 32%) var(--layout-bestof-left-match-width, 15%) var(--layout-bestof-sep-width, 6%) var(--layout-bestof-right-match-width, 15%) var(--layout-bestof-right-width, 32%);
     align-items: stretch;
 }
 
     .bestof-mid-grid .left-match-points,
     .bestof-mid-grid .right-match-points {
         align-items: flex-end;
-        font-weight: 200;
+        font-weight: var(--fontweight-bestof-matchpoints, 200);
         padding-bottom: 2.5rem;
     }
 

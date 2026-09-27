@@ -12,13 +12,13 @@ public class BestOfViewModel(SettingsService settingsService, MatchService match
 			? HeaderTextBasis
 			: $"{HeaderTextBasis}    Spiel: {CurrentMatch.CurrentGame.GameNumber}    Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
 
-	public new string LeftPoints => _isDemoMode
+	public override string LeftPoints => _isDemoMode
 		? DemoData.LeftPoints
 		: (base.CurrentMatch.CurrentGame.Turns.Count == 0 && base.CurrentMatch.CurrentGame.GameNumber > 1)
 			? base.CurrentMatch.LeftPointsOverAll.ToString()
 			: base.LeftPoints;
 
-	public new string RightPoints => _isDemoMode
+	public override string RightPoints => _isDemoMode
 		? DemoData.RightPoints
 		: (base.CurrentMatch.CurrentGame.Turns.Count == 0 && base.CurrentMatch.CurrentGame.GameNumber > 1)
 			? base.CurrentMatch.RightPointsOverAll.ToString()

@@ -4,168 +4,235 @@
 
 <PageTitle>Themes verwalten</PageTitle>
 
-<div class="theme-page">
-    <div class="theme-sidebar">
-        <div class="sidebar-header">
-            <h2>Themes</h2>
-            <button class="btn-new" @onclick="CreateNewTheme">+ Neu</button>
+<div class="page-root">
+    <div class="page-tabs">
+        <button class="tab-btn @(_activeTab == "themes" ? "active" : "")" @onclick="ShowThemesTab">Themes</button>
+        <button class="tab-btn @(_activeTab == "layout" ? "active" : "")" @onclick="ShowLayoutTab">Tabellenstruktur</button>
+        <button class="tab-btn @(_activeTab == "fontweight" ? "active" : "")" @onclick="ShowFontWeightTab">Schrift</button>
+    </div>
+
+    @if (_activeTab == "layout")
+    {
+        <div class="theme-page">
+            <div class="theme-editor" style="width: 100%;">
+                <TableLayoutEditor />
+            </div>
+        </div>
+    }
+    else if (_activeTab == "fontweight")
+    {
+        <div class="theme-page">
+            <div class="theme-editor" style="width: 100%;">
+                <FontEditor />
+            </div>
+        </div>
+    }
+    else
+    {
+    <div class="theme-page">
+        <div class="theme-sidebar">
+            <div class="sidebar-header">
+                <h2>Themes</h2>
+                <button class="btn-new" @onclick="CreateNewTheme">+ Neu</button>
+            </div>
+
+            <div class="theme-list">
+                @foreach (var theme in SettingsService.CurrentSettings.UI.AllThemes)
+                {
+                    var isActive = SettingsService.CurrentSettings.UI.ActiveTheme.Id == theme.Id;
+                    var previewColor = theme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung).BackgroundColor;
+
+                    <div class="theme-item @(isActive ? "active" : "")"
+                         @onclick="() => SelectTheme(theme)">
+                        <span class="theme-dot" style="background:@previewColor; border:1px solid #888;"></span>
+                        <span class="theme-name">@theme.Name</span>
+
+                        @if (theme.IsBuiltIn)
+                        {
+                            <span class="badge">Standard</span>
+                        }
+                        else if (theme is CustomTheme customTheme && customTheme.BaseTheme.HasValue)
+                        {
+                            <span class="badge">@customTheme.BaseTheme.Value</span>
+                        }
+
+                        @if (!theme.IsBuiltIn)
+                        {
+                            <button class="btn-icon btn-delete" title="Löschen"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => DeleteTheme(theme.Id)">🗑</button>
+                        }
+                    </div>
+                }
+            </div>
         </div>
 
-        <div class="theme-list">
-            @foreach (var theme in SettingsService.CurrentSettings.UI.AllThemes)
+        <div class="theme-editor">
+            @if (_editingTheme is not null)
             {
-                var isActive = SettingsService.CurrentSettings.UI.ActiveTheme.Id == theme.Id;
-                var previewColor = theme.GetColors(SettingsService.CurrentSettings.UI.CurrentRichtung).BackgroundColor;
+                <div class="editor-header">
+                    <h3>@(_isNew ? "Neues Theme" : "Theme bearbeiten")</h3>
+                </div>
 
-                <div class="theme-item @(isActive ? "active" : "")"
-                     @onclick="() => SelectTheme(theme)">
-                    <span class="theme-dot" style="background:@previewColor; border:1px solid #888;"></span>
-                    <span class="theme-name">@theme.Name</span>
+                <div class="editor-body">
+                    <div class="field">
+                        <label>Name</label>
+                        <input type="text" @bind="_editingTheme.Name" @bind:after="ApplyLiveChangeIfExisting" placeholder="Theme-Name" />
+                    </div>
 
-                    @if (theme.IsBuiltIn)
-                    {
-                        <span class="badge">Standard</span>
-                    }
-                    else if (theme is CustomTheme customTheme && customTheme.BaseTheme.HasValue)
-                    {
-                        <span class="badge">@customTheme.BaseTheme.Value</span>
-                    }
+                    <div class="field">
+                        <label>Basis-Theme (optional)</label>
+                        <select value="@_baseThemeValue" @onchange="OnBaseThemeChanged">
+                            <option value="-1">-- Keine Basis --</option>
+                            <option value="0">Hell</option>
+                            <option value="1">Dunkel</option>
+                        </select>
+                    </div>
 
-                    @if (!theme.IsBuiltIn)
+                    <div class="accordion" style="margin-top: 1rem;">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button @(_showColorSettings ? "" : "collapsed")" type="button"
+                                        @onclick="ToggleColorSettings" aria-expanded="@(_showColorSettings.ToString().ToLower())"
+                                        aria-controls="colorSettingsCollapse">
+                                    Farben
+                                </button>
+                            </h2>
+                            @if (_showColorSettings)
+                            {
+                                <div id="colorSettingsCollapse" class="accordion-body">
+                                    <div class="color-grid">
+                        <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Werte A"     @bind-Value="_editingTheme.Colors.ForegroundA" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Werte B"     @bind-Value="_editingTheme.Colors.ForegroundB" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Teamname A"  @bind-Value="_editingTheme.Colors.TeamNameA" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Teamname B"  @bind-Value="_editingTheme.Colors.TeamNameB" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                        <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" @bind-Value:after="ApplyLiveChangeIfExisting" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="accordion" style="margin-top: 1rem;">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button @(_showAnspielSettings ? "" : "collapsed")" type="button"
+                                        @onclick="ToggleAnspielSettings" aria-expanded="@(_showAnspielSettings.ToString().ToLower())"
+                                        aria-controls="anspielSettingsCollapse">
+                                    Anspiel-Indikator Einstellungen
+                                </button>
+                            </h2>
+                            @if (_showAnspielSettings)
+                            {
+                                <div id="anspielSettingsCollapse" class="accordion-body">
+                                    <div class="field">
+                                        <label>
+                                            <input type="checkbox" @bind="_editingTheme.ShowFrameOnAnspiel" @bind:after="ApplyLiveChangeIfExisting" />
+                                            Rahmen statt Sonderzeichen anzeigen
+                                        </label>
+                                    </div>
+
+                                    @if (_editingTheme.ShowFrameOnAnspiel)
+                                    {
+                                        <div class="field">
+                                            <label>Rahmenstärke (px)</label>
+                                            <input type="number" min="1" max="10" @bind="_editingTheme.FrameWidthPx" @bind:after="ApplyLiveChangeIfExisting"
+                                                   style="max-width: 100px;" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h4>Vorschau</h4>
+                        <ThemePreview />
+                    </div>
+
+                    @if (_isNew)
                     {
-                        <button class="btn-icon btn-delete" title="Löschen"
-                                @onclick:stopPropagation="true"
-                                @onclick="() => DeleteTheme(theme.Id)">🗑</button>
+                        <div class="editor-footer">
+                            <button class="btn-cancel" @onclick="CancelEdit">Abbrechen</button>
+                            <button class="btn-save" @onclick="SaveTheme">Speichern</button>
+                        </div>
                     }
+                </div>
+            }
+            else if (_previewColors is not null)
+            {
+                <div class="editor-header">
+                    <h3>@_previewName <span class="badge">Standard</span></h3>
+                </div>
+
+                <div class="editor-body">
+                    <div class="color-grid readonly">
+                        <div class="color-field-readonly">
+                            <span class="field-label">Hintergrund</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.BackgroundColor;"></span>
+                            <span class="hex-value">@_previewColors.BackgroundColor</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Vordergrund</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ForegroundColor;"></span>
+                            <span class="hex-value">@_previewColors.ForegroundColor</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Werte A</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ForegroundA;"></span>
+                            <span class="hex-value">@_previewColors.ForegroundA</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Werte B</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ForegroundB;"></span>
+                            <span class="hex-value">@_previewColors.ForegroundB</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Teamname A</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.TeamNameA;"></span>
+                            <span class="hex-value">@_previewColors.TeamNameA</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Teamname B</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.TeamNameB;"></span>
+                            <span class="hex-value">@_previewColors.TeamNameB</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">ZielSumme Ges.</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeGesamt;"></span>
+                            <span class="hex-value">@_previewColors.ZielSummeGesamt</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">ZielSumme Einz.</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeEinzel;"></span>
+                            <span class="hex-value">@_previewColors.ZielSummeEinzel</span>
+                        </div>
+                        <div class="color-field-readonly">
+                            <span class="field-label">Ziel-Spielername</span>
+                            <span class="color-swatch-lg" style="background:@_previewColors.ZielSpielername;"></span>
+                            <span class="hex-value">@_previewColors.ZielSpielername</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h4>Vorschau</h4>
+                        <ThemePreview />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="editor-empty">
+                    <p>Wähle ein Theme aus oder erstelle ein neues.</p>
                 </div>
             }
         </div>
     </div>
-
-    <div class="theme-editor">
-        @if (_editingTheme is not null)
-        {
-            <div class="editor-header">
-                <h3>@(_isNew ? "Neues Theme" : "Theme bearbeiten")</h3>
-            </div>
-
-            <div class="editor-body">
-                <div class="field">
-                    <label>Name</label>
-                    <input type="text" @bind="_editingTheme.Name" placeholder="Theme-Name" />
-                </div>
-
-                <div class="field">
-                    <label>Basis-Theme (optional)</label>
-                    <select value="@_baseThemeValue" @onchange="OnBaseThemeChanged">
-                        <option value="-1">-- Keine Basis --</option>
-                        <option value="0">Hell</option>
-                        <option value="1">Dunkel</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Schriftart (optional)</label>
-                    <select value="@_selectedFontFamily" @onchange="OnFontFamilyChanged">
-                        <option value="">-- Standard --</option>
-                        @foreach (var font in FontService.GetAvailableFonts())
-                        {
-                            <option value="@font">@font</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="color-grid">
-                    <ColorField Label="Hintergrund"     @bind-Value="_editingTheme.Colors.BackgroundColor" />
-                    <ColorField Label="Vordergrund"     @bind-Value="_editingTheme.Colors.ForegroundColor" />
-                    <ColorField Label="Werte A"     @bind-Value="_editingTheme.Colors.ForegroundA" />
-                    <ColorField Label="Werte B"     @bind-Value="_editingTheme.Colors.ForegroundB" />
-                    <ColorField Label="Teamname A"  @bind-Value="_editingTheme.Colors.TeamNameA" />
-                    <ColorField Label="Teamname B"  @bind-Value="_editingTheme.Colors.TeamNameB" />
-                    <ColorField Label="ZielSumme Ges."  @bind-Value="_editingTheme.Colors.ZielSummeGesamt" />
-                    <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" />
-                    <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" />
-                </div>
-
-                <div class="preview-section">
-                    <h4>Vorschau</h4>
-                    <ThemePreview />
-                </div>
-
-                <div class="editor-footer">
-                    <button class="btn-cancel" @onclick="CancelEdit">Abbrechen</button>
-                    <button class="btn-save" @onclick="SaveTheme">Speichern</button>
-                </div>
-            </div>
-        }
-        else if (_previewColors is not null)
-        {
-            <div class="editor-header">
-                <h3>@_previewName <span class="badge">Standard</span></h3>
-            </div>
-
-            <div class="editor-body">
-                <div class="color-grid readonly">
-                    <div class="color-field-readonly">
-                        <span class="field-label">Hintergrund</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.BackgroundColor;"></span>
-                        <span class="hex-value">@_previewColors.BackgroundColor</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Vordergrund</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundColor;"></span>
-                        <span class="hex-value">@_previewColors.ForegroundColor</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Werte A</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundA;"></span>
-                        <span class="hex-value">@_previewColors.ForegroundA</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Werte B</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ForegroundB;"></span>
-                        <span class="hex-value">@_previewColors.ForegroundB</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Teamname A</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameA;"></span>
-                        <span class="hex-value">@_previewColors.TeamNameA</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Teamname B</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.TeamNameB;"></span>
-                        <span class="hex-value">@_previewColors.TeamNameB</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">ZielSumme Ges.</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeGesamt;"></span>
-                        <span class="hex-value">@_previewColors.ZielSummeGesamt</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">ZielSumme Einz.</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSummeEinzel;"></span>
-                        <span class="hex-value">@_previewColors.ZielSummeEinzel</span>
-                    </div>
-                    <div class="color-field-readonly">
-                        <span class="field-label">Ziel-Spielername</span>
-                        <span class="color-swatch-lg" style="background:@_previewColors.ZielSpielername;"></span>
-                        <span class="hex-value">@_previewColors.ZielSpielername</span>
-                    </div>
-                </div>
-
-                <div class="preview-section">
-                    <h4>Vorschau</h4>
-                    <ThemePreview />
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="editor-empty">
-                <p>Wähle ein Theme aus oder erstelle ein neues.</p>
-            </div>
-        }
-    </div>
+    }
 </div>
 
 @if (!string.IsNullOrEmpty(_errorMessage))

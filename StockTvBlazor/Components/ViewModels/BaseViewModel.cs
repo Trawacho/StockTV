@@ -68,15 +68,15 @@ public abstract class BaseViewModel : IDisposable
 
 	public int RightPointsSum => _isDemoMode ? DemoData.RightPointsSum : CurrentMatch.CurrentGame.RightPointsSum;
 
-	public string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
+	public virtual string LeftPoints => _isDemoMode ? DemoData.LeftPoints : CurrentMatch.CurrentGame.LeftPoints;
 
-	public string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
+	public virtual string RightPoints => _isDemoMode ? DemoData.RightPoints : CurrentMatch.CurrentGame.RightPoints;
 
 	#endregion
 
 	#region Layout
 
-	public string GetShellGridStyle()
+	public virtual string GetShellGridStyle()
 	{
 		if (!TeamNamesAvailable)
 			return "grid-template-columns: 100%;";
@@ -85,10 +85,24 @@ public abstract class BaseViewModel : IDisposable
 		var mid = s.UI.MidColumnWidth;
 		var side = (100 - mid) / 2.0;
 
-		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
-                                          {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}% 
+		return @$"grid-template-columns: {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%
+                                          {mid.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%
                                           {side.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}%;";
 	}
+
+	/// <summary>
+	/// CSS-Custom-Properties für alle editierbaren Zeilen-/Spaltenwerte aus
+	/// UI.TableLayout, an einen Wrapper-Div gehängt und per var() in den .css-Dateien
+	/// konsumiert. Enthält absichtlich alle Variablen für alle Modi — ungenutzte
+	/// Variablen auf einer Seite sind harmlos.
+	/// </summary>
+	public string GetTableLayoutCssVariables() => _settingsService.CurrentSettings.UI.TableLayout.ToCssVariables();
+
+	/// <summary>
+	/// CSS-Custom-Properties für alle editierbaren Schriftstärken aus UI.CellFontWeight,
+	/// analog zu GetTableLayoutCssVariables().
+	/// </summary>
+	public string GetCellFontWeightCssVariables() => _settingsService.CurrentSettings.UI.CellFontWeight.ToCssVariables();
 
 	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
 
@@ -120,6 +134,45 @@ public abstract class BaseViewModel : IDisposable
 				?.TeamNameRight(s.UI.CurrentRichtung == UiSettings.Richtung.Links)
 				?? string.Empty;
 		}
+	}
+
+	#endregion
+
+	#region Team Frame (Anspiel-Indikator)
+
+	/// <summary>
+	/// Prüft ob der Teamname mit >> oder << markiert ist (Anspiel-Indikator)
+	/// </summary>
+	public bool HasAnspiel(string teamName)
+	{
+		return !string.IsNullOrEmpty(teamName) && (teamName.Contains("»") || teamName.Contains("«"));
+	}
+
+	/// <summary>
+	/// Gibt die CSS-Klasse für den Teamrahmen zurück, wenn Anspiel vorhanden UND Rahmen aktiviert
+	/// </summary>
+	public string GetTeamFrameClass(string teamName)
+	{
+		var activeTheme = _settingsService.CurrentSettings.UI.ActiveTheme;
+		var showFrame = activeTheme is CustomTheme customTheme && customTheme.ShowFrameOnAnspiel;
+
+		return HasAnspiel(teamName) && showFrame ? "team-has-anspiel" : "";
+	}
+
+	/// <summary>
+	/// Gibt den bereinigten Teamnamen zurück (ohne >> oder <<)
+	/// Nur wenn Rahmen aktiviert ist, sonst werden Sonderzeichen behalten
+	/// </summary>
+	public string GetCleanTeamName(string teamName)
+	{
+		if (string.IsNullOrEmpty(teamName)) return teamName;
+
+		var activeTheme = _settingsService.CurrentSettings.UI.ActiveTheme;
+		var showFrame = activeTheme is CustomTheme customTheme && customTheme.ShowFrameOnAnspiel;
+
+		if (!showFrame) return teamName; // Sonderzeichen behalten wenn Rahmen nicht aktiv
+
+		return teamName.Replace("»", "").Replace("«", "").Trim();
 	}
 
 	#endregion

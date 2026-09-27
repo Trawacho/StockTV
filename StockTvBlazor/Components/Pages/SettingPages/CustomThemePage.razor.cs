@@ -7,7 +7,6 @@ namespace StockTvBlazor.Components.Pages.SettingPages;
 public partial class CustomThemePage : IDisposable
 {
 	[Inject] private SettingsService SettingsService { get; set; } = default!;
-	[Inject] private FontService FontService { get; set; } = default!;
 
 	private CustomTheme? _editingTheme;
 	private bool _isNew;
@@ -16,7 +15,18 @@ public partial class CustomThemePage : IDisposable
 	private string _previewName = "";
 	private bool _disposed;
 	private int _baseThemeValue = -1;
-	private string _selectedFontFamily = "";
+	private bool _showColorSettings = false;
+	private bool _showAnspielSettings = false;
+	private string _activeTab = "themes";
+
+	private void SetTab(string tab)
+	{
+		_activeTab = tab;
+	}
+
+	private void ShowThemesTab() => SetTab("themes");
+	private void ShowLayoutTab() => SetTab("layout");
+	private void ShowFontWeightTab() => SetTab("fontweight");
 
 	protected override void OnInitialized()
 	{
@@ -68,7 +78,6 @@ public partial class CustomThemePage : IDisposable
 			BaseTheme = baseTheme
 		};
 		_baseThemeValue = baseTheme.HasValue ? (int)baseTheme.Value : -1;
-		_selectedFontFamily = templateColors.FontFamily ?? "";
 	}
 
 	private void EditTheme(CustomTheme theme)
@@ -79,10 +88,11 @@ public partial class CustomThemePage : IDisposable
 			Id = theme.Id,
 			Name = theme.Name,
 			Colors = CopyColors(theme.Colors),
-			BaseTheme = theme.BaseTheme
+			BaseTheme = theme.BaseTheme,
+			ShowFrameOnAnspiel = theme.ShowFrameOnAnspiel,
+			FrameWidthPx = theme.FrameWidthPx
 		};
 		_baseThemeValue = theme.BaseTheme.HasValue ? (int)theme.BaseTheme.Value : -1;
-		_selectedFontFamily = theme.Colors.FontFamily ?? "";
 	}
 
 	private void SaveTheme()
@@ -108,7 +118,31 @@ public partial class CustomThemePage : IDisposable
 		_editingTheme = null;
 		_errorMessage = "";
 		_baseThemeValue = -1;
-		_selectedFontFamily = "";
+		_showColorSettings = false;
+		_showAnspielSettings = false;
+	}
+
+	/// <summary>
+	/// Wendet Änderungen an einem bestehenden Theme sofort an (persistiert + published).
+	/// Bei einem neuen Theme (noch nicht gespeichert) tut diese Methode bewusst nichts —
+	/// dort bleibt "Speichern" der einzige Weg, das Theme überhaupt anzulegen.
+	/// </summary>
+	private void ApplyLiveChangeIfExisting()
+	{
+		if (_isNew || _editingTheme is null) return;
+		if (string.IsNullOrWhiteSpace(_editingTheme.Name)) return;
+
+		SettingsService.AddOrUpdateCustomTheme(_editingTheme);
+	}
+
+	private void ToggleColorSettings()
+	{
+		_showColorSettings = !_showColorSettings;
+	}
+
+	private void ToggleAnspielSettings()
+	{
+		_showAnspielSettings = !_showAnspielSettings;
 	}
 
 	private void OnBaseThemeChanged(ChangeEventArgs e)
@@ -125,14 +159,8 @@ public partial class CustomThemePage : IDisposable
 			_baseThemeValue = -1;
 			_editingTheme.BaseTheme = null;
 		}
-	}
 
-	private void OnFontFamilyChanged(ChangeEventArgs e)
-	{
-		if (_editingTheme is null) return;
-
-		_selectedFontFamily = e.Value?.ToString() ?? "";
-		_editingTheme.Colors.FontFamily = _selectedFontFamily;
+		ApplyLiveChangeIfExisting();
 	}
 
 	private void DeleteTheme(Guid id)
@@ -152,7 +180,6 @@ public partial class CustomThemePage : IDisposable
 		TeamNameB = s.TeamNameB,
 		ZielSummeGesamt = s.ZielSummeGesamt,
 		ZielSummeEinzel = s.ZielSummeEinzel,
-		ZielSpielername = s.ZielSpielername,
-		FontFamily = s.FontFamily
+		ZielSpielername = s.ZielSpielername
 	};
 }

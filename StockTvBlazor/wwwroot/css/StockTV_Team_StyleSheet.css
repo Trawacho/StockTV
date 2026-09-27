@@ -8,7 +8,7 @@
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--fg-color);
-    font-weight: 400;
+    font-weight: var(--fontweight-teamname, 400);
     line-height: 1;
 }
 
@@ -23,6 +23,17 @@
     color: var(--fg-color-teamname-right);
 }
 
+/* Anspiel-Indikator: farbiger Rahmen um das Team mit Anspiel */
+.teamname-left.team-has-anspiel {
+    border: var(--team-frame-width) solid var(--fg-color-teamname-left);
+    box-sizing: border-box;
+}
+
+.teamname-right.team-has-anspiel {
+    border: var(--team-frame-width) solid var(--fg-color-teamname-right);
+    box-sizing: border-box;
+}
+
 .scoreboard-shell {
     display: grid;
     height: 100%;
@@ -33,7 +44,7 @@
 .scoreboard-center {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 13% 69% 18%;
+    grid-template-rows: var(--layout-center-row-header-height, 13%) var(--layout-center-row-mid-height, 69%) var(--layout-center-row-bottom-height, 18%);
     height: 100%;
     width: 100%;
 }
@@ -52,7 +63,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 700;
+    font-weight: var(--fontweight-header-row, 700);
     line-height: 1;
 }
 
@@ -66,15 +77,30 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-weight: 700;
     line-height: 1;
+}
+
+/* font-weight bewusst nicht auf .score-cell selbst (siehe CellFontWeightSettings):
+   die drei Bedeutungsgruppen unten sind je eigene Settings, Links/Rechts bleiben gemeinsam. */
+.left-point-sum,
+.right-point-sum {
+    font-weight: var(--fontweight-points-sum, 700);
+}
+
+.left-points,
+.right-points {
+    font-weight: var(--fontweight-current-points, 700);
+}
+
+.input-value {
+    font-weight: var(--fontweight-input-value, 700);
 }
 
 .score-bottom-grid {
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 42.5% 15% 42.5%;
+    grid-template-columns: var(--layout-bottom-left-width, 42.5%) var(--layout-bottom-mid-width, 15%) var(--layout-bottom-right-width, 42.5%);
     align-items: stretch;
 }
 
@@ -84,6 +110,6 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 47% 6% 47%;
+    grid-template-columns: var(--layout-midgrid3-left-width, 47%) var(--layout-midgrid3-mid-width, 6%) var(--layout-midgrid3-right-width, 47%);
     align-items: stretch;
 }

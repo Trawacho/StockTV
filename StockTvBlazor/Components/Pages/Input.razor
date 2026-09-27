@@ -18,13 +18,19 @@
 
     @* Zweiter Container: Das Keypad *@
     @* z-index und position:relative stellen sicher, dass dieser Bereich "oben" liegt *@
-    <div class="keypad-panel">
-        <div class="display">
+    <div class="keypad-panel @(_modusEditActive ? "modus-edit-active" : "") @(_teamNameEditActive ? "team-name-edit-active" : "")">
+        <div class="keypad-grid">
+        <div class="display @(CanEditModus ? "clickable" : "") @(_isPressingModusEdit ? "pressing" : "")"
+             @onpointerdown="OnDisplayPressStart"
+             @onpointerup="OnDisplayPressEnd"
+             @onpointerleave="OnDisplayPressEnd"
+             @onpointercancel="OnDisplayPressEnd"
+             @oncontextmenu="SuppressContextMenu" @oncontextmenu:preventDefault="true">
             @SpielModus
         </div>
 
         <div class="numbers-grid">
-            @if(SettingsService.SettingsPageActive)
+            @if(SettingsService.SettingsPageActive || _modusEditActive)
             {
                 <button type="button" @onclick='() => HandleInput("7")' class="key"></button>
                 <button type="button" @onclick='() => HandleInput("8")' class="key">up</button>
@@ -57,7 +63,18 @@
                 <button type="button" @onclick='() => HandleInput("3")' class="key">3</button>
 
                 <button type="button" @onclick='() => HandleInput("0")' class="key">0</button>
-                <button type="button" @onclick='() => HandleInput("")' class="key"></button>
+                <button type="button" @onclick='ToggleTeamNameEdit' class="key">
+                    @if (CanEditTeamNames)
+                    {
+                        <svg class="team-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                            <circle cx="9" cy="10" r="2" />
+                            <path d="M6 16c0-1.7 1.3-3 3-3s3 1.3 3 3" />
+                            <line x1="14" y1="8" x2="18" y2="8" />
+                            <line x1="14" y1="12" x2="18" y2="12" />
+                        </svg>
+                    }
+                </button>
                 <button type="button" @onclick='() => HandleInput("Enter")' class="key"></button>
             }
            
@@ -89,6 +106,28 @@
                 </button>
             </div>
         </div>
+        </div>
+
+        @if (_teamNameEditActive)
+        {
+            <div class="team-name-editor">
+                <div class="team-name-field">
+                    <input type="text" class="team-name-input team-name-input-left"
+                           @bind="_teamNameLeftInput" @bind:event="oninput"
+                           placeholder="Team links" />
+                    <button type="button" class="team-name-clear" @onclick="ClearTeamNameLeft">✕</button>
+                </div>
+                <div class="team-name-field">
+                    <input type="text" class="team-name-input team-name-input-right"
+                           @bind="_teamNameRightInput" @bind:event="oninput"
+                           placeholder="Team rechts" />
+                    <button type="button" class="team-name-clear" @onclick="ClearTeamNameRight">✕</button>
+                </div>
+                <button type="button" @onclick="SaveTeamNames" class="key btn-yellow team-name-save">
+                    Speichern
+                </button>
+            </div>
+        }
     </div>
 </div>
 
