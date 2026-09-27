@@ -425,6 +425,23 @@ public class AppFixture : IAsyncLifetime
 	}
 
 	/// <summary>
+	/// Verbindet/trennt die testeigene Subscription am PUB-Socket (Port 4748), um serverseitig
+	/// General.BlockLocalChanges zu simulieren (siehe NetMqPublisherService.OnReceiveReady):
+	/// Subscribe() => BlockLocalChanges wird true ("StockApp verbunden"), Unsubscribe() => false.
+	/// Während inaktiver Subscription werden keine Publisher-Nachrichten aufgezeichnet.
+	/// </summary>
+	public void SetPublisherSubscriptionActive(bool active)
+	{
+		if (_publisherSubscriber == null)
+			throw new InvalidOperationException("Publisher subscriber not initialized");
+
+		if (active)
+			_publisherSubscriber.Subscribe("");
+		else
+			_publisherSubscriber.Unsubscribe("");
+	}
+
+	/// <summary>
 	/// Get all recorded Publisher-Subscriber messages with the specified topic. GetResult or Alive messages can be retrieved this way.
 	/// </summary>
 	public IReadOnlyList<PublisherSubscriberMessage> GetPublisherMessagesByTopic(string topic)

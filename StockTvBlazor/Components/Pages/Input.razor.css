@@ -116,6 +116,27 @@
     -webkit-user-select: none;
 }
 
+.display.clickable {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.display.clickable.pressing::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 179, 0, 0.35);
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: modus-edit-press-fill 5s linear forwards; /* Dauer = ModusEditHoldDuration */
+}
+
+@keyframes modus-edit-press-fill {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
 /* ===================================================
    NUMBERS GRID (4 Reihen)
 =================================================== */

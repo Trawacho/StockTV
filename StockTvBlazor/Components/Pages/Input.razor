@@ -18,13 +18,18 @@
 
     @* Zweiter Container: Das Keypad *@
     @* z-index und position:relative stellen sicher, dass dieser Bereich "oben" liegt *@
-    <div class="keypad-panel">
-        <div class="display">
+    <div class="keypad-panel @(_modusEditActive ? "modus-edit-active" : "")">
+        <div class="display @(CanEditModus ? "clickable" : "") @(_isPressingModusEdit ? "pressing" : "")"
+             @onpointerdown="OnDisplayPressStart"
+             @onpointerup="OnDisplayPressEnd"
+             @onpointerleave="OnDisplayPressEnd"
+             @onpointercancel="OnDisplayPressEnd"
+             @oncontextmenu="SuppressContextMenu" @oncontextmenu:preventDefault="true">
             @SpielModus
         </div>
 
         <div class="numbers-grid">
-            @if(SettingsService.SettingsPageActive)
+            @if(SettingsService.SettingsPageActive || _modusEditActive)
             {
                 <button type="button" @onclick='() => HandleInput("7")' class="key"></button>
                 <button type="button" @onclick='() => HandleInput("8")' class="key">up</button>

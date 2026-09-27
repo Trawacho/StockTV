@@ -148,6 +148,31 @@ public class SettingsService : BackgroundService
 		s.Game.CurrentModus = newModus;
 	}
 
+	/// <summary>
+	/// Schaltet den Modus wie ChangeModus() weiter, löst aber zusätzlich OnSettingsChanged aus —
+	/// für den Modus-Schnellwechsel auf der Input-Seite (dort läuft kein ProcessKeyAsync-Aufruf,
+	/// der das sonst übernehmen würde).
+	/// </summary>
+	public void CycleModus(bool forward)
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		ChangeModus(forward);
+		NotifyChanged();
+	}
+
+	/// <summary>
+	/// Übernimmt den aktuell (per CycleModus) gewählten Modus: speichert und navigiert zur
+	/// zugehörigen Seite — analog zu ExitSettingsPage(), aber ohne SettingsPageActive zu berühren.
+	/// </summary>
+	public void ConfirmModusSelection()
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		RequestSaveSettings();
+		OnNavigationRequested?.Invoke(GetModusUrl(CurrentSettings.Game.CurrentModus));
+	}
+
 	public void ChangeTheme(bool forward)
 	{
 		var s = CurrentSettings;

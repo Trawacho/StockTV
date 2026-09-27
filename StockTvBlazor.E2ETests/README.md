@@ -1,6 +1,6 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 9, Phase 10, Phase 11, Phase 12 grün | 🚀 Phase 4–6, Phase 9, Phase 11, Phase 12 vollständig implementiert  
+**Status:** ✅ Phase 1–7, Phase 9–13 grün | 🚀 Phase 4–6, Phase 9, Phase 11–13 vollständig implementiert  
 **Datum:** 2026-09-15  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
@@ -12,7 +12,7 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (26 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests), Phase 12 (4 Tests) grün)
+# Alle Tests (27 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests), Phase 12 (4 Tests), Phase 13 grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
@@ -22,6 +22,7 @@ dotnet test StockTvBlazor.E2ETests/ --filter "Phase9"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase11"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase12"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase13"
 
 # Mit Diagnostik
 dotnet test StockTvBlazor.E2ETests/ -v diagnostic
@@ -49,8 +50,9 @@ $env:PLAYWRIGHT_HEADLESS = "false"
 ✓ Phase 10: Settings Persistence (2 Tests)
 ✓ Phase 11: Schriftstärke der Zellen (6 Tests)
 ✓ Phase 12: Themes-Seite Live-Edit (4 Tests)
+✓ Phase 13: Modus-Schnellwechsel auf /input (Press-and-Hold)
 
-Bestanden: 26, Übersprungen: 0, Dauer: ~9–11 Min
+Bestanden: 27, Übersprungen: 0, Dauer: ~9–11 Min
 ```
 
 ---
@@ -567,6 +569,49 @@ Speichern-Button beim Anlegen eines neuen Themes per Scroll erreichbar/klickbar 
 
 ---
 
+### ✅ Phase 13: Modus-Schnellwechsel auf /input — Press-and-Hold Modus-Bearbeitung
+
+**Test:** 1 Test (`Phase13_ModusQuickSwitch_DisabledWhileSubscriberConnected_ThenFullFlow`) für die neue
+Bearbeitung des `.display`-Felds auf `/input`: 5 Sekunden gedrückt halten schaltet das Numpad auf
+die von der Settings-Seite bekannte up/prev/next/down-Beschriftung um, wobei nur "4"/"6" den
+Modus durchblättern; "+" bestätigt (speichert + navigiert). Die Funktion ist bewusst nur nutzbar,
+solange kein Subscriber (StockApp) am NetMQ-PUB-Socket verbunden ist
+(`General.BlockLocalChanges`).
+
+**Ablauf:**
+1. Modus per NetMQ auf Training setzen (definierter Ausgangszustand)
+2. Zu `/input` navigieren
+3. **Deaktiviert bei verbundenem Subscriber:** Der Test-Fixture-Subscriber ist seit
+   `AppFixture.InitializeNetMQ()` dauerhaft verbunden (Ausgangszustand aller E2E-Tests) →
+   `.display` hat keine `clickable`-Klasse; 5s Halten aktiviert die Bearbeitung nicht
+4. `Fixture.SetPublisherSubscriptionActive(false)` — Test-Subscriber trennt sich testweise
+   (simuliert StockApp-Verbindungsabbau) → `.display` wird `clickable` (gepollt, bis zu 5s)
+5. Kurzer Tap (1s, < 5s) → aktiviert nichts
+6. 5s+ Halten auf `.display` → `.keypad-panel` bekommt `modus-edit-active`-Klasse, Numpad zeigt
+   up/prev/next/down statt Ziffern
+7. Ziffern-Taste (leere Position) antippen → wirkungslos (Modus + Bearbeitungsmodus unverändert)
+8. "next" (6) antippen → `.display`-Text wechselt sofort zu "BestOf", Iframe-`src` bleibt
+   unverändert (noch nicht bestätigt)
+9. "Bestätigen" (+) antippen → Bearbeitungsmodus endet, Iframe navigiert zu `/bestof`, Numpad
+   zeigt wieder Ziffern
+10. `stocktv.config.json` prüfen: `CurrentModus`/`MaxPunkteProKehre`/`MaxKehrenProSpiel`
+    korrekt persistiert (Modus=1/BestOf)
+11. Cleanup (`finally`): Test-Subscriber wird wieder verbunden
+    (`SetPublisherSubscriptionActive(true)`), damit `BlockLocalChanges=true` — der von allen
+    anderen Phasen erwartete Ausgangszustand — wiederhergestellt ist
+
+**Validierung:** CSS-Klassen (`clickable`, `modus-edit-active`), Numpad-Beschriftung, Anzeige-Text,
+Iframe-`src` vor/nach Bestätigung, Settings-Persistierung in `stocktv.config.json`.
+
+**Infrastruktur:** `AppFixture.SetPublisherSubscriptionActive(bool)` (neu) verbindet/trennt die
+testeigene Subscription am PUB-Socket (Port 4748), um serverseitig `General.BlockLocalChanges` zu
+simulieren — während der Trennung werden keine Publisher-Nachrichten (z.B. `GetResult`, `Alive`)
+aufgezeichnet, was für diesen Test unerheblich ist.
+
+**Dauer:** ~15–20s
+
+---
+
 ## 🏗️ Zentrale Logging & Infrastruktur
 
 ### TestLogWriter — Duale Protokollierung
@@ -745,7 +790,10 @@ StockTvBlazor.E2ETests/
 │       ├── Phase6Ziel2E2ETests.cs
 │       ├── Phase7SettingsE2ETests.cs
 │       ├── Phase9ThemeLayoutE2ETests.cs (5 Tests)
-│       └── Phase10SettingsPersistenceE2ETests.cs (2 Tests)
+│       ├── Phase10SettingsPersistenceE2ETests.cs (2 Tests)
+│       ├── Phase11FontWeightE2ETests.cs (6 Tests)
+│       ├── Phase12ThemesLiveEditE2ETests.cs (4 Tests)
+│       └── Phase13ModusQuickSwitchE2ETests.cs (1 Test)
 ├── TestResults/
 │   └── e2e-test-20260912-*.log (Auto-generiert nach Test-Run)
 └── StockTvBlazor.E2ETests.csproj
@@ -755,12 +803,13 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (26 Tests):**
+**Aktuell Grün (27 Tests):**
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 9: Theme Layout Editor (5 Tests) — Default values, sum warnings, persistence, reset, group hints
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 - ✅ Phase 11: Schriftstärke der Zellen (6 Tests) — Default values, persistence, reset, Ziel-/Score-Cell-Unabhängigkeit, gerenderte Zelle
 - ✅ Phase 12: Themes-Seite Live-Edit (4 Tests) — Live-Apply, Footer-Sichtbarkeit, Schriftart-Standort, Scroll-Fix
+- ✅ Phase 13: Modus-Schnellwechsel auf /input (1 Test) — Press-and-Hold-Aktivierung, Deaktivierung bei verbundenem Subscriber, Live-Vorschau, Bestätigung + Persistierung
 
 **Implementiert (2026-09-27):**
 - 🚀 Phase 11: Schriftstärke der Zellen — FontEditor E2E Tests (6 Szenarien)
@@ -775,12 +824,17 @@ StockTvBlazor.E2ETests/
   - Footer nur beim Anlegen eines neuen Themes sichtbar
   - Schriftart-Auswahl nur noch im Schrift-Tab (global statt pro Theme)
   - Scroll-Fix: Speichern-Button bei kleinem Viewport erreichbar
+- 🚀 Phase 13: Modus-Schnellwechsel auf /input E2E Test (1 Szenario)
+  - Deaktiviert, solange ein Subscriber (StockApp) am PUB-Socket verbunden ist
+  - Press-and-Hold-Aktivierung (kurzer Tap wirkungslos, 5s+ aktiviert)
+  - Numpad-Umschaltung auf up/prev/next/down, nur "4"/"6" wirksam
+  - Live-Vorschau ohne Iframe-Navigation, Bestätigung via "+" navigiert + persistiert
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
 
 ---
 
-**Version:** 2.4  
+**Version:** 2.5  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 26/26 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
+**Status:** 27/27 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
