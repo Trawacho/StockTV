@@ -4,6 +4,21 @@
 
 <PageTitle>Themes verwalten</PageTitle>
 
+<div class="page-tabs">
+    <button class="tab-btn @(_activeTab == "themes" ? "active" : "")" @onclick="ShowThemesTab">Themes</button>
+    <button class="tab-btn @(_activeTab == "layout" ? "active" : "")" @onclick="ShowLayoutTab">Tabellenstruktur</button>
+</div>
+
+@if (_activeTab == "layout")
+{
+    <div class="theme-page">
+        <div class="theme-editor" style="width: 100%;">
+            <TableLayoutEditor />
+        </div>
+    </div>
+}
+else
+{
 <div class="theme-page">
     <div class="theme-sidebar">
         <div class="sidebar-header">
@@ -231,6 +246,7 @@
         }
     </div>
 </div>
+}
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {

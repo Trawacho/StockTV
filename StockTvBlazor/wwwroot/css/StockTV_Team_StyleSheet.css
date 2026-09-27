@@ -44,7 +44,7 @@
 .scoreboard-center {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 13% 69% 18%;
+    grid-template-rows: var(--layout-center-row-header-height, 13%) var(--layout-center-row-mid-height, 69%) var(--layout-center-row-bottom-height, 18%);
     height: 100%;
     width: 100%;
 }
@@ -85,7 +85,7 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 42.5% 15% 42.5%;
+    grid-template-columns: var(--layout-bottom-left-width, 42.5%) var(--layout-bottom-mid-width, 15%) var(--layout-bottom-right-width, 42.5%);
     align-items: stretch;
 }
 
@@ -95,6 +95,6 @@
     display: grid;
     height: 100%;
     width: 100%;
-    grid-template-columns: 47% 6% 47%;
+    grid-template-columns: var(--layout-midgrid3-left-width, 47%) var(--layout-midgrid3-mid-width, 6%) var(--layout-midgrid3-right-width, 47%);
     align-items: stretch;
 }

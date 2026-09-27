@@ -1,7 +1,7 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 10 grün | 🚀 Phase 4–6 vollständig implementiert  
-**Datum:** 2026-09-13  
+**Status:** ✅ Phase 1–7, Phase 9, Phase 10 grün | 🚀 Phase 4–6, Phase 9 vollständig implementiert  
+**Datum:** 2026-09-15  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
 
@@ -12,12 +12,13 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (11 Tests: Phase 1–7, Phase 10 grün)
+# Alle Tests (16 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10 grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase1"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase7"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase9"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
 
 # Mit Diagnostik
@@ -42,9 +43,10 @@ $env:PLAYWRIGHT_HEADLESS = "false"
 ✓ Phase 5: Ziel 12 Kehren (12 Versuche pro Disziplin)
 ✓ Phase 6: Ziel2 2 Runden (6+6 Versuche pro Disziplin, automatischer Wechsel)
 ✓ Phase 7: Settings Navigation
+✓ Phase 9: Theme Layout Editor (5 Tests)
 ✓ Phase 10: Settings Persistence (2 Tests)
 
-Bestanden: 11, Übersprungen: 0, Dauer: ~6–8 Min
+Bestanden: 16, Übersprungen: 0, Dauer: ~8–10 Min
 ```
 
 ---
@@ -270,6 +272,105 @@ dotnet test StockTvBlazor.E2ETests/
 
 ---
 
+### ✅ Phase 9: Theme & Tabellenstruktur — Layout-Editor
+
+**Tests:** 5 Tests für TableLayoutEditor auf `/themes` → Tab "Tabellenstruktur"
+
+#### Test 1: `Phase9_KehreZeile_DefaultValuesDisplayCorrectly()`
+
+**Szenario:** Regressionstest für `@bind-value` zwei-Wege-Binding. Default-Werte müssen in der UI angezeigt werden.
+
+**Ablauf:**
+1. Navigiere zu `/themes`
+2. Klicke auf Tab "Tabellenstruktur"
+3. Öffne Accordion "Kehre-Zeile"
+4. Lese die drei Eingabefelder:
+   - Links: **42.5%**
+   - Mitte: **15%**
+   - Rechts: **42.5%**
+
+**Validierung:**
+- Alle drei Felder zeigen die korrekten Default-Werte an
+- Keine fehlenden/leeren Felder (Bug-Regression)
+
+**Dauer:** ~3–5s
+
+#### Test 2: `Phase9_SumWarning_AppearsWhenSumNot100_DisappearsWhenFixed()`
+
+**Szenario:** Live-Warnung bei ungültiger Summe (≠ 100%) ein-/ausblenden.
+
+**Ablauf:**
+1. Öffne "Kehre-Zeile"
+2. Ändere "Links" auf **50** → Summe wird 107,5 %
+3. Prüfe `.sum-warning` ist sichtbar und enthält Text mit "107.5"
+4. Ändere "Links" zurück auf **42.5** → Summe = 100 %
+5. Prüfe `.sum-warning` verschwindet
+
+**Validierung:**
+- Warnung erscheint **sofort** nach Wert-Änderung (via `@bind-value:after` Callback)
+- Warntext enthält die Summe: "⚠ Summe: 107.5 % — sollte 100 % sein"
+- Warnung verschwindet, sobald Summe wieder 100 % ist
+
+**Dauer:** ~5–7s
+
+#### Test 3: `Phase9_ValueChange_PersistsToConfigFile()`
+
+**Szenario:** Wert-Änderung wird nach Debounce in `stocktv.config.json` persistiert.
+
+**Ablauf:**
+1. Öffne "Punkte-Grid (Training / Turnier)"
+2. Ändere "Mitte" (MidGrid3MidWidth) auf **8**
+3. Warte `DEBOUNCE_DELAY_MS` (1100ms)
+4. Lese `_config/stocktv.config.json`
+5. Prüfe `UI.TableLayout.MidGrid3MidWidth == 8`
+6. Cleanup: setze zurück auf Default (**6**)
+
+**Validierung:**
+- Wert wird nach Debounce-Timeout in JSON geschrieben
+- `JsonDocument.Parse()` bestätigt den neuen Wert
+- Cleanup funktioniert (anderer Test wird nicht beeinflusst)
+
+**Dauer:** ~10–12s (wegen Debounce-Wartezeit)
+
+#### Test 4: `Phase9_ResetAllValues_RestoresDefaultsInUiAndFile()`
+
+**Szenario:** Button "Alle Werte zurücksetzen" stellt alle Defaults wieder her.
+
+**Ablauf:**
+1. Öffne zwei verschiedene Accordion-Gruppen
+2. Ändere 2–3 Werte in verschiedenen Gruppen
+3. Klicke Button "Alle Werte zurücksetzen"
+4. Warte Debounce-Timeout
+5. Prüfe:
+   - UI zeigt alle Default-Werte
+   - Keine `.sum-warning` mehr sichtbar irgendwo
+   - Config-Datei enthält alle Default-Werte + `MidColumnWidth == 90`
+
+**Validierung:**
+- Reset-Button funktioniert und setzt **alle** Felder zurück
+- Config-Datei wird aktualisiert
+- Keine Seiten-Effekte auf andere Tests (vollständiger Cleanup)
+
+**Dauer:** ~10–12s
+
+#### Test 5: `Phase9_GroupKindHint_DistinguishesRowsFromColumns()`
+
+**Szenario:** UX-Hint unterscheidet Zeilen-Gruppen von Spalten-Gruppen.
+
+**Ablauf:**
+1. Öffne "Kopf-/Mitte-/Fuß-Zeilen" (Zeilen-Gruppe)
+2. Prüfe `.group-kind` Text enthält **"Zeilenhöhen"**
+3. Öffne "Kehre-Zeile" (Spalten-Gruppe)
+4. Prüfe `.group-kind` Text enthält **"Spaltenbreiten"**
+
+**Validierung:**
+- Zeilen-Gruppen zeigen "↕ Zeilenhöhen — werden übereinander angeordnet..."
+- Spalten-Gruppen zeigen "↔ Spaltenbreiten — werden nebeneinander angeordnet..."
+
+**Dauer:** ~3–5s
+
+---
+
 ### ✅ Phase 10: Settings Persistence — Debounce & Speicherung
 
 **Tests:** 2 Szenarien unter Phase 10
@@ -393,9 +494,14 @@ Sorgt dafür dass:
 | 5 | Ziel 12 Kehren | ✅ | ~60–80s |
 | 6 | Ziel2 2 Runden | ✅ | ~60–80s |
 | 7 | Settings Navigation | ✅ | ~15s |
+| 9a | Default Values Display | ✅ | ~3–5s |
+| 9b | Sum Warning Display | ✅ | ~5–7s |
+| 9c | Value Persistence | ✅ | ~10–12s |
+| 9d | Reset All Button | ✅ | ~10–12s |
+| 9e | Group Kind Hints | ✅ | ~3–5s |
 | 10a | Rapid Settings Changes | ✅ | ~10s |
 | 10b | Debounce Timeout | ✅ | ~10s |
-| **TOTAL** | **Alle grünen** | ✅ | **~6–8 Min** |
+| **TOTAL** | **Alle grünen** | ✅ | **~8–10 Min** |
 
 ---
 
@@ -486,6 +592,7 @@ StockTvBlazor.E2ETests/
 │       ├── Phase5Ziel12E2ETests.cs
 │       ├── Phase6Ziel2E2ETests.cs
 │       ├── Phase7SettingsE2ETests.cs
+│       ├── Phase9ThemeLayoutE2ETests.cs (5 Tests)
 │       └── Phase10SettingsPersistenceE2ETests.cs (2 Tests)
 ├── TestResults/
 │   └── e2e-test-20260912-*.log (Auto-generiert nach Test-Run)
@@ -496,19 +603,21 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (11 Tests):**
+**Aktuell Grün (16 Tests):**
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
+- ✅ Phase 9: Theme Layout Editor (5 Tests) — Default values, sum warnings, persistence, reset, group hints
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 
-**Implementiert (2026-09-13):**
-- 🚀 Centralized Random Seed — Ein eindeutiger Seed pro Testlauf, einmalig geloggt
-- ✅ Phase 4: Ziel 6 Kehren — Invalid input handling, discipline transitions, delete functionality
-- ✅ Phase 5: Ziel 12 Kehren — Longer form, performance-validated, spaced logging
-- ✅ Phase 6: Ziel2 2 Runden — Round transitions, automatic reset, gesamtsumme tracking
+**Implementiert (2026-09-15):**
+- 🚀 Phase 9: Theme & Tabellenstruktur — TableLayoutEditor E2E Tests (5 Szenarien)
+  - Default-Werte-Display (Regression-Test für `@bind-value` Bug)
+  - Live Summen-Warnung (erscheint/verschwindet)
+  - Persistierung nach Debounce-Timeout
+  - Reset-Button-Funktionalität
+  - UX-Hinweise für Zeilen vs. Spalten
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
-- 🔜 Phase 9: Theme & erweiterte Settings
 
 ---
 

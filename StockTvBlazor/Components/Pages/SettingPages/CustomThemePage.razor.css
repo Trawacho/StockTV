@@ -1,3 +1,31 @@
+.page-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 0;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.tab-btn:hover {
+    color: #222;
+}
+
+.tab-btn.active {
+    color: #0066cc;
+    border-bottom-color: #0066cc;
+    font-weight: 600;
+}
+
 .theme-page {
     display: flex;
     height: 100%;
