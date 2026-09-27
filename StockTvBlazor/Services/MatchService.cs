@@ -39,6 +39,28 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		}
 	}
 
+	/// <summary>
+	/// Setzt die Teamnamen für den BestOf-Modus direkt über die Input-Seite (statt extern per
+	/// NetMQ). Trägt dieselben zwei Namen für die Spiele 1-7 ein, damit sie über die gesamte Serie
+	/// nicht erneut gesetzt werden müssen. leftFieldValue/rightFieldValue beziehen sich auf die
+	/// aktuell sichtbare linke/rechte Position - die Zuordnung zu TeamA/TeamB wird anhand der
+	/// aktuellen Richtung umgerechnet, damit Begegnung.TeamNameLeft/-Right sofort wieder denselben
+	/// Namen an der eingegebenen Position liefert.
+	/// </summary>
+	public void SetBestOfTeamNames(string leftFieldValue, string rightFieldValue)
+	{
+		var isLinks = _settingsService.CurrentSettings.UI.CurrentRichtung == UiSettings.Richtung.Links;
+		var teamA = isLinks ? rightFieldValue : leftFieldValue;
+		var teamB = isLinks ? leftFieldValue : rightFieldValue;
+
+		CurrentMatch.ClearBegegnungen();
+		for (int spielNummer = 1; spielNummer <= 7; spielNummer++)
+			CurrentMatch.AddBegegnung(new Begegnung(spielNummer, teamA, teamB));
+
+		// Konsistent mit ProcessKeyAsync: MatchService feuert OnGlobalRefresh nach jeder Mutation.
+		RequestGlobalRefresh();
+	}
+
 	private int _inputValue;
 
 	private int _specialCounter;

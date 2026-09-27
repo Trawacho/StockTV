@@ -1,6 +1,6 @@
 # StockTV E2E Tests — Dokumentation
 
-**Status:** ✅ Phase 1–7, Phase 9–13 grün | 🚀 Phase 4–6, Phase 9, Phase 11–13 vollständig implementiert  
+**Status:** ✅ Phase 1–7, Phase 9–14 grün | 🚀 Phase 4–6, Phase 9, Phase 11–14 vollständig implementiert  
 **Datum:** 2026-09-15  
 **Framework:** xUnit + Playwright + NetMQ  
 **Execution:** Sequenziell, ein AppFixture für alle Tests ([Collection("E2E Sequential")])
@@ -12,7 +12,7 @@
 ```powershell
 cd C:\Users\daniel\source\repos\StockTV
 
-# Alle Tests (27 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests), Phase 12 (4 Tests), Phase 13 grün)
+# Alle Tests (28 Tests: Phase 1–7, Phase 9 (5 Tests), Phase 10, Phase 11 (6 Tests), Phase 12 (4 Tests), Phase 13, Phase 14 grün)
 dotnet test StockTvBlazor.E2ETests/
 
 # Einzelne Phase
@@ -23,6 +23,7 @@ dotnet test StockTvBlazor.E2ETests/ --filter "Phase10"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase11"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase12"
 dotnet test StockTvBlazor.E2ETests/ --filter "Phase13"
+dotnet test StockTvBlazor.E2ETests/ --filter "Phase14"
 
 # Mit Diagnostik
 dotnet test StockTvBlazor.E2ETests/ -v diagnostic
@@ -51,8 +52,9 @@ $env:PLAYWRIGHT_HEADLESS = "false"
 ✓ Phase 11: Schriftstärke der Zellen (6 Tests)
 ✓ Phase 12: Themes-Seite Live-Edit (4 Tests)
 ✓ Phase 13: Modus-Schnellwechsel auf /input (Press-and-Hold)
+✓ Phase 14: Teamnamen-Eingabe auf /input (BestOf)
 
-Bestanden: 27, Übersprungen: 0, Dauer: ~9–11 Min
+Bestanden: 28, Übersprungen: 0, Dauer: ~9–11 Min
 ```
 
 ---
@@ -612,6 +614,44 @@ aufgezeichnet, was für diesen Test unerheblich ist.
 
 ---
 
+### ✅ Phase 14: Teamnamen-Eingabe auf /input — BestOf-Modus
+
+**Test:** 1 Test (`Phase14_BestOfTeamNames_FullFlow`) für den neuen Team-Button (Namensschild-Icon) im Numpad-Grid auf
+`/input` (unterhalb "2", rechts von "0", vormals funktionslos). Öffnet zwei Eingabefelder + einen
+"Speichern"-Button unterhalb der virtuellen Tastatur, mit denen die beiden Teamnamen direkt am
+Gerät gesetzt werden können — ohne auf das zentrale Verwaltungsprogramm angewiesen zu sein. Nur
+nutzbar, solange Modus=BestOf, keine Punkte im aktuellen Match erfasst sind und (wie beim
+Modus-Schnellwechsel) kein Subscriber (StockApp) am NetMQ-PUB-Socket verbunden ist.
+
+**Ablauf:**
+1. Modus per NetMQ auf BestOf setzen (Richtung=Rechts), `ResetResult` senden (frisches Match ohne
+   Kehren/Begegnungen)
+2. Test-Subscriber trennen (`SetPublisherSubscriptionActive(false)`, wie bei Phase 13) und zu
+   `/input` navigieren
+3. Team-Button (Namensschild-Icon) ist sichtbar (BestOf + 0 Punkte + kein Subscriber)
+4. Klick öffnet `.team-name-editor` mit zwei leeren Feldern
+5. Rahmenfarben der Felder entsprechen den G/R-Tasten (Richtung=Rechts → links grün, rechts rot)
+6. Beide Felder befüllen, "✕" auf dem linken Feld testen (leert nur dieses Feld), erneut
+   befüllen, "Speichern" klicken → Editor schließt, Button bleibt sichtbar (weiterhin 0 Punkte)
+7. `/bestof` zeigt die Namen korrekt links/rechts
+8. Richtung auf Links wechseln (NetMQ) → Namen spiegeln sich auf `/bestof` korrekt (verifiziert
+   die richtungsabhängige TeamA/TeamB-Umrechnung in `MatchService.SetBestOfTeamNames`); Richtung
+   danach zurück auf Rechts
+9. Erneutes Öffnen des Editors zeigt die zuvor gespeicherten Namen vorbefüllt; Schließen ohne
+   Speichern (erneuter Klick auf den Button) funktioniert gefahrlos (nichts wird vor "Speichern" committet)
+10. Eine Kehre erfassen → Button ist danach gesperrt (leer), `ResetResult` zum Aufräumen
+11. Modus auf Training wechseln → Button bleibt gesperrt (Modus-Bedingung)
+12. Cleanup (`finally`): Test-Subscriber wird wieder verbunden, wie bei Phase 13
+
+**Validierung:** Sichtbarkeit/Inhalt von `.team-name-editor`, `input`-Werte, computed
+`border-color` der Felder, Teamnamen-Anzeige auf `/bestof` (`.teamname-left`/`.teamname-right`)
+für beide `Richtung`-Werte, Guard-Verhalten (BestOf+0 Punkte+kein Subscriber) inkl. Sperrung nach
+erfasster Kehre bzw. bei Modus-Wechsel.
+
+**Dauer:** ~15–20s
+
+---
+
 ## 🏗️ Zentrale Logging & Infrastruktur
 
 ### TestLogWriter — Duale Protokollierung
@@ -793,7 +833,8 @@ StockTvBlazor.E2ETests/
 │       ├── Phase10SettingsPersistenceE2ETests.cs (2 Tests)
 │       ├── Phase11FontWeightE2ETests.cs (6 Tests)
 │       ├── Phase12ThemesLiveEditE2ETests.cs (4 Tests)
-│       └── Phase13ModusQuickSwitchE2ETests.cs (1 Test)
+│       ├── Phase13ModusQuickSwitchE2ETests.cs (1 Test)
+│       └── Phase14BestOfTeamNamesE2ETests.cs (1 Test)
 ├── TestResults/
 │   └── e2e-test-20260912-*.log (Auto-generiert nach Test-Run)
 └── StockTvBlazor.E2ETests.csproj
@@ -803,13 +844,14 @@ StockTvBlazor.E2ETests/
 
 ## 🎯 Status & Nächste Schritte
 
-**Aktuell Grün (27 Tests):**
+**Aktuell Grün (28 Tests):**
 - ✅ Phase 1–7: Training, Turnier, BestOf, Ziel (6 & 12 Kehren), Ziel2 (2 Runden), Settings Navigation
 - ✅ Phase 9: Theme Layout Editor (5 Tests) — Default values, sum warnings, persistence, reset, group hints
 - ✅ Phase 10: Rapid Changes + Debounce Timeout (2 Tests)
 - ✅ Phase 11: Schriftstärke der Zellen (6 Tests) — Default values, persistence, reset, Ziel-/Score-Cell-Unabhängigkeit, gerenderte Zelle
 - ✅ Phase 12: Themes-Seite Live-Edit (4 Tests) — Live-Apply, Footer-Sichtbarkeit, Schriftart-Standort, Scroll-Fix
 - ✅ Phase 13: Modus-Schnellwechsel auf /input (1 Test) — Press-and-Hold-Aktivierung, Deaktivierung bei verbundenem Subscriber, Live-Vorschau, Bestätigung + Persistierung
+- ✅ Phase 14: Teamnamen-Eingabe auf /input (1 Test) — BestOf-Guard, Rahmenfarben, Richtungs-Umrechnung, Vorbefüllung, Sperrung nach Kehre/Modus-Wechsel
 
 **Implementiert (2026-09-27):**
 - 🚀 Phase 11: Schriftstärke der Zellen — FontEditor E2E Tests (6 Szenarien)
@@ -829,12 +871,18 @@ StockTvBlazor.E2ETests/
   - Press-and-Hold-Aktivierung (kurzer Tap wirkungslos, 5s+ aktiviert)
   - Numpad-Umschaltung auf up/prev/next/down, nur "4"/"6" wirksam
   - Live-Vorschau ohne Iframe-Navigation, Bestätigung via "+" navigiert + persistiert
+- 🚀 Phase 14: Teamnamen-Eingabe auf /input E2E Test (1 Szenario)
+  - Guard: nur bei Modus=BestOf, 0 erfassten Punkten und getrenntem Subscriber nutzbar
+  - Rahmenfarben der Eingabefelder entsprechen den G/R-Tasten (Richtung-abhängig über CSS-Variablen)
+  - Richtungswechsel spiegelt gespeicherte Teamnamen auf /bestof korrekt (TeamA/TeamB-Umrechnung)
+  - Erneutes Öffnen zeigt vorbefüllte Namen; Schließen ohne Speichern ist gefahrlos
+  - Sperrung nach erfasster Kehre bzw. bei Modus-Wechsel weg von BestOf
 
 **Ausstehend:**
 - 🔜 Phase 8: Deployment Checklisten
 
 ---
 
-**Version:** 2.5  
+**Version:** 2.6  
 **Autor:** Comprehensive Phase-based E2E Suite  
-**Status:** 27/27 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
+**Status:** 28/28 Tests grün, Zentralisierte Seed-Verwaltung, Sequenzielle Execution
