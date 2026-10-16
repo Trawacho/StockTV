@@ -1,0 +1,203 @@
+<div class="layout-editor">
+    <div class="layout-editor-header">
+        <button class="btn-cancel" @onclick="ResetAll">Alle Werte zurücksetzen</button>
+    </div>
+
+    <div class="accordion">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("team") ? "" : "collapsed")" type="button" @onclick="ToggleTeamGroup">
+                    Team-Spalten (Turnier / BestOf)
+                </button>
+            </h2>
+            @if (ShowGroup("team"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">↔ Spaltenbreite der mittleren Spalte — die beiden Seiten teilen sich automatisch den Rest bis 100 %.</div>
+                    <div class="layout-field">
+                        <label>
+                            Team-Spalte Breite (Mitte)
+                            <span class="info-icon" title="Standard: 90%">ℹ</span>
+                        </label>
+                        <input type="number" step="1" min="0" max="100" value="@MidColumnWidth" @onchange="OnMidColumnWidthChanged" />
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("center") ? "" : "collapsed")" type="button" @onclick="ToggleCenterGroup">
+                    Kopf-/Mitte-/Fuß-Zeilen (Training / Turnier / BestOf)
+                </button>
+            </h2>
+            @if (ShowGroup("center"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: true)</div>
+                    @if (SumInvalid(Layout.CenterRowHeaderHeight, Layout.CenterRowMidHeight, Layout.CenterRowBottomHeight))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.CenterRowHeaderHeight, Layout.CenterRowMidHeight, Layout.CenterRowBottomHeight)</div>
+                    }
+                    <LayoutField Label="Kopfzeile" DefaultValue="13" @bind-Value="Layout.CenterRowHeaderHeight" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Mittelzeile" DefaultValue="69" @bind-Value="Layout.CenterRowMidHeight" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Fußzeile" DefaultValue="18" @bind-Value="Layout.CenterRowBottomHeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("bottom") ? "" : "collapsed")" type="button" @onclick="ToggleBottomGroup">
+                    Kehre-Zeile (Training / Turnier / BestOf)
+                </button>
+            </h2>
+            @if (ShowGroup("bottom"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: false)</div>
+                    @if (SumInvalid(Layout.BottomGridLeftWidth, Layout.BottomGridMidWidth, Layout.BottomGridRightWidth))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.BottomGridLeftWidth, Layout.BottomGridMidWidth, Layout.BottomGridRightWidth)</div>
+                    }
+                    <LayoutField Label="Links" DefaultValue="42.5" @bind-Value="Layout.BottomGridLeftWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Mitte" DefaultValue="15" @bind-Value="Layout.BottomGridMidWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Rechts" DefaultValue="42.5" @bind-Value="Layout.BottomGridRightWidth" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("midgrid3") ? "" : "collapsed")" type="button" @onclick="ToggleMidGrid3Group">
+                    Punkte-Grid (Training / Turnier)
+                </button>
+            </h2>
+            @if (ShowGroup("midgrid3"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: false)</div>
+                    @if (SumInvalid(Layout.MidGrid3LeftWidth, Layout.MidGrid3MidWidth, Layout.MidGrid3RightWidth))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.MidGrid3LeftWidth, Layout.MidGrid3MidWidth, Layout.MidGrid3RightWidth)</div>
+                    }
+                    <LayoutField Label="Links" DefaultValue="47" @bind-Value="Layout.MidGrid3LeftWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Mitte" DefaultValue="6" @bind-Value="Layout.MidGrid3MidWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Rechts" DefaultValue="47" @bind-Value="Layout.MidGrid3RightWidth" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("bestof") ? "" : "collapsed")" type="button" @onclick="ToggleBestOfGroup">
+                    Punkte-Grid (BestOf)
+                </button>
+            </h2>
+            @if (ShowGroup("bestof"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: false)</div>
+                    @if (SumInvalid(Layout.BestOfLeftWidth, Layout.BestOfLeftMatchWidth, Layout.BestOfSeparatorWidth, Layout.BestOfRightMatchWidth, Layout.BestOfRightWidth))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.BestOfLeftWidth, Layout.BestOfLeftMatchWidth, Layout.BestOfSeparatorWidth, Layout.BestOfRightMatchWidth, Layout.BestOfRightWidth)</div>
+                    }
+                    <LayoutField Label="Links (Punkte)" DefaultValue="32" @bind-Value="Layout.BestOfLeftWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Links (Matchpunkte)" DefaultValue="15" @bind-Value="Layout.BestOfLeftMatchWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Trenner" DefaultValue="6" @bind-Value="Layout.BestOfSeparatorWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Rechts (Matchpunkte)" DefaultValue="15" @bind-Value="Layout.BestOfRightMatchWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Rechts (Punkte)" DefaultValue="32" @bind-Value="Layout.BestOfRightWidth" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("zielmain") ? "" : "collapsed")" type="button" @onclick="ToggleZielMainGroup">
+                    Ziel — Hauptraster
+                </button>
+            </h2>
+            @if (ShowGroup("zielmain"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: true)</div>
+                    @if (SumInvalid(Layout.ZielNameRowHeight, Layout.ZielBlockRowHeight))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.ZielNameRowHeight, Layout.ZielBlockRowHeight)</div>
+                    }
+                    <LayoutField Label="Spielername-Zeile" DefaultValue="10" @bind-Value="Layout.ZielNameRowHeight" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Block-Zeile" DefaultValue="90" @bind-Value="Layout.ZielBlockRowHeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("zielblock") ? "" : "collapsed")" type="button" @onclick="ToggleZielBlockGroup">
+                    Ziel — Block-Zeilen
+                </button>
+            </h2>
+            @if (ShowGroup("zielblock"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: true)</div>
+                    @if (SumInvalid(Layout.ZielBlockTopHeight, Layout.ZielBlockMidHeight, Layout.ZielBlockBottomHeight))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.ZielBlockTopHeight, Layout.ZielBlockMidHeight, Layout.ZielBlockBottomHeight)</div>
+                    }
+                    <LayoutField Label="Zeile 1 (Versuche/Gesamt)" DefaultValue="20" @bind-Value="Layout.ZielBlockTopHeight" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Zeile 2 (Werte)" DefaultValue="60" @bind-Value="Layout.ZielBlockMidHeight" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Zeile 3 (Summe)" DefaultValue="20" @bind-Value="Layout.ZielBlockBottomHeight" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("zielrowtop") ? "" : "collapsed")" type="button" @onclick="ToggleZielRowTopGroup">
+                    Ziel — Zeile 1 (Versuche / Gesamt)
+                </button>
+            </h2>
+            @if (ShowGroup("zielrowtop"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: false)</div>
+                    @if (SumInvalid(Layout.ZielRowTopVersucheWidth, Layout.ZielRowTopGesamtWidth))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.ZielRowTopVersucheWidth, Layout.ZielRowTopGesamtWidth)</div>
+                    }
+                    <LayoutField Label="Versuche" DefaultValue="70" @bind-Value="Layout.ZielRowTopVersucheWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Gesamt" DefaultValue="30" @bind-Value="Layout.ZielRowTopGesamtWidth" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(ShowGroup("zielrowmid") ? "" : "collapsed")" type="button" @onclick="ToggleZielRowMidGroup">
+                    Ziel — Zeile 2 (Werte)
+                </button>
+            </h2>
+            @if (ShowGroup("zielrowmid"))
+            {
+                <div class="accordion-body layout-group">
+                    <div class="group-kind">@KindHint(isRow: false)</div>
+                    @if (SumInvalid(Layout.ZielRowMidAWidth, Layout.ZielRowMidBWidth, Layout.ZielRowMidCWidth))
+                    {
+                        <div class="sum-warning">@SumWarning(Layout.ZielRowMidAWidth, Layout.ZielRowMidBWidth, Layout.ZielRowMidCWidth)</div>
+                    }
+                    <LayoutField Label="Letzter Wert" DefaultValue="35" @bind-Value="Layout.ZielRowMidAWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Eingabe" DefaultValue="35" @bind-Value="Layout.ZielRowMidBWidth" @bind-Value:after="NotifyChanged" />
+                    <LayoutField Label="Gesamtpunkte" DefaultValue="30" @bind-Value="Layout.ZielRowMidCWidth" @bind-Value:after="NotifyChanged" />
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <div class="preview-section">
+        <h4>Vorschau</h4>
+        <ThemePreview />
+    </div>
+</div>

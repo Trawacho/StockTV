@@ -53,6 +53,12 @@ Details zu den Plattform-Skripten und dem GitHub Release-Prozess: siehe [CONTRIB
 
 **Zwei Bildschirme:** Pro Plattform gibt es eine Ein- und eine Zwei-Bildschirm-Variante des Kiosks — Pi: `install.sh` / `install-dual.sh`, Windows: `install-service.ps1` mit bzw. ohne `-DualDisplay` (kopiert `start-kiosk-dual.ps1` über `start-kiosk.ps1`). Die Zwei-Bildschirm-Einrichtung wird per Sentinel `.kiosk-dual` gemerkt, damit ein Update sie nicht stillschweigend entfernt.
 
+**Kritisch für Raspberry Pi:** `build/rpi/install.sh` und `build/rpi/build-image.sh` müssen **immer synchron** bleiben. Beide erstellen identische Dateien (sudoers-Regeln, Verwaltungs-Skripte). Bei jeder Änderung an einem der Skripte **MUSS** die andere Datei ebenfalls geprüft und angepasst werden:
+- Änderungen an `/etc/sudoers.d/stocktv`
+- Änderungen an `/usr/local/sbin/stocktv-*.sh` (Hostname-, Update-, Offline-Update-Skripte)
+- Paketabhängigkeiten (z.B. network-manager, curl, etc.)
+Vergessene Synchronisierung führt dazu, dass Image-Builds (GitHub Release) wichtige Dateien enthalten, die install.sh liefert – das Image funktioniert nicht auf der Setup-Seite.
+
 ---
 
 ## Tech-Stack
@@ -85,7 +91,6 @@ StockTV/
 │   │                           #   MarketingImageService, FileLogger
 │   ├── Settings/               # Settings, DeviceSettings, GameSettings, UiSettings, ColorSettings, Themes
 │   └── wwwroot/css/StockTV_AutoFit.css   # CSS-basierte Textskalierung (kein JS)
-├── BlazorAppTests/             # Temporäres Blazor-Testprojekt (kein xUnit, nicht für automatisierte Tests)
 ├── build/
 │   ├── rpi/                    # Raspberry Pi: publish-rpi.ps1, build-image.sh, install.sh, install-dual.sh
 │   ├── windows/                # Windows x64: publish-windows.ps1, install-service.ps1, start-kiosk[-dual].ps1
@@ -558,6 +563,33 @@ NetMQ läuft auf eigenem `Poller`-Thread. Bei State-Änderungen von außen (z.B.
 
 ---
 
+## Tests
+
+**⚠️ Jede Änderung an der App muss mit Tests geprüft werden — vor dem Merge. Alle Tests müssen grün sein.**
+
+### Unit Tests (`StockTvBlazor.Tests/`)
+Isolierte Tests für Komponenten, Modelle, Services und Netzwerk-Logik. Prüfen Funktionalität einzelner Bausteine (AutoFitText-Rendering, Punkte-Eingabe/Anzeige, Begegnung-Logik, NetMQ-Responses, etc.).
+
+```powershell
+dotnet test StockTvBlazor.Tests/
+```
+
+### E2E Tests (`StockTvBlazor.E2ETests/`)
+Integrationstest für alle Spielmodi (Training, Turnier, BestOf, Ziel, Ziel2) und Settings-Persistierung. Simulieren echte Benutzerszenarien mit Blazor-Komponenten und NetMQ-Nachrichten. Tests laufen sequenziell und sind voneinander abhängig.
+
+**Dokumentation:** Siehe [StockTvBlazor.E2ETests/README.md](StockTvBlazor.E2ETests/README.md) für vollständige Test-Beschreibungen. **Jeder neue Test muss dort dokumentiert sein mit Ablauf, Konfiguration und Validierungspunkten.**
+
+```powershell
+dotnet test StockTvBlazor.E2ETests/
+```
+
+**Alle Tests ausführen:**
+```powershell
+dotnet test
+```
+
+---
+
 ## Git Workflow
 
 Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für vollständige Anleitung. Kurz zusammengefasst:
@@ -577,11 +609,9 @@ main (nur Releases)
 
 ⚠️ **Wichtig:** Nach jedem Merge von `release/vX.Y` immer auch zu `develop` zurück mergen!
 
----
+⚠️ **Vor jedem Release prüfen:** `MaxOfflineUpdateUploadBytes`/`OfflineUpdateSafetyMarginBytes` in
+`StockTvBlazor/Services/UpdateService.cs` (Offline-Update-Upload auf der `/setup`-Seite) gegen die
+tatsächliche Größe von `stocktv-rpi.zip` (via `build\rpi\publish-rpi.ps1` neu bauen und Zip-/
+Publish-Ordnergröße vergleichen) und bei Bedarf anpassen, damit die Limits nicht durch App-Wachstum
+zu knapp werden.
 
-## Testprojekt & Manuelle Tests
-
-`BlazorAppTests/` ist ein **interaktives Testprojekt**, keine automatisierte Test-Suite:
-- Dient zum **manuellen Testen** von Komponenten in Isolation (`LayoutTest`, `HomeCards`, usw.)
-- Im Debug-Modus öffnet die Home-Seite automatisch alle Test-Tabs
-- **Nicht** für xUnit / Automatisierung gedacht (würde zu viele Blazor-Komplexitäten mitschleppen)

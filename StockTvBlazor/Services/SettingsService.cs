@@ -29,6 +29,19 @@ public class SettingsService : BackgroundService
 
 	private readonly SemaphoreSlim _saveGate = new(1, 1);
 
+	/// <summary>
+	/// Wartezeit, in der weitere Speicheranforderungen zu einem einzigen Schreibvorgang
+	/// zusammengefasst werden (Themes-Seite mit Live-Vorschau, Layout-Editor).
+	/// </summary>
+	private static readonly TimeSpan SaveDebounceDelay = TimeSpan.FromSeconds(1);
+
+	private readonly object _debounceLock = new();
+
+	/// <summary>Bereiche, die seit der letzten Ausfuehrung angefordert wurden und noch warten.</summary>
+	private readonly HashSet<SettingsScope> _pendingScopes = [];
+
+	private CancellationTokenSource? _saveDebounceCts;
+
 	private readonly ILogger _logger;
 
 	private readonly FileLoggerProvider _fileLoggerProvider;
@@ -80,6 +93,30 @@ public class SettingsService : BackgroundService
 
 	public override void Dispose()
 	{
+		try
+		{
+			_saveDebounceCts?.Cancel();
+		}
+		catch (ObjectDisposedException)
+		{
+			// bereits freigegeben
+		}
+
+		// Was noch auf die Wartezeit hofft, geht sonst beim Herunterfahren verloren.
+		try
+		{
+			foreach (var scope in TakePendingScopes())
+			{
+				_logger.LogInformation("Speichere {Scope}-Einstellungen vor dem Herunterfahren", scope);
+				SaveSettingsInternalAsync(scope).GetAwaiter().GetResult();
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Fehler beim Speichern der Einstellungen beim Herunterfahren");
+		}
+
+		_saveDebounceCts?.Dispose();
 		_saveSettingsQueue.Writer.TryComplete();
 		base.Dispose();
 	}
@@ -148,6 +185,31 @@ public class SettingsService : BackgroundService
 		}
 
 		s.Game.CurrentModus = newModus;
+	}
+
+	/// <summary>
+	/// Schaltet den Modus wie ChangeModus() weiter, loest aber zusaetzlich OnSettingsChanged aus -
+	/// fuer den Modus-Schnellwechsel auf der Input-Seite (dort laeuft kein ProcessKeyAsync-Aufruf,
+	/// der das sonst uebernehmen wuerde).
+	/// </summary>
+	public void CycleModus(bool forward)
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		ChangeModus(forward);
+		NotifyChanged();
+	}
+
+	/// <summary>
+	/// Uebernimmt den aktuell (per CycleModus) gewaehlten Modus: speichert und navigiert zur
+	/// zugehoerigen Seite - analog zu ExitSettingsPage(), aber ohne SettingsPageActive zu beruehren.
+	/// </summary>
+	public void ConfirmModusSelection()
+	{
+		if (CurrentSettings.General.BlockLocalChanges) return;
+
+		RequestSaveSettings();
+		OnNavigationRequested?.Invoke(GetModusUrl(CurrentSettings.Game.CurrentModus));
 	}
 
 	public void ChangeTheme(bool forward)
@@ -481,7 +543,45 @@ public class SettingsService : BackgroundService
 	/// </summary>
 	public void RequestSaveSettings(SettingsScope scope = SettingsScope.Config)
 	{
-		_saveSettingsQueue.Writer.TryWrite(scope);
+		CancellationTokenSource cts;
+
+		lock (_debounceLock)
+		{
+			_pendingScopes.Add(scope);
+
+			// Die vorige Wartezeit verfaellt; sie wird absichtlich nur abgebrochen und erst in
+			// Dispose() freigegeben, weil ihre Aufgabe noch auf das Token wartet.
+			_saveDebounceCts?.Cancel();
+			cts = _saveDebounceCts = new CancellationTokenSource();
+		}
+
+		_ = FlushAfterDelayAsync(cts);
+	}
+
+	private async Task FlushAfterDelayAsync(CancellationTokenSource cts)
+	{
+		try
+		{
+			await Task.Delay(SaveDebounceDelay, cts.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// Eine neuere Anforderung hat die Wartezeit neu gestartet.
+			return;
+		}
+
+		foreach (var scope in TakePendingScopes())
+			_saveSettingsQueue.Writer.TryWrite(scope);
+	}
+
+	private SettingsScope[] TakePendingScopes()
+	{
+		lock (_debounceLock)
+		{
+			var scopes = _pendingScopes.ToArray();
+			_pendingScopes.Clear();
+			return scopes;
+		}
 	}
 
 	/// <summary>
@@ -514,6 +614,66 @@ public class SettingsService : BackgroundService
 				_logger.LogError("Fehler beim Speichern ({Scope}): {Msg}", scope, ex.Message);
 			}
 		}
+	}
+
+	#endregion
+
+	#region Table Layout
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.TableLayout bzw. UI.MidColumnWidth.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Custom Themes.
+	/// </summary>
+	public void NotifyTableLayoutChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetTableLayout()
+	{
+		CurrentSettings.UI.TableLayout = new TableLayoutSettings();
+		CurrentSettings.UI.MidColumnWidth = 90;
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Cell Font Weight
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.CellFontWeight.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Table Layout.
+	/// </summary>
+	public void NotifyCellFontWeightChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetCellFontWeight()
+	{
+		CurrentSettings.UI.CellFontWeight = new CellFontWeightSettings();
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Font Family
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.FontFamily (global, unabhaengig vom
+	/// aktiven Theme). Die Editor-Komponente bindet direkt auf die Settings-Property und ruft
+	/// diese Methode danach auf (@bind:after), analog zum Save-Aufruf bei Cell Font Weight.
+	/// </summary>
+	public void NotifyFontFamilyChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
 	}
 
 	#endregion

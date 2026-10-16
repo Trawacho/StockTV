@@ -11,5 +11,4 @@ public class ColorSettings
 	public string ZielSummeGesamt { get; set; } = "#8b008b";
 	public string ZielSummeEinzel { get; set; } = "#008b8b";
 	public string ZielSpielername { get; set; } = "#8b008b";
-	public string FontFamily { get; set; } = "";
 }

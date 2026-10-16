@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using StockTvBlazor.Services;
 
 namespace StockTvBlazor.Components.Pages.SettingPages;
@@ -31,6 +32,10 @@ public partial class SetupPage : IDisposable
 	// System angesprochen werden kann.
 	private bool HasRecordedValues => GameStateGuard.HasRecordedValues(MatchService, ZielService);
 
+	private enum SetupSection { Hostname, Netzwerk, Update, Neustart }
+
+	private SetupSection _activeSection = SetupSection.Hostname;
+
 	private readonly CancellationTokenSource _cts = new();
 
 	private string _hostnameText = "";
@@ -57,6 +62,12 @@ public partial class SetupPage : IDisposable
 	private bool _isCheckingUpdate;
 	private bool _isUpdating;
 
+	private bool _isUploadingOfflinePackage;
+	private bool _offlineUpdateReady;
+	private string _offlineUpdateErrorMessage = "";
+	private string _offlineUpdateSuccessMessage = "";
+	private bool _isStartingOfflineUpdate;
+
 	private bool _rebootArmed;
 	private bool _isRebooting;
 	private string _rebootErrorMessage = "";
@@ -70,6 +81,12 @@ public partial class SetupPage : IDisposable
 
 		if (!PlatformInfo.IsRaspberryPi || HasRecordedValues)
 			return;
+
+		// Ein zuvor hochgeladenes, aber nie gestartetes Offline-Update-Paket wird bei jedem
+		// Seitenaufruf verworfen - der Bereitschaftszustand (_offlineUpdateReady) lebt bewusst nur
+		// innerhalb dieser Komponenteninstanz, damit nach einem Reload immer ein frischer Upload
+		// noetig ist statt stillschweigend eine evtl. Tage alte Datei anzuwenden.
+		UpdateService.ClearStaleOfflineUpdatePackage();
 
 		_hostnameText = NetworkConfig.GetHostname();
 
@@ -323,6 +340,61 @@ public partial class SetupPage : IDisposable
 		finally
 		{
 			_isUpdating = false;
+		}
+	}
+
+	private async Task OnOfflinePackageSelectedAsync(InputFileChangeEventArgs e)
+	{
+		_offlineUpdateErrorMessage = "";
+		_offlineUpdateSuccessMessage = "";
+		_offlineUpdateReady = false;
+
+		var file = e.File;
+
+		_isUploadingOfflinePackage = true;
+		using var uploadTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+		uploadTimeoutCts.CancelAfter(UpdateService.OfflineUpdateUploadTimeout);
+		try
+		{
+			await using var stream = file.OpenReadStream(UpdateService.MaxOfflineUpdateUploadBytes, uploadTimeoutCts.Token);
+			var result = await UpdateService.SaveOfflineUpdatePackageAsync(stream, file.Size, uploadTimeoutCts.Token);
+			if (result.Success)
+			{
+				_offlineUpdateReady = true;
+				_offlineUpdateSuccessMessage = $"'{file.Name}' geprüft und bereit zur Installation.";
+			}
+			else
+			{
+				_offlineUpdateErrorMessage = result.ErrorMessage ?? "Die Datei konnte nicht verarbeitet werden.";
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogWarning(ex, "Offline-Update-Datei konnte nicht hochgeladen werden");
+			_offlineUpdateErrorMessage = "Fehler beim Hochladen: " + ex.Message;
+		}
+		finally
+		{
+			_isUploadingOfflinePackage = false;
+		}
+	}
+
+	private async Task StartOfflineUpdateAsync()
+	{
+		_isStartingOfflineUpdate = true;
+		try
+		{
+			var result = await UpdateService.StartOfflineUpdateAsync(_cts.Token);
+			_updateStartedMessage = result.Success
+				? "Offline-Update gestartet — die Seite lädt sich nicht mehr automatisch neu, bitte in ca. 1 Minute manuell neu laden."
+				: $"Offline-Update konnte nicht gestartet werden: {result.ErrorMessage}";
+
+			if (result.Success)
+				_offlineUpdateReady = false;
+		}
+		finally
+		{
+			_isStartingOfflineUpdate = false;
 		}
 	}
 

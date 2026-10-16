@@ -31,7 +31,7 @@
 
 :root .seperator {
     color: var(--fg-color);
-    font-weight: 600;
+    font-weight: var(--fontweight-separator, 600);
     transform: scaleY(1.5) scaleX(1.5);
 }
 

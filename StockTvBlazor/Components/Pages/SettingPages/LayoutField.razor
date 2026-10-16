@@ -1,0 +1,7 @@
+<div class="layout-field">
+    <label>
+        @Label
+        <span class="info-icon" title="Standard: @DefaultDisplay">ℹ</span>
+    </label>
+    <input type="number" step="0.5" min="0" max="100" @bind-value="Value" @bind-value:after="OnValueChanged" />
+</div>

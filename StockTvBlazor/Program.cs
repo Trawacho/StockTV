@@ -44,8 +44,13 @@ builder.Logging.AddFileLogger();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-	.AddInteractiveServerComponents();
+	.AddInteractiveServerComponents()
+	// Blazor-Server-Standardlimit (~32 KB) reicht nicht fuer den manuellen Offline-Update-Upload
+	// auf der Setup-Seite (siehe UpdateService.SaveOfflineUpdatePackageAsync) - Wert muss mit
+	// UpdateService.MaxOfflineUpdateUploadBytes uebereinstimmen.
+	.AddHubOptions(o => o.MaximumReceiveMessageSize = StockTvBlazor.Services.UpdateService.MaxOfflineUpdateUploadBytes);
 
+builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
 builder.Services.AddSingleton<MatchService>();
@@ -169,12 +174,10 @@ if (app.Environment.IsDevelopment())
 else
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	app.UseHsts();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

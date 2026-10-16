@@ -67,8 +67,7 @@ public static class ColorSettingsFactory
 			TeamNameB = colors.TeamNameA,        // Swap
 			ZielSummeGesamt = colors.ZielSummeGesamt,
 			ZielSummeEinzel = colors.ZielSummeEinzel,
-			ZielSpielername = colors.ZielSpielername,
-			FontFamily = colors.FontFamily
+			ZielSpielername = colors.ZielSpielername
 		};
 	}
 }

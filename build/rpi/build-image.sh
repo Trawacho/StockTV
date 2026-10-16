@@ -319,6 +319,108 @@ apt-get clean
 rm -rf /var/lib/apt/lists/*
 CHROOT
 
+# ---- 8. sudoers-Regeln und Verwaltungs-Skripte erstellen (nach chroot) ----
+echo "Installiere sudoers-Regel und Verwaltungs-Skripte..."
+
+# sudoers-Datei
+mkdir -p "$MNT/etc/sudoers.d"
+cat > /tmp/stocktv-sudoers <<'SUDOERS_EOF'
+# Managed by StockTV build-image.sh - manuelle Aenderungen werden beim naechsten Update ueberschrieben.
+Cmnd_Alias STOCKTV_NM_READ = /usr/bin/nmcli -t -f DEVICE\,TYPE\,STATE\,CONNECTION device status, \
+    /usr/bin/nmcli -t -f * device show *, \
+    /usr/bin/nmcli -t -f * con show *
+
+Cmnd_Alias STOCKTV_NM_WRITE = /usr/bin/nmcli con mod * ipv4.method manual ipv4.addresses * ipv4.gateway * ipv4.dns *, \
+    /usr/bin/nmcli con mod * ipv4.method auto, \
+    /usr/bin/nmcli con up *
+
+Cmnd_Alias STOCKTV_HOSTNAME = /usr/local/sbin/stocktv-set-hostname.sh *
+
+Cmnd_Alias STOCKTV_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-update.sh
+
+Cmnd_Alias STOCKTV_OFFLINE_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-offline-update.sh
+
+Cmnd_Alias STOCKTV_REBOOT = /usr/bin/systemctl reboot
+
+pi ALL=(root) NOPASSWD: STOCKTV_NM_READ, STOCKTV_NM_WRITE, STOCKTV_HOSTNAME, STOCKTV_UPDATE, STOCKTV_OFFLINE_UPDATE, STOCKTV_REBOOT
+SUDOERS_EOF
+install -m 0440 -o root -g root /tmp/stocktv-sudoers "$MNT/etc/sudoers.d/stocktv"
+rm -f /tmp/stocktv-sudoers
+
+# Hostname-Skript
+mkdir -p "$MNT/usr/local/sbin"
+cat > /tmp/stocktv-set-hostname.sh <<'HOSTNAME_SCRIPT_EOF'
+#!/bin/bash
+set -e
+NEW_HOSTNAME="$1"
+
+if ! [[ "$NEW_HOSTNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$ ]]; then
+    echo "Ungueltiger Hostname: $NEW_HOSTNAME" >&2
+    exit 1
+fi
+
+nmcli general hostname "$NEW_HOSTNAME"
+
+if grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts; then
+    sed -i "s/^127\.0\.1\.1[[:space:]]\+.*/127.0.1.1\t$NEW_HOSTNAME/" /etc/hosts
+else
+    echo -e "127.0.1.1\t$NEW_HOSTNAME" >> /etc/hosts
+fi
+HOSTNAME_SCRIPT_EOF
+install -m 0755 -o root -g root /tmp/stocktv-set-hostname.sh "$MNT/usr/local/sbin/stocktv-set-hostname.sh"
+rm -f /tmp/stocktv-set-hostname.sh
+
+# Update-Skript
+cat > /tmp/stocktv-run-update.sh <<'UPDATE_SCRIPT_EOF'
+#!/bin/bash
+set -e
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash
+UPDATE_SCRIPT_EOF
+install -m 0755 -o root -g root /tmp/stocktv-run-update.sh "$MNT/usr/local/sbin/stocktv-run-update.sh"
+rm -f /tmp/stocktv-run-update.sh
+
+# Offline-Update-Skript
+cat > /tmp/stocktv-run-offline-update.sh <<'OFFLINE_UPDATE_SCRIPT_EOF'
+#!/bin/bash
+set -e
+INSTALL_DIR="/opt/stocktv"
+SERVICE_NAME="stocktv"
+UPLOAD_ZIP="$INSTALL_DIR/_update/upload.zip"
+
+if [ ! -f "$UPLOAD_ZIP" ]; then
+    echo "Keine Offline-Update-Datei gefunden: $UPLOAD_ZIP" >&2
+    exit 1
+fi
+
+TMPDIR=$(mktemp -d -p "$INSTALL_DIR/_update")
+trap 'rm -rf "$TMPDIR"; rm -f "$UPLOAD_ZIP"' EXIT
+
+echo "Entpacke Offline-Update..."
+set +e
+unzip -q "$UPLOAD_ZIP" -d "$TMPDIR/app"
+UNZIP_EXIT=$?
+set -e
+if [ "$UNZIP_EXIT" -gt 1 ]; then
+    echo "Fehler beim Entpacken (unzip Exit-Code $UNZIP_EXIT)" >&2
+    exit 1
+fi
+
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+fi
+
+EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null | tr -d '\r')
+APP_USER="${EXISTING_SERVICE_USER:-root}"
+
+cp -r "$TMPDIR/app/"* "$INSTALL_DIR/"
+chmod +x "$INSTALL_DIR/StockTvBlazor"
+chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
+
+systemctl start "$SERVICE_NAME" 2>/dev/null || true
+OFFLINE_UPDATE_SCRIPT_EOF
+install -m 0755 -o root -g root /tmp/stocktv-run-offline-update.sh "$MNT/usr/local/sbin/stocktv-run-offline-update.sh"
+rm -f /tmp/stocktv-run-offline-update.sh
+
 # ---- 8. Cleanup im Image ----------------------------------
 echo "Finalisiere Image..."
 rm -f "$MNT/usr/bin/qemu-aarch64-static"

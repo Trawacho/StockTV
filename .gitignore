@@ -379,3 +379,12 @@ build/linux/stocktv-linux-x64.zip
 
 # Claude Ordner
 .claude/
+
+# E2E Test-Logdateien
+StockTvBlazor.E2ETests/TestResults/
+
+# Playwright MCP - Sitzungs-Snapshots/Logs, nur lokales Debugging
+.playwright-mcp/
+
+# MCP-Server-Konfiguration ist eine persoenliche Dev-Tool-Einstellung, kein Projekt-Dependency
+.mcp.json
