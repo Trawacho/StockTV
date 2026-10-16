@@ -32,7 +32,7 @@ public sealed class GameStateStore(ILogger<GameStateStore> logger) : BackgroundS
 
 	private readonly Channel<bool> _saveQueue = Channel.CreateUnbounded<bool>();
 
-	private Func<GameStateFile>? _snapshotFactory;
+	private Func<GameStateFile?>? _snapshotFactory;
 
 	/// <summary>
 	/// Waehrend des Wiederherstellens unterdrueckt, sonst loesen die Aenderungsereignisse der
@@ -45,9 +45,10 @@ public sealed class GameStateStore(ILogger<GameStateStore> logger) : BackgroundS
 
 	/// <summary>
 	/// Meldet die Quelle fuer kuenftige Schnappschuesse an. Ab hier fuehrt jedes
-	/// <see cref="RequestSave"/> zu einem Schreibvorgang.
+	/// <see cref="RequestSave"/> zu einem Schreibvorgang. Liefert die Quelle <c>null</c>, wird
+	/// nichts geschrieben und die vorhandene Datei bleibt unberuehrt (Modus Training).
 	/// </summary>
-	public void StartAutoSave(Func<GameStateFile> snapshotFactory)
+	public void StartAutoSave(Func<GameStateFile?> snapshotFactory)
 		=> _snapshotFactory = snapshotFactory;
 
 	/// <summary>
@@ -70,8 +71,8 @@ public sealed class GameStateStore(ILogger<GameStateStore> logger) : BackgroundS
 			{
 				try
 				{
-					if (_snapshotFactory is { } factory)
-						await SaveAsync(factory());
+					if (_snapshotFactory?.Invoke() is { } snapshot)
+						await SaveAsync(snapshot);
 				}
 				catch (Exception ex)
 				{
@@ -163,6 +164,14 @@ public sealed class GameStateStore(ILogger<GameStateStore> logger) : BackgroundS
 	/// </summary>
 	private static bool IsApplicable(GameStateFile state, Settings.Settings settings, out string reason)
 	{
+		// Training ist freies Spiel ohne Spielzaehlung und wird nicht gesichert. Eine Datei aus
+		// einer aelteren Fassung, die es doch tat, soll nicht ins Training zurueckkommen.
+		if (state.Modus == GameSettings.Modus.Training || settings.Game.CurrentModus == GameSettings.Modus.Training)
+		{
+			reason = "im Modus Training wird kein Spielstand gesichert oder geladen";
+			return false;
+		}
+
 		var age = DateTimeOffset.UtcNow - state.SavedAtUtc;
 
 		if (age > MaxAge)

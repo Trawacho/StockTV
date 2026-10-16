@@ -142,13 +142,24 @@ using (var scope = app.Services.CreateScope())
 	}
 
 	// Erst nach dem Wiederherstellen anmelden, sonst schreibt das Wiederherstellen selbst.
-	gameStateStore.StartAutoSave(() => new GameStateFile
+	// Im Training wird nichts gesichert (null = Schreibvorgang ueberspringen, Datei bleibt liegen):
+	// freies Spiel ohne Spielzaehlung, und ein kurzer Abstecher ins Training soll den Stand des
+	// eigentlichen Spielmodus nicht loeschen.
+	gameStateStore.StartAutoSave(() =>
 	{
-		SavedAtUtc = DateTimeOffset.UtcNow,
-		BahnNummer = settingsService.CurrentSettings.General.BahnNummer,
-		Modus = settingsService.CurrentSettings.Game.CurrentModus,
-		Match = matchService.CurrentMatch.CreateSnapshot(),
-		Ziel = zielService.CurrentZielBewerb.CreateSnapshot()
+		var current = settingsService.CurrentSettings;
+
+		if (current.Game.CurrentModus == GameSettings.Modus.Training)
+			return null;
+
+		return new GameStateFile
+		{
+			SavedAtUtc = DateTimeOffset.UtcNow,
+			BahnNummer = current.General.BahnNummer,
+			Modus = current.Game.CurrentModus,
+			Match = matchService.CurrentMatch.CreateSnapshot(),
+			Ziel = zielService.CurrentZielBewerb.CreateSnapshot()
+		};
 	});
 
 	// Jede Aenderung an Spielstand oder Zielbewerb sichern. Ueber die Ereignisse der Modelle und

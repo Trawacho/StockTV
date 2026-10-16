@@ -780,6 +780,16 @@ Alle drei Phasen sind grün und in Produktion. Siehe [Phase 4](#-phase-4-ziel--6
 - Debounce-Timeout: 1100ms — bei schnellen Tests `await Task.Delay(1200)` nutzen
 - Logs in `TestResults/e2e-test-*.log` prüfen
 
+### ❌ Phase 13/14 schlagen fehl: Subscriber trennen hat keine Wirkung
+
+Auf dem Rechner läuft **StockApp.UI.exe** (zentrale Verwaltung). Sie findet die Test-Instanz per mDNS
+und verbindet sich auf 4747/4748 als zusätzlicher Abonnent. Die App sperrt lokale Eingaben
+(`BlockLocalChanges`), solange mindestens ein Abonnent verbunden ist — der Test trennt aber nur
+seinen eigenen. Folge: in Phase 13 wird `.display` nie `clickable`, in Phase 14 fehlt der Team-Button.
+
+**Lösung:** StockApp vor dem Testlauf beenden. Kontrolle: `netstat -ano | findstr ":4748"` darf nur
+Verbindungen von `127.0.0.1` zeigen.
+
 ### ❌ "Playwright executable doesn't exist"
 
 ```powershell
@@ -791,7 +801,7 @@ cd StockTvBlazor.E2ETests\bin\Debug\net10.0
 
 ## ✅ Checkliste vor Tests
 
-- [ ] Keine StockTV Prozesse laufen
+- [ ] Keine StockTV Prozesse laufen (auch **StockApp.UI.exe** nicht, siehe Troubleshooting)
 - [ ] Ports 5001, 4747, 4748 frei
 - [ ] .NET 10.0 SDK installiert
 - [ ] `dotnet restore` ausgeführt

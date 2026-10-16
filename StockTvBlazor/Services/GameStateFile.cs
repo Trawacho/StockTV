@@ -30,7 +30,7 @@ public sealed class GameStateFile
 	public ZielState Ziel { get; set; } = new();
 }
 
-/// <summary>Spielstand der Modi Training, BestOf und Turnier.</summary>
+/// <summary>Spielstand der Modi BestOf und Turnier (Training wird nicht gesichert).</summary>
 public sealed class MatchState
 {
 	public List<GameState> Games { get; set; } = [];
