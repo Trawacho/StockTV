@@ -382,8 +382,8 @@ public abstract class PhaseTestBase
 	}
 
 	/// <summary>
-	/// Validates that match state is correctly persisted in match-state.json file.
-	/// Checks that all turns match expected values and count.
+	/// Validates that match state is correctly persisted in the "Match" section of stocktv.state.json.
+	/// Checks that all turns (over all games, ordered by game number) match expected values and count.
 	/// Waits for the expected turn count to appear (handles async write delays).
 	/// </summary>
 	protected async Task ValidateMatchStatePersistenceAsync(
@@ -394,16 +394,15 @@ public abstract class PhaseTestBase
 		var (expectedTurnsLeft, expectedTurnsRight) = lastGame.Value;
 		int currentGameTurns = expectedTurnsLeft.Count;
 
-		Log(CurrentPhase, "Validierung der match-state.json Persistierung...");
+		Log(CurrentPhase, "Validierung der stocktv.state.json Persistierung (Match)...");
 
-		var matchStateJson = await Fixture.ReadLocalFileAsync("match-state.json", json =>
+		var matchStateJson = await Fixture.ReadLocalFileAsync(GameStateFileName, json =>
 		{
 			try
 			{
 				using var doc = System.Text.Json.JsonDocument.Parse(json);
-				return doc.RootElement.TryGetProperty("Turns", out var turns)
-					&& turns.ValueKind == System.Text.Json.JsonValueKind.Array
-					&& turns.GetArrayLength() == totalExpectedTurns;
+				return TryGetPersistedTurns(doc.RootElement, out var turns)
+					&& turns.Count == totalExpectedTurns;
 			}
 			catch (System.Text.Json.JsonException)
 			{
@@ -414,14 +413,14 @@ public abstract class PhaseTestBase
 		using var jsonDoc = System.Text.Json.JsonDocument.Parse(matchStateJson);
 		var root = jsonDoc.RootElement;
 
-		if (!root.TryGetProperty("Turns", out var turnsArray) || turnsArray.ValueKind != System.Text.Json.JsonValueKind.Array)
+		if (!TryGetPersistedTurns(root, out var turnsArray))
 		{
-			Log(CurrentPhase, $"'Turns' Array nicht gefunden in match-state.json", LogSymbol.Warning);
-			Assert.Fail("Turns array not found in match-state.json");
+			Log(CurrentPhase, $"'Match.Games[].Turns' nicht gefunden in {GameStateFileName}", LogSymbol.Warning);
+			Assert.Fail($"Match.Games[].Turns not found in {GameStateFileName}");
 			return;
 		}
 
-		int actualTurnCount = turnsArray.GetArrayLength();
+		int actualTurnCount = turnsArray.Count;
 		Assert.Equal(totalExpectedTurns, actualTurnCount);
 
 		int startIndex = actualTurnCount - currentGameTurns;
@@ -435,7 +434,78 @@ public abstract class PhaseTestBase
 			Assert.Equal(expectedTurnsRight[i], pointsRight);
 		}
 
-		Log(CurrentPhase, $"match-state.json validiert: {actualTurnCount} Kehren korrekt persistiert", LogSymbol.Check);
+		Log(CurrentPhase, $"{GameStateFileName} validiert: {actualTurnCount} Kehren korrekt persistiert", LogSymbol.Check);
+	}
+
+	/// <summary>Name des Spielstands in <c>_config/</c> (Match und Ziel in einer Datei).</summary>
+	protected const string GameStateFileName = "stocktv.state.json";
+
+	/// <summary>
+	/// Liest alle Kehren aus <c>Match.Games[].Turns</c> in Spielreihenfolge (nach <c>GameNumber</c>)
+	/// als flache Liste. Der Aufbau entspricht <c>GameStateFile</c> der App.
+	/// </summary>
+	private static bool TryGetPersistedTurns(System.Text.Json.JsonElement root, out List<System.Text.Json.JsonElement> turns)
+	{
+		turns = [];
+
+		if (!root.TryGetProperty("Match", out var match)
+			|| !match.TryGetProperty("Games", out var games)
+			|| games.ValueKind != System.Text.Json.JsonValueKind.Array)
+			return false;
+
+		foreach (var game in games.EnumerateArray().OrderBy(g => g.GetProperty("GameNumber").GetInt32()))
+		{
+			if (!game.TryGetProperty("Turns", out var gameTurns)
+				|| gameTurns.ValueKind != System.Text.Json.JsonValueKind.Array)
+				return false;
+
+			turns.AddRange(gameTurns.EnumerateArray());
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Wartet, bis der Ziel-Teil von stocktv.state.json leer ist - oder die ganze Datei entfernt
+	/// wurde. Die App loescht die Datei nur, wenn Match <b>und</b> Ziel leer sind; ein ResetResult
+	/// im Ziel-Modus leert nur den Ziel-Teil.
+	/// </summary>
+	protected async Task<bool> WaitForZielStateClearedAsync(int maxWaitMs = 3000)
+	{
+		const int delayMs = 200;
+		int maxAttempts = Math.Max(1, maxWaitMs / delayMs);
+
+		for (int attempt = 0; attempt < maxAttempts; attempt++)
+		{
+			if (await Fixture.WaitForLocalFileDeletedAsync(GameStateFileName, maxWaitMs: delayMs))
+				return true;
+
+			try
+			{
+				var json = await Fixture.ReadLocalFileAsync(GameStateFileName);
+				using var doc = System.Text.Json.JsonDocument.Parse(json);
+
+				if (doc.RootElement.TryGetProperty("Ziel", out var ziel) && IsZielSectionEmpty(ziel))
+					return true;
+			}
+			catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)
+			{
+				// App schreibt gerade oder Datei wurde zwischenzeitlich geloescht - naechster Versuch
+			}
+		}
+
+		return false;
+	}
+
+	private static bool IsZielSectionEmpty(System.Text.Json.JsonElement ziel)
+	{
+		foreach (var name in new[] { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" })
+		{
+			if (ziel.TryGetProperty(name, out var list) && list.GetArrayLength() > 0)
+				return false;
+		}
+
+		return !(ziel.TryGetProperty("Runde1Summe", out var summe) && summe.GetInt32() != 0);
 	}
 
 	#endregion TOURNAMENT HELPERS
@@ -861,8 +931,8 @@ public abstract class PhaseTestBase
 	}
 
 	/// <summary>
-	/// Validates that Ziel state is correctly persisted in ziel-state.json file.
-	/// Checks all 4 discipline values match exactly and metadata (Runde, Runde1Summe) is correct.
+	/// Validates that Ziel state is correctly persisted in the "Ziel" section of stocktv.state.json.
+	/// Checks all 4 discipline values match exactly and metadata (Durchgang, Runde1Summe) is correct.
 	/// Waits for the expected attempt count and round to appear (handles async write delays).
 	/// </summary>
 	protected async Task ValidateZielStatePersistenceAsync(
@@ -872,30 +942,32 @@ public abstract class PhaseTestBase
 	{
 		int totalExpectedAttempts = expectedVersucheByDisziplin.Values.Sum(v => v.Count);
 
-		Log(CurrentPhase, "Validierung der ziel-state.json Persistierung...");
+		Log(CurrentPhase, "Validierung der stocktv.state.json Persistierung (Ziel)...");
 
-		var zielStateJson = await Fixture.ReadLocalFileAsync("ziel-state.json", json =>
+		var disciplineNames = new[] { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" };
+
+		var zielStateJson = await Fixture.ReadLocalFileAsync(GameStateFileName, json =>
 		{
 			try
 			{
 				using var doc = System.Text.Json.JsonDocument.Parse(json);
-				var root = doc.RootElement;
 
-				// Check if Versuche exists and has correct total count
-				if (!root.TryGetProperty("Versuche", out var versuche))
+				if (!doc.RootElement.TryGetProperty("Ziel", out var ziel))
 					return false;
 
+				// Check if all discipline arrays have the correct total count
 				int totalCount = 0;
-				foreach (var disziplin in versuche.EnumerateObject())
+				foreach (var diszName in disciplineNames)
 				{
-					if (disziplin.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+					if (ziel.TryGetProperty(diszName, out var disziplin)
+						&& disziplin.ValueKind == System.Text.Json.JsonValueKind.Array)
 					{
-						totalCount += disziplin.Value.GetArrayLength();
+						totalCount += disziplin.GetArrayLength();
 					}
 				}
 
-				// Check if Runde matches expected
-				if (!root.TryGetProperty("Runde", out var runde) || runde.GetInt32() != expectedRunde)
+				// Check if Durchgang matches expected
+				if (!ziel.TryGetProperty("Durchgang", out var runde) || runde.GetInt32() != expectedRunde)
 					return false;
 
 				return totalCount == totalExpectedAttempts;
@@ -907,23 +979,24 @@ public abstract class PhaseTestBase
 		});
 
 		using var jsonDoc = System.Text.Json.JsonDocument.Parse(zielStateJson);
-		var rootElement = jsonDoc.RootElement;
 
-		if (!rootElement.TryGetProperty("Versuche", out var versucheElement))
+		if (!jsonDoc.RootElement.TryGetProperty("Ziel", out var rootElement))
 		{
-			Log(CurrentPhase, "'Versuche' nicht gefunden in ziel-state.json", LogSymbol.Warning);
-			Assert.Fail("Versuche object not found in ziel-state.json");
+			Log(CurrentPhase, $"'Ziel' nicht gefunden in {GameStateFileName}", LogSymbol.Warning);
+			Assert.Fail($"Ziel section not found in {GameStateFileName}");
 			return;
 		}
 
+		// Die Disziplinen stehen direkt unter "Ziel" (keine "Versuche"-Ebene mehr)
+		var versucheElement = rootElement;
+
 		// Validate each discipline's values
-		var disciplineNames = new[] { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" };
 		foreach (var diszName in disciplineNames)
 		{
 			if (!versucheElement.TryGetProperty(diszName, out var versucheArray))
 			{
-				Log(CurrentPhase, $"Disziplin {diszName} nicht in ziel-state.json gefunden", LogSymbol.Warning);
-				Assert.Fail($"Discipline {diszName} not found in ziel-state.json");
+				Log(CurrentPhase, $"Disziplin {diszName} nicht in {GameStateFileName} gefunden", LogSymbol.Warning);
+				Assert.Fail($"Discipline {diszName} not found in {GameStateFileName}");
 				continue;
 			}
 
@@ -947,10 +1020,10 @@ public abstract class PhaseTestBase
 				LogSymbol.Check);
 		}
 
-		// Validate Runde
-		if (!rootElement.TryGetProperty("Runde", out var rundeElement))
+		// Validate Durchgang (Runde)
+		if (!rootElement.TryGetProperty("Durchgang", out var rundeElement))
 		{
-			Log(CurrentPhase, "'Runde' nicht gefunden in ziel-state.json", LogSymbol.Warning);
+			Log(CurrentPhase, $"'Durchgang' nicht gefunden in {GameStateFileName}", LogSymbol.Warning);
 		}
 		else
 		{
@@ -962,7 +1035,7 @@ public abstract class PhaseTestBase
 		// Validate Runde1Summe
 		if (!rootElement.TryGetProperty("Runde1Summe", out var runde1SummeElement))
 		{
-			Log(CurrentPhase, "'Runde1Summe' nicht gefunden in ziel-state.json", LogSymbol.Warning);
+			Log(CurrentPhase, $"'Runde1Summe' nicht gefunden in {GameStateFileName}", LogSymbol.Warning);
 		}
 		else
 		{
@@ -971,7 +1044,7 @@ public abstract class PhaseTestBase
 			Log(CurrentPhase, $"Runde1Summe in Datei persistiert: {actualRunde1Summe}", LogSymbol.Check);
 		}
 
-		Log(CurrentPhase, $"ziel-state.json validiert: {totalExpectedAttempts} Versuche über alle Disziplinen", LogSymbol.Check);
+		Log(CurrentPhase, $"{GameStateFileName} validiert: {totalExpectedAttempts} Versuche über alle Disziplinen", LogSymbol.Check);
 	}
 
 	#endregion ZIEL HELPERS

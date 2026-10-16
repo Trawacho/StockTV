@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using StockTvBlazor.E2ETests.Fixtures;
 using StockTvBlazor.E2ETests.Helpers;
 using Xunit;
@@ -7,25 +7,25 @@ using Xunit.Abstractions;
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
 [Collection("E2E Sequential")]
-public class Phase5Ziel12E2ETests : PhaseTestBase
+public class Phase04Ziel6E2ETests : PhaseTestBase
 {
-	public Phase5Ziel12E2ETests(AppFixture fixture, ITestOutputHelper output)
+	public Phase04Ziel6E2ETests(AppFixture fixture, ITestOutputHelper output)
 		: base(fixture, output)
 	{
 	}
 
 	[Fact]
-	public async Task Phase5_Ziel_12Kehren()
+	public async Task Phase4_Ziel_6Kehren()
 	{
-		CurrentPhase = "Phase 5";
-		LogPhaseStart(CurrentPhase, "Ziel 12 Kehren pro Disziplin");
+		CurrentPhase = "Phase 4";
+		LogPhaseStart(CurrentPhase, "Ziel 6 Kehren pro Disziplin");
 		Assert.NotNull(Fixture.Page);
 
 		// Konstanten
-		const int maxKehrenProSpiel = 12;
-		const int maxVersucheGesamt = 4 * maxKehrenProSpiel;  // 48 total
+		const int maxKehrenProSpiel = 6;
+		const int maxVersucheGesamt = 4 * maxKehrenProSpiel;  // 24 total
 
-		// Konfiguriere Ziel-Modus mit 12 Versuchen
+		// Konfiguriere Ziel-Modus
 		Log(CurrentPhase, $"Starte Ziel mit {maxKehrenProSpiel} Versuchen pro Disziplin ({maxVersucheGesamt} total)");
 		await ConfigureAndValidateSettings(
 			modus: 100,
@@ -45,7 +45,7 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 		Fixture.SendNetMqCommand("ResetResult");
 
 		// Set player name via NetMQ
-		string spielername = "TestSpieler_Phase5";
+		string spielername = "TestSpieler_Phase4";
 		SetZielTeilnehmer(spielername);
 
 		var validValuesPerDisziplin = new[]
@@ -59,7 +59,6 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 		string[] disziplinNamen = { "MassenVorne", "Schiessen", "MassenSeite", "Kombinieren" };
 
 		// Validate player name is displayed
-		await Task.Delay(500);
 		await ValidateZielSpielernameAsync(spielername);
 
 		int totalVersucheCount = 0;
@@ -89,9 +88,10 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 			{
 				int value;
 
-				// Test invalid input on specific attempt (11. von 12)
+				// Test invalid input on specific attempt
 				if (versucheInDisziplin == maxKehrenProSpiel - 2)
 				{
+					// 5. Versuch von 6: ungültiger Wert
 					int[] allValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15];
 					value = allValues.FirstOrDefault(v => !validValues.Contains(v));
 
@@ -99,6 +99,7 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 					Assert.False(wasAccepted, "Invalid value should be rejected");
 					Log(CurrentPhase, $"Versuch {versucheInDisziplin + 1}/{maxKehrenProSpiel}: Ungültiger Wert {value} korrekt abgelehnt", LogSymbol.Check);
 
+					// Validate display after invalid attempt (attempt count should NOT increase)
 					await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
 
 					// Now send valid value
@@ -118,16 +119,15 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 				disziplinSummen[disziplinNamen[disziplin]] += value;
 				disziplinVersuche[disziplinNamen[disziplin]].Add(value);
 
-				// Log sparsely for long tests
-				if (versucheInDisziplin % 4 == 0 || versucheInDisziplin == maxKehrenProSpiel)
-				{
-					Log(CurrentPhase, $"  Versuch {versucheInDisziplin}/{maxKehrenProSpiel}: {value} ({totalVersucheCount}/{maxVersucheGesamt})");
-					// Validate NetMQ less frequently for longer tests
-					await ValidateZielNetMqPublisherAsync(totalVersucheCount, disziplinSummen);
-				}
+				Log(CurrentPhase, $"  Versuch {versucheInDisziplin}/{maxKehrenProSpiel}: Wert {value} akzeptiert");
 
+				// Validate display
 				await ValidateDisplayZielAsync(totalVersucheCount, maxVersucheGesamt);
-				await Task.Delay(250);
+
+				// Validate NetMQ Publisher
+				await ValidateZielNetMqPublisherAsync(totalVersucheCount, disziplinSummen);
+
+				await Task.Delay(200);
 			}
 
 			// Test delete on last discipline only
@@ -135,6 +135,7 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 			{
 				Log(CurrentPhase, "Teste Löschen auf letzter Disziplin (Taste -)", LogSymbol.Check);
 
+				// Delete last
 				await DeleteZielAttemptAsync();
 				totalVersucheCount--;
 				versucheInDisziplin--;
@@ -163,12 +164,19 @@ public class Phase5Ziel12E2ETests : PhaseTestBase
 			Log(CurrentPhase, $"Disziplin {disziplin + 1}/4 abgeschlossen ({maxKehrenProSpiel} Versuche)", LogSymbol.Check);
 		}
 
-		Log(CurrentPhase, $"Phase 5 abgeschlossen: {totalVersucheCount}/{maxVersucheGesamt} Versuche", LogSymbol.Check);
+		Log(CurrentPhase, $"Phase 4 abgeschlossen: {totalVersucheCount}/{maxVersucheGesamt} Versuche", LogSymbol.Check);
 
-		// Validate ziel-state.json persistence
+		// Validate stocktv.state.json persistence (Ziel-Teil)
 		await ValidateZielStatePersistenceAsync(disziplinVersuche, expectedRunde: 1, expectedRunde1Summe: 0);
 
+		Log(CurrentPhase, "Teste ResetResult: Ziel-Teil in stocktv.state.json sollte geleert werden...");
 		Fixture.SendNetMqCommand("ResetResult");
+
+		// Validate that the Ziel section is cleared after ResetResult (file is removed once Match is empty too)
+		bool deleted = await WaitForZielStateClearedAsync();
+		Assert.True(deleted, "Ziel-Teil in stocktv.state.json sollte nach ResetResult geleert sein");
+		Log(CurrentPhase, "Ziel-Teil in stocktv.state.json wurde nach ResetResult korrekt geleert", LogSymbol.Check);
+
 		LogPhaseEnd(CurrentPhase);
 	}
 }

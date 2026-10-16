@@ -201,8 +201,8 @@ dotnet test StockTvBlazor.E2ETests/
 - Invalid overlay wird angezeigt und verschwindet nach 1,5s
 - Disziplin-Übergänge funktionieren automatisch
 - Finale Seite lädt erfolgreich
-- `ziel-state.json` Persistierung: Alle Versuche pro Disziplin korrekt gespeichert
-- `ResetResult` NetMQ-Kommando: `ziel-state.json` wird korrekt gelöscht
+- `stocktv.state.json` Persistierung (Abschnitt `Ziel`): Alle Versuche pro Disziplin korrekt gespeichert
+- `ResetResult` NetMQ-Kommando: Abschnitt `Ziel` in `stocktv.state.json` wird geleert (die Datei selbst wird nur entfernt, wenn auch `Match` leer ist)
 
 **Dauer:** ~30–40s
 
@@ -226,7 +226,7 @@ dotnet test StockTvBlazor.E2ETests/
 **Validierung:**
 - Ungültiger Versuch löst korrekt ungültig-Overlay aus
 - UI bleibt responsive über alle 48 Versuche hinweg
-- `ziel-state.json` Persistierung: Alle Versuche pro Disziplin korrekt gespeichert
+- `stocktv.state.json` Persistierung (Abschnitt `Ziel`): Alle Versuche pro Disziplin korrekt gespeichert
 
 **Dauer:** ~60–80s
 
@@ -251,7 +251,7 @@ dotnet test StockTvBlazor.E2ETests/
 - Automatischer Übergang zwischen Runden
 - Ungültige Versuche in beiden Runden funktionieren
 - Finale Seite mit Gesamtsumme korrekt
-- `ziel-state.json` Persistierung: Runde1 Versuche, Rundenwechsel, Runde 2 Versuche + Runde1Summe korrekt persistiert
+- `stocktv.state.json` Persistierung (Abschnitt `Ziel`): Runde1 Versuche, Rundenwechsel (`Durchgang`), Runde 2 Versuche + `Runde1Summe` korrekt persistiert
 
 **Dauer:** ~60–80s
 

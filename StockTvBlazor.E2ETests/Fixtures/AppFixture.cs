@@ -595,7 +595,7 @@ public class AppFixture : IAsyncLifetime
 	/// Wartet darauf, dass eine lokale Datei gelöscht wird.
 	/// Nützlich für die Validierung von asynchronem Löschen, z.B. wenn ResetResult die State-Datei löscht.
 	/// </summary>
-	/// <param name="filename">Der Name der zu überwachenden Datei (z.B. "ziel-state.json")</param>
+	/// <param name="filename">Der Name der zu überwachenden Datei (z.B. "stocktv.state.json")</param>
 	/// <param name="maxWaitMs">Maximale Wartezeit in Millisekunden (default 3000)</param>
 	/// <returns>true wenn die Datei gelöscht wurde, false wenn Timeout erreicht</returns>
 	public async Task<bool> WaitForLocalFileDeletedAsync(string filename, int maxWaitMs = 3000)
