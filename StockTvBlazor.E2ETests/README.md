@@ -65,6 +65,7 @@ Bestanden: 28, Übersprungen: 0, Dauer: ~9–11 Min
 - ✅ .NET 10.0 SDK
 - ✅ Playwright Chromium (in `bin/Debug/net10.0/`)
 - ✅ Ports frei: 5001 (HTTP), 4747/4748 (NetMQ)
+  - ⚠️ Es darf keine andere StockTV-Instanz laufen (z.B. Docker-Container `stocktvbahn1`, lokal gestartete App). Die Tests sprechen NetMQ fest über 4747/4748 an; eine laufende Instanz würde die Nachrichten abfangen, die Tests schlagen dann mit scheinbar zufälligen Settings-Fehlern fehl (z.B. `Expected: 0, Actual: 1`). Die `AppFixture` prüft das vor dem Start und bricht mit einer klaren Meldung ab. Prüfen mit `docker ps`, stoppen mit `docker stop <name>`.
 
 ### Initial Setup
 ```powershell
