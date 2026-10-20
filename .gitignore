@@ -367,6 +367,7 @@ stocktv.config.json
 
 # StockTV Laufzeit-Verzeichnisse (werden zur App-Laufzeit erzeugt)
 _logs/
+_config/
 
 # StockTV Build-Artefakte (publish/ ist bereits durch die publish/-Regel oben abgedeckt)
 build/rpi/stocktv-rpi.zip
