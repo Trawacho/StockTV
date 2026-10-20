@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using Microsoft.Playwright;
 using NetMQ;
 using NetMQ.Sockets;
@@ -40,6 +41,9 @@ public class AppFixture : IAsyncLifetime
 
 	public async Task InitializeAsync()
 	{
+		// Abbrechen, falls eine andere StockTV-Instanz (z.B. Docker-Container) die Ports belegt
+		EnsureRequiredPortsAreFree();
+
 		// Start the StockTV app in a subprocess
 		await StartAppAsync();
 
@@ -154,6 +158,28 @@ public class AppFixture : IAsyncLifetime
 			}
 			catch { }
 			_appProcess.Dispose();
+		}
+	}
+
+	/// <summary>
+	/// Die Tests sprechen NetMQ fest über 4747/4748 an. Läuft dort bereits eine andere Instanz
+	/// (z.B. Docker-Container), gehen die Nachrichten an diese statt an die Test-App.
+	/// </summary>
+	private static void EnsureRequiredPortsAreFree()
+	{
+		int[] requiredPorts = { 5001, 4747, 4748 };
+		var listening = IPGlobalProperties.GetIPGlobalProperties()
+			.GetActiveTcpListeners()
+			.Select(e => e.Port)
+			.ToHashSet();
+
+		var busy = requiredPorts.Where(listening.Contains).ToList();
+		if (busy.Count > 0)
+		{
+			throw new InvalidOperationException(
+				$"Die E2E-Tests benötigen freie Ports, aber folgende Ports sind belegt: {string.Join(", ", busy)}. " +
+				"Vermutlich läuft eine andere StockTV-Instanz (z.B. Docker-Container 'stocktvbahn1', 'docker ps'). " +
+				"Instanz stoppen und Tests erneut starten.");
 		}
 	}
 
