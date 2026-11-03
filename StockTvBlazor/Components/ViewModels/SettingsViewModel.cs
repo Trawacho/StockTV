@@ -40,7 +40,7 @@ public class SettingsViewModel(SettingsService settingsService) : IDisposable
 
 	public string BahnNummerValue => _currentSettings.General.BahnNummer.ToString();
 
-	public string NetworkingValue => _currentSettings.Network.Enabled ? "An" : "Aus";
+	public string NetworkingValue => _currentSettings.Device.Network.Enabled ? "An" : "Aus";
 
 	#endregion
 

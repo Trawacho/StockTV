@@ -73,8 +73,11 @@ jobs:
             --output build/windows/publish `
             -p:UseAppHost=true
 
-      - name: install-service.ps1 ins Paket aufnehmen
-        run: Copy-Item "build/windows/install-service.ps1" "build/windows/publish/install-service.ps1" -Force
+      - name: Setup-Skripte ins Paket aufnehmen
+        run: |
+          Copy-Item "build/windows/install-service.ps1"  "build/windows/publish/install-service.ps1"  -Force
+          Copy-Item "build/windows/start-kiosk.ps1"      "build/windows/publish/start-kiosk.ps1"      -Force
+          Copy-Item "build/windows/start-kiosk-dual.ps1" "build/windows/publish/start-kiosk-dual.ps1" -Force
 
       - name: Release-Zip erstellen
         run: Compress-Archive -Path "build/windows/publish/*" -DestinationPath "build/windows/stocktv-windows-x64.zip"

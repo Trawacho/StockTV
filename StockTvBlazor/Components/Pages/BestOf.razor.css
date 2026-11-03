@@ -22,3 +22,12 @@
         justify-content: flex-start;
         color: var(--fg-right);
     }
+
+/* Gespiegelte Anzeige: Match-Punkte bleiben am Doppelpunkt "kleben" */
+.mirrored .bestof-mid-grid .left-match-points {
+    justify-content: flex-start;
+}
+
+.mirrored .bestof-mid-grid .right-match-points {
+    justify-content: flex-end;
+}

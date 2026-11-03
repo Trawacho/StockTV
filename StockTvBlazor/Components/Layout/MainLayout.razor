@@ -1,6 +1,10 @@
 @inherits LayoutComponentBase
 
 <ThemeHandler />
+@* Eigene interaktive Insel: das Layout selbst wird statisch gerendert, nur die Seite in
+   @Body ist interaktiv. Ohne @rendermode bekaeme der Tracker keinen Circuit und damit
+   weder LocationChanged noch RendererInfo.IsInteractive. *@
+<MainWindowTracker @rendermode="InteractiveServer" />
 
 @Body
 

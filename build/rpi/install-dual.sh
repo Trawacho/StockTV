@@ -1,0 +1,467 @@
+#!/bin/bash
+# ============================================
+#  StockTV - Installation / Update Script
+#  Raspberry Pi (arm64) - ZWEI BILDSCHIRME
+# ============================================
+#
+#  Aufruf:
+#    curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
+#
+#  Oder nach manuellem Download:
+#    chmod +x install-dual.sh && ./install-dual.sh
+#
+#  Unterschied zu install.sh: der Kiosk verteilt sich auf beide HDMI-Ausgaenge,
+#  der zweite zeigt die gespiegelte Anzeige (/display2) fuer die gegenueber-
+#  liegende Bahnseite. Sonst identisch.
+
+set -e
+
+REPO="Trawacho/StockTV"
+ASSET_NAME="stocktv-rpi.zip"
+INSTALL_DIR="/opt/stocktv"
+KIOSK_SENTINEL="$INSTALL_DIR/.kiosk"
+# Zweiter Sentinel: markiert die Zwei-Bildschirm-Variante, damit ein spaeteres
+# Update mit install.sh nicht stillschweigend auf einen Bildschirm zurueckstellt.
+KIOSK_DUAL_SENTINEL="$INSTALL_DIR/.kiosk-dual"
+SERVICE_NAME="stocktv"
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo ""
+echo "=========================================="
+echo "  StockTV Installation / Update"
+echo "=========================================="
+echo ""
+
+# --- Root-Prüfung ---
+if [ "$EUID" -eq 0 ]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
+# --- Architektur prüfen ---
+ARCH=$(uname -m)
+if [ "$ARCH" != "aarch64" ]; then
+    echo -e "${RED}Fehler: Falsche Architektur '$ARCH'. Benoetigt wird aarch64 (64-Bit).${NC}"
+    echo "Bitte Raspberry Pi OS 64-Bit installieren."
+    exit 1
+fi
+
+# --- Tools prüfen ---
+for cmd in curl unzip; do
+    if ! command -v $cmd &>/dev/null; then
+        echo -e "${YELLOW}Installiere $cmd...${NC}"
+        $SUDO apt-get install -y $cmd -qq
+    fi
+done
+
+# --- System-Bibliotheken fuer .NET (self-contained) ---
+echo "Pruefe System-Bibliotheken..."
+$SUDO apt-get install -y --no-install-recommends libicu-dev libssl3 zlib1g -qq
+
+# --- Avahi deaktivieren (belegt Port 5353, blockiert StockTV-mDNS) ---
+$SUDO systemctl mask avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
+$SUDO systemctl stop avahi-daemon.service 2>/dev/null || true
+
+# --- Neueste Release-URL ermitteln ---
+echo "Suche neueste Version auf GitHub..."
+
+DOWNLOAD_URL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" \
+    | grep "browser_download_url" \
+    | grep "$ASSET_NAME" \
+    | cut -d '"' -f 4)
+
+if [ -z "$DOWNLOAD_URL" ]; then
+    echo -e "${RED}Fehler: Kein Release gefunden auf github.com/$REPO${NC}"
+    echo "Bitte pruefen ob ein Release mit '$ASSET_NAME' existiert."
+    exit 1
+fi
+
+VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" \
+    | grep '"tag_name"' | cut -d '"' -f 4)
+
+echo -e "Gefunden: ${GREEN}$VERSION${NC}"
+
+# --- Temporaeres Verzeichnis ---
+TMPDIR=$(mktemp -d)
+trap "rm -rf $TMPDIR" EXIT
+
+# --- Download ---
+echo "Lade $ASSET_NAME herunter..."
+curl -L --progress-bar -o "$TMPDIR/$ASSET_NAME" "$DOWNLOAD_URL"
+
+# --- Entpacken ---
+echo "Entpacke..."
+unzip -q "$TMPDIR/$ASSET_NAME" -d "$TMPDIR/app"
+
+# --- Erster Start oder Update? ---
+FIRST_INSTALL=false
+if [ ! -d "$INSTALL_DIR" ]; then
+    FIRST_INSTALL=true
+fi
+
+# --- Kiosk-Modus: Entscheidung treffen ---
+# Sentinel vorhanden → Kiosk war beim First-Install aktiviert → immer einrichten
+# Sentinel fehlt + First-Install → fragen
+# Sentinel fehlt + Update → fragen (Nachholung moeglich)
+SETUP_KIOSK=false
+if [ -f "$KIOSK_SENTINEL" ]; then
+    SETUP_KIOSK=true
+    if [ "$FIRST_INSTALL" = false ]; then
+        if [ -f "$KIOSK_DUAL_SENTINEL" ]; then
+            echo -e "${YELLOW}Kiosk-Modus (zwei Bildschirme) ist aktiviert — wird geprueft und ggf. korrigiert.${NC}"
+        else
+            echo -e "${YELLOW}Kiosk-Modus ist aktiviert — wird auf ZWEI Bildschirme umgestellt.${NC}"
+        fi
+    fi
+else
+    echo ""
+    # "|| true": beim Update ueber die /setup-Seite laeuft das Skript ohne Terminal,
+    # "read" liefert dann EOF - ohne den Zusatz wuerde "set -e" das Update abbrechen.
+    KIOSK_ANSWER=""
+    read -r -p "Kiosk-Modus aktivieren (Autologin + Chromium, zwei Bildschirme)? [j/N] " KIOSK_ANSWER || true
+    if [[ "$KIOSK_ANSWER" =~ ^[jJyY]$ ]]; then
+        SETUP_KIOSK=true
+    fi
+fi
+
+# --- Laufenden Dienst stoppen ---
+# "systemctl is-active --quiet" erkennt nur den sauberen "active"-Zustand. Haengt der Dienst nach
+# einem vorherigen fehlgeschlagenen Update im Neustart-Loop fest (Zustand "activating", z.B. durch
+# Restart=always nach einem Absturz), wird dieser Check faelschlich uebersprungen und "cp" scheitert
+# anschliessend am noch laufenden Binary ("Text file busy"). Deshalb stattdessen: stoppen, sobald die
+# Unit-Datei ueberhaupt existiert (unabhaengig vom genauen Laufzeitzustand); "|| true" haelt das
+# Skript auch dann am Laufen, falls "stop" aus einem anderen Grund scheitert.
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    echo "Stoppe Dienst (falls aktiv)..."
+    $SUDO systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+fi
+
+# --- Dateien installieren ---
+echo "Installiere nach $INSTALL_DIR..."
+$SUDO mkdir -p "$INSTALL_DIR"
+$SUDO cp -r "$TMPDIR/app/"* "$INSTALL_DIR/"
+$SUDO chmod +x "$INSTALL_DIR/StockTvBlazor"
+$SUDO mkdir -p "$INSTALL_DIR/_config" "$INSTALL_DIR/_logs"
+
+# APP_USER ermitteln: Bei einem Update MUSS der bereits konfigurierte Service-User verwendet werden.
+# SUDO_USER ist dafuer nicht zuverlaessig - beim Update-Weg ueber die /setup-Seite startet
+# UpdateService.cs das Skript per "sudo systemd-run ... stocktv-run-update.sh", und systemd-run
+# erzeugt eine neue transiente Unit OHNE die SUDO_USER-Variable der aufrufenden Shell. APP_USER
+# faellt dort auf "$(whoami)" zurueck, also root (die Unit laeuft als root) - "chown -R root:root"
+# sperrt den tatsaechlich als $APP_USER laufenden Dienst danach vom Schreiben auf _config/_logs aus
+# (genau das hat stocktv.service nach einem Update ueber /setup zum Absturz gebracht). Deshalb hier
+# bevorzugt aus der bestehenden systemd-Unit lesen (die "User="-Zeile bleibt bei einem Update
+# unveraendert, siehe FIRST_INSTALL-Block weiter unten); nur beim allerersten Install (keine
+# bestehende Unit vorhanden) gilt weiterhin der bisherige SUDO_USER/whoami-Fallback.
+EXISTING_SERVICE_USER=""
+if [ -f "/etc/systemd/system/$SERVICE_NAME.service" ]; then
+    # tr -d '\r': aeltere Service-Dateien wurden teils mit CRLF-Zeilenenden geschrieben
+    # (PowerShell-Here-String in publish-rpi.ps1) - ohne das Stripping haengt ein \r am
+    # extrahierten Usernamen, was "chown -R pi<CR>:pi<CR>" mit "invalid user" abbrechen liess.
+    EXISTING_SERVICE_USER=$(sed -n 's/^User=//p' "/etc/systemd/system/$SERVICE_NAME.service" 2>/dev/null | tr -d '\r')
+fi
+APP_USER="${EXISTING_SERVICE_USER:-${SUDO_USER:-$(whoami)}}"
+$SUDO chown -R "$APP_USER:$APP_USER" "$INSTALL_DIR"
+
+# --- Update-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR) ---
+# Liegt bewusst NICHT unter $INSTALL_DIR: das obige "chown -R $APP_USER" wuerde es sonst fuer den
+# App-User beschreibbar machen, der ueber die sudoers-Regel unten genau dieses Skript als root
+# ausfuehren darf - das waere eine Privilege-Escalation-Luecke.
+echo "Aktualisiere Update-Skript (/usr/local/sbin/stocktv-run-update.sh)..."
+UPDATE_SCRIPT_TMP=$(mktemp)
+cat > "$UPDATE_SCRIPT_TMP" <<'UPDATESCRIPTEOF'
+#!/bin/bash
+set -e
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
+UPDATESCRIPTEOF
+$SUDO install -m 0755 -o root -g root "$UPDATE_SCRIPT_TMP" /usr/local/sbin/stocktv-run-update.sh
+rm -f "$UPDATE_SCRIPT_TMP"
+
+# --- Hostname-Skript bereitstellen (bei jedem Lauf, ausserhalb $INSTALL_DIR, siehe Begruendung oben) ---
+# Setzt Hostname UND die "127.0.1.1"-Zeile in /etc/hosts atomar in einem Rutsch - "nmcli general
+# hostname" alleine laesst /etc/hosts unveraendert, was zu "sudo: unable to resolve host ..." fuehrt,
+# sobald beide auseinanderlaufen.
+echo "Aktualisiere Hostname-Skript (/usr/local/sbin/stocktv-set-hostname.sh)..."
+HOSTNAME_SCRIPT_TMP=$(mktemp)
+cat > "$HOSTNAME_SCRIPT_TMP" <<'HOSTNAMESCRIPTEOF'
+#!/bin/bash
+set -e
+NEW_HOSTNAME="$1"
+
+if ! [[ "$NEW_HOSTNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$ ]]; then
+    echo "Ungueltiger Hostname: $NEW_HOSTNAME" >&2
+    exit 1
+fi
+
+nmcli general hostname "$NEW_HOSTNAME"
+
+if grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts; then
+    sed -i "s/^127\.0\.1\.1[[:space:]]\+.*/127.0.1.1\t$NEW_HOSTNAME/" /etc/hosts
+else
+    echo -e "127.0.1.1\t$NEW_HOSTNAME" >> /etc/hosts
+fi
+HOSTNAMESCRIPTEOF
+$SUDO install -m 0755 -o root -g root "$HOSTNAME_SCRIPT_TMP" /usr/local/sbin/stocktv-set-hostname.sh
+rm -f "$HOSTNAME_SCRIPT_TMP"
+
+# --- sudoers-Regel fuer die /setup-Seite (bei jedem Lauf, damit auch bestehende ---
+# --- Installationen die Regel beim naechsten Update nachgezogen bekommen) ---
+echo "Pruefe sudoers-Regel..."
+SUDOERS_FILE="/etc/sudoers.d/stocktv"
+SUDOERS_TMP=$(mktemp)
+
+cat > "$SUDOERS_TMP" <<'SUDOERS_EOF'
+# Managed by StockTV install.sh - manuelle Aenderungen werden beim naechsten Update ueberschrieben.
+Cmnd_Alias STOCKTV_NM_READ = /usr/bin/nmcli -t -f DEVICE\,TYPE\,STATE\,CONNECTION device status, \
+    /usr/bin/nmcli -t -f * device show *, \
+    /usr/bin/nmcli -t -f * con show *
+
+Cmnd_Alias STOCKTV_NM_WRITE = /usr/bin/nmcli con mod * ipv4.method manual ipv4.addresses * ipv4.gateway * ipv4.dns *, \
+    /usr/bin/nmcli con mod * ipv4.method auto, \
+    /usr/bin/nmcli con up *
+
+Cmnd_Alias STOCKTV_HOSTNAME = /usr/local/sbin/stocktv-set-hostname.sh *
+
+Cmnd_Alias STOCKTV_UPDATE = /usr/bin/systemd-run --unit=stocktv-update --collect /usr/local/sbin/stocktv-run-update.sh
+
+Cmnd_Alias STOCKTV_REBOOT = /usr/bin/systemctl reboot
+SUDOERS_EOF
+echo "$APP_USER ALL=(root) NOPASSWD: STOCKTV_NM_READ, STOCKTV_NM_WRITE, STOCKTV_HOSTNAME, STOCKTV_UPDATE, STOCKTV_REBOOT" >> "$SUDOERS_TMP"
+
+if ! $SUDO cmp -s "$SUDOERS_TMP" "$SUDOERS_FILE" 2>/dev/null; then
+    if $SUDO visudo -c -f "$SUDOERS_TMP" >/dev/null 2>&1; then
+        $SUDO install -m 0440 -o root -g root "$SUDOERS_TMP" "$SUDOERS_FILE"
+        echo -e "${GREEN}sudoers-Regel aktualisiert.${NC}"
+    else
+        echo -e "${RED}Warnung: neue sudoers-Regel ungueltig, bestehende Regel bleibt unveraendert.${NC}"
+    fi
+else
+    echo "sudoers-Regel bereits aktuell."
+fi
+rm -f "$SUDOERS_TMP"
+
+# --- Systemd-Dienst installieren (nur beim ersten Mal) ---
+if [ "$FIRST_INSTALL" = true ]; then
+    echo "Installiere systemd-Dienst..."
+
+    cat > "$TMPDIR/$SERVICE_NAME.service" <<EOF
+[Unit]
+Description=StockTV Punkteanzeige
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/StockTvBlazor
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+User=$APP_USER
+Environment=ASPNETCORE_URLS=http://+:8080
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    $SUDO cp "$TMPDIR/$SERVICE_NAME.service" "/etc/systemd/system/$SERVICE_NAME.service"
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable "$SERVICE_NAME"
+fi
+
+# --- Kiosk-Modus einrichten / pruefen ---
+if [ "$SETUP_KIOSK" = true ]; then
+    echo ""
+    echo "Kiosk-Modus wird eingerichtet..."
+
+    APP_HOME=$(eval echo "~$APP_USER")
+
+    # Pakete installieren (idempotent)
+    $SUDO apt-get install -y --no-install-recommends \
+        xserver-xorg x11-xserver-utils xinit openbox chromium wmctrl -qq
+
+    # Autologin-Drop-in
+    AUTOLOGIN_DIR="/etc/systemd/system/getty@tty1.service.d"
+    $SUDO mkdir -p "$AUTOLOGIN_DIR"
+    $SUDO tee "$AUTOLOGIN_DIR/autologin.conf" > /dev/null <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $APP_USER --noclear %I
+EOF
+
+    # getty@tty1 in getty.target.wants aktivieren
+    $SUDO mkdir -p /etc/systemd/system/getty.target.wants
+    $SUDO ln -sf /usr/lib/systemd/system/getty@.service \
+        /etc/systemd/system/getty.target.wants/getty@tty1.service
+
+    # .bash_profile: X11 automatisch starten wenn auf tty1
+    $SUDO tee "$APP_HOME/.bash_profile" > /dev/null <<'BASHEOF'
+[ -f ~/.bashrc ] && . ~/.bashrc
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    startx -- -nocursor 2>/tmp/xorg.log
+fi
+BASHEOF
+
+    # .xinitrc: Kiosk-Modus
+    $SUDO tee "$APP_HOME/.xinitrc" > /dev/null <<'XINITEOF'
+#!/bin/bash
+xset -dpms
+xset s off
+xset s noblank
+
+openbox &
+
+rm -f ~/.config/chromium/Singleton*
+rm -f ~/.config/chromium-mirror/Singleton*
+
+for i in $(seq 1 30); do
+    curl -s http://localhost:8080 >/dev/null 2>&1 && break
+    sleep 2
+done
+
+CHROMIUM=$(command -v chromium 2>/dev/null || command -v chromium-browser 2>/dev/null)
+
+COMMON_ARGS=(
+    --noerrdialogs
+    --disable-session-crashed-bubble
+    --disable-infobars
+    --disable-translate
+    --no-first-run
+    --disable-features=TranslateUI
+    --check-for-update-interval=31536000
+)
+
+# Geometrie eines Ausgangs als "BREITE HOEHE X Y" ausgeben (leer, wenn inaktiv)
+output_geometry() {
+    xrandr --query \
+        | grep "^$1 connected" \
+        | grep -o '[0-9]\+x[0-9]\++[0-9]\++[0-9]\+' \
+        | head -1 \
+        | sed 's/[x+]/ /g'
+}
+
+# Fenster anhand seiner WM_CLASS exakt auf einen Ausgang legen. Chromium
+# platziert mit --window-position zwar meist schon richtig, bei zwei Ausgaengen
+# ist das aber nicht garantiert - deshalb hinterher korrigieren. Ohne wmctrl
+# bleibt es bei Chromiums eigener Platzierung.
+place_window() {
+    local class="$1" x="$2" y="$3" w="$4" h="$5" i
+
+    command -v wmctrl >/dev/null 2>&1 || return 0
+
+    for i in $(seq 1 40); do
+        wmctrl -lx 2>/dev/null | grep -qi "$class" && break
+        sleep 0.5
+    done
+    wmctrl -lx 2>/dev/null | grep -qi "$class" || return 0
+
+    wmctrl -x -r "$class" -b remove,fullscreen 2>/dev/null
+    wmctrl -x -r "$class" -e "0,$x,$y,$w,$h"   2>/dev/null
+    wmctrl -x -r "$class" -b add,fullscreen    2>/dev/null
+}
+
+# Zweite Anzeige (gegenueberliegende Bahnseite): beide HDMI-Ausgaenge nebeneinander
+# legen. Ist nur ein Bildschirm angeschlossen, bleibt es beim Hauptfenster.
+OUTPUTS=($(xrandr --query | awk '/ connected/ {print $1}'))
+MIRROR_ACTIVE=false
+
+if [ "${#OUTPUTS[@]}" -ge 2 ]; then
+    # --pos 0x0 setzt den ersten Ausgang ausdruecklich auf den Ursprung; ohne das
+    # kann eine alte Anordnung bestehen bleiben und das Hauptfenster daneben landen.
+    xrandr --output "${OUTPUTS[0]}" --auto --primary --pos 0x0 --rotate normal \
+           --output "${OUTPUTS[1]}" --auto --right-of "${OUTPUTS[0]}" --rotate normal
+    sleep 1
+
+    read -r M_W M_H M_X M_Y <<< "$(output_geometry "${OUTPUTS[1]}")"
+
+    if [ -n "$M_W" ]; then
+        MIRROR_ACTIVE=true
+
+        # Spiegel-Fenster zuerst starten, damit das Hauptfenster spaeter den
+        # Tastatur-Fokus bekommt (Ziffernblock-Eingabe).
+        "$CHROMIUM" "${COMMON_ARGS[@]}" \
+            --user-data-dir="$HOME/.config/chromium-mirror" \
+            --class=StockTV-Mirror \
+            --window-position=${M_X},${M_Y} \
+            --window-size=${M_W},${M_H} \
+            --kiosk \
+            http://localhost:8080/display2 &
+    fi
+fi
+
+read -r P_W P_H P_X P_Y <<< "$(output_geometry "${OUTPUTS[0]}")"
+P_X=${P_X:-0}
+P_Y=${P_Y:-0}
+
+"$CHROMIUM" "${COMMON_ARGS[@]}" \
+    --user-data-dir="$HOME/.config/chromium" \
+    --class=StockTV-Main \
+    --window-position=${P_X},${P_Y} \
+    --kiosk \
+    http://localhost:8080 &
+
+MAIN_PID=$!
+
+# Beide Fenster nachtraeglich exakt auf ihren Ausgang zwingen
+if [ "$MIRROR_ACTIVE" = true ]; then
+    place_window "StockTV-Mirror" "$M_X" "$M_Y" "$M_W" "$M_H"
+fi
+if [ -n "$P_W" ]; then
+    place_window "StockTV-Main" "$P_X" "$P_Y" "$P_W" "$P_H"
+fi
+
+# Fokus zum Schluss ausdruecklich auf das Bedienfenster - nur dort werden
+# Tastatureingaben verarbeitet.
+if command -v wmctrl >/dev/null 2>&1; then
+    wmctrl -x -a "StockTV-Main" 2>/dev/null
+fi
+
+wait "$MAIN_PID"
+XINITEOF
+    $SUDO chmod +x "$APP_HOME/.xinitrc"
+    $SUDO chown "$APP_USER:$APP_USER" "$APP_HOME/.bash_profile" "$APP_HOME/.xinitrc"
+
+    # Sentinel anlegen
+    $SUDO touch "$KIOSK_SENTINEL"
+    $SUDO chown "$APP_USER:$APP_USER" "$KIOSK_SENTINEL"
+    $SUDO touch "$KIOSK_DUAL_SENTINEL"
+    $SUDO chown "$APP_USER:$APP_USER" "$KIOSK_DUAL_SENTINEL"
+
+    $SUDO systemctl daemon-reload
+
+    echo -e "${GREEN}Kiosk-Modus eingerichtet.${NC}"
+    echo -e "${YELLOW}Hinweis: Kiosk startet nach dem naechsten Reboot automatisch.${NC}"
+fi
+
+# --- Dienst starten ---
+$SUDO systemctl start "$SERVICE_NAME"
+
+# --- Prüfen ob Dienst wirklich läuft ---
+sleep 3
+if ! systemctl is-active --quiet "$SERVICE_NAME"; then
+    echo ""
+    echo -e "${RED}Warnung: Dienst ist nicht aktiv. Letzte Log-Zeilen:${NC}"
+    $SUDO journalctl -u "$SERVICE_NAME" --no-pager -n 20
+    echo ""
+    echo "Moegliche Ursache: fehlende System-Bibliothek."
+    echo "Bitte pruefen: sudo journalctl -u $SERVICE_NAME -n 50"
+    exit 1
+fi
+
+PI_IP=$(hostname -I | awk '{print $1}')
+
+echo ""
+echo "=========================================="
+if [ "$FIRST_INSTALL" = true ]; then
+    echo -e "  ${GREEN}Installation abgeschlossen! ($VERSION)${NC}"
+else
+    echo -e "  ${GREEN}Update abgeschlossen! ($VERSION)${NC}"
+fi
+echo "  Web-UI: http://$PI_IP:8080"
+echo "=========================================="
+echo ""

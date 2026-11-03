@@ -1,10 +1,13 @@
 ﻿using StockTvBlazor.Models;
 using StockTvBlazor.Networking;
-using System.Text;
 
 namespace StockTvBlazor.Services;
 
-public class ZielService(SettingsService settingsService, ILogger<ZielService> logger, NetMqPublisherService publisherService, GameStatePersistenceService gamePersistence)
+public class ZielService(
+	SettingsService settingsService,
+	ILogger<ZielService> logger,
+	NetMqPublisherService publisherService,
+	GameEventBroadcaster broadcaster) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 
@@ -12,14 +15,14 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 
 	private readonly NetMqPublisherService _publisherService = publisherService;
 
-	private readonly GameStatePersistenceService _gamePersistence = gamePersistence;
+	private readonly GameEventBroadcaster _broadcaster = broadcaster;
 
 	private ZielBewerb? _currentZielBewerb;
 
-	public async Task InitializeZielAsync()
+
+	public void InitializeZiel()
 	{
-		_currentZielBewerb ??= new ZielBewerb(_settingsService, _gamePersistence);
-		await _currentZielBewerb.LoadZielStateAsync();
+		_currentZielBewerb ??= new ZielBewerb(_settingsService);
 		_logger.LogInformation("ZielService wurde initialisiert.");
 	}
 
@@ -28,9 +31,11 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 
 	public void SetTeilnehmer(byte[] name)
 	{
-		var spielerName = Encoding.UTF8.GetString(name);
+		var spielerName = System.Text.Encoding.UTF8.GetString(name);
 		CurrentZielBewerb.AddSpielerName(spielerName);
 	}
+
+
 
 	private int _inputValue;
 
@@ -112,7 +117,12 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 		}
 
 		OnGlobalRefresh?.Invoke();
+		// Beide Wege bedienen, solange StockAppV2 noch auf NetMQ hoert.
 		_publisherService.Publish("GetResult", CurrentZielBewerb.SerializeJson());
+		_broadcaster.ResultChanged(new Api.ResultDto(
+			Api.GameDtoFactory.Settings(_settingsService.CurrentSettings),
+			Match: null,
+			Api.GameDtoFactory.Ziel(CurrentZielBewerb)));
 	}
 
 	private void AddInput(int value)
@@ -136,7 +146,6 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 			return;
 
 		CurrentZielBewerb.Reset();
-		await CurrentZielBewerb.SaveZielStateAsync();
 		_inputValue = -1;
 	}
 
@@ -154,7 +163,6 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 			return;
 		}
 
-		await CurrentZielBewerb.SaveZielStateAsync();
 		_inputValue = -1;
 	}
 
@@ -163,10 +171,7 @@ public class ZielService(SettingsService settingsService, ILogger<ZielService> l
 		if (_inputValue >= 0)
 			_inputValue = -1;
 		else
-		{
 			CurrentZielBewerb.DeleteLastVersuch();
-			await CurrentZielBewerb.SaveZielStateAsync();
-		}
 	}
 
 	private protected void ShowSpecialPage()

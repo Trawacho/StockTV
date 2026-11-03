@@ -1,5 +1,7 @@
-using StockTvBlazor.Extensions;
+﻿using StockTvBlazor.Extensions;
+using StockTvBlazor.Models;
 using StockTvBlazor.Settings;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 
@@ -23,30 +25,62 @@ public class SettingsService : BackgroundService
 
 	private Settings.Settings _settings = null!;
 
-	private readonly string _settingsFileName = "stocktv.config.json";
+	private readonly Channel<SettingsScope> _saveSettingsQueue = Channel.CreateUnbounded<SettingsScope>();
 
-	private readonly Channel<bool> _saveSettingsQueue = Channel.CreateUnbounded<bool>();
+	private readonly SemaphoreSlim _saveGate = new(1, 1);
+
+	/// <summary>
+	/// Wartezeit, in der weitere Speicheranforderungen zu einem einzigen Schreibvorgang
+	/// zusammengefasst werden (Themes-Seite mit Live-Vorschau, Layout-Editor).
+	/// </summary>
+	private static readonly TimeSpan SaveDebounceDelay = TimeSpan.FromSeconds(1);
+
+	private readonly object _debounceLock = new();
+
+	/// <summary>Bereiche, die seit der letzten Ausfuehrung angefordert wurden und noch warten.</summary>
+	private readonly HashSet<SettingsScope> _pendingScopes = [];
+
+	private CancellationTokenSource? _saveDebounceCts;
 
 	private readonly ILogger _logger;
 
 	private readonly FileLoggerProvider _fileLoggerProvider;
 
-	private CancellationTokenSource? _saveDebounceCts;
-
 	public bool SettingsPageActive = false;
+
+	/// <summary>
+	/// Relative Adresse der Seite, die gerade im Bedienfenster offen ist. Grundlage dafuer,
+	/// dass die zweite Anzeige (Display2) dem Hauptfenster folgt. Gemeldet wird sie vom
+	/// MainWindowTracker im MainLayout.
+	/// </summary>
+	public string? MainWindowUrl { get; private set; }
 
 	public event Action? OnSettingsChanged;
 
 	public event Action<string>? OnNavigationRequested;
 
-	private string _settingsFilePath
+	/// <summary>
+	/// Feuert, wenn das Bedienfenster auf eine andere Seite gewechselt ist. Bewusst ein
+	/// eigenes Ereignis und nicht <see cref="OnNavigationRequested"/>: auf letzteres reagieren
+	/// die Spielseiten mit einer eigenen Navigation - das blosse Melden der aktuellen Seite
+	/// wuerde darueber eine Endlosschleife ausloesen.
+	/// </summary>
+	public event Action? OnMainWindowUrlChanged;
+
+	/// <summary>
+	/// Fordert die Anzeige auf, zu einer Adresse zu wechseln - z.B. auf das Werbebild und wieder
+	/// zurueck (NetMQ <c>GoToImage</c>/<c>ClearImage</c>).
+	/// </summary>
+	public void RequestNavigation(string url) => OnNavigationRequested?.Invoke(url);
+
+	/// <summary>Meldet die im Bedienfenster offene Seite. Mehrfachmeldungen sind unschaedlich.</summary>
+	public void ReportMainWindowUrl(string relativeUrl)
 	{
-		get
-		{
-			string appDataPath = AppContext.BaseDirectory;
-			string settingsFolderPath = Path.Combine(appDataPath, "_config");
-			return Path.Combine(settingsFolderPath, _settingsFileName);
-		}
+		if (string.Equals(MainWindowUrl, relativeUrl, StringComparison.Ordinal))
+			return;
+
+		MainWindowUrl = relativeUrl;
+		OnMainWindowUrlChanged?.Invoke();
 	}
 
 	public SettingsService(
@@ -61,23 +95,25 @@ public class SettingsService : BackgroundService
 	{
 		try
 		{
-			// Wenn noch eine Debounce läuft, stop sie
 			_saveDebounceCts?.Cancel();
 		}
 		catch (ObjectDisposedException)
 		{
-			// CTS wurde bereits disposed
+			// bereits freigegeben
 		}
 
+		// Was noch auf die Wartezeit hofft, geht sonst beim Herunterfahren verloren.
 		try
 		{
-			// Speichere alle ausstehenden Änderungen synchron vor dem Shutdown
-			_logger.LogInformation("Saving settings during shutdown");
-			SaveSettingsInternalAsync().GetAwaiter().GetResult();
+			foreach (var scope in TakePendingScopes())
+			{
+				_logger.LogInformation("Speichere {Scope}-Einstellungen vor dem Herunterfahren", scope);
+				SaveSettingsInternalAsync(scope).GetAwaiter().GetResult();
+			}
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Error saving settings during shutdown");
+			_logger.LogError(ex, "Fehler beim Speichern der Einstellungen beim Herunterfahren");
 		}
 
 		_saveDebounceCts?.Dispose();
@@ -89,10 +125,10 @@ public class SettingsService : BackgroundService
 	{
 		_settings = await LoadSettingsAsync();
 
-		_fileLoggerProvider.Enabled = _settings.General.FileLoggingEnabled;
+		_fileLoggerProvider.Enabled = _settings.Device.FileLoggingEnabled;
 
 		_logger.LogInformation("FileLogging initial: {State}",
-			_settings.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+			_settings.Device.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
 	}
 
 	public Settings.Settings CurrentSettings
@@ -117,12 +153,15 @@ public class SettingsService : BackgroundService
 	{
 		var s = CurrentSettings;
 
-		s.General.FileLoggingEnabled = !s.General.FileLoggingEnabled;
-		_fileLoggerProvider.Enabled = s.General.FileLoggingEnabled;
+		s.Device.FileLoggingEnabled = !s.Device.FileLoggingEnabled;
+		_fileLoggerProvider.Enabled = s.Device.FileLoggingEnabled;
 
 		_logger.LogInformation("FileLogging wurde {State}",
-			s.General.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
+			s.Device.FileLoggingEnabled ? "aktiviert" : "deaktiviert");
 
+		// Eigener Speicheraufruf mit Device-Scope: bis zur Aufteilung hat das ExitSettingsPage
+		// miterledigt, das jetzt nur noch die Betriebs-Konfiguration schreibt.
+		RequestSaveSettings(SettingsScope.Device);
 		NotifyChanged();
 	}
 
@@ -149,9 +188,9 @@ public class SettingsService : BackgroundService
 	}
 
 	/// <summary>
-	/// Schaltet den Modus wie ChangeModus() weiter, löst aber zusätzlich OnSettingsChanged aus —
-	/// für den Modus-Schnellwechsel auf der Input-Seite (dort läuft kein ProcessKeyAsync-Aufruf,
-	/// der das sonst übernehmen würde).
+	/// Schaltet den Modus wie ChangeModus() weiter, loest aber zusaetzlich OnSettingsChanged aus -
+	/// fuer den Modus-Schnellwechsel auf der Input-Seite (dort laeuft kein ProcessKeyAsync-Aufruf,
+	/// der das sonst uebernehmen wuerde).
 	/// </summary>
 	public void CycleModus(bool forward)
 	{
@@ -162,8 +201,8 @@ public class SettingsService : BackgroundService
 	}
 
 	/// <summary>
-	/// Übernimmt den aktuell (per CycleModus) gewählten Modus: speichert und navigiert zur
-	/// zugehörigen Seite — analog zu ExitSettingsPage(), aber ohne SettingsPageActive zu berühren.
+	/// Uebernimmt den aktuell (per CycleModus) gewaehlten Modus: speichert und navigiert zur
+	/// zugehoerigen Seite - analog zu ExitSettingsPage(), aber ohne SettingsPageActive zu beruehren.
 	/// </summary>
 	public void ConfirmModusSelection()
 	{
@@ -266,8 +305,11 @@ public class SettingsService : BackgroundService
 
 	public void ChangeNetworking()
 	{
-		CurrentSettings.Network.Enabled =
-			!CurrentSettings.Network.Enabled;
+		CurrentSettings.Device.Network.Enabled =
+			!CurrentSettings.Device.Network.Enabled;
+
+		// Wie bei ToggleFileLogging: gehoert in die Geraetedatei, die ExitSettingsPage nicht anfasst.
+		RequestSaveSettings(SettingsScope.Device);
 	}
 
 	#endregion
@@ -287,133 +329,351 @@ public class SettingsService : BackgroundService
 
 	#region Load / Save
 
+	/// <summary>Aufteilung der Konfiguration auf zwei Dateien - siehe <see cref="Settings.Settings"/>.</summary>
+	private static string GetFilePath(SettingsScope scope) => Path.Combine(
+		AppContext.BaseDirectory,
+		"_config",
+		scope == SettingsScope.Device ? "stocktv.device.json" : "stocktv.config.json");
+
+	/// <summary>
+	/// Ablageort der Betriebs-Konfiguration. Statisch, weil ihn auch die REST-Schnittstelle
+	/// braucht, wo der DI-Container nicht zur Verfuegung steht.
+	/// </summary>
+	public static string GetSettingsFilePath() => GetFilePath(SettingsScope.Config);
+
+	/// <summary>Ablageort der Geraete-Konfiguration (enthaelt den API-Schluessel).</summary>
+	public static string GetDeviceFilePath() => GetFilePath(SettingsScope.Device);
+
+	private static readonly JsonSerializerOptions _fileJsonOptions = new() { WriteIndented = true };
+
+	/// <summary>Was in stocktv.config.json steht - der Rest liegt in der Geraetedatei.</summary>
+	private sealed class ConfigFile
+	{
+		public GeneralSettings General { get; set; } = new();
+		public GameSettings Game { get; set; } = new();
+		public UiSettings UI { get; set; } = new();
+	}
+
 	private async Task<Settings.Settings> LoadSettingsAsync()
 	{
-		if (!File.Exists(_settingsFilePath))
+		await MigrateLegacyFileIfNeededAsync();
+
+		var settings = new Settings.Settings();
+
+		settings.Device = await ReadFileAsync<DeviceSettings>(SettingsScope.Device) ?? new DeviceSettings();
+
+		var config = await ReadFileAsync<ConfigFile>(SettingsScope.Config);
+		if (config is not null)
 		{
-			_logger.LogWarning("Keine Config-Datei gefunden, Standardwerte werden verwendet.");
-			return new Settings.Settings();
+			settings.General = config.General;
+			settings.Game = config.Game;
+			settings.UI = config.UI;
+		}
+
+		_logger.LogInformation(
+			"Konfiguration geladen: BahnNummer={BahnNummer}, Modus={Modus}, RestApi={RestApi}",
+			settings.General.BahnNummer, settings.Game.CurrentModus,
+			settings.Device.RestApi.Enabled ? $"Port {settings.Device.RestApi.Port}" : "aus");
+
+		return settings;
+	}
+
+	/// <summary>
+	/// Liest eine der beiden Dateien. Fehlt sie, gelten Standardwerte; ist sie unlesbar, wird sie
+	/// als <c>.corrupt</c> beiseitegelegt, damit sie nicht beim naechsten Speichern unbemerkt
+	/// ueberschrieben wird - mit ihr verschwaende sonst auch der API-Schluessel.
+	/// </summary>
+	private async Task<T?> ReadFileAsync<T>(SettingsScope scope) where T : class
+	{
+		var path = GetFilePath(scope);
+
+		// Reste eines abgebrochenen Schreibvorgangs (Absturz zwischen Schreiben und Umbenennen)
+		// entfernen - die eigentliche Datei ist davon unberuehrt.
+		var orphanedTemp = path + ".tmp";
+		if (File.Exists(orphanedTemp))
+		{
+			try { File.Delete(orphanedTemp); }
+			catch (IOException) { /* naechster Start versucht es erneut */ }
+		}
+
+		if (!File.Exists(path))
+		{
+			_logger.LogWarning("{File} nicht gefunden, Standardwerte werden verwendet.", Path.GetFileName(path));
+			return null;
 		}
 
 		try
 		{
-			var json = await File.ReadAllTextAsync(_settingsFilePath);
-			var settings = JsonSerializer.Deserialize<Settings.Settings>(json) ?? new Settings.Settings();
-
-			_logger.LogInformation("Config geladen: BahnNummer={BahnNummer}, Modus={Modus}",
-				settings.General.BahnNummer, settings.Game.CurrentModus);
-
-			return settings;
+			var json = await File.ReadAllTextAsync(path);
+			return JsonSerializer.Deserialize<T>(json);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError("Fehler beim Laden der Config: {Msg}", ex.Message);
-			return new Settings.Settings();
+			var brokenPath = path + ".corrupt";
+			try
+			{
+				File.Move(path, brokenPath, overwrite: true);
+				_logger.LogError(
+					"{File} unlesbar ({Msg}). Die Datei wurde als {Path} gesichert, es gelten " +
+					"Standardwerte.", Path.GetFileName(path), ex.Message, brokenPath);
+			}
+			catch (Exception moveEx)
+			{
+				_logger.LogError("{File} unlesbar ({Msg}) und nicht sicherbar ({MoveMsg}). " +
+					"Es gelten Standardwerte.", Path.GetFileName(path), ex.Message, moveEx.Message);
+			}
+
+			return null;
 		}
 	}
 
-	private async Task SaveSettingsInternalAsync()
+	/// <summary>
+	/// Einmalige Umstellung von der frueheren Einzeldatei auf zwei Dateien. Erkennungsmerkmal ist
+	/// die fehlende Geraetedatei; die Altdatei bleibt als <c>.migrated</c> erhalten.
+	/// </summary>
+	private async Task MigrateLegacyFileIfNeededAsync()
 	{
-		var directory = Path.GetDirectoryName(_settingsFilePath);
+		var devicePath = GetDeviceFilePath();
+		var configPath = GetSettingsFilePath();
 
+		if (File.Exists(devicePath) || !File.Exists(configPath))
+			return;
+
+		try
+		{
+			var json = await File.ReadAllTextAsync(configPath);
+
+			using var document = JsonDocument.Parse(json);
+			var root = document.RootElement;
+
+			var device = new DeviceSettings();
+
+			// Aeltere Installationen haben weder Network noch RestApi - dann gelten Standardwerte.
+			if (root.TryGetProperty("Network", out var network))
+				device.Network = network.Deserialize<NetworkSettings>() ?? new NetworkSettings();
+
+			if (root.TryGetProperty("RestApi", out var restApi))
+				device.RestApi = restApi.Deserialize<RestApiSettings>() ?? new RestApiSettings();
+
+			// FileLoggingEnabled stand frueher unter General.
+			if (root.TryGetProperty("General", out var general)
+				&& general.TryGetProperty("FileLoggingEnabled", out var fileLogging)
+				&& fileLogging.ValueKind is JsonValueKind.True or JsonValueKind.False)
+			{
+				device.FileLoggingEnabled = fileLogging.GetBoolean();
+			}
+
+			var config = JsonSerializer.Deserialize<ConfigFile>(json) ?? new ConfigFile();
+
+			await WriteFileAsync(devicePath, JsonSerializer.Serialize(device, _fileJsonOptions));
+
+			var backupPath = configPath + ".migrated";
+			File.Copy(configPath, backupPath, overwrite: true);
+			await WriteFileAsync(configPath, JsonSerializer.Serialize(config, _fileJsonOptions));
+
+			_logger.LogWarning(
+				"Konfiguration auf zwei Dateien aufgeteilt: Geraete-Einstellungen stehen jetzt in " +
+				"{Device}. Die bisherige Fassung wurde als {Backup} gesichert.",
+				Path.GetFileName(devicePath), Path.GetFileName(backupPath));
+		}
+		catch (Exception ex)
+		{
+			// Nicht abbrechen: schlaegt die Umstellung fehl, startet die Anwendung mit
+			// Standardwerten fuer das Geraet - die Altdatei bleibt dabei unberuehrt und kann
+			// von Hand aufgeteilt werden.
+			_logger.LogError(ex, "Die Konfiguration konnte nicht auf zwei Dateien aufgeteilt werden.");
+		}
+	}
+
+	/// <summary>
+	/// Schreibt atomar: erst vollstaendig in eine Temp-Datei (Write-Through, also am
+	/// Betriebssystem-Cache vorbei), dann umbenennen.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="File.WriteAllTextAsync(string,string,CancellationToken)"/> kuerzt die Zieldatei
+	/// zuerst und schreibt danach - ein Stromausfall dazwischen (Stecker am TV-Schrank)
+	/// hinterlaesst eine halbe Datei. Beim naechsten Start gaelten dann Standardwerte, und weil
+	/// ein leerer API-Schluessel mit BindAddress 0.0.0.0 den Start der REST-Schnittstelle
+	/// verhindert, waere das Geraet aus der Ferne nicht mehr erreichbar.
+	/// </remarks>
+	private static async Task WriteFileAsync(string path, string json)
+	{
+		var directory = Path.GetDirectoryName(path);
 		if (!string.IsNullOrEmpty(directory))
 			Directory.CreateDirectory(directory);
 
-		var options = new JsonSerializerOptions { WriteIndented = true };
-		var json = JsonSerializer.Serialize(_settings, options);
+		var tempPath = path + ".tmp";
+		var bytes = Encoding.UTF8.GetBytes(json);
 
-		await File.WriteAllTextAsync(_settingsFilePath, json);
+		await using (var stream = new FileStream(
+			tempPath, FileMode.Create, FileAccess.Write, FileShare.None,
+			bufferSize: 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
+		{
+			await stream.WriteAsync(bytes);
+			await stream.FlushAsync();
+		}
+
+		File.Move(tempPath, path, overwrite: true);
 	}
 
-	public void RequestSaveSettings()
+	private async Task SaveSettingsInternalAsync(SettingsScope scope)
 	{
-		var oldCts = _saveDebounceCts;
-		_saveDebounceCts = new CancellationTokenSource();
-		var newCts = _saveDebounceCts;
+		// Beide Schreibwege - die Warteschlange unten und SaveSettingsNowAsync - greifen auf
+		// dieselben Dateien zu.
+		await _saveGate.WaitAsync();
 
-		_logger.LogDebug("Settings save debounced (waiting 1s)");
-
-		_ = DebouncedSaveAsync(newCts, oldCts);
-	}
-
-	private async Task DebouncedSaveAsync(CancellationTokenSource newCts, CancellationTokenSource? oldCts)
-	{
 		try
 		{
-			// Cancle alte Debounce
-			try
-			{
-				oldCts?.Cancel();
-			}
-			catch (ObjectDisposedException)
-			{
-				// Alte CTS wurde bereits disposed, ignorieren
-			}
+			object payload = scope == SettingsScope.Device
+				? _settings.Device
+				: new ConfigFile { General = _settings.General, Game = _settings.Game, UI = _settings.UI };
 
-			// Warte auf Debounce-Timeout
-			await Task.Delay(1000, newCts.Token);
-
-			// Prüfe ob diese CTS noch aktuell ist (nicht durch neue Änderung cancelled)
-			if (newCts == _saveDebounceCts)
-			{
-				_logger.LogDebug("Debounce timeout reached, triggering settings save");
-				try
-				{
-					await _saveSettingsQueue.Writer.WriteAsync(true);
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, "Failed to write settings save request to queue");
-				}
-			}
-			else
-			{
-				_logger.LogDebug("Debounce cancelled by newer save request");
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			_logger.LogDebug("Settings save debounce cancelled (new save requested)");
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error in settings save debounce");
+			await WriteFileAsync(GetFilePath(scope), JsonSerializer.Serialize(payload, payload.GetType(), _fileJsonOptions));
 		}
 		finally
 		{
-			// Dispose neue CTS nur wenn sie noch aktuell ist
-			if (newCts == _saveDebounceCts)
-			{
-				try
-				{
-					newCts.Dispose();
-				}
-				catch { }
-			}
-
-			// Dispose alte CTS
-			try
-			{
-				oldCts?.Dispose();
-			}
-			catch { }
+			_saveGate.Release();
 		}
 	}
 
+	/// <summary>
+	/// Reiht einen Speichervorgang ein. <paramref name="scope"/> entscheidet, welche Datei
+	/// geschrieben wird - ohne diese Unterscheidung wuerde jede Kehre auch die Geraetedatei mit
+	/// dem API-Schluessel neu schreiben.
+	/// </summary>
+	public void RequestSaveSettings(SettingsScope scope = SettingsScope.Config)
+	{
+		CancellationTokenSource cts;
+
+		lock (_debounceLock)
+		{
+			_pendingScopes.Add(scope);
+
+			// Die vorige Wartezeit verfaellt; sie wird absichtlich nur abgebrochen und erst in
+			// Dispose() freigegeben, weil ihre Aufgabe noch auf das Token wartet.
+			_saveDebounceCts?.Cancel();
+			cts = _saveDebounceCts = new CancellationTokenSource();
+		}
+
+		_ = FlushAfterDelayAsync(cts);
+	}
+
+	private async Task FlushAfterDelayAsync(CancellationTokenSource cts)
+	{
+		try
+		{
+			await Task.Delay(SaveDebounceDelay, cts.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// Eine neuere Anforderung hat die Wartezeit neu gestartet.
+			return;
+		}
+
+		foreach (var scope in TakePendingScopes())
+			_saveSettingsQueue.Writer.TryWrite(scope);
+	}
+
+	private SettingsScope[] TakePendingScopes()
+	{
+		lock (_debounceLock)
+		{
+			var scopes = _pendingScopes.ToArray();
+			_pendingScopes.Clear();
+			return scopes;
+		}
+	}
+
+	/// <summary>
+	/// Speichert sofort und meldet Fehler an den Aufrufer weiter, statt sie nur zu
+	/// protokollieren.
+	/// </summary>
+	/// <remarks>
+	/// Gegenstueck zu <see cref="RequestSaveSettings"/>: das reiht nur in die Warteschlange ein
+	/// und der Aufrufer erfaehrt nie, ob geschrieben wurde. Fuer den Wechsel des API-Schluessels
+	/// reicht das nicht - dort muss bei einem Fehler zurueckgenommen werden koennen, sonst
+	/// gaelte im Betrieb ein Schluessel, der nirgends steht, und nach dem naechsten Start kaeme
+	/// niemand mehr auf das Geraet.
+	///
+	/// Fuer den normalen Spielbetrieb weiterhin <see cref="RequestSaveSettings"/> verwenden.
+	/// </remarks>
+	public Task SaveSettingsNowAsync(SettingsScope scope = SettingsScope.Config)
+		=> SaveSettingsInternalAsync(scope);
+
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		await foreach (var _ in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
+		await foreach (var scope in _saveSettingsQueue.Reader.ReadAllAsync(stoppingToken))
 		{
 			try
 			{
-				await SaveSettingsInternalAsync();
-				_logger.LogDebug("Settings gespeichert");
+				await SaveSettingsInternalAsync(scope);
+				_logger.LogDebug("{Scope}-Einstellungen gespeichert", scope);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError("Fehler beim Speichern: {Msg}", ex.Message);
+				_logger.LogError("Fehler beim Speichern ({Scope}): {Msg}", scope, ex.Message);
 			}
 		}
+	}
+
+	#endregion
+
+	#region Table Layout
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.TableLayout bzw. UI.MidColumnWidth.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Custom Themes.
+	/// </summary>
+	public void NotifyTableLayoutChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetTableLayout()
+	{
+		CurrentSettings.UI.TableLayout = new TableLayoutSettings();
+		CurrentSettings.UI.MidColumnWidth = 90;
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Cell Font Weight
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.CellFontWeight.
+	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
+	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Table Layout.
+	/// </summary>
+	public void NotifyCellFontWeightChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	public void ResetCellFontWeight()
+	{
+		CurrentSettings.UI.CellFontWeight = new CellFontWeightSettings();
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Font Family
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.FontFamily (global, unabhaengig vom
+	/// aktiven Theme). Die Editor-Komponente bindet direkt auf die Settings-Property und ruft
+	/// diese Methode danach auf (@bind:after), analog zum Save-Aufruf bei Cell Font Weight.
+	/// </summary>
+	public void NotifyFontFamilyChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
 	}
 
 	#endregion
@@ -443,66 +703,6 @@ public class SettingsService : BackgroundService
 	public void ActivateTheme(Guid id)
 	{
 		CurrentSettings.UI.ActivateTheme(id);
-		RequestSaveSettings();
-		NotifyChanged();
-	}
-
-	#endregion
-
-	#region Table Layout
-
-	/// <summary>
-	/// Persistiert und published eine Änderung an UI.TableLayout bzw. UI.MidColumnWidth.
-	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
-	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Custom Themes.
-	/// </summary>
-	public void NotifyTableLayoutChanged()
-	{
-		RequestSaveSettings();
-		NotifyChanged();
-	}
-
-	public void ResetTableLayout()
-	{
-		CurrentSettings.UI.TableLayout = new TableLayoutSettings();
-		CurrentSettings.UI.MidColumnWidth = 90;
-		RequestSaveSettings();
-		NotifyChanged();
-	}
-
-	#endregion
-
-	#region Cell Font Weight
-
-	/// <summary>
-	/// Persistiert und published eine Änderung an UI.CellFontWeight.
-	/// Die Editor-Komponente bindet direkt auf die Settings-Properties und ruft diese
-	/// Methode danach auf (@bind:after), analog zum Save-Aufruf bei Table Layout.
-	/// </summary>
-	public void NotifyCellFontWeightChanged()
-	{
-		RequestSaveSettings();
-		NotifyChanged();
-	}
-
-	public void ResetCellFontWeight()
-	{
-		CurrentSettings.UI.CellFontWeight = new CellFontWeightSettings();
-		RequestSaveSettings();
-		NotifyChanged();
-	}
-
-	#endregion
-
-	#region Font Family
-
-	/// <summary>
-	/// Persistiert und published eine Änderung an UI.FontFamily (global, unabhängig vom
-	/// aktiven Theme). Die Editor-Komponente bindet direkt auf die Settings-Property und ruft
-	/// diese Methode danach auf (@bind:after), analog zum Save-Aufruf bei Cell Font Weight.
-	/// </summary>
-	public void NotifyFontFamilyChanged()
-	{
 		RequestSaveSettings();
 		NotifyChanged();
 	}

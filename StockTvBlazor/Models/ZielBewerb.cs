@@ -9,12 +9,10 @@ public class ZielBewerb
 	public event Action? OnZielBewerbChanged;
 
 	private readonly SettingsService _settingsService;
-	private readonly GameStatePersistenceService _gamePersistence;
 
-	public ZielBewerb(SettingsService settingsService, GameStatePersistenceService gamePersistence)
+	public ZielBewerb(SettingsService settingsService)
 	{
 		_settingsService = settingsService;
-		_gamePersistence = gamePersistence;
 	}
 
 	public int MassenVorneSumme => _massenVorne.Sum();
@@ -149,7 +147,7 @@ public class ZielBewerb
 		return success;
 	}
 
-	private void ClearZielStateInMemory()
+	public void Reset()
 	{
 		_massenVorne.Clear();
 		_schiessen.Clear();
@@ -158,17 +156,8 @@ public class ZielBewerb
 		_spielerName = string.Empty;
 		_runde1Summe = 0;
 		_aktuellerDurchgang = 1;
+
 		OnZielBewerbChanged?.Invoke();
-	}
-
-	public void Reset(bool force = false)
-	{
-		ClearZielStateInMemory();
-
-		if (force)
-		{
-			_gamePersistence.DeleteZielState();
-		}
 	}
 
 	public void AddSpielerName(string spielerName)
@@ -177,54 +166,44 @@ public class ZielBewerb
 		OnZielBewerbChanged?.Invoke();
 	}
 
-	public async Task SaveZielStateAsync()
+	#region Persistenz (stocktv.state.json)
+
+	/// <summary>Zieht einen Abzug des Zielbewerbs fuer die Ablage auf der Platte.</summary>
+	public ZielState CreateSnapshot() => new()
 	{
-		var s = _settingsService.CurrentSettings;
+		MassenVorne = [.. _massenVorne],
+		Schiessen = [.. _schiessen],
+		MassenSeite = [.. _massenSeite],
+		Kombinieren = [.. _kombinieren],
+		Spielername = _spielerName ?? string.Empty,
+		Runde1Summe = _runde1Summe,
+		Durchgang = _aktuellerDurchgang
+	};
 
-		if (s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel &&
-			s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel2)
-			return;
-
-		var state = new GameStatePersistenceService.ZielStateData
-		{
-			Versuche = new Dictionary<string, List<int>>
-			{
-				["MassenVorne"] = new List<int>(_massenVorne),
-				["Schiessen"] = new List<int>(_schiessen),
-				["MassenSeite"] = new List<int>(_massenSeite),
-				["Kombinieren"] = new List<int>(_kombinieren)
-			},
-			Runde = _aktuellerDurchgang,
-			Runde1Summe = _runde1Summe
-		};
-
-		await _gamePersistence.SaveZielStateAsync(state);
-	}
-
-	public async Task LoadZielStateAsync()
+	/// <summary>
+	/// Stellt einen gesicherten Zielbewerb wieder her. Der Aufrufer hat vorher geprueft, dass er
+	/// zu Bahn, Modus und Zeitfenster passt (siehe <see cref="Services.GameStateStore"/>).
+	/// </summary>
+	/// <remarks>
+	/// <see cref="_runde1Summe"/> und <see cref="_aktuellerDurchgang"/> muessen mit: ohne sie
+	/// faenge ein wiederhergestellter Ziel2-Bewerb die zweite Runde von vorn an und die
+	/// Gesamtsumme fiele um die erste Runde zurueck.
+	/// </remarks>
+	public void RestoreFrom(ZielState state)
 	{
-		var s = _settingsService.CurrentSettings;
+		_massenVorne.Clear(); _massenVorne.AddRange(state.MassenVorne);
+		_schiessen.Clear(); _schiessen.AddRange(state.Schiessen);
+		_massenSeite.Clear(); _massenSeite.AddRange(state.MassenSeite);
+		_kombinieren.Clear(); _kombinieren.AddRange(state.Kombinieren);
 
-		if (s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel &&
-			s.Game.CurrentModus != Settings.GameSettings.Modus.Ziel2)
-			return;
-
-		ClearZielStateInMemory();
-
-		var state = await _gamePersistence.LoadZielStateAsync();
-
-		if (state == null || state.Versuche.Count == 0)
-			return;
-
-		_massenVorne.AddRange(state.Versuche.GetValueOrDefault("MassenVorne", []));
-		_schiessen.AddRange(state.Versuche.GetValueOrDefault("Schiessen", []));
-		_massenSeite.AddRange(state.Versuche.GetValueOrDefault("MassenSeite", []));
-		_kombinieren.AddRange(state.Versuche.GetValueOrDefault("Kombinieren", []));
+		_spielerName = state.Spielername;
 		_runde1Summe = state.Runde1Summe;
-		_aktuellerDurchgang = state.Runde;
+		_aktuellerDurchgang = state.Durchgang < 1 ? 1 : state.Durchgang;
 
 		OnZielBewerbChanged?.Invoke();
 	}
+
+	#endregion
 
 	internal byte[] SerializeJson()
 	{

@@ -11,8 +11,7 @@ public class MatchTests
 	{
 		var settingsService = new SettingsService(NullLogger<SettingsService>.Instance, new FileLoggerProvider());
 		await settingsService.InitializeAsync();
-		var persistence = new GameStatePersistenceService(NullLogger<GameStatePersistenceService>.Instance);
-		return new Match(settingsService, NullLogger<MatchService>.Instance, persistence);
+		return new Match(settingsService, NullLogger<MatchService>.Instance);
 	}
 
 	[Fact]

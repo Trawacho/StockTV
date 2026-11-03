@@ -2,12 +2,12 @@
 - [x] Über die Settingspage den Netzwerkstack mDNS, publisher und responseServer neu starten
 - [x] Schriftarten wählbar machen
 - [x] Theme-Settings in der Netzwerkconfig verfügbar machen
-- Marketing Seite implementieren
+- [x] Marketing Seite implementieren (`/marketing`, `Components/Pages/Marketing.razor`)
 - Homepage designen
 - [x] javascript durch css ersetzen
-- NetMQ SetImage Befehl implementieren
-- NetMQ GoToImage Befehl implementieren
-- NetMQ ClearImage Befehl implementieren
+- [x] NetMQ SetImage Befehl implementieren
+- [x] NetMQ GoToImage Befehl implementieren
+- [x] NetMQ ClearImage Befehl implementieren
 - [x] Mannschaft mit Anspiel soll einen farbigen Rahmen bekommen, um Sichtbarkeit zu verbessern
 - [x] Erweiterung der setup page. Ein Update kann aktuell über das Internet gemacht werden, zusätzlich soll es die Möglichkeit geben, eine Version manuell über den Browser hochzuladen und zu installieren.
 - Neuer Spielmodus "Special1" (Kopie von BestOf, Quote 6/9/12=Aus, keine Netzwerkübertragung) — Plan siehe [Special1-Modus-Plan.md](Special1-Modus-Plan.md)
@@ -15,11 +15,17 @@
 - [x] `UseHttpsRedirection()`/`UseHsts()` aus `Program.cs` entfernen — App bedient nie HTTPS (nur Port 8080 HTTP), erzeugt bei jedem Start nur die sinnlose Warnung "Failed to determine the https port for redirect"
 - [x] `MdnsDiscoveryService`: mDNS nach Pi-Boot-Race dauerhaft unerreichbar (Hotfix `hotfix/mdns-ip-selfheal`, 2026-08-16) — Ursache war tiefer als vermutet: nicht nur die im `ServiceProfile` eingebackene IP war beim Boot-Race auf `127.0.0.1` eingefroren, sondern `MulticastService` trat der mDNS-Multicast-Gruppe (`224.0.0.251`) nie auf dem echten Netzwerk-Interface (`eth0`) bei, wenn dieses beim Start von `ServiceDiscovery` noch keine IP hatte (nur auf `lo`, dauerhaft — die eingebaute periodische Neuerkennung alle 2 Minuten hat das nicht behoben, ein nachträglicher `Mdns.Stop()`/`Start()` auch nicht, nur doppelte Socket-Bindings erzeugt). Fix: `ServiceDiscovery` wird jetzt erst erstellt/gestartet, sobald `IpAdvertisementService.GetAdvertisedIp()` eine echte IP liefert (2s-Retry-Loop vor der Konstruktion), zusätzliches Start-/Fehler-Logging ergänzt. Auf `stocktvPi4` durch drei echte Reboots verifiziert (Boot-Race reproduziert, `eth0` tritt jetzt korrekt bei, externe mDNS-Query beantwortet)
 - [x] `SettingsService`: Erfolgreiches Laden der Config loggen (`LoadSettingsAsync` loggt jetzt bei Erfolg eine Info-Zeile mit BahnNummer/Modus)
-- [x] **Spielstand-Persistierung über alle Modi außer Training** — gelöst mit `GameStatePersistenceService`:
-  - Zwei separate Dateien in `_config/`: `match-state.json` (Kehren für BestOf/Turnier) und `ziel-state.json` (Versuche für Ziel/Ziel2)
-  - Laden nur beim App-Startup (MatchService/ZielService.InitializeAsync)
-  - Speichern direkt bei `AddTurn()`/`AddVersuch()` (nicht über SettingsService/[JsonIgnore])
-  - Löschen bei `Reset(force=true)` oder wenn Daten leer sind
-  - Training speichert nichts
-  - Modus-Wechsel arbeitet mit In-Memory-Daten (keine neuen Loads)
+- [x] **Spielstand-Persistierung über alle Modi außer Training** (Branch `feature/rest-api-security`)
+  - Umgesetzt wie vorgegeben über einen **eigenen, dedizierten Service**: `Services/GameStateStore.cs` + `Services/GameStateFile.cs`, eigene Datei `_config/stocktv.state.json` — nicht über `SettingsService`/`stocktv.config.json`.
+  - Der tote Pfad ist entfernt: `GameSettings.Kehren` (`[JsonIgnore]`), `SettingsService.SaveTurnsAsync()`, `Match.SaveTurnsToLocalSettingsAsync()`/`LoadTurnsFromLocalSettings()`. Das `[JsonIgnore]` stand schon vor dem großen Settings-Refactor (`1a24161`) in `Models/Settings.cs` — die Kehren waren nie in der Datei, das Wiederherstellen lief immer ins Leere, und jede Kehre löste trotzdem einen vollständigen Schreibvorgang aus.
+  - Ziel/Ziel2 sind jetzt mit persistiert, inklusive `Runde1Summe` und `Durchgang` — ohne die beiden fängt ein wiederhergestellter Ziel2-Bewerb die zweite Runde von vorn an.
+  - Gespeichert wird über `OnMatchChanged`/`OnZielBewerbChanged` (verdrahtet in `Program.cs`), damit auch `SetTeamNames`/`SetTeilnehmer`/`ResetResult` von außen erfasst sind. Schreiben über eine `Channel`-Queue und atomar (Temp-Datei + `File.Move`).
+  - Mit `develop` (v1.9.1) zusammengeführt: dessen `GameStatePersistenceService` mit `match-state.json`/`ziel-state.json` ist entfallen. **Keine Migration** der alten Dateien von Geräten mit v1.9 (bewusste Entscheidung): Bei einem Update mitten im Turnier geht der Stand verloren, die alten Dateien werden ignoriert.
+  - **Training wird weder gespeichert noch geladen:** `Program.cs` liefert im Training keinen Schnappschuss (die Datei bleibt unberührt, ein Abstecher ins Training löscht den Stand des eigentlichen Modus nicht), und `GameStateStore.IsApplicable` lehnt Training beim Laden ab. Tests: `GameStateStoreTests`.
+  - Geladen wird nur, wenn `BahnNummer` und `Modus` passen und `SavedAtUtc` jünger als 12 h ist. Ein unlesbarer Spielstand wird kommentarlos verworfen — eine Anzeige, die wegen einer defekten Punktedatei nicht hochkommt, wäre der schlechtere Tausch.
+- [x] **REST-Schnittstelle mit API-Schlüssel** (Branch `feature/rest-api-security`) — eigener Kestrel-Host auf Port 8098, Muster aus StockTvKiosk übernommen (`Api/StockTvApiHost.cs`, `Api/ApiKeyMiddleware.cs`, `Api/ConfigController.cs`). Schlüsselwechsel über `POST /api/v1/config/api-key`, verschlüsselt abgelegt (`Services/SecretProtector.cs`).
+- [x] **Konfiguration auf getrennte Dateien aufgeteilt** — `stocktv.device.json` (Gerät, enthält den Schlüssel, im Spielbetrieb nie geschrieben), `stocktv.config.json` (Betrieb), `stocktv.state.json` (Spielstand). Migration aus der Altdatei läuft einmalig beim Start.
+- [x] **REST-Endpunkte für den Spielbetrieb und SignalR-Hub** (Branch `feature/rest-api-security`) — `Api/GameController.cs`, `ImageController.cs`, `SystemController.cs`, `StockTvHub.cs`. Läuft **parallel** zu NetMQ, bis StockAppV2 umgestellt ist: gemeinsame `GameCommandQueue` (Serialisierung), `GameEventBroadcaster` (Fan-out auf beide Wege), `SubscriberRegistry` (BlockLocalChanges aus beiden Quellen).
+- NetMQ abbauen, sobald StockAppV2 auf REST/SignalR umgestellt ist (NetMQ-Package, Ports 4747/4748, `Networking/NetMq*`)
+- `PUT /api/v1/config` und `POST /api/v1/config/default` (Konfiguration hochladen/zurücksetzen) — durch die Aufteilung jetzt möglich, weil die Gerätedatei im Spielbetrieb unberührt bleibt
 - **IPv4-Link-Local-Fallback (169.254.x.x) für den Fall, dass ein Pi auf DHCP steht, aber kein DHCP-Server antwortet:** aktuell bekommt der Pi dann (anders als z.B. Windows/APIPA) gar keine IPv4-Adresse, da NetworkManager bei `ipv4.method=auto` nicht automatisch auf Link-Local zurückfällt. Lösungsansatz (noch nicht umgesetzt): pro Ethernet-Interface ein zweites, niedriger priorisiertes nmcli-Connection-Profil mit `ipv4.method=link-local` in `install.sh` einrichten (läuft als root, keine sudoers-Änderung nötig) plus `connection.autoconnect-priority` am Haupt-Profil erhöhen. Zusätzlich nötig: `NetworkConfigService.GetConnectionDetailsAsync` erkennt ein aktives Link-Local-Profil aktuell fälschlich als "DHCP" (`isDhcp = method != "manual"`) statt als eigenen Zustand; `SetStaticAsync`/`SetDhcpAsync` müssten gezielt das Haupt-Profil ansprechen statt das gerade aktive (sonst landet eine manuell gesetzte statische IP im falschen, `-linklocal` benannten Profil). Scope bewusst nur Ethernet, nicht WLAN (bräuchte dort ein zweites Profil mit identischer SSID/Security, deutlich mehr Aufwand für wenig Nutzen bei den üblicherweise verkabelten Geräten). Wichtig: Link-Local ist laut RFC 3927 nicht routbar, hilft also nur, wenn PC und Pi am selben physischen Segment hängen, nicht über einen Router hinweg.

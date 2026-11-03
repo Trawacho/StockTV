@@ -15,13 +15,10 @@ public class Match
 
 	private readonly ILogger<MatchService> _logger;
 
-	private readonly GameStatePersistenceService _gamePersistence;
-
-	public Match(SettingsService settingsService, ILogger<MatchService> logger, GameStatePersistenceService gamePersistence)
+	public Match(SettingsService settingsService, ILogger<MatchService> logger)
 	{
 		_settingsService = settingsService;
 		_logger = logger;
-		_gamePersistence = gamePersistence;
 
 		_games.Add(new Game(_settingsService.CurrentSettings, 1));
 	}
@@ -100,23 +97,17 @@ public class Match
 		OnMatchChanged?.Invoke();
 	}
 
-	private void ClearMatchStateInMemory()
-	{
-		var s = _settingsService.CurrentSettings;
-		ClearBegegnungen();
-		_games.Clear();
-		_games.Add(new Game(s, 1));
-		OnMatchChanged?.Invoke();
-	}
-
 	public void Reset(bool force = false)
 	{
 		var s = _settingsService.CurrentSettings;
 
 		if (force)
 		{
-			ClearMatchStateInMemory();
-			_gamePersistence.DeleteMatchState();
+			ClearBegegnungen();
+			_games.Clear();
+			_games.Add(new Game(s, 1));
+
+			OnMatchChanged?.Invoke();
 			return;
 		}
 
@@ -136,37 +127,55 @@ public class Match
 		OnMatchChanged?.Invoke();
 	}
 
-	public async Task SaveMatchStateAsync()
+	#endregion
+
+	#region Persistenz (stocktv.state.json)
+
+	/// <summary>Zieht einen Abzug des Spielstands fuer die Ablage auf der Platte.</summary>
+	public MatchState CreateSnapshot() => new()
 	{
-		var s = _settingsService.CurrentSettings;
-
-		if (s.Game.CurrentModus == GameSettings.Modus.Training)
-			return;
-
-		var allTurns = Games.SelectMany(g => g.Turns).ToList();
-		await _gamePersistence.SaveMatchStateAsync(allTurns);
-	}
-
-	public async Task LoadMatchStateAsync()
-	{
-		var s = _settingsService.CurrentSettings;
-
-		if (s.Game.CurrentModus == GameSettings.Modus.Training)
-			return;
-
-		ClearMatchStateInMemory();
-
-		var allTurns = await _gamePersistence.LoadMatchStateAsync();
-
-		if (allTurns == null || allTurns.Count == 0)
-			return;
-
-		_logger.LogInformation("Loaded {Count} turns from match-state.json", allTurns.Count);
-		foreach (var turn in allTurns)
+		Games = [.. _games.Select(g => new GameState
 		{
-			AddTurn(turn);
-			Reset();
+			GameNumber = g.GameNumber,
+			Turns = [.. g.Turns]
+		})],
+		Begegnungen = [.. _begegnungen.Select(b => new BegegnungState
+		{
+			Spielnummer = b.Spielnummer,
+			MannschaftA = b.MannschaftA,
+			MannschaftB = b.MannschaftB
+		})]
+	};
+
+	/// <summary>
+	/// Stellt einen gesicherten Spielstand wieder her. Der Aufrufer hat vorher geprueft, dass er
+	/// zu Bahn, Modus und Zeitfenster passt (siehe <see cref="Services.GameStateStore"/>).
+	/// </summary>
+	public void RestoreFrom(MatchState state)
+	{
+		_games.Clear();
+		_begegnungen.Clear();
+
+		foreach (var gameState in state.Games.OrderBy(g => g.GameNumber))
+		{
+			// Ueber den Konstruktor mit Settings, sonst haette das Spiel eine eigene, leere
+			// Settings-Instanz und MaxKehrenProSpiel waere falsch - davon haengen die Spielpunkte ab.
+			var game = new Game(_settingsService.CurrentSettings, gameState.GameNumber);
+			game.Turns.AddRange(gameState.Turns);
+			_games.Add(game);
 		}
+
+		if (_games.Count == 0)
+			_games.Add(new Game(_settingsService.CurrentSettings, 1));
+
+		foreach (var b in state.Begegnungen)
+			_begegnungen.Add(new Begegnung(b.Spielnummer, b.MannschaftA, b.MannschaftB));
+
+		_logger.LogInformation(
+			"Spielstand wiederhergestellt: {Games} Spiel(e), {Turns} Kehren, {Begegnungen} Begegnung(en)",
+			_games.Count, _games.Sum(g => g.Turns.Count), _begegnungen.Count);
+
+		OnMatchChanged?.Invoke();
 	}
 
 	#endregion

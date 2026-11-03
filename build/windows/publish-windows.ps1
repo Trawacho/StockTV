@@ -52,6 +52,7 @@ dotnet publish $Project `
 
 Copy-Item "$PSScriptRoot\install-service.ps1" "$OutputDir\install-service.ps1" -Force
 Copy-Item "$PSScriptRoot\start-kiosk.ps1"   "$OutputDir\start-kiosk.ps1"   -Force
+Copy-Item "$PSScriptRoot\start-kiosk-dual.ps1" "$OutputDir\start-kiosk-dual.ps1" -Force
 
 # ============================================
 #  3. Zip fuer GitHub Release erstellen

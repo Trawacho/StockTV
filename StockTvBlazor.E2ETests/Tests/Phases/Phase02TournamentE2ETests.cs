@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using StockTvBlazor.E2ETests.Fixtures;
 using StockTvBlazor.E2ETests.Helpers;
 using Xunit;
@@ -7,9 +7,9 @@ using Xunit.Abstractions;
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
 [Collection("E2E Sequential")]
-public class Phase2TournamentE2ETests : PhaseTestBase
+public class Phase02TournamentE2ETests : PhaseTestBase
 {
-	public Phase2TournamentE2ETests(AppFixture fixture, ITestOutputHelper output)
+	public Phase02TournamentE2ETests(AppFixture fixture, ITestOutputHelper output)
 		: base(fixture, output)
 	{
 	}

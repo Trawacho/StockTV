@@ -23,6 +23,8 @@ Installationsanleitung für Raspberry Pi, Windows und Docker.
   - [Update (Docker)](#update-docker)
   - [Hinweise (Docker)](#hinweise-docker)
 - [Konfiguration nach der Installation](#konfiguration-nach-der-installation)
+  - [Konfigurationsdateien](#konfigurationsdateien)
+  - [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle)
   - [Bahnnummer einstellen](#bahnnummer-einstellen)
   - [Netzwerk-Empfehlungen](#netzwerk-empfehlungen)
   - [Verwendung von Tablets](#verwendung-von-tablets)
@@ -109,6 +111,29 @@ Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N]
 
 **Mit Kiosk (`j`):** Autologin auf tty1, Chromium startet nach dem Reboot automatisch im Vollbild.  
 **Ohne Kiosk (`N`):** Nur der Hintergrunddienst wird eingerichtet, Web-UI unter `http://<IP>:8080`.
+
+**Zwei Bildschirme (Anzeige für beide Bahnseiten):** Dafür gibt es ein eigenes Script,
+`install-dual.sh` — sonst identisch zu `install.sh`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install-dual.sh | bash
+```
+
+Es ordnet beide HDMI-Ausgänge per `xrandr` nebeneinander an und startet auf dem zweiten Bildschirm
+ein zusätzliches Vollbild-Fenster mit `http://localhost:8080/display2`. Dort werden dieselben Daten
+**spiegelverkehrt** angezeigt (linke und rechte Spalte vertauscht), damit jede Bahnseite ihre
+Mannschaft auf der Seite sieht, auf der sie steht. Eingaben nimmt nur der Hauptbildschirm (bzw. das
+Tablet unter `/input`) entgegen; die Ziel-Modi werden nicht gespiegelt.
+
+Damit die Zuordnung sicher stimmt, wird der erste Ausgang ausdrücklich auf Position 0x0 gesetzt und
+zusätzlich `wmctrl` installiert: nach dem Start werden beide Fenster anhand ihrer WM_CLASS
+(`StockTV-Main` / `StockTV-Mirror`) nochmals exakt auf ihren Ausgang gelegt und der Tastaturfokus
+gezielt auf das Bedienfenster gesetzt — Chromium platziert bei zwei Ausgängen von sich aus nicht
+zuverlässig.
+
+Die Zwei-Bildschirm-Einrichtung wird in `/opt/stocktv/.kiosk-dual` vermerkt. Wird später
+versehentlich mit `install.sh` aktualisiert, fragt dieses nach, statt still auf einen Bildschirm
+zurückzustellen — für Updates einer Dual-Installation also weiter `install-dual.sh` verwenden.
 
 Das Script:
 - lädt automatisch die neueste Version von GitHub herunter
@@ -277,11 +302,54 @@ notwendig sein soll. Unterstützte Browser (in dieser Reihenfolge gesucht): Micr
 - `C:\StockTV\kiosk-profile\` — Browser-Profil mit deaktivierten Übersetzungs- und Benachrichtigungs-Dialogen
 - Windows Scheduled Task `StockTV Kiosk` — führt das Skript bei Anmeldung jedes Benutzers aus
 - Sentinel-Datei `C:\StockTV\.kiosk` — merkt sich, dass Kiosk aktiv ist; bei Updates wird er automatisch neu eingerichtet
+- `C:\StockTV\start-kiosk-dual.ps1` — Variante für zwei Bildschirme (siehe unten)
+
+**Zwei Bildschirme (Anzeige für beide Bahnseiten):**
+
+Dafür beim Setup zusätzlich `-DualDisplay` angeben:
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay
+```
+
+Das Setup legt dann `start-kiosk-dual.ps1` über `start-kiosk.ps1` — Portersetzung und Scheduled
+Task bleiben unverändert. Beim Ersteinrichten fragt das Script auch danach, wenn der Schalter
+fehlt. Voraussetzung ist der Windows-Anzeigemodus **„Erweitern"** (Win+P → Erweitern); bei
+„Duplizieren" meldet Windows nur einen Bildschirm und es bleibt beim Hauptfenster.
+
+Die Fenster werden anhand der von Windows gemeldeten Bildschirmgrenzen platziert und danach über
+`MoveWindow` nochmals exakt gesetzt; der Tastaturfokus geht zum Schluss per `SetForegroundWindow`
+gezielt auf das Bedienfenster. Damit hängt weder die Zuordnung noch die Eingabe an der
+Startreihenfolge.
+
+Auf dem zweiten Bildschirm öffnet sich ein zusätzliches Vollbild-Fenster mit
+`http://localhost:8080/display2`. Dort werden dieselben Daten **spiegelverkehrt** angezeigt
+(linke und rechte Spalte vertauscht), damit jede Bahnseite ihre Mannschaft auf der Seite sieht,
+auf der sie steht. Farben und Teamnamen bleiben dabei bei ihrer Mannschaft.
+
+- Bedient wird ausschließlich über den **Hauptbildschirm** (Ziffernblock) bzw. das Tablet unter
+  `/input` — das Spiegel-Fenster nimmt keine Eingaben entgegen.
+- Die Ziel-Modi werden nicht gespiegelt; dort zeigt der zweite Bildschirm die normale Ansicht.
+- Sentinel-Datei `C:\StockTV\.kiosk-dual` merkt sich die Einstellung, Updates behalten sie bei.
+- Zum Testen ohne Kiosk genügt ein zweites Browserfenster auf `http://localhost:8080/display2`.
 
 **Kiosk nachträglich aktivieren:**
 
 ```powershell
 .\install-service.ps1 -Kiosk
+```
+
+**Nachträglich auf zwei Bildschirme umstellen:**
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay
+```
+
+**Zurück auf einen Bildschirm** — einmal gesetzt bleibt die Einstellung erhalten, das Zurückstellen
+muss deshalb ausdrücklich passieren:
+
+```powershell
+.\install-service.ps1 -Download -Kiosk -DualDisplay:$false
 ```
 
 **Kiosk deaktivieren** (ohne Dienst zu entfernen):
@@ -318,7 +386,10 @@ Dienst deinstallieren:
 ### Hinweise (Windows)
 
 - StockTV läuft auf Port **8080** (HTTP). HTTPS ist nicht konfiguriert.
-- Konfiguration liegt in `C:\StockTV\_config\stocktv.config.json`.
+- Die REST-Schnittstelle auf Port **8098** ist ohne eingetragenen Schlüssel deaktiviert — siehe
+  [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle).
+- Konfiguration liegt in `C:\StockTV\_config\` — drei Dateien, siehe
+  [Konfigurationsdateien](#konfigurationsdateien).
 - Der Dienst startet automatisch mit Windows (`UseWindowsService()` in `Program.cs`).
 
 ---
@@ -348,7 +419,7 @@ Alternativ kann eine feste Version verwendet werden, z.B. `ghcr.io/trawacho/stoc
 
 Statt einzelne Ports zu veröffentlichen (`-p ...`), bekommt der Container über ein
 **`macvlan`-Netzwerk** eine eigene IP-Adresse im LAN — wie ein eigenständiges Gerät.
-Dadurch sind automatisch alle Ports (`8080`, `4747`, `4748` und mDNS auf `5353`) direkt
+Dadurch sind automatisch alle Ports (`8080`, `8098`, `4747`, `4748` und mDNS auf `5353`) direkt
 unter dieser IP erreichbar, ohne sie einzeln zu mappen.
 
 1. Docker-Netzwerk einmalig anlegen:
@@ -500,13 +571,72 @@ einem Neuerstellen des Containers.
   [Mehrere Bahnen auf einem Rechner](#mehrere-bahnen-auf-einem-rechner) — dort auch die
   Hinweise zu Tablet-Eingabe und Smart-TV-Anzeige.
 - **Volumes:** `_config` und `_logs` unbedingt als Volumes mounten, sonst gehen Einstellungen
-  und Log-Dateien beim Neuerstellen des Containers verloren.
+  und Log-Dateien beim Neuerstellen des Containers verloren. In `_config` liegen drei Dateien
+  (Gerät, Betrieb, Spielstand) — siehe [Konfigurationsdateien](#konfigurationsdateien). Ein
+  `_config`-Ordner darf **nicht** als Vorlage für einen anderen Container kopiert werden, ohne
+  `stocktv.state.json` daraus zu entfernen.
+- **Ports:** Neben `8080` (Anzeige), `4747`/`4748` (NetMQ) und `5353` (mDNS) belegt StockTV
+  `8098` für die REST-Schnittstelle — die startet allerdings nur mit eingetragenem Schlüssel,
+  siehe [Fernsteuerung über die REST-Schnittstelle](#fernsteuerung-über-die-rest-schnittstelle).
 - **Bahnnummer:** Wird wie bei den anderen Plattformen über die Einstellungsseite in der
   App gesetzt, siehe [Konfiguration nach der Installation](#konfiguration-nach-der-installation).
 
 ---
 
 ## Konfiguration nach der Installation
+
+### Konfigurationsdateien
+
+Im Ordner `_config` liegen drei Dateien. Sie sind danach getrennt, **wer sie schreibt und wie
+oft** — die Datei mit dem API-Schlüssel wird im Spielbetrieb nie angefasst, damit ein Stromausfall
+mitten im Spiel sie nicht beschädigen kann:
+
+| Datei | Inhalt | Wird geschrieben |
+|---|---|---|
+| `stocktv.device.json` | Protokollierung, Netzwerk, REST-Schnittstelle **inkl. API-Schlüssel** | nur bei Änderung durch Betreuer oder API |
+| `stocktv.config.json` | Bahnnummer, Spielgruppe, Modus, Punkte/Kehren, Anzeige, Themes | bei jeder Einstellungsänderung |
+| `stocktv.state.json` | laufender Spielstand (Kehren, Teamnamen, Zielbewerb) | bei jeder Eingabe |
+
+**Beim ersten Start nach einem Update** wird eine vorhandene alte `stocktv.config.json` automatisch
+aufgeteilt; die bisherige Fassung bleibt als `stocktv.config.json.migrated` liegen. Es ist nichts
+von Hand zu tun.
+
+**Spielstand nach einem Neustart:** Startet das Gerät mitten im Bewerb neu (Stromausfall, Absturz),
+kommt der Spielstand automatisch zurück. Er wird nur geladen, wenn Bahnnummer und Spielmodus
+übereinstimmen und er **jünger als 12 Stunden** ist — ein Stand vom Vortag landet also nicht im
+neuen Turnier. `stocktv.state.json` gehört deshalb **nicht** mitkopiert, wenn ein `_config`-Ordner
+als Vorlage für eine andere Bahn dient.
+
+### Fernsteuerung über die REST-Schnittstelle
+
+Neben der Anzeige auf Port **8080** bietet StockTV eine REST-Schnittstelle auf Port **8098** — mit
+allen Funktionen, die bisher nur über NetMQ erreichbar waren (Spielstand, Einstellungen,
+Teamnamen, Werbebild, Geräteverwaltung), dazu einen Live-Kanal unter `/hubs/stocktv`. Beides läuft
+**parallel zu NetMQ**, die bisherige Anbindung bleibt unverändert nutzbar.
+
+Sie ist **standardmäßig gesperrt**: Ohne eingetragenen Schlüssel startet sie nicht und schreibt
+den Grund ins Protokoll — sonst könnte jeder im Netz das Gerät fernsteuern.
+
+Zum Aktivieren in `_config/stocktv.device.json` einen Schlüssel eintragen (mindestens 8 Zeichen,
+im Klartext — er wird beim nächsten Speichern automatisch verschlüsselt):
+
+```json
+"RestApi": {
+  "Enabled": true,
+  "BindAddress": "0.0.0.0",
+  "Port": 8098,
+  "ApiKey": "HierEinenEigenenSchluesselEintragen",
+  "ApiKeyHeader": "X-Api-Key",
+  "SwaggerEnabled": true,
+  "SwaggerRoute": "swagger"
+}
+```
+
+Danach den Dienst neu starten. Eine Übersicht aller Aufrufe steht dann unter
+`http://<IP>:8098/swagger`. Jeder Aufruf braucht den Schlüssel als Kopfzeile `X-Api-Key`.
+
+Soll die Schnittstelle nur lokal erreichbar sein, `BindAddress` auf `127.0.0.1` setzen — dann
+darf der Schlüssel auch leer bleiben.
 
 ### Bahnnummer einstellen
 

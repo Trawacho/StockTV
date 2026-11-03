@@ -26,11 +26,20 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 	private readonly ILogger<NetMqPublisherService> _logger;
 	private readonly SettingsService settingsService;
 	private readonly string _osVersion;
+	private readonly SubscriberRegistry _subscribers;
+	private readonly GameEventBroadcaster _broadcaster;
 
-	public NetMqPublisherService(ILogger<NetMqPublisherService> logger, SettingsService settingsService, PlatformInfoService platformInfo)
+	public NetMqPublisherService(
+		ILogger<NetMqPublisherService> logger,
+		SettingsService settingsService,
+		PlatformInfoService platformInfo,
+		SubscriberRegistry subscribers,
+		GameEventBroadcaster broadcaster)
 	{
 		_logger = logger;
 		this.settingsService = settingsService;
+		_subscribers = subscribers;
+		_broadcaster = broadcaster;
 		_osVersion = platformInfo.OsVersion;
 		try
 		{
@@ -75,6 +84,13 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 				}
 			}
 			Publish("Alive", _serializedAliveInfo);
+
+			// Parallel an die SignalR-Clients - solange beide Protokolle laufen, muss jedes
+			// Ereignis auf beiden Wegen ankommen.
+			var info = AliveInfo.Create(_osVersion);
+			_broadcaster.Alive(new Api.AliveDto(
+				info.HostName ?? "", info.IpAddress ?? "", info.AppVersion ?? "", info.OsVersion ?? "",
+				settingsService.CurrentSettings.General.BahnNummer));
 		};
 
 		_poller = [_pubSocket, _aliveTimer];
@@ -160,7 +176,9 @@ public class NetMqPublisherService : BackgroundService, IDisposable
 		{
 			await foreach (var block in _blockLocalChangesChannel.Reader.ReadAllAsync(stoppingToken))
 			{
-				settingsService.ChangeBlockLocalChanges(block);
+					// Ueber die Registry statt direkt: seit dem Parallelbetrieb setzt auch der SignalR-Hub
+				// diesen Schalter, und beide wuerden sich sonst gegenseitig ueberschreiben.
+				_subscribers.NetMqSubscriptionChanged(block);
 			}
 		}
 		catch (OperationCanceledException) { }

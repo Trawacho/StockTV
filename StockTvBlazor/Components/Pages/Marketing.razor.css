@@ -1,0 +1,22 @@
+.marketing-shell {
+	position: fixed;
+	inset: 0;
+	background-color: var(--bg-color, #000);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+/* contain statt cover: ein Werbebild soll vollstaendig zu sehen sein, auch wenn das
+   Seitenverhaeltnis nicht zum Bildschirm passt. */
+.marketing-image {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+.marketing-empty {
+	color: var(--fg-color, #d3d3d3);
+	font-size: 4vw;
+}

@@ -87,6 +87,12 @@ sudo STOCKTV_VERSION=v0.1 bash build-image.sh
 - Hostname: `stocktv`
 - Web-UI nach dem Start: `http://<ip>:8080`
 
+**Konfiguration:** `/opt/stocktv/_config/` enthält drei Dateien — `stocktv.device.json` (Gerät,
+enthält den API-Schlüssel der REST-Schnittstelle auf Port 8098), `stocktv.config.json` (Betrieb)
+und `stocktv.state.json` (laufender Spielstand, überlebt einen Neustart bis zu 12 Stunden). Eine
+alte Einzeldatei wird beim ersten Start automatisch aufgeteilt. Details in
+[INSTALL.md](../../INSTALL.md#konfigurationsdateien).
+
 ---
 
 ### [install.sh](install.sh)
@@ -119,9 +125,20 @@ Das Skript fragt beim ersten Aufruf ob Autologin + Chromium eingerichtet werden 
 Bei Bestätigung werden installiert/konfiguriert: `xserver-xorg`, `xinit`, `openbox`,
 `chromium`, autologin-Drop-in für `getty@tty1`, `~/.bash_profile`, `~/.xinitrc`.
 
+Für **zwei Bildschirme** gibt es [install-dual.sh](install-dual.sh) — sonst identisch. Dessen
+`.xinitrc` ordnet beide HDMI-Ausgänge per `xrandr` nebeneinander an und startet auf dem zweiten
+Bildschirm ein zweites Chromium-Fenster mit `http://localhost:8080/display2`: die spiegelverkehrte
+Anzeige für die gegenüberliegende Bahnseite (nur Anzeige, keine Eingabe). Dafür wird zusätzlich
+`wmctrl` installiert — beide Fenster werden nach dem Start per WM_CLASS (`StockTV-Main` /
+`StockTV-Mirror`) exakt auf ihren Ausgang gesetzt und der Fokus gezielt auf das Bedienfenster
+gelegt.
+
 Der gewählte Zustand wird in `/opt/stocktv/.kiosk` gespeichert:
 - **Kiosk aktiv:** beim Update automatisch geprüft und ggf. korrigiert, keine Rückfrage
 - **Kiosk inaktiv:** beim Update erneut gefragt (Nachholung möglich)
+- **Zwei Bildschirme:** zusätzlich `/opt/stocktv/.kiosk-dual`. Ein Update mit `install.sh` fragt
+  dann nach, statt still auf einen Bildschirm zurückzustellen — für Updates weiter
+  `install-dual.sh` verwenden.
 
 **Eignet sich für:**
 - Erstinstallation auf einem frischen Raspberry Pi OS

@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using StockTvBlazor.E2ETests.Fixtures;
 using StockTvBlazor.E2ETests.Helpers;
 using Xunit;
@@ -9,9 +9,9 @@ using System.Globalization;
 namespace StockTvBlazor.E2ETests.Tests.Phases;
 
 [Collection("E2E Sequential")]
-public class Phase9ThemeLayoutE2ETests : PhaseTestBase
+public class Phase09ThemeLayoutE2ETests : PhaseTestBase
 {
-	public Phase9ThemeLayoutE2ETests(AppFixture fixture, ITestOutputHelper output)
+	public Phase09ThemeLayoutE2ETests(AppFixture fixture, ITestOutputHelper output)
 		: base(fixture, output)
 	{
 		CurrentPhase = "Phase 9";

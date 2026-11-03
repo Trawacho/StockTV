@@ -4,7 +4,7 @@ using StockTvBlazor.Settings;
 
 namespace StockTvBlazor.Components.ViewModels;
 
-public class ZielViewModel : IDisposable
+public class ZielViewModel : IPageViewModel
 {
 	public ZielViewModel(
 		ZielService zielService,

@@ -16,6 +16,9 @@
 #  Mit Kiosk-Modus (Browser startet bei Anmeldung automatisch):
 #    .\install-service.ps1 -Download -Kiosk
 #
+#  Kiosk mit zweiter, gespiegelter Anzeige (zwei Bildschirme, Modus "Erweitern"):
+#    .\install-service.ps1 -Download -Kiosk -DualDisplay
+#
 #  Deinstallieren:
 #    .\install-service.ps1 -Uninstall
 # ============================================
@@ -29,6 +32,7 @@ param(
     [string]$KioskPassword = "stocktv",
     [switch]$Download,                  # Neueste Version von GitHub Releases laden
     [switch]$Kiosk,                     # Kiosk-Modus: Browser bei Anmeldung automatisch starten
+    [switch]$DualDisplay,               # Kiosk auf zwei Bildschirmen (zweite Anzeige gespiegelt)
     [switch]$Uninstall
 )
 
@@ -37,6 +41,11 @@ $ASSET_NAME      = "stocktv-windows-x64.zip"
 $KIOSK_TASK      = "StockTV Kiosk"
 $KIOSK_SENTINEL  = Join-Path $InstallDir ".kiosk"
 $KIOSK_SCRIPT    = Join-Path $InstallDir "start-kiosk.ps1"
+
+# Die Dual-Variante wird bei -DualDisplay ueber start-kiosk.ps1 kopiert, damit
+# Portersetzung und Scheduled Task unveraendert weiterfunktionieren.
+$KIOSK_SCRIPT_DUAL   = Join-Path $InstallDir "start-kiosk-dual.ps1"
+$KIOSK_SENTINEL_DUAL = Join-Path $InstallDir ".kiosk-dual"
 
 $ErrorActionPreference = "Stop"
 
@@ -117,7 +126,8 @@ if ($Uninstall) {
         Write-Host "Kiosk-Task geloescht."
     }
 
-    if (Test-Path $KIOSK_SENTINEL) { Remove-Item $KIOSK_SENTINEL -Force }
+    if (Test-Path $KIOSK_SENTINEL)      { Remove-Item $KIOSK_SENTINEL -Force }
+    if (Test-Path $KIOSK_SENTINEL_DUAL) { Remove-Item $KIOSK_SENTINEL_DUAL -Force }
 
     $winlogon = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
     Set-ItemProperty -Path $winlogon -Name "AutoAdminLogon" -Value "0" -Type String -ErrorAction SilentlyContinue
@@ -138,11 +148,26 @@ if (-not $SourceDir) { $SourceDir = $PSScriptRoot }
 $exe = Join-Path $InstallDir "StockTvBlazor.exe"
 
 # Sentinel pruefen: Kiosk war beim Erstinstall aktiviert -> immer neu einrichten
-if (Test-Path $KIOSK_SENTINEL) { $Kiosk = $true }
+$kioskWasConfigured = Test-Path $KIOSK_SENTINEL
+if ($kioskWasConfigured) { $Kiosk = $true }
+
+# Dual-Sentinel gewinnt: einmal auf zwei Bildschirme eingerichtet, bleibt es dabei
+# (sonst wuerde ein normales Update die zweite Anzeige stillschweigend entfernen).
+# Zurueck auf einen Bildschirm geht ausdruecklich mit -DualDisplay:$false.
+if ((Test-Path $KIOSK_SENTINEL_DUAL) -and -not $PSBoundParameters.ContainsKey("DualDisplay")) {
+    $Kiosk = $true
+    $DualDisplay = $true
+}
 
 if (-not $Kiosk) {
     $answer = Read-Host "Kiosk-Modus aktivieren? [J/n]"
     if ($answer -eq "" -or $answer -match "^[JjYy]") { $Kiosk = $true }
+}
+
+# Nur beim Ersteinrichten fragen; nachtraeglich umstellen per -DualDisplay
+if ($Kiosk -and -not $DualDisplay -and -not $kioskWasConfigured) {
+    $answer = Read-Host "Zweiten Bildschirm fuer die gegenueberliegende Bahnseite nutzen? [j/N]"
+    if ($answer -match "^[JjYy]") { $DualDisplay = $true }
 }
 
 Write-Host "=========================================="
@@ -151,7 +176,8 @@ Write-Host "   Quelle:  $SourceDir"
 Write-Host "   Ziel:    $InstallDir"
 Write-Host "   Port:    $Port"
 if ($Kiosk) {
-    Write-Host "   Kiosk:   ja"
+    if ($DualDisplay) { Write-Host "   Kiosk:   ja (zwei Bildschirme)" }
+    else              { Write-Host "   Kiosk:   ja" }
 }
 Write-Host "==========================================`n"
 
@@ -243,6 +269,17 @@ $status = (Get-Service $ServiceName).Status
 
 if ($Kiosk) {
     Write-Host "`nKiosk-Modus wird eingerichtet..."
+
+    # Bei zwei Bildschirmen die Dual-Variante ueber start-kiosk.ps1 legen. Alles
+    # Weitere (Portersetzung, Scheduled Task) arbeitet dann unveraendert damit.
+    if ($DualDisplay) {
+        if (-not (Test-Path $KIOSK_SCRIPT_DUAL)) {
+            Write-Error "start-kiosk-dual.ps1 nicht gefunden in $InstallDir"
+            exit 1
+        }
+        Copy-Item -Path $KIOSK_SCRIPT_DUAL -Destination $KIOSK_SCRIPT -Force
+        Write-Host "  Dual-Display-Variante uebernommen (start-kiosk-dual.ps1)."
+    }
 
     # Port-Platzhalter in start-kiosk.ps1 ersetzen
     if (-not (Test-Path $KIOSK_SCRIPT)) {
@@ -350,8 +387,13 @@ if ($Kiosk) {
 
     Write-Host "  Scheduled Task '$KIOSK_TASK' registriert."
 
-    # Sentinel anlegen
+    # Sentinel anlegen (merkt sich Kiosk und Ein-/Zwei-Bildschirm-Variante)
     New-Item -Path $KIOSK_SENTINEL -ItemType File -Force | Out-Null
+    if ($DualDisplay) {
+        New-Item -Path $KIOSK_SENTINEL_DUAL -ItemType File -Force | Out-Null
+    } elseif (Test-Path $KIOSK_SENTINEL_DUAL) {
+        Remove-Item $KIOSK_SENTINEL_DUAL -Force
+    }
 
     Write-Host "  Kiosk-Modus eingerichtet."
     Write-Host "  Neustart erforderlich, damit Autologin aktiv wird."
@@ -368,6 +410,10 @@ Write-Host "  Web-UI:  http://localhost:$Port"
 if ($Kiosk) {
     Write-Host "  Kiosk:   Browser startet automatisch bei Anmeldung"
     Write-Host "           (Task: '$KIOSK_TASK')"
+    if ($DualDisplay) {
+        Write-Host "           Zweiter Bildschirm: http://localhost:$Port/display2"
+        Write-Host "           Voraussetzung: Windows-Anzeigemodus 'Erweitern'"
+    }
 }
 Write-Host ""
 Write-Host "  Verwaltung:"

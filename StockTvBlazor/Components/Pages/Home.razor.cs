@@ -13,6 +13,13 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 	[Inject] protected MatchService? MatchService { get; set; }
 	[Inject] private ILogger<HomeBase> Logger { get; set; } = default!;
 
+	// Als Spiegel eingebettet (Display2): der Countdown laeuft sichtbar mit, die Seite
+	// navigiert danach aber NICHT selbst weiter. Sonst laege im iframe eine Seite ohne
+	// mirror=true, die sich beim MainWindowTracker als Bedienfenster melden wuerde.
+	// Den Wechsel loest ohnehin das echte Bedienfenster aus.
+	[SupplyParameterFromQuery(Name = "mirror")]
+	protected bool IsMirrored { get; set; }
+
 	protected int countdown = 10;
 	protected int progress = 0;
 	protected int currentCardIndex = 0;
@@ -23,18 +30,17 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 
 	protected List<Type> CardComponents = new()
 	{
-		typeof(HomeCards.CardDisplay1),
-		typeof(HomeCards.CardDisplay2),
-		typeof(HomeCards.CardDisplay3),
-		typeof(HomeCards.CardDisplay4)
+		typeof(HomeCards.CardInfo),
+		typeof(HomeCards.CardSpielmodi),
+		typeof(HomeCards.CardTastenhilfe)
 	};
 
 	protected override Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
-			if (Debugger.IsAttached)
-				countdown = 3;
+			//if (Debugger.IsAttached)
+			//	countdown = 3;
 
 			_countdownTask = RunCountdownAsync(_cts.Token);
 			_cardTask = RunCardRotationAsync(_cts.Token);
@@ -111,16 +117,20 @@ public class HomeBase : ComponentBase, IAsyncDisposable
 			if (SettingsService == null || NavManager == null)
 				return;
 
+			// Siehe IsMirrored: die Spiegelinstanz navigiert bewusst nicht.
+			if (IsMirrored)
+				return;
+
 			var settings = SettingsService.CurrentSettings;
 			string pageName = SettingsService.GetModusUrl(settings.Game.CurrentModus);
 			string[] pagesToOpen = [pageName];
 
-			if (Debugger.IsAttached)
-			{
-				pagesToOpen = new[] { "LayoutTest", "training", "turnier", "bestof", "input", "settings", "themes" };
-				var sampleNames = System.Text.Encoding.UTF8.GetBytes("1:ESF Hankofen:SV Pilgramsberg;2:EC Neubänrdorf Regen:EC Moitzerlitz Regen;");
-				MatchService?.SetTeamNames(sampleNames);
-			}
+			//if (Debugger.IsAttached)
+			//{
+			//	pagesToOpen = new[] { "LayoutTest", "training", "turnier", "bestof", "input", "settings", "themes" };
+			//	var sampleNames = System.Text.Encoding.UTF8.GetBytes("1:ESF Hankofen:SV Pilgramsberg;2:EC Neubänrdorf Regen:EC Moitzerlitz Regen;");
+			//	MatchService?.SetTeamNames(sampleNames);
+			//}
 
 			if (pagesToOpen.Length == 1)
 			{

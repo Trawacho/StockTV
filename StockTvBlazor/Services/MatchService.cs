@@ -1,31 +1,32 @@
 ﻿using StockTvBlazor.Models;
 using StockTvBlazor.Networking;
 using StockTvBlazor.Settings;
-using System.Text;
 
 namespace StockTvBlazor.Services;
 
-public class MatchService(SettingsService settingsService, ILogger<MatchService> logger, NetMqPublisherService publisherService, GameStatePersistenceService gamePersistence)
+public class MatchService(
+	SettingsService settingsService,
+	ILogger<MatchService> logger,
+	NetMqPublisherService publisherService,
+	GameEventBroadcaster broadcaster) : IGameInputService
 {
 	private readonly SettingsService _settingsService = settingsService;
 	private readonly ILogger<MatchService> _logger = logger;
 	private readonly NetMqPublisherService _publisherService = publisherService;
-	private readonly GameStatePersistenceService _gamePersistence = gamePersistence;
+	private readonly GameEventBroadcaster _broadcaster = broadcaster;
 	private Match? _currentMatch;
-	private CancellationTokenSource? _saveMatchDebounceCts;
 
 	public Match CurrentMatch => _currentMatch
 		?? throw new InvalidOperationException("Match wurde nicht initialisiert. Prüfe Program.cs!");
 
-	public async Task InitializeMatchAsync()
+	public void InitializeMatch()
 	{
-		_currentMatch ??= new Models.Match(_settingsService, _logger, _gamePersistence);
-		await _currentMatch.LoadMatchStateAsync();
+		_currentMatch ??= new Models.Match(_settingsService, _logger);
 	}
 
 	public void SetTeamNames(byte[] teamNamesArray)
 	{
-		var teamNames = Encoding.UTF8.GetString(teamNamesArray);
+		var teamNames = System.Text.Encoding.UTF8.GetString(teamNamesArray);
 		CurrentMatch.ClearBegegnungen();
 		var parts = teamNames.TrimEnd(';').Split(';');
 		foreach (var part in parts)
@@ -101,10 +102,10 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		switch (value)
 		{
 			case "Enter": ShowSpecialPage(); break;
-			case "*": await AddToGreenAsync(); break;
-			case "-": await DeleteLastTurnAsync(); break;
-			case "/" or "Backspace": await AddToRedAsync(); break;
-			case "+": await ResetAsync(); break;
+			case "*": AddToGreen(); break;
+			case "-": DeleteLastTurn(); break;
+			case "/" or "Backspace": AddToRed(); break;
+			case "+": Reset(); break;
 
 			default:
 				int? input = value switch
@@ -130,11 +131,17 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 
 		OnGlobalRefresh?.Invoke();
 
-		// Training ist freies Spiel ohne Spielzaehlung/Persistierung (siehe CurrentMatch.Reset()
-		// bzw. SaveMatchStateAsync) - entsprechend soll auch nichts an das zentrale
-		// Verwaltungsprogramm gesendet werden.
+		// Training ist freies Spiel ohne Spielzaehlung (siehe CurrentMatch.Reset()) - entsprechend
+		// soll auch nichts an das zentrale Verwaltungsprogramm gesendet werden.
 		if (s.Game.CurrentModus != GameSettings.Modus.Training)
+		{
+			// Beide Wege bedienen, solange StockAppV2 noch auf NetMQ hoert.
 			_publisherService.Publish("GetResult", CurrentMatch.SerializeJson());
+			_broadcaster.ResultChanged(new Api.ResultDto(
+				Api.GameDtoFactory.Settings(s),
+				Api.GameDtoFactory.Match(CurrentMatch),
+				Ziel: null));
+		}
 	}
 
 	private void AddInput(int value)
@@ -150,7 +157,7 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 			_inputValue =  -1;
 	}
 
-	private async Task AddToGreenAsync()
+	private void AddToGreen()
 	{
 		if (_inputValue == -1)
 			return;
@@ -160,12 +167,11 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, true);
 
 		CurrentMatch.AddTurn(turn);
-		await CurrentMatch.SaveMatchStateAsync();
 
 		_inputValue = -1;
 	}
 
-	private async Task AddToRedAsync()
+	private void AddToRed()
 	{
 		if (_inputValue == -1)
 			return;
@@ -175,19 +181,17 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		var turn = Turn.Create(_inputValue, s.UI.CurrentRichtung, false);
 
 		CurrentMatch.AddTurn(turn);
-		RequestSaveMatchState();
 
 		_inputValue = -1;
 	}
 
-	private async Task ResetAsync(bool force = false)
+	private void Reset(bool force = false)
 	{
 		CurrentMatch.Reset(force);
-		RequestSaveMatchState();
 		_inputValue = -1;
 	}
 
-	private async Task DeleteLastTurnAsync()
+	private void DeleteLastTurn()
 	{
 		if (_inputValue > 0)
 		{
@@ -196,7 +200,6 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		}
 
 		CurrentMatch.DeleteLastTurn();
-		RequestSaveMatchState();
 	}
 
 	private protected void ShowSpecialPage()
@@ -213,47 +216,6 @@ public class MatchService(SettingsService settingsService, ILogger<MatchService>
 		else if (_inputValue == 10)
 		{
 			// TODO: Marketing
-		}
-	}
-
-	/// <summary>
-	/// Requests match state to be saved with debounce.
-	/// Multiple rapid requests are coalesced into a single save operation.
-	/// </summary>
-	public void RequestSaveMatchState()
-	{
-		var oldCts = _saveMatchDebounceCts;
-		_saveMatchDebounceCts = new CancellationTokenSource();
-		var newCts = _saveMatchDebounceCts;
-
-		_logger.LogDebug("Match state save debounced (waiting 500ms)");
-
-		_ = DebouncedSaveMatchAsync(newCts, oldCts);
-	}
-
-	private async Task DebouncedSaveMatchAsync(CancellationTokenSource newCts, CancellationTokenSource? oldCts)
-	{
-		try
-		{
-			// Cancel previous debounce if it's still pending
-			oldCts?.Cancel();
-
-			// Wait for debounce timeout or cancellation
-			await Task.Delay(500, newCts.Token);
-
-			// Save the match state
-			await _currentMatch!.SaveMatchStateAsync();
-
-			_logger.LogDebug("Match state saved after debounce");
-		}
-		catch (OperationCanceledException)
-		{
-			// Debounce was cancelled because a new save was requested
-			_logger.LogDebug("Match state save debounce cancelled (new save requested)");
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error saving match state");
 		}
 	}
 }

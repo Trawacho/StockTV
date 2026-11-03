@@ -1,4 +1,5 @@
 ﻿using NetMQ;
+using StockTvBlazor.Api;
 using StockTvBlazor.Components;
 using StockTvBlazor.Components.ViewModels;
 using StockTvBlazor.Networking;
@@ -52,13 +53,19 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SettingsService>());
-builder.Services.AddSingleton<GameStatePersistenceService>();
 builder.Services.AddSingleton<MatchService>();
 builder.Services.AddSingleton<ZielService>();
 builder.Services.AddSingleton<FontService>();
 builder.Services.AddSingleton<PlatformInfoService>();
 builder.Services.AddSingleton<NetworkConfigService>();
 builder.Services.AddSingleton<UpdateService>();
+builder.Services.AddSingleton<MarketingImageService>();
+builder.Services.AddSingleton<SubscriberRegistry>();
+builder.Services.AddSingleton<GameEventBroadcaster>();
+builder.Services.AddSingleton<GameCommandQueue>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<GameCommandQueue>());
+builder.Services.AddSingleton<GameStateStore>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<GameStateStore>());
 
 builder.Services.AddHttpClient("GitHub", c =>
 {
@@ -90,8 +97,16 @@ builder.Services.Configure<HostOptions>(options =>
 
 var app = builder.Build();
 
+// Eigener Web-Host der REST-Schnittstelle; bleibt null, wenn sie abgeschaltet ist oder nicht
+// starten konnte (siehe StockTvApiHost.StartIfEnabledAsync).
+StockTvApiHost? apiHost = null;
+
 app.Lifetime.ApplicationStopping.Register(() =>
 {
+	// Vor dem harten Exit unten sauber beenden, damit der Port wieder frei wird.
+	if (apiHost is not null)
+		apiHost.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
 	Task.Run(async () =>
 	{
 		await Task.Delay(5000);
@@ -107,11 +122,59 @@ using (var scope = app.Services.CreateScope())
 	await settingsService.InitializeAsync();
 
 	var matchService = services.GetRequiredService<MatchService>();
-	await matchService.InitializeMatchAsync();
+	matchService.InitializeMatch();
 
 	var zielService = services.GetRequiredService<ZielService>();
-	await zielService.InitializeZielAsync();
+	zielService.InitializeZiel();
 
+	// Nach dem Laden der Konfiguration: die Gueltigkeitspruefung des Spielstands braucht
+	// Bahnnummer und Modus. Ein nicht passender oder zu alter Stand wird dabei verworfen.
+	var gameStateStore = services.GetRequiredService<GameStateStore>();
+	var savedState = await gameStateStore.LoadAsync(settingsService.CurrentSettings);
+
+	if (savedState is not null)
+	{
+		gameStateStore.RestoreWithoutSaving(() =>
+		{
+			matchService.CurrentMatch.RestoreFrom(savedState.Match);
+			zielService.CurrentZielBewerb.RestoreFrom(savedState.Ziel);
+		});
+	}
+
+	// Erst nach dem Wiederherstellen anmelden, sonst schreibt das Wiederherstellen selbst.
+	// Im Training wird nichts gesichert (null = Schreibvorgang ueberspringen, Datei bleibt liegen):
+	// freies Spiel ohne Spielzaehlung, und ein kurzer Abstecher ins Training soll den Stand des
+	// eigentlichen Spielmodus nicht loeschen.
+	gameStateStore.StartAutoSave(() =>
+	{
+		var current = settingsService.CurrentSettings;
+
+		if (current.Game.CurrentModus == GameSettings.Modus.Training)
+			return null;
+
+		return new GameStateFile
+		{
+			SavedAtUtc = DateTimeOffset.UtcNow,
+			BahnNummer = current.General.BahnNummer,
+			Modus = current.Game.CurrentModus,
+			Match = matchService.CurrentMatch.CreateSnapshot(),
+			Ziel = zielService.CurrentZielBewerb.CreateSnapshot()
+		};
+	});
+
+	// Jede Aenderung an Spielstand oder Zielbewerb sichern. Ueber die Ereignisse der Modelle und
+	// nicht an den einzelnen Eingabestellen: so ist auch erfasst, was von aussen kommt
+	// (SetTeamNames, SetTeilnehmer, ResetResult ueber NetMQ).
+	matchService.CurrentMatch.OnMatchChanged += gameStateStore.RequestSave;
+	zielService.CurrentZielBewerb.OnZielBewerbChanged += gameStateStore.RequestSave;
+
+	// Erst hier, nach InitializeAsync(): der eigene Web-Host der REST-Schnittstelle braucht die
+	// geladene Konfiguration (Port, BindAddress, ApiKey). Genau deshalb ein zweiter Host und
+	// kein zweiter Listener im Anzeige-Host - dessen Kestrel steht schon vor builder.Build().
+	apiHost = await StockTvApiHost.StartIfEnabledAsync(
+		settingsService.CurrentSettings,
+		app.Services,
+		app.Services.GetRequiredService<ILoggerFactory>());
 }
 
 // WICHTIG: Development richtig behandeln!
@@ -131,6 +194,18 @@ app.UseAntiforgery();
 
 app.UseStaticFiles();
 app.MapStaticAssets();
+
+// Liefert das Werbebild aus. Bewusst am Anzeige-Host (8080) und nicht an der REST-Schnittstelle:
+// die Seite /marketing laeuft im Browser des Kiosks, der die API auf 8098 weder erreichen soll
+// noch den API-Schluessel kennt.
+app.MapGet("/marketing/image", (MarketingImageService images) =>
+{
+	var file = images.CurrentFile;
+
+	return file is null
+		? Results.NotFound()
+		: Results.File(file, MarketingImageService.ContentTypeFor(file));
+});
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();

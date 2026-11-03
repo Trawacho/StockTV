@@ -1,7 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using StockTvBlazor.Models;
-
-namespace StockTvBlazor.Settings;
+﻿namespace StockTvBlazor.Settings;
 
 public class GameSettings
 {
@@ -19,6 +16,8 @@ public class GameSettings
 	public int MaxPunkteProKehre { get; set; } = 10;
 	public int MaxKehrenProSpiel { get; set; } = 6;
 
-	[JsonIgnore]
-	public List<Turn> Kehren { get; set; } = new();
+	// Hier stand eine Liste "Kehren", die den Spielstand ueber einen Neustart retten sollte. Sie
+	// trug seit jeher [JsonIgnore], landete also nie in der Datei - das Wiederherstellen beim
+	// Start lief immer ins Leere, waehrend jede bestaetigte Kehre trotzdem einen vollstaendigen
+	// Schreibvorgang ausloeste. Der Spielstand lebt allein in Match.Games.
 }

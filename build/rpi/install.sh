@@ -16,6 +16,9 @@ REPO="Trawacho/StockTV"
 ASSET_NAME="stocktv-rpi.zip"
 INSTALL_DIR="/opt/stocktv"
 KIOSK_SENTINEL="$INSTALL_DIR/.kiosk"
+# Merkt sich zusaetzlich, dass der Kiosk auf ZWEI Bildschirme eingerichtet wurde.
+# install.sh prueft diesen Sentinel und stellt nicht stillschweigend auf einen um.
+KIOSK_DUAL_SENTINEL="$INSTALL_DIR/.kiosk-dual"
 SERVICE_NAME="stocktv"
 
 GREEN='\033[0;32m'
@@ -106,19 +109,44 @@ if [ ! -d "$INSTALL_DIR" ]; then
     FIRST_INSTALL=true
 fi
 
+# --- Zwei-Bildschirm-Installation erkennen ---
+# Dieses Skript wuerde die .xinitrc auf einen Bildschirm zurueckschreiben. War das
+# Geraet mit install-dual.sh eingerichtet, wird deshalb nachgefragt statt einfach
+# ueberschrieben.
+KEEP_DUAL_KIOSK=false
+if [ -f "$KIOSK_DUAL_SENTINEL" ]; then
+    echo ""
+    echo -e "${YELLOW}Dieses Geraet ist fuer ZWEI Bildschirme eingerichtet (install-dual.sh).${NC}"
+    DUAL_ANSWER=""
+    read -r -p "Auf EINEN Bildschirm umstellen? [j/N] " DUAL_ANSWER || true
+    if [[ "$DUAL_ANSWER" =~ ^[jJyY]$ ]]; then
+        $SUDO rm -f "$KIOSK_DUAL_SENTINEL"
+        echo -e "${YELLOW}Kiosk wird auf einen Bildschirm zurueckgestellt.${NC}"
+    else
+        KEEP_DUAL_KIOSK=true
+        echo -e "${GREEN}Kiosk-Konfiguration bleibt unveraendert (zwei Bildschirme).${NC}"
+    fi
+fi
+
 # --- Kiosk-Modus: Entscheidung treffen ---
 # Sentinel vorhanden → Kiosk war beim First-Install aktiviert → immer einrichten
 # Sentinel fehlt + First-Install → fragen
 # Sentinel fehlt + Update → fragen (Nachholung moeglich)
 SETUP_KIOSK=false
-if [ -f "$KIOSK_SENTINEL" ]; then
+if [ "$KEEP_DUAL_KIOSK" = true ]; then
+    # .xinitrc der Dual-Variante unangetastet lassen
+    SETUP_KIOSK=false
+elif [ -f "$KIOSK_SENTINEL" ]; then
     SETUP_KIOSK=true
     if [ "$FIRST_INSTALL" = false ]; then
         echo -e "${YELLOW}Kiosk-Modus ist aktiviert — wird geprueft und ggf. korrigiert.${NC}"
     fi
 else
     echo ""
-    read -r -p "Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N] " KIOSK_ANSWER
+    # "|| true": beim Update ueber die /setup-Seite laeuft das Skript ohne Terminal,
+    # "read" liefert dann EOF - ohne den Zusatz wuerde "set -e" das Update abbrechen.
+    KIOSK_ANSWER=""
+    read -r -p "Kiosk-Modus aktivieren (Autologin + Chromium auf diesem Geraet)? [j/N] " KIOSK_ANSWER || true
     if [[ "$KIOSK_ANSWER" =~ ^[jJyY]$ ]]; then
         SETUP_KIOSK=true
     fi
