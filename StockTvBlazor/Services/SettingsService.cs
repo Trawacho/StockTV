@@ -9,9 +9,14 @@ namespace StockTvBlazor.Services;
 
 public class SettingsService : BackgroundService
 {
+	/// <summary>
+	/// Zeilen des Tastaturmenues (/settings). Die Reihenfolge ist die Reihenfolge von Pfeil
+	/// hoch/runter; der Wert wird nirgends gespeichert oder verschickt.
+	/// </summary>
 	public enum SettingsOptions
 	{
 		Theme,
+		AnspielFrame,
 		Richtung,
 		Modus,
 		BahnNummer,
@@ -228,6 +233,16 @@ public class SettingsService : BackgroundService
 
 		s.UI.ActivateTheme(themes[nextIndex].Id);
 
+	}
+
+	/// <summary>
+	/// Tastaturmenue: Anspiel-Rahmen ein/aus. Beide Pfeilrichtungen schalten um; gespeichert wird
+	/// wie bei den anderen Zeilen beim Verlassen des Menues.
+	/// </summary>
+	public void ChangeAnspielFrame()
+	{
+		var frame = CurrentSettings.UI.AnspielFrame;
+		frame.ShowFrame = !frame.ShowFrame;
 	}
 
 	public void ChangeRichtung(bool forward)
@@ -883,6 +898,10 @@ public class SettingsService : BackgroundService
 		{
 			case SettingsOptions.Theme:
 				ChangeTheme(forward);
+				break;
+
+			case SettingsOptions.AnspielFrame:
+				ChangeAnspielFrame();
 				break;
 
 			case SettingsOptions.Richtung:

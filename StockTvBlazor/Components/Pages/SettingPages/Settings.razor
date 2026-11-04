@@ -19,6 +19,12 @@
         </div>
 
         <div class="setting-row">
+            <div class="icon">@(ViewModel.IsAnspielFrameActive ? "▶" : "")</div>
+            <div class="value">@ViewModel.AnspielFrameValue</div>
+            <div class="label">Anspiel</div>
+        </div>
+
+        <div class="setting-row">
             <div class="icon">@(ViewModel.IsRichtungActive ? "▶" : "")</div>
             <div class="value">@ViewModel.RichtungValue</div>
             <div class="label">Richtung (links/rechts)</div>
