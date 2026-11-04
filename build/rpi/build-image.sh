@@ -15,6 +15,7 @@
 #
 #  Umgebungsvariablen:
 #    STOCKTV_VERSION  – Versionsnummer (default: "dev")
+#    STOCKTV_API_KEY  – Schluessel der REST-Schnittstelle (default: "Secret4StockTV?")
 #
 #  Ausgabe:
 #    stocktv-rpi-<version>.img.xz
@@ -31,6 +32,9 @@ APP_DIR="/opt/stocktv"
 APP_BINARY="StockTvBlazor"
 IMAGE_SIZE_GB=4
 VERSION="${STOCKTV_VERSION:-dev}"
+# Alle Geraete aus diesem Image haben denselben Schluessel - eine Huerde gegen versehentliche
+# Zugriffe, kein Geraeteschutz. Pro Geraet aendern: POST /api/v1/config/api-key.
+API_KEY="${STOCKTV_API_KEY:-Secret4StockTV?}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PUBLISH_DIR="$SCRIPT_DIR/publish"
@@ -138,6 +142,27 @@ cp -r "$PUBLISH_DIR/"* "$MNT$APP_DIR/"
 chmod +x "$MNT$APP_DIR/$APP_BINARY"
 mkdir -p "$MNT$APP_DIR/_config" "$MNT$APP_DIR/_logs"
 touch "$MNT$APP_DIR/.kiosk"
+
+# Geraete-Konfiguration mit API-Schluessel - ohne ihn startet die REST-Schnittstelle nicht.
+API_KEY_JSON="${API_KEY//\\/\\\\}"
+API_KEY_JSON="${API_KEY_JSON//\"/\\\"}"
+cat > "$MNT$APP_DIR/_config/stocktv.device.json" <<DEVICEEOF
+{
+  "FileLoggingEnabled": true,
+  "Network": {
+    "Enabled": true
+  },
+  "RestApi": {
+    "Enabled": true,
+    "BindAddress": "0.0.0.0",
+    "Port": 8098,
+    "ApiKey": "$API_KEY_JSON",
+    "ApiKeyHeader": "X-Api-Key",
+    "SwaggerEnabled": true,
+    "SwaggerRoute": "swagger"
+  }
+}
+DEVICEEOF
 
 # ---- 6. Konfigurationsdateien schreiben -------------------
 
@@ -457,6 +482,8 @@ echo "  SSH-User:     $PI_USER"
 echo "  SSH-Passwort: $PI_PASSWORD"
 echo "  Hostname:     $HOSTNAME_NEW"
 echo "  Web-UI:       http://<ip>:8080"
+echo "  REST:         http://<ip>:8098/swagger"
+echo "  API-Schluessel: $API_KEY"
 echo ""
 echo "  Flashen mit Raspberry Pi Imager:"
 echo "  'Use custom' → $FINAL_IMAGE wählen"

@@ -25,4 +25,19 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.0" />
   </ItemGroup>
 
+  <!-- Entwicklung: Ohne Geraetedatei laeuft StockTV mit Standardwerten (BindAddress 0.0.0.0,
+       kein Schluessel), und die REST-Schnittstelle startet nicht. Im Debug-Build deshalb eine
+       Geraetedatei mitgeben, die nur auf 127.0.0.1 lauscht - dort ist kein Schluessel noetig.
+       Nur wenn noch keine da ist: eine eigene (z.B. mit Schluessel und 0.0.0.0) bleibt stehen.
+       Nicht als Content: sonst landete die Datei im Release-Paket. -->
+  <ItemGroup>
+    <Content Remove="_config.dev\**" />
+    <None Include="_config.dev\**" />
+  </ItemGroup>
+
+  <Target Name="CopyDevDeviceConfig" AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Debug' And !Exists('$(OutDir)_config\stocktv.device.json')">
+    <Copy SourceFiles="_config.dev\stocktv.device.json" DestinationFolder="$(OutDir)_config" />
+  </Target>
+
 </Project>

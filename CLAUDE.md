@@ -229,7 +229,22 @@ läuft zeitkonstant (`CryptographicOperations.FixedTimeEquals`). Der Schlüssel 
 Anfrage neu aus dem Settings-Objekt gelesen — nur dadurch gilt ein gewechselter Schlüssel sofort.
 
 Ist `BindAddress` nicht Loopback und `ApiKey` leer, **startet die Schnittstelle nicht** und
-schreibt den Grund ins Log.
+schreibt den Grund ins Log (die Anzeige läuft weiter).
+
+**Woher der Schlüssel kommt** (Muster aus StockTvKiosk, Commit `9fcf545`): Die Vorgabe der
+*Anwendung* bleibt leer — ein fester Schlüssel im Code hieße, dass ein Gerät ohne
+Konfigurationsdatei mit bekanntem Schlüssel ans Netz ginge. Stattdessen tragen die
+**Installationsskripte** ihn ein (`install-service.ps1 -ApiKey/-GenerateApiKey`,
+`install.sh`/`install-dual.sh --api-key/--generate-api-key`, `build-image.sh` über
+`STOCKTV_API_KEY`), vorbelegt mit `Secret4StockTV?`. Bewusst gleich auf allen Geräten: eine
+Hürde gegen versehentliche Zugriffe, kein Geräteschutz. Geschrieben wird nur, wenn
+`stocktv.device.json` fehlt. Liegt dann noch die frühere Einzeldatei da, übernehmen die Skripte
+`FileLoggingEnabled` und `Network.Enabled` selbst — die neue Gerätedatei verhindert sonst
+`MigrateLegacyFileIfNeededAsync`, und die Werte gingen verloren.
+
+**Debug:** Der Debug-Build kopiert `StockTvBlazor/_config.dev/stocktv.device.json`
+(`BindAddress 127.0.0.1`, kein Schlüssel) nach `bin/…/_config`, falls dort noch keine
+Gerätedatei liegt (Target `CopyDevDeviceConfig` im csproj). Nicht im Publish enthalten.
 
 | Endpunkt | Ersetzt NetMQ-Topic |
 |---|---|

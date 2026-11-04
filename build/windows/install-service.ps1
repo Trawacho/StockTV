@@ -19,6 +19,10 @@
 #  Kiosk mit zweiter, gespiegelter Anzeige (zwei Bildschirme, Modus "Erweitern"):
 #    .\install-service.ps1 -Download -Kiosk -DualDisplay
 #
+#  Eigener bzw. zufaelliger Schluessel fuer die REST-Schnittstelle (Port 8098):
+#    .\install-service.ps1 -Download -ApiKey "eigener-schluessel"
+#    .\install-service.ps1 -Download -GenerateApiKey
+#
 #  Deinstallieren:
 #    .\install-service.ps1 -Uninstall
 # ============================================
@@ -33,10 +37,21 @@ param(
     [switch]$Download,                  # Neueste Version von GitHub Releases laden
     [switch]$Kiosk,                     # Kiosk-Modus: Browser bei Anmeldung automatisch starten
     [switch]$DualDisplay,               # Kiosk auf zwei Bildschirmen (zweite Anzeige gespiegelt)
+
+    # Schluessel der REST-Schnittstelle. Vorbelegt, damit alle Geraete gleich eingerichtet
+    # sind und niemand pro Geraet einen Wert nachhalten muss (wie bei StockTvKiosk).
+    # Der Preis dafuer: wer ihn von einem Geraet kennt, kommt auf alle. Er ist eine Huerde
+    # gegen versehentliche Zugriffe, kein Geraeteschutz. Pro Geraet aendern geht mit
+    # -GenerateApiKey, mit -ApiKey oder spaeter ueber POST /api/v1/config/api-key.
+    # Wird nur in eine NEUE Geraete-Konfiguration geschrieben - eine vorhandene behaelt ihren.
+    [string]$ApiKey      = "Secret4StockTV?",
+    [switch]$GenerateApiKey,            # Statt des vorbelegten einen zufaelligen Schluessel erzeugen
+
     [switch]$Uninstall
 )
 
 $REPO            = "Trawacho/StockTV"
+$REST_API_PORT   = 8098
 $ASSET_NAME      = "stocktv-windows-x64.zip"
 $KIOSK_TASK      = "StockTV Kiosk"
 $KIOSK_SENTINEL  = Join-Path $InstallDir ".kiosk"
@@ -115,7 +130,7 @@ if ($Uninstall) {
         Write-Host "Dienst '$ServiceName' nicht gefunden - nichts zu tun."
     }
 
-    foreach ($n in @("StockTV Web UI","StockTV NetMQ REP","StockTV NetMQ PUB","StockTV mDNS")) {
+    foreach ($n in @("StockTV Web UI","StockTV REST-API","StockTV NetMQ REP","StockTV NetMQ PUB","StockTV mDNS")) {
         Remove-NetFirewallRule -DisplayName $n -ErrorAction SilentlyContinue
     }
     Write-Host "Firewall-Regeln entfernt."
@@ -214,6 +229,69 @@ foreach ($sub in @("_config", "_logs")) {
     if (-not (Test-Path $path)) { New-Item $path -ItemType Directory -Force | Out-Null }
 }
 
+# Geraete-Konfiguration mit API-Schluessel anlegen. Ohne Schluessel startet die
+# REST-Schnittstelle nicht (sie lauscht auf 0.0.0.0). Nur wenn es noch keine Datei gibt:
+# eine vorhandene behaelt ihren Schluessel, auch einen ueber die Schnittstelle gewechselten.
+$deviceConfig   = Join-Path $InstallDir "_config\stocktv.device.json"
+$legacyConfig   = Join-Path $InstallDir "_config\stocktv.config.json"
+$apiKeyWritten  = $false
+$apiKeyGenerated = $false
+
+if (Test-Path $deviceConfig) {
+    Write-Host "Geraete-Konfiguration vorhanden - der API-Schluessel bleibt unveraendert."
+} else {
+    if ($GenerateApiKey -or -not $ApiKey) {
+        # Ueber Create() und die Instanzmethode: das statische GetBytes(int) gibt es erst
+        # ab .NET 6, dieses Skript laeuft ueblicherweise in Windows PowerShell 5.1.
+        $bytes = New-Object byte[] 24
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+        $ApiKey = [Convert]::ToBase64String($bytes)
+        $apiKeyGenerated = $true
+    }
+
+    # Eine fruehere Einzeldatei teilt StockTV beim Start zwar selbst auf - aber nur, solange
+    # es keine Geraetedatei gibt. Die hier angelegte verhindert das, deshalb die beiden
+    # Geraete-Werte daraus selbst uebernehmen. Alles andere liest StockTV weiter aus der Datei.
+    $fileLogging = $true
+    $network     = $true
+    if (Test-Path $legacyConfig) {
+        try {
+            $legacy = Get-Content $legacyConfig -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($null -ne $legacy.General.FileLoggingEnabled) { $fileLogging = [bool]$legacy.General.FileLoggingEnabled }
+            if ($null -ne $legacy.Network.Enabled)            { $network     = [bool]$legacy.Network.Enabled }
+            Write-Host "  Protokollierung und Netzwerk aus der bisherigen Konfiguration uebernommen."
+        } catch {
+            Write-Warning "Bisherige Konfiguration nicht lesbar - Protokollierung und Netzwerk mit Standardwerten."
+        }
+    }
+
+    $device = [ordered]@{
+        FileLoggingEnabled = $fileLogging
+        Network            = [ordered]@{ Enabled = $network }
+        RestApi            = [ordered]@{
+            Enabled        = $true
+            BindAddress    = "0.0.0.0"
+            Port           = $REST_API_PORT
+            ApiKey         = $ApiKey
+            ApiKeyHeader   = "X-Api-Key"
+            SwaggerEnabled = $true
+            SwaggerRoute   = "swagger"
+        }
+    }
+
+    # Ohne BOM und ueber .NET geschrieben: Set-Content -Encoding UTF8 setzt in PowerShell 5.1
+    # immer ein BOM.
+    $json = $device | ConvertTo-Json -Depth 5
+    [System.IO.File]::WriteAllText($deviceConfig, $json, (New-Object System.Text.UTF8Encoding($false)))
+
+    # Sofort gegenlesen: eine kaputte Datei fiele sonst erst beim Start auf, und dort nur als
+    # Geraet ohne Fernsteuerung.
+    $null = Get-Content $deviceConfig -Raw | ConvertFrom-Json
+    $apiKeyWritten = $true
+    Write-Host "Geraete-Konfiguration mit API-Schluessel angelegt: $deviceConfig"
+}
+
 # Dienst anlegen (nur beim ersten Mal)
 if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) {
     Write-Host "Installiere Windows-Dienst '$ServiceName'..."
@@ -242,6 +320,7 @@ if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) {
 Write-Host "Konfiguriere Firewall-Regeln..."
 $fwRules = @(
     @{ Name = "StockTV Web UI";    Port = $Port; Protocol = "TCP" },
+    @{ Name = "StockTV REST-API";  Port = $REST_API_PORT; Protocol = "TCP" },
     @{ Name = "StockTV NetMQ REP"; Port = 4747;  Protocol = "TCP" },
     @{ Name = "StockTV NetMQ PUB"; Port = 4748;  Protocol = "TCP" },
     @{ Name = "StockTV mDNS";      Port = 5353;  Protocol = "UDP" }
@@ -255,7 +334,7 @@ foreach ($rule in $fwRules) {
         -LocalPort $rule.Port `
         -Action Allow | Out-Null
 }
-Write-Host "Firewall-Regeln gesetzt (TCP $Port, 4747, 4748 / UDP 5353)."
+Write-Host "Firewall-Regeln gesetzt (TCP $Port, $REST_API_PORT, 4747, 4748 / UDP 5353)."
 
 # Dienst starten
 Write-Host "Starte Dienst..."
@@ -407,6 +486,21 @@ Write-Host "`n=========================================="
 Write-Host "  Dienst '$ServiceName': $status"
 Write-Host ""
 Write-Host "  Web-UI:  http://localhost:$Port"
+Write-Host "  REST:    http://$($env:COMPUTERNAME):$REST_API_PORT/swagger"
+if ($apiKeyWritten) {
+    Write-Host ""
+    Write-Host "  API-Schluessel: $ApiKey" -ForegroundColor Yellow
+    if ($apiKeyGenerated) {
+        Write-Host "  Jetzt notieren - nach dem ersten Speichern steht er nur noch" -ForegroundColor Yellow
+        Write-Host "  verschluesselt in der Datei und laesst sich nicht mehr ablesen." -ForegroundColor Yellow
+    } else {
+        Write-Host "  Das ist der vorbelegte Schluessel - auf allen so eingerichteten Geraeten" -ForegroundColor Yellow
+        Write-Host "  derselbe. Pro Geraet aendern:" -ForegroundColor Yellow
+        Write-Host "    curl -X POST -H `"X-Api-Key: $ApiKey`" -H `"Content-Type: application/json`" ``" -ForegroundColor Yellow
+        Write-Host "         -d '{\`"newKey\`":\`"...\`"}' http://localhost:$REST_API_PORT/api/v1/config/api-key" -ForegroundColor Yellow
+    }
+    Write-Host ""
+}
 if ($Kiosk) {
     Write-Host "  Kiosk:   Browser startet automatisch bei Anmeldung"
     Write-Host "           (Task: '$KIOSK_TASK')"

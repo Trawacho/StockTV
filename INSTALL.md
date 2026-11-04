@@ -614,11 +614,35 @@ allen Funktionen, die bisher nur über NetMQ erreichbar waren (Spielstand, Einst
 Teamnamen, Werbebild, Geräteverwaltung), dazu einen Live-Kanal unter `/hubs/stocktv`. Beides läuft
 **parallel zu NetMQ**, die bisherige Anbindung bleibt unverändert nutzbar.
 
-Sie ist **standardmäßig gesperrt**: Ohne eingetragenen Schlüssel startet sie nicht und schreibt
-den Grund ins Protokoll — sonst könnte jeder im Netz das Gerät fernsteuern.
+Ohne eingetragenen Schlüssel startet sie nicht und schreibt den Grund ins Protokoll — sonst
+könnte jeder im Netz das Gerät fernsteuern. Die Anzeige läuft in dem Fall ganz normal weiter.
 
-Zum Aktivieren in `_config/stocktv.device.json` einen Schlüssel eintragen (mindestens 8 Zeichen,
-im Klartext — er wird beim nächsten Speichern automatisch verschlüsselt):
+**Die Installationsskripte tragen den Schlüssel selbst ein** — vorbelegt mit `Secret4StockTV?`,
+wie bei StockTvKiosk. Damit sind alle Geräte gleich eingerichtet. Der Preis dafür: Wer den
+Schlüssel von einem Gerät kennt, kommt auf alle. Er ist eine Hürde gegen versehentliche Zugriffe,
+**kein Geräteschutz** — in einem abgeschotteten Hallennetz vertretbar, in einem geteilten nicht.
+Einen eigenen oder zufälligen Schlüssel gibt es mit:
+
+| System | Eigener Schlüssel | Zufälliger Schlüssel |
+|---|---|---|
+| Windows | `.\install-service.ps1 -ApiKey "…"` | `.\install-service.ps1 -GenerateApiKey` |
+| Linux / Pi | `… \| bash -s -- --api-key "…"` | `… \| bash -s -- --generate-api-key` |
+| Pi-Image | `STOCKTV_API_KEY="…" sudo -E bash build-image.sh` | — |
+
+Der Schlüssel wird nur in eine **neue** `stocktv.device.json` geschrieben — ein Update lässt einen
+vorhandenen (auch einen über die Schnittstelle gewechselten) unverändert. Bei einem Update von
+einer Version mit der früheren Einzeldatei übernimmt das Skript Protokollierung und
+Netzwerk-Einstellung daraus.
+
+Im laufenden Betrieb wechseln (gilt sofort, ohne Neustart):
+
+```bash
+curl -X POST -H "X-Api-Key: Secret4StockTV?" -H "Content-Type: application/json" \
+     -d '{"newKey":"..."}' http://<IP>:8098/api/v1/config/api-key
+```
+
+Von Hand geht es auch: in `_config/stocktv.device.json` einen Schlüssel eintragen (mindestens
+8 Zeichen, im Klartext — er wird beim nächsten Speichern automatisch verschlüsselt):
 
 ```json
 "RestApi": {
@@ -636,7 +660,9 @@ Danach den Dienst neu starten. Eine Übersicht aller Aufrufe steht dann unter
 `http://<IP>:8098/swagger`. Jeder Aufruf braucht den Schlüssel als Kopfzeile `X-Api-Key`.
 
 Soll die Schnittstelle nur lokal erreichbar sein, `BindAddress` auf `127.0.0.1` setzen — dann
-darf der Schlüssel auch leer bleiben.
+darf der Schlüssel auch leer bleiben. So ist es beim Debuggen aus Visual Studio eingerichtet:
+Der Debug-Build legt `StockTvBlazor/_config.dev/stocktv.device.json` nach `bin/…/_config`, falls
+dort noch keine Gerätedatei liegt.
 
 ### Bahnnummer einstellen
 

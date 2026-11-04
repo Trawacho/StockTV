@@ -1,0 +1,15 @@
+{
+  "FileLoggingEnabled": true,
+  "Network": {
+    "Enabled": true
+  },
+  "RestApi": {
+    "Enabled": true,
+    "BindAddress": "127.0.0.1",
+    "Port": 8098,
+    "ApiKey": "",
+    "ApiKeyHeader": "X-Api-Key",
+    "SwaggerEnabled": true,
+    "SwaggerRoute": "swagger"
+  }
+}

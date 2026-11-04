@@ -54,6 +54,16 @@ curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/in
 chmod +x install.sh && ./install.sh
 ```
 
+**API-Schlüssel der REST-Schnittstelle (Port 8098):** Bei einer neuen Gerätedatei trägt das
+Skript `Secret4StockTV?` ein — auf allen so eingerichteten Geräten gleich. Eigener bzw.
+zufälliger Schlüssel:
+```bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/install.sh | bash -s -- --api-key "eigener-schluessel"
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/linux/install.sh | bash -s -- --generate-api-key
+```
+Eine vorhandene `stocktv.device.json` bleibt bei Updates unverändert. Details in
+[INSTALL.md](../../INSTALL.md#fernsteuerung-über-die-rest-schnittstelle).
+
 **Was das Skript macht:**
 - Prüft x86_64-Architektur
 - Installiert benötigte System-Bibliotheken (`libicu-dev`, `libssl3`, `zlib1g`)

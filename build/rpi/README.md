@@ -86,6 +86,8 @@ sudo STOCKTV_VERSION=v0.1 bash build-image.sh
 - SSH-User: `pi` / Passwort: `stocktv`
 - Hostname: `stocktv`
 - Web-UI nach dem Start: `http://<ip>:8080`
+- REST-Schnittstelle: `http://<ip>:8098/swagger`, API-Schlüssel `Secret4StockTV?` (für alle
+  Geräte aus dem Image gleich; eigener mit `sudo STOCKTV_API_KEY="…" bash build-image.sh`)
 
 **Konfiguration:** `/opt/stocktv/_config/` enthält drei Dateien — `stocktv.device.json` (Gerät,
 enthält den API-Schlüssel der REST-Schnittstelle auf Port 8098), `stocktv.config.json` (Betrieb)
@@ -109,6 +111,16 @@ curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/inst
 ```bash
 chmod +x install.sh && ./install.sh
 ```
+
+**API-Schlüssel der REST-Schnittstelle (Port 8098):** Bei einer neuen Gerätedatei trägt das
+Skript `Secret4StockTV?` ein — auf allen so eingerichteten Geräten gleich. Eigener bzw.
+zufälliger Schlüssel (gilt genauso für `install-dual.sh`):
+```bash
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash -s -- --api-key "eigener-schluessel"
+curl -sSL https://raw.githubusercontent.com/Trawacho/StockTV/main/build/rpi/install.sh | bash -s -- --generate-api-key
+```
+Eine vorhandene `stocktv.device.json` bleibt bei Updates unverändert. Details in
+[INSTALL.md](../../INSTALL.md#fernsteuerung-über-die-rest-schnittstelle).
 
 **Was das Skript macht:**
 - Prüft ARM64-Architektur
