@@ -697,6 +697,26 @@ public class SettingsService : BackgroundService
 		NotifyChanged();
 	}
 
+	/// <summary>
+	/// Setzt den Anspiel-Rahmen von aussen (REST). Ein nicht angegebener Wert bleibt unveraendert.
+	/// </summary>
+	/// <returns>Fehlermeldung, oder null wenn uebernommen.</returns>
+	public string? SetAnspielFrame(bool? showFrame, int? frameWidthPx)
+	{
+		if (showFrame is null && frameWidthPx is null)
+			return "Es wurde weder showFrame noch frameWidthPx uebergeben.";
+
+		if (frameWidthPx is < AnspielFrameSettings.MinWidthPx or > AnspielFrameSettings.MaxWidthPx)
+			return $"frameWidthPx muss zwischen {AnspielFrameSettings.MinWidthPx} und {AnspielFrameSettings.MaxWidthPx} liegen.";
+
+		var frame = CurrentSettings.UI.AnspielFrame;
+		if (showFrame is not null) frame.ShowFrame = showFrame.Value;
+		if (frameWidthPx is not null) frame.FrameWidthPx = frameWidthPx.Value;
+
+		NotifyAnspielFrameChanged();
+		return null;
+	}
+
 	/// <summary>Setzt den Anspiel-Rahmen auf die Standardwerte (ein, 3px) zurueck.</summary>
 	public void ResetAnspielFrame()
 	{

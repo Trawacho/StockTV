@@ -659,6 +659,14 @@ Von Hand geht es auch: in `_config/stocktv.device.json` einen Schlüssel eintrag
 Danach den Dienst neu starten. Eine Übersicht aller Aufrufe steht dann unter
 `http://<IP>:8098/swagger`. Jeder Aufruf braucht den Schlüssel als Kopfzeile `X-Api-Key`.
 
+Den **Anspiel-Rahmen** (Rahmen statt » bzw. « um die Mannschaft mit Anspiel, gilt für alle Themes)
+gibt es nur über REST, nicht über NetMQ. Ein weggelassenes Feld bleibt unverändert:
+
+```bash
+curl -X PUT -H "X-Api-Key: Secret4StockTV?" -H "Content-Type: application/json" \
+     -d '{"showFrame":true,"frameWidthPx":5}' http://<IP>:8098/api/v1/display/anspiel-frame
+```
+
 Soll die Schnittstelle nur lokal erreichbar sein, `BindAddress` auf `127.0.0.1` setzen — dann
 darf der Schlüssel auch leer bleiben. So ist es beim Debuggen aus Visual Studio eingerichtet:
 Der Debug-Build legt `StockTvBlazor/_config.dev/stocktv.device.json` nach `bin/…/_config`, falls
