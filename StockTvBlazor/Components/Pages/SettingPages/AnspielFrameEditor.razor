@@ -1,0 +1,30 @@
+@using StockTvBlazor.Settings
+
+<div class="layout-editor">
+    <div class="layout-editor-header">
+        <button class="btn-cancel" @onclick="Reset">Zurücksetzen</button>
+    </div>
+
+    <p class="hint">
+        Die Mannschaft mit Anspiel wird im Teamnamen mit » bzw. « markiert. Statt des Zeichens kann
+        ein Rahmen in der Teamnamen-Farbe angezeigt werden. Die Einstellung gilt für <strong>alle Themes</strong>
+        (Turnier und BestOf, auch auf dem zweiten Bildschirm).
+    </p>
+
+    <div class="anspiel-section">
+        <label class="anspiel-check">
+            <input id="anspiel-show-frame" type="checkbox" @bind="Frame.ShowFrame" @bind:after="NotifyChanged" />
+            Rahmen statt Sonderzeichen anzeigen
+        </label>
+
+        @if (Frame.ShowFrame)
+        {
+            <div class="anspiel-field">
+                <label for="anspiel-frame-width">Rahmenstärke (px)</label>
+                <input id="anspiel-frame-width" type="number"
+                       min="@AnspielFrameSettings.MinWidthPx" max="@AnspielFrameSettings.MaxWidthPx"
+                       @bind="Frame.FrameWidthPx" @bind:after="NotifyChanged" />
+            </div>
+        }
+    </div>
+</div>

@@ -22,6 +22,7 @@ public class UiSettings
 	public TableLayoutSettings TableLayout { get; set; } = new();
 	public CellFontWeightSettings CellFontWeight { get; set; } = new();
 	public string FontFamily { get; set; } = "";
+	public AnspielFrameSettings AnspielFrame { get; set; } = new();
 
 	public Guid? ActiveThemeId { get; set; }
 	public List<CustomTheme> CustomThemes { get; set; } = new();
@@ -77,6 +78,38 @@ public class UiSettings
 		CustomThemes.Add(theme);
 		if (activate)
 			ActiveThemeId = theme.Id;
+	}
+
+	/// <summary>
+	/// Uebernimmt die frueher pro Theme gespeicherte Rahmenstaerke in die zentrale Einstellung.
+	/// </summary>
+	/// <remarks>
+	/// Eingeschaltet ist der Rahmen jetzt standardmaessig fuer alle - uebernommen wird deshalb nur
+	/// die Staerke eines Themes, das ihn schon bisher zeigte (das aktive hat Vorrang). Die alten
+	/// Werte werden danach entfernt; ein zweiter Aufruf aendert nichts mehr.
+	/// </remarks>
+	/// <returns>true, wenn alte Werte gefunden wurden.</returns>
+	public bool MigrateLegacyAnspielFrame()
+	{
+		var legacy = CustomThemes.Where(t => t.LegacyShowFrameOnAnspiel is not null || t.LegacyFrameWidthPx is not null).ToList();
+		if (legacy.Count == 0)
+			return false;
+
+		var source = legacy
+			.Where(t => t.LegacyShowFrameOnAnspiel == true && t.LegacyFrameWidthPx is not null)
+			.OrderByDescending(t => t.Id == ActiveThemeId)
+			.FirstOrDefault();
+
+		if (source is not null)
+			AnspielFrame.FrameWidthPx = source.LegacyFrameWidthPx!.Value;
+
+		foreach (var theme in legacy)
+		{
+			theme.LegacyShowFrameOnAnspiel = null;
+			theme.LegacyFrameWidthPx = null;
+		}
+
+		return true;
 	}
 
 	/// <summary>

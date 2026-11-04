@@ -11,15 +11,8 @@ public partial class ThemeHandler : IDisposable
 	private int _updateCounter;
 	private Settings.Settings _settings => _settingsService.CurrentSettings;
 
-	private string GetTeamFrameWidth()
-	{
-		var activeTheme = _settings.UI.ActiveTheme;
-		if (activeTheme is CustomTheme customTheme)
-		{
-			return $"{customTheme.FrameWidthPx}px";
-		}
-		return "3px"; // default
-	}
+	// Anspiel-Rahmen: zentrale Einstellung, gilt für alle Themes
+	private string GetTeamFrameWidth() => $"{_settings.UI.AnspielFrame.EffectiveWidthPx}px";
 
 	protected override void OnInitialized()
 		=> _settingsService.OnSettingsChanged += HandleUpdate;

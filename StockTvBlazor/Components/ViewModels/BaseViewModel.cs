@@ -141,36 +141,33 @@ public abstract class BaseViewModel : IPageViewModel
 	#region Team Frame (Anspiel-Indikator)
 
 	/// <summary>
-	/// Prüft ob der Teamname mit >> oder << markiert ist (Anspiel-Indikator)
+	/// Prüft ob der Teamname mit » oder « markiert ist (Anspiel-Indikator)
 	/// </summary>
 	public bool HasAnspiel(string teamName)
 	{
-		return !string.IsNullOrEmpty(teamName) && (teamName.Contains("»") || teamName.Contains("«"));
+		return !string.IsNullOrEmpty(teamName) && (teamName.Contains('»') || teamName.Contains('«'));
 	}
+
+	/// <summary>Rahmen statt Sonderzeichen - zentrale Einstellung, gilt für alle Themes.</summary>
+	private bool ShowAnspielFrame => _settingsService.CurrentSettings.UI.AnspielFrame.ShowFrame;
 
 	/// <summary>
 	/// Gibt die CSS-Klasse für den Teamrahmen zurück, wenn Anspiel vorhanden UND Rahmen aktiviert
 	/// </summary>
 	public string GetTeamFrameClass(string teamName)
 	{
-		var activeTheme = _settingsService.CurrentSettings.UI.ActiveTheme;
-		var showFrame = activeTheme is CustomTheme customTheme && customTheme.ShowFrameOnAnspiel;
-
-		return HasAnspiel(teamName) && showFrame ? "team-has-anspiel" : "";
+		return HasAnspiel(teamName) && ShowAnspielFrame ? "team-has-anspiel" : "";
 	}
 
 	/// <summary>
-	/// Gibt den bereinigten Teamnamen zurück (ohne >> oder <<)
+	/// Gibt den bereinigten Teamnamen zurück (ohne » oder «)
 	/// Nur wenn Rahmen aktiviert ist, sonst werden Sonderzeichen behalten
 	/// </summary>
 	public string GetCleanTeamName(string teamName)
 	{
 		if (string.IsNullOrEmpty(teamName)) return teamName;
 
-		var activeTheme = _settingsService.CurrentSettings.UI.ActiveTheme;
-		var showFrame = activeTheme is CustomTheme customTheme && customTheme.ShowFrameOnAnspiel;
-
-		if (!showFrame) return teamName; // Sonderzeichen behalten wenn Rahmen nicht aktiv
+		if (!ShowAnspielFrame) return teamName; // Sonderzeichen behalten wenn Rahmen nicht aktiv
 
 		return teamName.Replace("»", "").Replace("«", "").Trim();
 	}

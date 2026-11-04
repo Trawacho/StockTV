@@ -368,6 +368,13 @@ public class SettingsService : BackgroundService
 			settings.General = config.General;
 			settings.Game = config.Game;
 			settings.UI = config.UI;
+
+			// Der Anspiel-Rahmen hing frueher am eigenen Theme. Die alten Felder verschwinden mit
+			// dem naechsten Speichern aus der Datei.
+			if (settings.UI.MigrateLegacyAnspielFrame())
+				_logger.LogInformation(
+					"Anspiel-Rahmen gilt jetzt fuer alle Themes: Rahmen {State}, Staerke {Width}px.",
+					settings.UI.AnspielFrame.ShowFrame ? "ein" : "aus", settings.UI.AnspielFrame.FrameWidthPx);
 		}
 
 		_logger.LogInformation(
@@ -674,6 +681,27 @@ public class SettingsService : BackgroundService
 	{
 		RequestSaveSettings();
 		NotifyChanged();
+	}
+
+	#endregion
+
+	#region Anspiel-Rahmen
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.AnspielFrame (gilt fuer alle Themes). Der
+	/// Editor bindet direkt auf die Settings-Properties und ruft diese Methode danach auf.
+	/// </summary>
+	public void NotifyAnspielFrameChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	/// <summary>Setzt den Anspiel-Rahmen auf die Standardwerte (ein, 3px) zurueck.</summary>
+	public void ResetAnspielFrame()
+	{
+		CurrentSettings.UI.AnspielFrame = new AnspielFrameSettings();
+		NotifyAnspielFrameChanged();
 	}
 
 	#endregion
