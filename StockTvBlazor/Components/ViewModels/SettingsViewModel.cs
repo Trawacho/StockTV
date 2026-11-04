@@ -13,6 +13,7 @@ public class SettingsViewModel(SettingsService settingsService) : IDisposable
 	#region Active Flags (UI)
 
 	public bool IsThemeActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Theme;
+	public bool IsAnspielFrameActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.AnspielFrame;
 	public bool IsRichtungActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Richtung;
 	public bool IsModusActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.Modus;
 	public bool IsMaxPunkteProKehreActive => _settingsService.CurrentSettingToChange == SettingsService.SettingsOptions.MaxPunkteProKehre;
@@ -27,6 +28,8 @@ public class SettingsViewModel(SettingsService settingsService) : IDisposable
 
 	//public string ThemeValue => _currentSettings.UI.CurrentTheme.ToString();
 	public string ThemeValue => _currentSettings.UI.ActiveTheme.Name;
+
+	public string AnspielFrameValue => _currentSettings.UI.AnspielFrame.ShowFrame ? "Rahmen" : "Zeichen";
 
 	public string RichtungValue => _currentSettings.UI.CurrentRichtung.ToString();
 

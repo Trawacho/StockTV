@@ -16,7 +16,6 @@ public partial class CustomThemePage : IDisposable
 	private bool _disposed;
 	private int _baseThemeValue = -1;
 	private bool _showColorSettings = false;
-	private bool _showAnspielSettings = false;
 	private string _activeTab = "themes";
 
 	private void SetTab(string tab)
@@ -27,6 +26,7 @@ public partial class CustomThemePage : IDisposable
 	private void ShowThemesTab() => SetTab("themes");
 	private void ShowLayoutTab() => SetTab("layout");
 	private void ShowFontWeightTab() => SetTab("fontweight");
+	private void ShowAnspielTab() => SetTab("anspiel");
 
 	protected override void OnInitialized()
 	{
@@ -88,9 +88,7 @@ public partial class CustomThemePage : IDisposable
 			Id = theme.Id,
 			Name = theme.Name,
 			Colors = CopyColors(theme.Colors),
-			BaseTheme = theme.BaseTheme,
-			ShowFrameOnAnspiel = theme.ShowFrameOnAnspiel,
-			FrameWidthPx = theme.FrameWidthPx
+			BaseTheme = theme.BaseTheme
 		};
 		_baseThemeValue = theme.BaseTheme.HasValue ? (int)theme.BaseTheme.Value : -1;
 	}
@@ -119,7 +117,6 @@ public partial class CustomThemePage : IDisposable
 		_errorMessage = "";
 		_baseThemeValue = -1;
 		_showColorSettings = false;
-		_showAnspielSettings = false;
 	}
 
 	/// <summary>
@@ -138,11 +135,6 @@ public partial class CustomThemePage : IDisposable
 	private void ToggleColorSettings()
 	{
 		_showColorSettings = !_showColorSettings;
-	}
-
-	private void ToggleAnspielSettings()
-	{
-		_showAnspielSettings = !_showAnspielSettings;
 	}
 
 	private void OnBaseThemeChanged(ChangeEventArgs e)

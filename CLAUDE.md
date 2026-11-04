@@ -256,6 +256,11 @@ Gerätedatei liegt (Target `CopyDevDeviceConfig` im csproj). Nicht im Publish en
 | `GET` / `PUT` / `DELETE /api/v1/image` · `POST /api/v1/image/show` | `SetImage` · `ClearImage` · `GoToImage` |
 | `GET`/`PUT /api/v1/system/hostname` · `/network` · `POST /system/reboot` | die Pi-Kommandos |
 | `GET /api/v1/config` · `POST /api/v1/config/api-key` | *(neu, kein NetMQ-Gegenstück)* |
+| `GET` / `PUT /api/v1/display/anspiel-frame` | *(neu, nur REST — `UI.AnspielFrame`)* |
+
+`PUT /api/v1/display/anspiel-frame` nimmt `{ "showFrame": bool?, "frameWidthPx": 1-10? }`; ein
+weggelassenes Feld bleibt unverändert. Bewusst ein eigener Endpunkt: Das 10-Byte-Paket von
+`SetSettings` und NetMQ bleiben unverändert.
 
 **SignalR-Hub `/hubs/stocktv`** ersetzt den PUB-Socket 4748: `ResultChanged` (bei jeder Eingabe),
 `Alive` (alle 5 Sek.) und neu `SettingsChanged`. Der .NET-Client übergibt den Schlüssel als

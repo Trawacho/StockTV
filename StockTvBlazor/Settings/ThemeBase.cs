@@ -1,4 +1,6 @@
-﻿namespace StockTvBlazor.Settings;
+﻿using System.Text.Json.Serialization;
+
+namespace StockTvBlazor.Settings;
 
 public interface ITheme
 {
@@ -6,15 +8,6 @@ public interface ITheme
 	string Name { get; set; }
 	bool IsBuiltIn { get; }
 	ColorSettings GetColors(UiSettings.Richtung richtung);
-}
-
-public abstract class ThemeBase
-{
-	public Guid Id { get; set; } = Guid.NewGuid();
-	public string Name { get; set; } = "";
-	public virtual bool IsBuiltIn => false;
-
-	public abstract ColorSettings GetColors(UiSettings.Richtung richtung);
 }
 
 public class BuiltInTheme : ITheme
@@ -45,14 +38,18 @@ public class CustomTheme : ITheme
 	public ColorSettings Colors { get; set; } = new();
 
 	/// <summary>
-	/// Anspiel-Indikator: Soll der Rahmen statt des Sonderzeichens angezeigt werden?
+	/// Nur noch zum Einlesen aelterer Dateien: Der Anspiel-Rahmen hing frueher am Theme und gilt
+	/// jetzt fuer alle (<see cref="UiSettings.AnspielFrame"/>). Wird beim Laden uebernommen und
+	/// danach auf null gesetzt - damit faellt er beim naechsten Speichern aus der Datei.
 	/// </summary>
-	public bool ShowFrameOnAnspiel { get; set; } = false;
+	[JsonPropertyName("ShowFrameOnAnspiel")]
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+	public bool? LegacyShowFrameOnAnspiel { get; set; }
 
-	/// <summary>
-	/// Anspiel-Indikator: Rahmenstärke in Pixeln (default: 3px)
-	/// </summary>
-	public int FrameWidthPx { get; set; } = 3;
+	/// <inheritdoc cref="LegacyShowFrameOnAnspiel"/>
+	[JsonPropertyName("FrameWidthPx")]
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+	public int? LegacyFrameWidthPx { get; set; }
 
 	public ColorSettings GetColors(UiSettings.Richtung richtung)
 	{

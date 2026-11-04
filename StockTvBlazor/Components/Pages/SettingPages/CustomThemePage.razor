@@ -9,9 +9,18 @@
         <button class="tab-btn @(_activeTab == "themes" ? "active" : "")" @onclick="ShowThemesTab">Themes</button>
         <button class="tab-btn @(_activeTab == "layout" ? "active" : "")" @onclick="ShowLayoutTab">Tabellenstruktur</button>
         <button class="tab-btn @(_activeTab == "fontweight" ? "active" : "")" @onclick="ShowFontWeightTab">Schrift</button>
+        <button class="tab-btn @(_activeTab == "anspiel" ? "active" : "")" @onclick="ShowAnspielTab">Anspiel</button>
     </div>
 
-    @if (_activeTab == "layout")
+    @if (_activeTab == "anspiel")
+    {
+        <div class="theme-page">
+            <div class="theme-editor" style="width: 100%;">
+                <AnspielFrameEditor />
+            </div>
+        </div>
+    }
+    else if (_activeTab == "layout")
     {
         <div class="theme-page">
             <div class="theme-editor" style="width: 100%;">
@@ -112,38 +121,6 @@
                         <ColorField Label="ZielSumme Einz." @bind-Value="_editingTheme.Colors.ZielSummeEinzel" @bind-Value:after="ApplyLiveChangeIfExisting" />
                         <ColorField Label="Ziel-Spielername" @bind-Value="_editingTheme.Colors.ZielSpielername" @bind-Value:after="ApplyLiveChangeIfExisting" />
                                     </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="accordion" style="margin-top: 1rem;">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button @(_showAnspielSettings ? "" : "collapsed")" type="button"
-                                        @onclick="ToggleAnspielSettings" aria-expanded="@(_showAnspielSettings.ToString().ToLower())"
-                                        aria-controls="anspielSettingsCollapse">
-                                    Anspiel-Indikator Einstellungen
-                                </button>
-                            </h2>
-                            @if (_showAnspielSettings)
-                            {
-                                <div id="anspielSettingsCollapse" class="accordion-body">
-                                    <div class="field">
-                                        <label>
-                                            <input type="checkbox" @bind="_editingTheme.ShowFrameOnAnspiel" @bind:after="ApplyLiveChangeIfExisting" />
-                                            Rahmen statt Sonderzeichen anzeigen
-                                        </label>
-                                    </div>
-
-                                    @if (_editingTheme.ShowFrameOnAnspiel)
-                                    {
-                                        <div class="field">
-                                            <label>Rahmenstärke (px)</label>
-                                            <input type="number" min="1" max="10" @bind="_editingTheme.FrameWidthPx" @bind:after="ApplyLiveChangeIfExisting"
-                                                   style="max-width: 100px;" />
-                                        </div>
-                                    }
                                 </div>
                             }
                         </div>

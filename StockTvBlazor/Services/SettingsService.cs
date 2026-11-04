@@ -9,9 +9,14 @@ namespace StockTvBlazor.Services;
 
 public class SettingsService : BackgroundService
 {
+	/// <summary>
+	/// Zeilen des Tastaturmenues (/settings). Die Reihenfolge ist die Reihenfolge von Pfeil
+	/// hoch/runter; der Wert wird nirgends gespeichert oder verschickt.
+	/// </summary>
 	public enum SettingsOptions
 	{
 		Theme,
+		AnspielFrame,
 		Richtung,
 		Modus,
 		BahnNummer,
@@ -230,6 +235,16 @@ public class SettingsService : BackgroundService
 
 	}
 
+	/// <summary>
+	/// Tastaturmenue: Anspiel-Rahmen ein/aus. Beide Pfeilrichtungen schalten um; gespeichert wird
+	/// wie bei den anderen Zeilen beim Verlassen des Menues.
+	/// </summary>
+	public void ChangeAnspielFrame()
+	{
+		var frame = CurrentSettings.UI.AnspielFrame;
+		frame.ShowFrame = !frame.ShowFrame;
+	}
+
 	public void ChangeRichtung(bool forward)
 	{
 		var s = CurrentSettings;
@@ -368,6 +383,13 @@ public class SettingsService : BackgroundService
 			settings.General = config.General;
 			settings.Game = config.Game;
 			settings.UI = config.UI;
+
+			// Der Anspiel-Rahmen hing frueher am eigenen Theme. Die alten Felder verschwinden mit
+			// dem naechsten Speichern aus der Datei.
+			if (settings.UI.MigrateLegacyAnspielFrame())
+				_logger.LogInformation(
+					"Anspiel-Rahmen gilt jetzt fuer alle Themes: Rahmen {State}, Staerke {Width}px.",
+					settings.UI.AnspielFrame.ShowFrame ? "ein" : "aus", settings.UI.AnspielFrame.FrameWidthPx);
 		}
 
 		_logger.LogInformation(
@@ -678,6 +700,47 @@ public class SettingsService : BackgroundService
 
 	#endregion
 
+	#region Anspiel-Rahmen
+
+	/// <summary>
+	/// Persistiert und published eine Aenderung an UI.AnspielFrame (gilt fuer alle Themes). Der
+	/// Editor bindet direkt auf die Settings-Properties und ruft diese Methode danach auf.
+	/// </summary>
+	public void NotifyAnspielFrameChanged()
+	{
+		RequestSaveSettings();
+		NotifyChanged();
+	}
+
+	/// <summary>
+	/// Setzt den Anspiel-Rahmen von aussen (REST). Ein nicht angegebener Wert bleibt unveraendert.
+	/// </summary>
+	/// <returns>Fehlermeldung, oder null wenn uebernommen.</returns>
+	public string? SetAnspielFrame(bool? showFrame, int? frameWidthPx)
+	{
+		if (showFrame is null && frameWidthPx is null)
+			return "Es wurde weder showFrame noch frameWidthPx uebergeben.";
+
+		if (frameWidthPx is < AnspielFrameSettings.MinWidthPx or > AnspielFrameSettings.MaxWidthPx)
+			return $"frameWidthPx muss zwischen {AnspielFrameSettings.MinWidthPx} und {AnspielFrameSettings.MaxWidthPx} liegen.";
+
+		var frame = CurrentSettings.UI.AnspielFrame;
+		if (showFrame is not null) frame.ShowFrame = showFrame.Value;
+		if (frameWidthPx is not null) frame.FrameWidthPx = frameWidthPx.Value;
+
+		NotifyAnspielFrameChanged();
+		return null;
+	}
+
+	/// <summary>Setzt den Anspiel-Rahmen auf die Standardwerte (ein, 3px) zurueck.</summary>
+	public void ResetAnspielFrame()
+	{
+		CurrentSettings.UI.AnspielFrame = new AnspielFrameSettings();
+		NotifyAnspielFrameChanged();
+	}
+
+	#endregion
+
 	#region Custom Themes
 
 	public void AddOrUpdateCustomTheme(CustomTheme theme)
@@ -835,6 +898,10 @@ public class SettingsService : BackgroundService
 		{
 			case SettingsOptions.Theme:
 				ChangeTheme(forward);
+				break;
+
+			case SettingsOptions.AnspielFrame:
+				ChangeAnspielFrame();
 				break;
 
 			case SettingsOptions.Richtung:
