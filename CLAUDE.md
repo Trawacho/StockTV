@@ -262,6 +262,11 @@ Gerätedatei liegt (Target `CopyDevDeviceConfig` im csproj). Nicht im Publish en
 weggelassenes Feld bleibt unverändert. Bewusst ein eigener Endpunkt: Das 10-Byte-Paket von
 `SetSettings` und NetMQ bleiben unverändert.
 
+**Anspiel je Kehre (IER 422):** Die Verwaltung markiert mit » / « nur die Mannschaft mit Anspiel in
+Kehre 1. `Models/AnspielWechsel.FuerKehre` verschiebt die Markierung in geraden Kehren (laufende Kehre =
+eingetragen + 1, höchstens die letzte) auf die andere Seite, außen am Namen. `BaseViewModel.LeftTeamName`/
+`RightTeamName` liefern schon die Namen für die laufende Kehre – Rahmen, Zeichen und `/display2` ziehen mit.
+
 **SignalR-Hub `/hubs/stocktv`** ersetzt den PUB-Socket 4748: `ResultChanged` (bei jeder Eingabe),
 `Alive` (alle 5 Sek.) und neu `SettingsChanged`. Der .NET-Client übergibt den Schlüssel als
 Kopfzeile (`HttpConnectionOptions.Headers`), die auch beim Aushandeln mitgeht — ein Browser-Client
