@@ -604,7 +604,7 @@ public abstract class PhaseTestBase
 	/// <param name="expectedTeamLeft">Erwarteter Team-Name links (muss zusammen mit expectedTeamRight angegeben werden)</param>
 	/// <param name="expectedTeamRight">Erwarteter Team-Name rechts (muss zusammen mit expectedTeamLeft angegeben werden)</param>
 	/// <param name="expectedGameNumber">Erwartete Spiel-Nummer im Header</param>
-	/// <param name="expectedTurnNumber">Erwartete Kehren-Nummer im Header</param>
+	/// <param name="expectedTurnNumber">Anzahl eingetragener Kehren (der Kopf zeigt die laufende Kehre, also eins mehr)</param>
 	protected async Task ValidateDisplayAsync(
 		List<int>? expectedTurnsLeft = null,
 		List<int>? expectedTurnsRight = null,
@@ -680,7 +680,7 @@ public abstract class PhaseTestBase
 		}
 
 		// Validate Header (Game Number and Turn Number)
-		// Hinweis: Header wird angezeigt, sobald im ersten Spiel eine Kehre eingegeben wird, und bleibt dann sichtbar
+		// Hinweis: Der Kopf zeigt Spiel und laufende Kehre von Anfang an (auch vor der ersten Kehre)
 		if (expectedGameNumber.HasValue && (expectedTurnNumber == null || expectedTurnNumber > 0))
 		{
 			var headerText = await Fixture.Page.Locator(".score-row.header-text").TextContentAsync();
@@ -701,7 +701,9 @@ public abstract class PhaseTestBase
 				// Im Training: nur Kehre validieren
 				if (expectedTurnNumber.HasValue)
 				{
-					Assert.Equal(expectedTurnNumber.Value, displayedTurnNumber);
+					// Der Kopf zeigt die laufende Kehre (eingetragen + 1); nach der letzten Kehre bleibt er auf ihr stehen.
+					Assert.True(displayedTurnNumber == expectedTurnNumber.Value + 1 || displayedTurnNumber == expectedTurnNumber.Value,
+						$"Kehre im Kopf {displayedTurnNumber}, erwartet {expectedTurnNumber.Value + 1} (laufende Kehre)");
 				}
 				Log(CurrentPhase, $"Header korrekt: Kehre {displayedTurnNumber}", LogSymbol.Check);
 			}
