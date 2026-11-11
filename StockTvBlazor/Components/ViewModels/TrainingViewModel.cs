@@ -9,9 +9,7 @@ public class TrainingViewModel(SettingsService settingsSerivce, MatchService mat
 {
 	public string HeaderText => _isDemoMode
 		? $"{HeaderTextBasis}     Kehre: {DemoData.KehreAnzahl}"
-		: CurrentMatch.CurrentGame.Turns.Count == 0
-			? base.HeaderTextBasis
-			: $"{HeaderTextBasis}     Kehre: {CurrentMatch.CurrentGame.Turns.Count}";
+		: $"{HeaderTextBasis}     Kehre: {LaufendeKehre}";
 
 	public new string GetShellGridStyle() => "grid-template-columns: 100%;";
 }

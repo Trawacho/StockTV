@@ -58,6 +58,17 @@ public abstract class BaseViewModel : IPageViewModel
 		}
 	}
 
+	/// <summary>Die Kehre, die gerade gespielt wird: eingetragene Kehren + 1, höchstens die letzte Kehre des Spiels.</summary>
+	protected int LaufendeKehre
+	{
+		get
+		{
+			var laufend = CurrentMatch.CurrentGame.Turns.Count + 1;
+			var max = _settingsService.CurrentSettings.Game.MaxKehrenProSpiel;
+			return max > 0 ? Math.Min(laufend, max) : laufend;
+		}
+	}
+
 	#endregion
 
 	#region Points
