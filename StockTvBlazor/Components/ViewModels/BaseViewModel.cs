@@ -117,34 +117,18 @@ public abstract class BaseViewModel : IPageViewModel
 
 	public bool TeamNamesAvailable => _isDemoMode || !string.IsNullOrEmpty(LeftTeamName);
 
-	public string LeftTeamName
+	public string LeftTeamName => _isDemoMode ? DemoData.LeftTeamName : TeamNamenFuerKehre().Links;
+
+	public string RightTeamName => _isDemoMode ? DemoData.RightTeamName : TeamNamenFuerKehre().Rechts;
+
+	/// <summary>Namen der laufenden Begegnung; die Anspiel-Markierung wechselt mit jeder Kehre die Seite.</summary>
+	private (string Links, string Rechts) TeamNamenFuerKehre()
 	{
-		get
-		{
-			if (_isDemoMode) return DemoData.LeftTeamName;
+		var begegnung = CurrentMatch.Begegnungen.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber);
+		if (begegnung is null) return (string.Empty, string.Empty);
 
-			var s = _settingsService.CurrentSettings;
-
-			return CurrentMatch.Begegnungen
-				.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
-				?.TeamNameLeft(s.UI.CurrentRichtung == UiSettings.Richtung.Links)
-				?? string.Empty;
-		}
-	}
-
-	public string RightTeamName
-	{
-		get
-		{
-			if (_isDemoMode) return DemoData.RightTeamName;
-
-			var s = _settingsService.CurrentSettings;
-
-			return CurrentMatch.Begegnungen
-				.FirstOrDefault(b => b.Spielnummer == CurrentMatch.CurrentGame.GameNumber)
-				?.TeamNameRight(s.UI.CurrentRichtung == UiSettings.Richtung.Links)
-				?? string.Empty;
-		}
+		var rechtsNachLinks = _settingsService.CurrentSettings.UI.CurrentRichtung == UiSettings.Richtung.Links;
+		return AnspielWechsel.FuerKehre(begegnung.TeamNameLeft(rechtsNachLinks), begegnung.TeamNameRight(rechtsNachLinks), LaufendeKehre);
 	}
 
 	#endregion
@@ -156,7 +140,7 @@ public abstract class BaseViewModel : IPageViewModel
 	/// </summary>
 	public bool HasAnspiel(string teamName)
 	{
-		return !string.IsNullOrEmpty(teamName) && (teamName.Contains('»') || teamName.Contains('«'));
+		return AnspielWechsel.IstMarkiert(teamName);
 	}
 
 	/// <summary>Rahmen statt Sonderzeichen - zentrale Einstellung, gilt für alle Themes.</summary>
@@ -180,7 +164,7 @@ public abstract class BaseViewModel : IPageViewModel
 
 		if (!ShowAnspielFrame) return teamName; // Sonderzeichen behalten wenn Rahmen nicht aktiv
 
-		return teamName.Replace("»", "").Replace("«", "").Trim();
+		return AnspielWechsel.OhneZeichen(teamName);
 	}
 
 	#endregion
