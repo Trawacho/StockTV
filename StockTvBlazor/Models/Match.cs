@@ -54,6 +54,15 @@ public class Match
 
 	public IEnumerable<Begegnung> Begegnungen => _begegnungen.AsReadOnly();
 
+	/// <summary>
+	/// Nach „+“ im letzten Spiel legt StockTV ein leeres Spiel ohne Begegnung an (die Verwaltung erkennt daran, dass das
+	/// letzte Spiel fertig ist). Fuer den Kopf: statt „Spiel 18“ ohne Mannschaften „alle Spiele beendet“.
+	/// </summary>
+	public bool AlleBegegnungenGespielt =>
+		_begegnungen.Count > 0
+		&& CurrentGame.Turns.Count == 0
+		&& CurrentGame.GameNumber > _begegnungen.Max(b => b.Spielnummer);
+
 	public void ClearBegegnungen()
 	{
 		_begegnungen.Clear();

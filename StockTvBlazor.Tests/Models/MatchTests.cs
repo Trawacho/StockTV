@@ -92,4 +92,35 @@ public class MatchTests
 
 		Assert.Equal(Enumerable.Range(1, 7), match.Begegnungen.Select(b => b.Spielnummer));
 	}
+
+	[Fact]
+	public async Task Nach_dem_letzten_Spiel_sind_alle_Begegnungen_gespielt()
+	{
+		// Befund aus dem 8-Bahnen-Test: nach „+“ im letzten Spiel stand „Spiel 18“ ohne Mannschaften im Kopf.
+		var settingsService = new SettingsService(NullLogger<SettingsService>.Instance, new FileLoggerProvider());
+		await settingsService.InitializeAsync();
+		settingsService.CurrentSettings.Game.CurrentModus = GameSettings.Modus.Turnier;
+		settingsService.CurrentSettings.Game.MaxKehrenProSpiel = 6;
+		var match = new Match(settingsService, NullLogger<MatchService>.Instance);
+		match.AddBegegnung(new Begegnung(1, "A", "B"));
+		match.AddBegegnung(new Begegnung(2, "C", "D"));
+
+		for (var spiel = 1; spiel <= 2; spiel++)
+		{
+			Assert.False(match.AlleBegegnungenGespielt);
+			for (var k = 0; k < 6; k++) match.AddTurn(Turn.Create(1, UiSettings.Richtung.Links, true));
+			Assert.False(match.AlleBegegnungenGespielt);   // letzte Kehre drin, aber noch kein „+“
+			match.Reset();
+		}
+
+		Assert.Equal(3, match.CurrentGame.GameNumber);
+		Assert.True(match.AlleBegegnungenGespielt);
+	}
+
+	[Fact]
+	public async Task Ohne_Begegnungen_gibt_es_kein_Ende()
+	{
+		var match = await CreateInitializedMatchAsync();
+		Assert.False(match.AlleBegegnungenGespielt);
+	}
 }

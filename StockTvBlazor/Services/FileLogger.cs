@@ -37,7 +37,7 @@ public class FileLogger : ILogger
 			logLevel,
 			_category,
 			formatter(state, exception),
-			exception
+			exception?.ToString()
 		);
 
 		_channel.Writer.TryWrite(msg);

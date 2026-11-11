@@ -136,6 +136,7 @@ dotnet test StockTvBlazor.E2ETests/
 - Team-Namen beim Spiel-Start sichtbar
 - Punkte-Anzeige aktualisiert sich nach jedem Input
 - Spiel 1 → Spiel 2 → Spiel 3 Progression
+- Nach dem letzten Spiel: keine Team-Namen, Kopf zeigt „alle Spiele beendet“
 
 **Beispiel-Log:**
 ```

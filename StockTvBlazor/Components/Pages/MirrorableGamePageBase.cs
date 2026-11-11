@@ -25,6 +25,13 @@ public abstract class MirrorableGamePageBase<TViewModel> : ComponentBase, IDispo
 
 	protected string MirrorClass => IsMirrored ? "mirrored" : "";
 
+	/// <summary>
+	/// Kopfzeile: Bis die Seite interaktiv ist (Verbindung zum Server steht), gehen Tasten verloren - die Seite ist
+	/// vorab gerendert und sieht fertig aus. Deshalb solange „verbinde …“ statt Spiel und Kehre. Das Spiegelfenster
+	/// nimmt ohnehin keine Eingaben an.
+	/// </summary>
+	protected string Kopf(string text) => RendererInfo.IsInteractive || IsMirrored ? text : "verbinde …";
+
 	protected ElementReference inputRef;
 
 	private bool _disposed;
