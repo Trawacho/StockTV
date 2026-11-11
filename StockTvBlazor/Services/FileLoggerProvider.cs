@@ -41,8 +41,26 @@ public class FileLoggerProvider : ILoggerProvider
 	{
 		while (!_cts.IsCancellationRequested)
 		{
-			var msg = await _channel.Reader.ReadAsync(_cts.Token);
-			await WriteLogAsync(msg);
+			LogMessage msg;
+			try
+			{
+				msg = await _channel.Reader.ReadAsync(_cts.Token);
+			}
+			catch (OperationCanceledException)
+			{
+				return;
+			}
+
+			// Ein Eintrag, der nicht geschrieben werden kann (Datei gesperrt, Platte voll ...), darf das
+			// Protokoll nicht beenden - frueher endete der Task, und danach kam nichts mehr in die Datei.
+			try
+			{
+				await WriteLogAsync(msg);
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"Protokolldatei: Eintrag nicht geschrieben ({ex.GetType().Name}: {ex.Message})");
+			}
 		}
 	}
 
@@ -50,10 +68,11 @@ public class FileLoggerProvider : ILoggerProvider
 	{
 		string file = GetCurrentLogFile();
 
-		var json = JsonSerializer.Serialize(msg) + Environment.NewLine;
-
-		await File.AppendAllTextAsync(file, json);
+		await File.AppendAllTextAsync(file, ZuJson(msg) + Environment.NewLine);
 	}
+
+	/// <summary>Eine Zeile der Protokolldatei.</summary>
+	public static string ZuJson(LogMessage msg) => JsonSerializer.Serialize(msg);
 
 	private string GetCurrentLogFile()
 	{

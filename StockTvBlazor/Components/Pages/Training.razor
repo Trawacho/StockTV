@@ -9,7 +9,7 @@
 	<div class="scoreboard-shell @MirrorClass" style="@ViewModel.GetShellGridStyle()">
 		
 		<div class="scoreboard-center">
-			<div class="score-row score-top-row header-text"><AutoFitText Text="@ViewModel.HeaderText" Min="8" /></div>
+			<div class="score-row score-top-row header-text"><AutoFitText Text="@Kopf(ViewModel.HeaderText)" Min="8" /></div>
 
 			<div class="score-row mid-grid-3">
 				<div class="score-cell left-point-sum"><AutoFitText Text="@ViewModel.LeftPointsSum.ToString()" Min="12" Numeric="true" Fill="90" MinLen="2"/></div>

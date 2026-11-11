@@ -266,6 +266,7 @@ weggelassenes Feld bleibt unverändert. Bewusst ein eigener Endpunkt: Das 10-Byt
 Kehre 1. `Models/AnspielWechsel.FuerKehre` verschiebt die Markierung in geraden Kehren (laufende Kehre =
 eingetragen + 1, höchstens die letzte) auf die andere Seite, außen am Namen. `BaseViewModel.LeftTeamName`/
 `RightTeamName` liefern schon die Namen für die laufende Kehre – Rahmen, Zeichen und `/display2` ziehen mit.
+**Kopfzeile:** `Kopf(...)` in `MirrorableGamePageBase` zeigt „verbinde …“, solange die Seite nur vorab gerendert ist(`RendererInfo.IsInteractive` falsch) – Tasten gingen in der Zeit verloren, ohne dass man es sah. Im Turnier zeigt der Kopfnach dem letzten Spiel „alle Spiele beendet“ (`Match.AlleBegegnungenGespielt`); das leere Spiel danach bleibt, dieVerwaltung erkennt daran das Ende des letzten Spiels.
 
 **SignalR-Hub `/hubs/stocktv`** ersetzt den PUB-Socket 4748: `ResultChanged` (bei jeder Eingabe),
 `Alive` (alle 5 Sek.) und neu `SettingsChanged`. Der .NET-Client übergibt den Schlüssel als
@@ -480,7 +481,9 @@ haben.
 ## Datenspeicherung & Logging
 
 - **Config**: `_config/stocktv.device.json`, `stocktv.config.json`, `stocktv.state.json` (relativ zum App-Verzeichnis, werden beim Start geladen)
-- **Logs**: `_logs/` (JSON-Dateien mit Timestamps, nur wenn `FileLoggingEnabled=true`)
+- **Logs**: `_logs/` (JSON-Dateien mit Timestamps, nur wenn `FileLoggingEnabled=true`). Die Ausnahme steht als Text im
+  Eintrag (`LogMessage.Exception` ist `string`) – ein `Exception`-Objekt lässt sich nicht serialisieren und hat früher den
+  Schreib-Task beendet. Die Schreibschleife fängt Fehler einzelner Einträge ab.
 - **Speicherung**: Via `Channel`-Queue im `SettingsService`, immer mit passendem `SettingsScope` — **nie direkt** auf `CurrentSettings` schreiben
 - Im Training-Modus werden Kehren **nicht** persistiert
 - `RequestSaveSettings(scope)` nach State-Änderungen aufrufen
